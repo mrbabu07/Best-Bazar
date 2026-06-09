@@ -76,6 +76,14 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     take: 50
   });
   const selectedOrder = orders[0];
+  const selectedTotals = selectedOrder
+    ? [
+        { label: dictionary.common.subtotal, value: Number(selectedOrder.subtotal), tone: "normal" },
+        { label: dictionary.common.shipping, value: Number(selectedOrder.shippingCost), tone: "normal" },
+        { label: dictionary.common.discount, value: -Number(selectedOrder.discount), tone: "normal" },
+        { label: dictionary.common.total, value: Number(selectedOrder.total), tone: "strong" }
+      ]
+    : [];
 
   return (
     <div>
@@ -166,30 +174,45 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         <aside className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           {selectedOrder ? (
             <>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-navy">{selectedOrder.orderNumber}</h2>
-              <p className="mt-1 text-sm text-neutral-500">{selectedOrder.customerEmail}</p>
-            </div>
-            <AdminPrintButton label={dictionary.actions.print} />
-          </div>
-          <div className="mt-5 grid gap-4">
-            {selectedOrder.items.map((item) => (
-              <div key={item.id} className="flex justify-between gap-4 text-sm">
-                <span className="text-neutral-600">
-                  {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
-                </span>
-                <span className="font-bold text-navy">{formatCurrency(Number(item.price) * item.quantity, "AED", locale)}</span>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-navy">{selectedOrder.orderNumber}</h2>
+                  <p className="mt-1 text-sm text-neutral-500">{selectedOrder.customerEmail}</p>
+                </div>
+                <AdminPrintButton label={dictionary.actions.print} />
               </div>
-            ))}
-          </div>
-          <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">
-            <p className="font-bold text-navy">{selectedOrder.customerName}</p>
-            <p className="text-neutral-600">{selectedOrder.customerPhone}</p>
-            <p className="text-neutral-600">
-              {selectedOrder.street}, {selectedOrder.emirate}
-            </p>
-          </div>
+              <div className="mt-5 grid gap-4">
+                {selectedOrder.items.map((item) => (
+                  <div key={item.id} className="flex justify-between gap-4 text-sm">
+                    <span className="text-neutral-600">
+                      {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
+                    </span>
+                    <span className="font-bold text-navy">{formatCurrency(Number(item.price) * item.quantity, "AED", locale)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">
+                {selectedTotals.map((item) => (
+                  <div
+                    key={item.label}
+                    className={item.tone === "strong" ? "flex justify-between text-base" : "flex justify-between"}
+                  >
+                    <span className={item.tone === "strong" ? "font-bold text-navy" : "text-neutral-500"}>
+                      {item.label}
+                    </span>
+                    <span className={item.tone === "strong" ? "font-bold text-navy" : "font-semibold text-navy"}>
+                      {formatCurrency(item.value, "AED", locale)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">
+                <p className="font-bold text-navy">{selectedOrder.customerName}</p>
+                <p className="text-neutral-600">{selectedOrder.customerPhone}</p>
+                <p className="text-neutral-600">
+                  {selectedOrder.street}, {selectedOrder.emirate}
+                </p>
+              </div>
             </>
           ) : (
             <p className="text-sm font-semibold text-neutral-500">No orders yet.</p>

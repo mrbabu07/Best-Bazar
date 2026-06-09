@@ -50,6 +50,12 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
     BDT: settings?.aedToBdt,
     USD: settings?.aedToUsd
   });
+  const totals = [
+    { label: dictionary.common.subtotal, value: Number(order.subtotal), tone: "normal" },
+    { label: dictionary.common.shipping, value: Number(order.shippingCost), tone: "normal" },
+    { label: dictionary.common.discount, value: -Number(order.discount), tone: "normal" },
+    { label: dictionary.common.total, value: Number(order.total), tone: "strong" }
+  ];
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -106,6 +112,21 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
                 </span>
                 <span className="font-bold text-navy">
                   {formatCurrency(Number(item.price) * item.quantity, currency, locale, currencyRates)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">
+            {totals.map((item) => (
+              <div
+                key={item.label}
+                className={item.tone === "strong" ? "flex justify-between text-base" : "flex justify-between"}
+              >
+                <span className={item.tone === "strong" ? "font-bold text-navy" : "text-neutral-500"}>
+                  {item.label}
+                </span>
+                <span className={item.tone === "strong" ? "font-bold text-navy" : "font-semibold text-navy"}>
+                  {formatCurrency(item.value, currency, locale, currencyRates)}
                 </span>
               </div>
             ))}
