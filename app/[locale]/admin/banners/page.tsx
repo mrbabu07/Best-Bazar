@@ -1,11 +1,8 @@
-import Image from "next/image";
 import type { Metadata } from "next";
-import { GripVertical, ImagePlus, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { notFound } from "next/navigation";
-import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
+import { AdminBannerManager } from "@/components/admin/AdminBannerManager";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
@@ -20,103 +17,42 @@ export default async function AdminBannersPage({ params }: { params: { locale: s
     notFound();
   }
 
-  const title = locale === "ar" ? "البانرات" : "Banners";
   const banners = await prisma.banner.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
   });
+  const bannerRows = banners.map((banner) => ({
+    id: banner.id,
+    titleEn: banner.titleEn,
+    titleAr: banner.titleAr,
+    subtitleEn: banner.subtitleEn ?? "",
+    subtitleAr: banner.subtitleAr ?? "",
+    buttonTextEn: banner.buttonTextEn ?? "",
+    buttonTextAr: banner.buttonTextAr ?? "",
+    buttonLink: banner.buttonLink,
+    desktopImage: banner.desktopImage,
+    mobileImage: banner.mobileImage ?? "",
+    sortOrder: banner.sortOrder,
+    isActive: banner.isActive
+  }));
 
   return (
     <div>
       <AdminPageHeader
-        eyebrow={title}
-        title={title}
+        eyebrow="Banners"
+        title="Banners"
         subtitle="Manage homepage hero slider images, bilingual text, links, ordering, and visibility."
         action={
-          <Button>
+          <a
+            href="#banner-editor"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-semibold text-navy shadow-soft transition hover:from-gold-400 hover:to-gold-200"
+          >
             <Plus size={17} />
             Add banner
-          </Button>
+          </a>
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
-        <section className="grid gap-3">
-          {banners.map((banner, index) => (
-            <article
-              key={banner.id}
-              className="grid gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:grid-cols-[auto_160px_1fr_auto]"
-            >
-              <div className="grid h-10 w-10 place-items-center rounded-md bg-paper text-neutral-400">
-                <GripVertical size={18} />
-              </div>
-              <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-neutral-100">
-                <Image
-                  src={banner.desktopImage}
-                  alt={banner.titleEn}
-                  fill
-                  sizes="160px"
-                  className="object-cover"
-                />
-              </div>
-              <div>
-                <h2 className="font-bold text-navy">{locale === "ar" ? banner.titleAr : banner.titleEn}</h2>
-                <p className="mt-1 text-sm text-neutral-500">{banner.buttonLink}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Badge tone={banner.isActive ? "green" : "red"}>
-                    {banner.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                  <Badge tone="gold">#{index + 1}</Badge>
-                </div>
-              </div>
-              <AdminDeleteButton
-                endpoint={`/api/admin/banners/${banner.id}`}
-                label={`Delete banner ${banner.titleEn}?`}
-                successMessage="Banner deleted"
-              />
-            </article>
-          ))}
-        </section>
-
-        <aside className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <h2 className="text-lg font-bold text-navy">Banner editor</h2>
-          <div className="mt-5 grid gap-4">
-            {[
-              "Title EN",
-              "Title AR",
-              "Subtitle EN",
-              "Subtitle AR",
-              "Button text EN",
-              "Button text AR",
-              "Button link URL",
-              "Sort order"
-            ].map((label) => (
-              <label key={label} className="grid gap-2 text-sm font-semibold text-navy">
-                {label}
-                <input className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
-              </label>
-            ))}
-            <button
-              type="button"
-              className="flex h-28 items-center justify-center gap-2 rounded-lg border border-dashed border-gold-300 bg-gold-50 text-sm font-bold text-navy"
-            >
-              <ImagePlus size={18} />
-              Desktop image
-            </button>
-            <button
-              type="button"
-              className="flex h-28 items-center justify-center gap-2 rounded-lg border border-dashed border-gold-300 bg-gold-50 text-sm font-bold text-navy"
-            >
-              <ImagePlus size={18} />
-              Mobile image
-            </button>
-            <label className="flex items-center gap-2 text-sm font-semibold text-navy">
-              <input type="checkbox" className="accent-gold-500" defaultChecked />
-              Active
-            </label>
-            <Button>Save changes</Button>
-          </div>
-        </aside>
-      </div>
+      <AdminBannerManager locale={locale} banners={bannerRows} />
     </div>
   );
 }
