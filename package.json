@@ -12,7 +12,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^5.2.0",
     "bcryptjs": "^2.4.3",
-    "cloudinary": "^2.5.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
     "mongoose": "^8.8.4",
@@ -23,8 +23,8 @@
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
     "stripe": "^17.4.0",
-    "zustand": "^5.0.2",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
