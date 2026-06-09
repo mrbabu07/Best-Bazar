@@ -53,7 +53,8 @@ function formatDate(value: string, locale: Locale) {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE" : "en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric"
+    year: "numeric",
+    timeZone: "Asia/Dubai"
   }).format(new Date(value));
 }
 
