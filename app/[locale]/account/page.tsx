@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
+import { AccountProfileForm } from "@/components/account/AccountProfileForm";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
@@ -90,12 +91,14 @@ export default async function AccountPage({ params }: { params: { locale: string
     USD: settings?.aedToUsd
   });
 
-  const profileFields = [
-    { label: "Name", value: user.name ?? "" },
-    { label: "Email", value: user.email },
-    { label: "Phone", value: user.phone ?? "" },
-    { label: "City", value: user.city ?? "" }
-  ];
+  const profile = {
+    name: user.name ?? "",
+    email: user.email,
+    phone: user.phone ?? "",
+    street: user.street ?? "",
+    city: user.city ?? "",
+    country: user.country ?? ""
+  };
   const savedAddresses = [
     user.street && user.city
       ? {
@@ -157,18 +160,7 @@ export default async function AccountPage({ params }: { params: { locale: string
         <section className="grid gap-6">
           <div id="profile" className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.account.profile}</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {profileFields.map((field) => (
-                <label key={field.label} className="grid gap-2 text-sm font-semibold text-navy">
-                  {field.label}
-                  <input
-                    value={field.value}
-                    readOnly
-                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm text-neutral-700"
-                  />
-                </label>
-              ))}
-            </div>
+            <AccountProfileForm locale={locale} profile={profile} saveLabel={dictionary.actions.save} />
           </div>
 
           <div id="addresses" className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">

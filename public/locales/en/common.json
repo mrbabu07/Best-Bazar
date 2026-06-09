@@ -44,15 +44,15 @@
     "heroMetricTwo": "Same-day Dubai delivery",
     "heroMetricThree": "AED, BDT, USD pricing",
     "featuredTitle": "Featured products",
-    "featuredSubtitle": "High-demand picks prepared for a premium online store launch.",
+    "featuredSubtitle": "High-demand picks from the active catalog, ready for premium gifting and everyday shopping.",
     "categoryTitle": "Shop by category",
     "categorySubtitle": "Clean paths for customers to find luxury, lifestyle, and gifting collections.",
     "arrivalTitle": "New arrivals",
-    "arrivalSubtitle": "Fresh products staged with frontend-ready commerce states."
+    "arrivalSubtitle": "Fresh products added to the catalog with live availability, pricing, and product details."
   },
   "shop": {
     "title": "Shop products",
-    "subtitle": "Browse the storefront with category, brand, price, and rating controls prepared for API integration.",
+    "subtitle": "Browse live products by category, brand, price, and rating with a polished bilingual storefront.",
     "filters": "Filters",
     "category": "Category",
     "brand": "Brand",
@@ -79,7 +79,7 @@
   },
   "checkout": {
     "title": "Checkout",
-    "subtitle": "Shipping details, payment choice, and order summary are ready for backend connection.",
+    "subtitle": "Enter shipping details, choose a payment method, and review the live order total before placing your order.",
     "shippingInfo": "Shipping information",
     "payment": "Payment method",
     "stripe": "Stripe card payment",
@@ -108,7 +108,7 @@
     "revenueChart": "Revenue chart"
   },
   "footer": {
-    "tagline": "A bilingual Dubai ecommerce frontend built for luxury, clarity, and scale.",
+    "tagline": "A bilingual Dubai shopping experience built for luxury, clarity, and reliable delivery.",
     "contact": "Dubai, United Arab Emirates",
     "newsletter": "Newsletter"
   }
