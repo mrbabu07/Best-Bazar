@@ -31,6 +31,23 @@ export const productImageSchema = z.object({
   sortOrder: z.coerce.number().int().min(0).default(0)
 });
 
+const colorHex = z
+  .string()
+  .trim()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+  .optional()
+  .nullable();
+
+export const productVariantSchema = z.object({
+  colorNameEn: z.string().trim().min(1),
+  colorNameAr: z.string().trim().min(1),
+  colorHex,
+  sku: nullableString,
+  stock: z.coerce.number().int().min(0).default(0),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true)
+});
+
 export const productSpecificationSchema = z.object({
   keyEn: z.string().trim().min(1),
   keyAr: z.string().trim().min(1),
@@ -56,6 +73,7 @@ export const productSchema = z.object({
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   images: z.array(productImageSchema).default([]),
+  variants: z.array(productVariantSchema).default([]),
   specifications: z.array(productSpecificationSchema).default([])
 });
 

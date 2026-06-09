@@ -228,6 +228,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <div key={item.id} className="flex justify-between gap-4 text-sm">
                     <span className="text-neutral-600">
                       {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
+                      {item.variantNameEn ? ` / ${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn}` : ""}
                     </span>
                     <span className="font-bold text-navy">
                       {formatCurrency(

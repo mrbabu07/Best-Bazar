@@ -37,7 +37,11 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
 
   const transporter = nodemailer.createTransport(config.server);
   const lines = order.items
-    .map((item) => `${item.quantity} x ${item.nameEn} - AED ${Number(item.price).toFixed(2)}`)
+    .map((item) => {
+      const variantName = item.variantNameEn ? ` / ${item.variantNameEn}` : "";
+
+      return `${item.quantity} x ${item.nameEn}${variantName} - AED ${Number(item.price).toFixed(2)}`;
+    })
     .join("\n");
   const confirmationUrl = getOrderConfirmationUrl(order);
 

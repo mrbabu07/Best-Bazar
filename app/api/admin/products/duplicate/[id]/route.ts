@@ -14,6 +14,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
       where: { id: params.id },
       include: {
         images: true,
+        variants: true,
         specifications: true
       }
     });
@@ -39,6 +40,17 @@ export async function POST(_request: Request, { params }: RouteContext) {
         images: {
           create: original.images.map(({ url, alt, sortOrder }) => ({ url, alt, sortOrder }))
         },
+        variants: {
+          create: original.variants.map(({ colorNameEn, colorNameAr, colorHex, sku, stock, sortOrder, isActive }) => ({
+            colorNameEn,
+            colorNameAr,
+            colorHex,
+            sku: sku ? `${sku}-COPY-${suffix}` : null,
+            stock,
+            sortOrder,
+            isActive
+          }))
+        },
         specifications: {
           create: original.specifications.map(({ keyEn, keyAr, valueEn, valueAr, sortOrder }) => ({
             keyEn,
@@ -51,6 +63,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
       },
       include: {
         images: true,
+        variants: true,
         specifications: true
       }
     });

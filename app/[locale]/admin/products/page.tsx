@@ -27,6 +27,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       include: {
         category: true,
         images: { orderBy: { sortOrder: "asc" } },
+        variants: { orderBy: { sortOrder: "asc" } },
         specifications: { orderBy: { sortOrder: "asc" } }
       },
       orderBy: { createdAt: "desc" },
@@ -61,6 +62,15 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       url: image.url,
       alt: image.alt ?? "",
       sortOrder: String(image.sortOrder)
+    })),
+    variants: product.variants.map((variant) => ({
+      colorNameEn: variant.colorNameEn,
+      colorNameAr: variant.colorNameAr,
+      colorHex: variant.colorHex ?? "",
+      sku: variant.sku ?? "",
+      stock: String(variant.stock),
+      sortOrder: String(variant.sortOrder),
+      isActive: variant.isActive
     })),
     specifications: product.specifications.map((specification) => ({
       keyEn: specification.keyEn,

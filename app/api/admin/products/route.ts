@@ -27,6 +27,14 @@ function buildProductWhere(request: Request): Prisma.ProductWhereInput {
   };
 }
 
+function stockFromVariants(stock: number, variants: Array<{ stock: number; isActive: boolean }>) {
+  const activeVariantStock = variants
+    .filter((variant) => variant.isActive)
+    .reduce((total, variant) => total + variant.stock, 0);
+
+  return variants.length ? activeVariantStock : stock;
+}
+
 export async function GET(request: Request) {
   try {
     await requireAdmin();
@@ -38,6 +46,7 @@ export async function GET(request: Request) {
         include: {
           category: true,
           images: { orderBy: { sortOrder: "asc" } },
+          variants: { orderBy: { sortOrder: "asc" } },
           specifications: { orderBy: { sortOrder: "asc" } }
         },
         orderBy: { createdAt: "desc" },
@@ -56,16 +65,19 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await requireAdmin();
-    const { images, specifications, ...data } = productSchema.parse(await request.json());
+    const { images, variants, specifications, stock, ...data } = productSchema.parse(await request.json());
     const product = await prisma.product.create({
       data: {
         ...data,
+        stock: stockFromVariants(stock, variants),
         images: { create: images },
+        variants: { create: variants },
         specifications: { create: specifications }
       },
       include: {
         category: true,
         images: true,
+        variants: true,
         specifications: true
       }
     });

@@ -168,7 +168,11 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
 
     const formData = new FormData(event.currentTarget);
     const payload = {
-      items: items.map((item) => ({ productId: item.id, quantity: item.quantity })),
+      items: items.map((item) => ({
+        productId: item.productId ?? item.id,
+        variantId: item.variantId,
+        quantity: item.quantity
+      })),
       shippingAddress: {
         name: String(formData.get("name") ?? ""),
         email: String(formData.get("email") ?? ""),
@@ -312,6 +316,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                 <div key={item.id} className="flex justify-between gap-4 text-sm">
                   <span className="text-neutral-600">
                     {item.quantity} x {getLocalized(item.name, locale)}
+                    {item.variantName ? ` / ${getLocalized(item.variantName, locale)}` : ""}
                   </span>
                   <span className="font-semibold text-navy">
                     {formatCurrency(item.price * item.quantity, currency, locale, currencyRates)}

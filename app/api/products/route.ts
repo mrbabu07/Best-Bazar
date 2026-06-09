@@ -48,6 +48,7 @@ export async function GET(request: Request) {
     include: {
       category: true,
       images: { orderBy: { sortOrder: "asc" } },
+      variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
       specifications: { orderBy: { sortOrder: "asc" } }
     },
     orderBy

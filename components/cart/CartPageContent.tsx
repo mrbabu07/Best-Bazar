@@ -168,6 +168,17 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                 >
                   {getLocalized(item.name, locale)}
                 </Link>
+                {item.variantName ? (
+                  <p className="mt-1 inline-flex items-center gap-2 text-xs font-semibold text-neutral-500">
+                    {item.variantColorHex ? (
+                      <span
+                        className="h-3 w-3 rounded-full border border-neutral-200"
+                        style={{ backgroundColor: item.variantColorHex }}
+                      />
+                    ) : null}
+                    {getLocalized(item.variantName, locale)}
+                  </p>
+                ) : null}
                 <p className="mt-2 font-semibold text-navy">
                   {formatCurrency(item.price, currency, locale, currencyRates)}
                 </p>

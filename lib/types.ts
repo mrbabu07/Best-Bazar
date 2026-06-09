@@ -28,6 +28,16 @@ export type ProductSpecification = {
   value: LocalizedText;
 };
 
+export type ProductVariant = {
+  id: string;
+  name: LocalizedText;
+  colorHex?: string;
+  sku?: string;
+  stock: number;
+  isActive: boolean;
+  sortOrder: number;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -41,6 +51,7 @@ export type Product = {
   stock: number;
   sku: string;
   brand: string;
+  variants: ProductVariant[];
   specifications: ProductSpecification[];
   tags: string[];
   isActive: boolean;
@@ -81,7 +92,11 @@ export type Order = {
   };
   items: Array<{
     productId: string;
+    variantId?: string;
     name: LocalizedText;
+    variantName?: LocalizedText;
+    variantColorHex?: string;
+    variantSku?: string;
     image: string;
     price: number;
     quantity: number;

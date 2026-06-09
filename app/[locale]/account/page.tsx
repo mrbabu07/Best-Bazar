@@ -253,7 +253,14 @@ export default async function AccountPage({ params }: { params: { locale: string
                           </Link>
                         </td>
                         <td className="px-5 py-4 text-neutral-600">
-                          {order.items.map((item) => (locale === "ar" ? item.nameAr : item.nameEn)).join(", ")}
+                          {order.items
+                            .map((item) => {
+                              const productName = locale === "ar" ? item.nameAr : item.nameEn;
+                              const variantName = locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn;
+
+                              return variantName ? `${productName} / ${variantName}` : productName;
+                            })
+                            .join(", ")}
                         </td>
                         <td className="px-5 py-4">
                           <Badge tone={getOrderTone(order.orderStatus)}>

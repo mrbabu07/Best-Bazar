@@ -74,6 +74,7 @@ export const products: Product[] = [
     stock: 18,
     sku: "BB-DGW-001",
     brand: "Aurum Dubai",
+    variants: [],
     specifications: [
       { key: { en: "Material", ar: "الخامة" }, value: { en: "Stainless steel", ar: "ستانلس ستيل" } },
       { key: { en: "Warranty", ar: "الضمان" }, value: { en: "2 years", ar: "سنتان" } }
@@ -110,6 +111,7 @@ export const products: Product[] = [
     stock: 9,
     sku: "BB-ROP-002",
     brand: "Majlis Scents",
+    variants: [],
     specifications: [
       { key: { en: "Volume", ar: "الحجم" }, value: { en: "75 ml", ar: "75 مل" } },
       { key: { en: "Concentration", ar: "التركيز" }, value: { en: "Eau de parfum", ar: "أو دو بارفان" } }
@@ -145,6 +147,7 @@ export const products: Product[] = [
     stock: 34,
     sku: "BB-STH-003",
     brand: "Nomad Tech",
+    variants: [],
     specifications: [
       { key: { en: "Battery", ar: "البطارية" }, value: { en: "42 hours", ar: "42 ساعة" } },
       { key: { en: "Connectivity", ar: "الاتصال" }, value: { en: "Bluetooth 5.3", ar: "بلوتوث 5.3" } }
@@ -180,6 +183,7 @@ export const products: Product[] = [
     stock: 42,
     sku: "BB-SDG-004",
     brand: "Palm & Gold",
+    variants: [],
     specifications: [
       { key: { en: "Weight", ar: "الوزن" }, value: { en: "1.2 kg", ar: "1.2 كجم" } },
       { key: { en: "Packaging", ar: "التغليف" }, value: { en: "Gift-ready", ar: "جاهز للإهداء" } }
@@ -216,6 +220,7 @@ export const products: Product[] = [
     stock: 7,
     sku: "BB-LWB-005",
     brand: "Marina Atelier",
+    variants: [],
     specifications: [
       { key: { en: "Material", ar: "الخامة" }, value: { en: "Full-grain leather", ar: "جلد طبيعي" } },
       { key: { en: "Capacity", ar: "السعة" }, value: { en: "38 liters", ar: "38 لتر" } }
@@ -251,6 +256,7 @@ export const products: Product[] = [
     stock: 16,
     sku: "BB-STS-006",
     brand: "Creek Home",
+    variants: [],
     specifications: [
       { key: { en: "Pieces", ar: "القطع" }, value: { en: "12 pieces", ar: "12 قطعة" } },
       { key: { en: "Care", ar: "العناية" }, value: { en: "Hand wash", ar: "غسل يدوي" } }
@@ -286,6 +292,7 @@ export const products: Product[] = [
     stock: 24,
     sku: "BB-PPS-007",
     brand: "Noor Living",
+    variants: [],
     specifications: [
       { key: { en: "Fabric", ar: "القماش" }, value: { en: "Velvet blend", ar: "مزيج مخملي" } },
       { key: { en: "Included", ar: "المحتويات" }, value: { en: "Mat, beads, pouch", ar: "سجادة ومسبحة وحقيبة" } }
@@ -322,6 +329,7 @@ export const products: Product[] = [
     stock: 12,
     sku: "BB-MGJ-008",
     brand: "Dune Fine",
+    variants: [],
     specifications: [
       { key: { en: "Finish", ar: "التشطيب" }, value: { en: "18k gold plated", ar: "مطلي بذهب 18 قيراط" } },
       { key: { en: "Set", ar: "الطقم" }, value: { en: "Necklace and earrings", ar: "عقد وأقراط" } }

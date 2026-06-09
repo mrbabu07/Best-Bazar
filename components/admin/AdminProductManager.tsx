@@ -26,6 +26,16 @@ type ProductImageForm = {
   sortOrder: string;
 };
 
+type ProductVariantForm = {
+  colorNameEn: string;
+  colorNameAr: string;
+  colorHex: string;
+  sku: string;
+  stock: string;
+  sortOrder: string;
+  isActive: boolean;
+};
+
 type ProductSpecificationForm = {
   keyEn: string;
   keyAr: string;
@@ -54,6 +64,7 @@ export type AdminProductRow = {
   isActive: boolean;
   isFeatured: boolean;
   images: ProductImageForm[];
+  variants: ProductVariantForm[];
   specifications: ProductSpecificationForm[];
 };
 
@@ -74,6 +85,7 @@ type ProductForm = {
   isActive: boolean;
   isFeatured: boolean;
   images: ProductImageForm[];
+  variants: ProductVariantForm[];
   specifications: ProductSpecificationForm[];
 };
 
@@ -103,6 +115,7 @@ function createEmptyForm(categoryId = ""): ProductForm {
     isActive: true,
     isFeatured: false,
     images: [{ url: "", alt: "", sortOrder: "0" }],
+    variants: [],
     specifications: []
   };
 }
@@ -125,6 +138,7 @@ function fromProduct(product: AdminProductRow): ProductForm {
     isActive: product.isActive,
     isFeatured: product.isFeatured,
     images: product.images.length ? product.images : [{ url: "", alt: "", sortOrder: "0" }],
+    variants: product.variants,
     specifications: product.specifications
   };
 }
@@ -191,6 +205,40 @@ export function AdminProductManager({
     }));
   };
 
+  const updateVariant = (index: number, key: keyof ProductVariantForm, value: string | boolean) => {
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.map((variant, variantIndex) =>
+        variantIndex === index ? { ...variant, [key]: value } : variant
+      )
+    }));
+  };
+
+  const addVariant = () => {
+    setForm((current) => ({
+      ...current,
+      variants: [
+        ...current.variants,
+        {
+          colorNameEn: "",
+          colorNameAr: "",
+          colorHex: "#000000",
+          sku: "",
+          stock: "0",
+          sortOrder: String(current.variants.length),
+          isActive: true
+        }
+      ]
+    }));
+  };
+
+  const removeVariant = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.filter((_, variantIndex) => variantIndex !== index)
+    }));
+  };
+
   const updateSpecification = (index: number, key: keyof ProductSpecificationForm, value: string) => {
     setForm((current) => ({
       ...current,
@@ -246,6 +294,17 @@ export function AdminProductManager({
           url: image.url,
           alt: image.alt || form.nameEn,
           sortOrder: Number(image.sortOrder || index)
+        })),
+      variants: form.variants
+        .filter((variant) => variant.colorNameEn.trim() && variant.colorNameAr.trim())
+        .map((variant, index) => ({
+          colorNameEn: variant.colorNameEn,
+          colorNameAr: variant.colorNameAr,
+          colorHex: variant.colorHex || null,
+          sku: variant.sku || null,
+          stock: Number(variant.stock || 0),
+          sortOrder: Number(variant.sortOrder || index),
+          isActive: variant.isActive
         })),
       specifications: form.specifications
         .filter((specification) => specification.keyEn && specification.keyAr && specification.valueEn && specification.valueAr)
@@ -346,6 +405,22 @@ export function AdminProductManager({
                   </td>
                   <td className="px-5 py-4">
                     <Badge tone={product.stock <= 10 ? "red" : "green"}>{product.stock}</Badge>
+                    {product.variants.length ? (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {product.variants.map((variant) => (
+                          <span
+                            key={`${product.id}-${variant.colorNameEn}-${variant.sortOrder}`}
+                            className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-neutral-200 px-1 text-[10px] font-bold text-navy"
+                            title={`${variant.colorNameEn}: ${variant.stock}`}
+                          >
+                            <span
+                              className="h-3 w-3 rounded-full border border-neutral-200"
+                              style={{ backgroundColor: variant.colorHex || "#ffffff" }}
+                            />
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
@@ -541,6 +616,93 @@ export function AdminProductManager({
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-bold text-navy">Color variants</h3>
+              <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
+                <Plus size={15} />
+                Add color
+              </Button>
+            </div>
+            {form.variants.length ? (
+              form.variants.map((variant, index) => (
+                <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
+                  <div className="grid gap-3 sm:grid-cols-[1fr_1fr_92px]">
+                    <input
+                      value={variant.colorNameEn}
+                      onChange={(event) => updateVariant(index, "colorNameEn", event.target.value)}
+                      placeholder="Color EN"
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                    <input
+                      value={variant.colorNameAr}
+                      onChange={(event) => updateVariant(index, "colorNameAr", event.target.value)}
+                      placeholder="Color AR"
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                    <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-2">
+                      <span
+                        className="h-5 w-5 rounded-full border border-neutral-300"
+                        style={{ backgroundColor: variant.colorHex || "#ffffff" }}
+                      />
+                      <input
+                        type="color"
+                        value={variant.colorHex || "#000000"}
+                        onChange={(event) => updateVariant(index, "colorHex", event.target.value)}
+                        className="h-7 w-10 cursor-pointer bg-transparent"
+                        aria-label="Color"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-[1fr_96px_96px_auto_auto]">
+                    <input
+                      value={variant.sku}
+                      onChange={(event) => updateVariant(index, "sku", event.target.value)}
+                      placeholder="Variant SKU"
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      value={variant.stock}
+                      onChange={(event) => updateVariant(index, "stock", event.target.value)}
+                      placeholder="Stock"
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      value={variant.sortOrder}
+                      onChange={(event) => updateVariant(index, "sortOrder", event.target.value)}
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                    <label className="flex h-10 items-center gap-2 text-sm font-semibold text-navy">
+                      <input
+                        type="checkbox"
+                        checked={variant.isActive}
+                        onChange={(event) => updateVariant(index, "isActive", event.target.checked)}
+                        className="accent-gold-500"
+                      />
+                      Active
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeVariant(index)}
+                      className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                      aria-label="Remove color"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
+                Add colors when this product has stock per color.
+              </p>
+            )}
           </div>
 
           <div className="grid gap-3">

@@ -38,9 +38,11 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const hasSale = product.comparePrice && product.comparePrice > product.price;
+  const defaultVariant = product.variants.find((variant) => variant.stock > 0);
+  const availableStock = defaultVariant?.stock ?? product.stock;
 
   const handleAdd = () => {
-    addItem(product);
+    addItem(product, 1, defaultVariant);
     toast.success(labels.addedToCart(getLocalized(product.name, locale)));
   };
 
@@ -93,8 +95,8 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
         <Button
           className="mt-4 w-full"
           onClick={handleAdd}
-          disabled={product.stock <= 0}
-          variant={product.stock <= 0 ? "secondary" : "primary"}
+          disabled={availableStock <= 0}
+          variant={availableStock <= 0 ? "secondary" : "primary"}
         >
           <ShoppingBag size={17} />
           {dictionary.actions.addToCart}

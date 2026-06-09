@@ -149,6 +149,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
               <div key={item.id} className="flex justify-between gap-4 rounded-md bg-paper p-3 text-sm">
                 <span className="font-semibold text-neutral-700">
                   {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
+                  {item.variantNameEn ? ` / ${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn}` : ""}
                 </span>
                 <span className="font-bold text-navy">
                   {formatCurrency(Number(item.price) * item.quantity, currency, locale, currencyRates)}

@@ -14,6 +14,7 @@ const categoryInclude = {
 const productInclude = {
   category: true,
   images: { orderBy: { sortOrder: "asc" } },
+  variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
   specifications: { orderBy: { sortOrder: "asc" } }
 } satisfies Prisma.ProductInclude;
 
@@ -44,6 +45,16 @@ export function mapStoreProduct(product: ProductRecord): Product {
         alt: image.alt ?? product.nameEn
       }))
     : [{ url: fallbackProductImage, alt: product.nameEn }];
+  const variants = product.variants.map((variant) => ({
+    id: variant.id,
+    name: { en: variant.colorNameEn, ar: variant.colorNameAr },
+    colorHex: variant.colorHex ?? undefined,
+    sku: variant.sku ?? undefined,
+    stock: variant.stock,
+    isActive: variant.isActive,
+    sortOrder: variant.sortOrder
+  }));
+  const variantStock = variants.reduce((total, variant) => total + variant.stock, 0);
 
   return {
     id: product.id,
@@ -55,9 +66,10 @@ export function mapStoreProduct(product: ProductRecord): Product {
     price: Number(product.price),
     comparePrice: toNumber(product.comparePrice),
     images,
-    stock: product.stock,
+    stock: variants.length ? variantStock : product.stock,
     sku: product.sku,
     brand: product.brand,
+    variants,
     specifications: product.specifications.map((specification) => ({
       key: { en: specification.keyEn, ar: specification.keyAr },
       value: { en: specification.valueEn, ar: specification.valueAr }

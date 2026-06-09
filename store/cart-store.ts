@@ -3,12 +3,17 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { fallbackProductImage } from "@/lib/images";
-import type { LocalizedText, Product } from "@/lib/types";
+import type { LocalizedText, Product, ProductVariant } from "@/lib/types";
 
 export type CartItem = {
   id: string;
+  productId?: string;
+  variantId?: string;
   slug: string;
   name: LocalizedText;
+  variantName?: LocalizedText;
+  variantColorHex?: string;
+  variantSku?: string;
   image: string;
   price: number;
   brand: string;
@@ -18,7 +23,7 @@ export type CartItem = {
 
 type CartState = {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -30,19 +35,22 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      addItem: (product, quantity = 1) => {
-        if (product.stock <= 0) {
+      addItem: (product, quantity = 1, variant) => {
+        const availableStock = variant?.stock ?? product.stock;
+        const lineId = variant ? `${product.id}:${variant.id}` : product.id;
+
+        if (availableStock <= 0) {
           return;
         }
 
         set((state) => {
-          const existing = state.items.find((item) => item.id === product.id);
+          const existing = state.items.find((item) => item.id === lineId);
 
           if (existing) {
             return {
               items: state.items.map((item) =>
-                item.id === product.id
-                  ? { ...item, quantity: Math.min(item.quantity + quantity, product.stock) }
+                item.id === lineId
+                  ? { ...item, stock: availableStock, quantity: Math.min(item.quantity + quantity, availableStock) }
                   : item
               )
             };
@@ -52,14 +60,19 @@ export const useCartStore = create<CartState>()(
             items: [
               ...state.items,
               {
-                id: product.id,
+                id: lineId,
+                productId: product.id,
+                variantId: variant?.id,
                 slug: product.slug,
                 name: product.name,
+                variantName: variant?.name,
+                variantColorHex: variant?.colorHex,
+                variantSku: variant?.sku,
                 image: product.images[0]?.url || fallbackProductImage,
                 price: product.price,
                 brand: product.brand,
-                stock: product.stock,
-                quantity: Math.min(quantity, product.stock)
+                stock: availableStock,
+                quantity: Math.min(quantity, availableStock)
               }
             ]
           };

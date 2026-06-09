@@ -16,6 +16,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     include: {
       category: true,
       images: { orderBy: { sortOrder: "asc" } },
+      variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
       specifications: { orderBy: { sortOrder: "asc" } },
       reviews: {
         where: { isApproved: true },

@@ -19,13 +19,20 @@ function createOrderAccessToken() {
 }
 
 function mergeOrderItems(items: OrderCreateInput["items"]) {
-  const quantities = new Map<string, number>();
+  const quantities = new Map<string, { productId: string; variantId?: string; quantity: number }>();
 
   for (const item of items) {
-    quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
+    const key = `${item.productId}:${item.variantId ?? ""}`;
+    const existing = quantities.get(key);
+
+    quantities.set(key, {
+      productId: item.productId,
+      variantId: item.variantId,
+      quantity: (existing?.quantity ?? 0) + item.quantity
+    });
   }
 
-  return Array.from(quantities, ([productId, quantity]) => ({ productId, quantity }));
+  return Array.from(quantities.values());
 }
 
 export async function createStoreOrder(data: OrderCreateInput, userId?: string) {
@@ -33,7 +40,10 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
   const productIds = orderItems.map((item) => item.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, isActive: true },
-    include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } }
+    include: {
+      images: { orderBy: { sortOrder: "asc" }, take: 1 },
+      variants: { where: { isActive: true } }
+    }
   });
 
   if (products.length !== productIds.length) {
@@ -47,12 +57,24 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
       throw new Error("Product not found after validation.");
     }
 
-    if (product.stock < item.quantity) {
-      throw new Error(`${product.nameEn} does not have enough stock.`);
+    const variant = item.variantId
+      ? product.variants.find((candidate) => candidate.id === item.variantId)
+      : undefined;
+
+    if (product.variants.length && !variant) {
+      throw new Error(`Choose an available color for ${product.nameEn}.`);
+    }
+
+    const availableStock = variant?.stock ?? product.stock;
+
+    if (availableStock < item.quantity) {
+      const label = variant ? `${product.nameEn} (${variant.colorNameEn})` : product.nameEn;
+      throw new Error(`${label} does not have enough stock.`);
     }
 
     return {
       product,
+      variant,
       quantity: item.quantity,
       lineTotal: Number(product.price) * item.quantity
     };
@@ -114,10 +136,15 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         locale: data.locale,
         notes: data.notes,
         items: {
-          create: items.map(({ product, quantity }) => ({
+          create: items.map(({ product, variant, quantity }) => ({
             productId: product.id,
+            variantId: variant?.id,
             nameEn: product.nameEn,
             nameAr: product.nameAr,
+            variantNameEn: variant?.colorNameEn,
+            variantNameAr: variant?.colorNameAr,
+            variantColorHex: variant?.colorHex,
+            variantSku: variant?.sku,
             price: product.price,
             quantity,
             image: product.images[0]?.url
@@ -127,18 +154,40 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
       include: { items: true }
     });
 
-    for (const { product, quantity } of items) {
-      const stockReservation = await tx.product.updateMany({
-        where: {
-          id: product.id,
-          isActive: true,
-          stock: { gte: quantity }
-        },
-        data: { stock: { decrement: quantity } }
-      });
+    for (const { product, variant, quantity } of items) {
+      const stockReservation = variant
+        ? await tx.productVariant.updateMany({
+            where: {
+              id: variant.id,
+              productId: product.id,
+              isActive: true,
+              stock: { gte: quantity }
+            },
+            data: { stock: { decrement: quantity } }
+          })
+        : await tx.product.updateMany({
+            where: {
+              id: product.id,
+              isActive: true,
+              stock: { gte: quantity }
+            },
+            data: { stock: { decrement: quantity } }
+          });
 
       if (stockReservation.count === 0) {
-        throw new Error(`${product.nameEn} does not have enough stock.`);
+        const label = variant ? `${product.nameEn} (${variant.colorNameEn})` : product.nameEn;
+        throw new Error(`${label} does not have enough stock.`);
+      }
+
+      if (variant) {
+        const productStockReservation = await tx.product.updateMany({
+          where: { id: product.id, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity } }
+        });
+
+        if (productStockReservation.count === 0) {
+          throw new Error(`${product.nameEn} inventory is out of sync. Please try again.`);
+        }
       }
     }
 

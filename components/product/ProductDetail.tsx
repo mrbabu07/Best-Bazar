@@ -25,12 +25,16 @@ const detailCopy = {
   en: {
     addedToCart: (quantity: number, name: string) => `${quantity} x ${name} added to cart`,
     decreaseQuantity: "Decrease quantity",
-    increaseQuantity: "Increase quantity"
+    increaseQuantity: "Increase quantity",
+    color: "Color",
+    stockForColor: (stock: number) => `${stock} available`
   },
   ar: {
     addedToCart: (quantity: number, name: string) => `تمت إضافة ${quantity} × ${name} إلى السلة`,
     decreaseQuantity: "إنقاص الكمية",
-    increaseQuantity: "زيادة الكمية"
+    increaseQuantity: "زيادة الكمية",
+    color: "اللون",
+    stockForColor: (stock: number) => `${stock} متوفر`
   }
 } satisfies Record<
   Locale,
@@ -38,30 +42,43 @@ const detailCopy = {
     addedToCart: (quantity: number, name: string) => string;
     decreaseQuantity: string;
     increaseQuantity: string;
+    color: string;
+    stockForColor: (stock: number) => string;
   }
 >;
 
 export function ProductDetail({ product, locale, dictionary }: ProductDetailProps) {
   const labels = detailCopy[locale];
+  const firstAvailableVariant = product.variants.find((variant) => variant.stock > 0) ?? product.variants[0];
   const hydrated = useHydrated();
   const [activeImage, setActiveImage] = useState(0);
+  const [selectedVariantId, setSelectedVariantId] = useState(firstAvailableVariant?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
-  const stockTone = product.stock > 10 ? "green" : product.stock > 0 ? "gold" : "red";
+  const selectedVariant = product.variants.find((variant) => variant.id === selectedVariantId);
+  const availableStock = selectedVariant?.stock ?? product.stock;
+  const stockTone = availableStock > 10 ? "green" : availableStock > 0 ? "gold" : "red";
   const stockLabel =
-    product.stock > 10
+    availableStock > 10
       ? dictionary.common.inStock
-      : product.stock > 0
+      : availableStock > 0
         ? dictionary.common.lowStock
         : dictionary.common.outOfStock;
 
   const handleAdd = () => {
-    addItem(product, quantity);
+    addItem(product, quantity, selectedVariant);
     toast.success(labels.addedToCart(quantity, getLocalized(product.name, locale)));
+  };
+
+  const selectVariant = (variantId: string) => {
+    const variant = product.variants.find((item) => item.id === variantId);
+
+    setSelectedVariantId(variantId);
+    setQuantity((value) => Math.max(1, Math.min(value, variant?.stock ?? product.stock)));
   };
 
   return (
@@ -110,7 +127,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           <span>{product.rating.toFixed(1)}</span>
           <span>({product.reviewCount} {dictionary.common.reviews})</span>
           <span className="text-neutral-300">|</span>
-          <span>{product.sku}</span>
+          <span>{selectedVariant?.sku ?? product.sku}</span>
         </div>
 
         <p className="mt-5 text-base leading-7 text-neutral-600">
@@ -128,6 +145,38 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           ) : null}
         </div>
 
+        {product.variants.length ? (
+          <div className="mt-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-bold text-navy">{labels.color}</p>
+              <p className="text-xs font-semibold text-neutral-500">{labels.stockForColor(availableStock)}</p>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {product.variants.map((variant) => {
+                const selected = variant.id === selectedVariantId;
+
+                return (
+                  <button
+                    key={variant.id}
+                    type="button"
+                    onClick={() => selectVariant(variant.id)}
+                    disabled={variant.stock <= 0}
+                    className={`inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                      selected ? "border-gold-500 bg-gold-50 text-navy" : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
+                    }`}
+                  >
+                    <span
+                      className="h-4 w-4 rounded-full border border-neutral-200"
+                      style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
+                    />
+                    {getLocalized(variant.name, locale)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-7 flex flex-wrap gap-3">
           <div className="inline-flex h-12 items-center overflow-hidden rounded-md border border-neutral-200 bg-white">
             <button
@@ -143,7 +192,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             </span>
             <button
               type="button"
-              onClick={() => setQuantity((value) => Math.min(product.stock, value + 1))}
+              onClick={() => setQuantity((value) => Math.min(availableStock, value + 1))}
               className="grid h-full w-12 place-items-center text-navy hover:bg-gold-50"
               aria-label={labels.increaseQuantity}
             >
@@ -151,7 +200,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             </button>
           </div>
 
-          <Button onClick={handleAdd} size="lg" disabled={product.stock <= 0}>
+          <Button onClick={handleAdd} size="lg" disabled={availableStock <= 0}>
             <ShoppingBag size={18} />
             {dictionary.actions.addToCart}
           </Button>

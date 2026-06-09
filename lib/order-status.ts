@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export const CUSTOMER_CANCELLABLE_ORDER_STATUSES = [OrderStatus.PENDING, OrderStatus.CONFIRMED] as const;
 
-type OrderItemStock = Pick<OrderItem, "productId" | "quantity" | "nameEn">;
+type OrderItemStock = Pick<OrderItem, "productId" | "variantId" | "quantity" | "nameEn" | "variantNameEn">;
 
 type UpdateOrderStatusInput = {
   orderId: string;
@@ -33,22 +33,50 @@ function withProductId(item: OrderItemStock): item is OrderItemStock & { product
 
 async function restoreStock(tx: Prisma.TransactionClient, items: OrderItemStock[]) {
   for (const item of items.filter(withProductId)) {
-    await tx.product.updateMany({
-      where: { id: item.productId },
-      data: { stock: { increment: item.quantity } }
-    });
+    if (item.variantId) {
+      await tx.productVariant.updateMany({
+        where: { id: item.variantId, productId: item.productId },
+        data: { stock: { increment: item.quantity } }
+      });
+      await tx.product.updateMany({
+        where: { id: item.productId },
+        data: { stock: { increment: item.quantity } }
+      });
+    } else {
+      await tx.product.updateMany({
+        where: { id: item.productId },
+        data: { stock: { increment: item.quantity } }
+      });
+    }
   }
 }
 
 async function reserveStock(tx: Prisma.TransactionClient, items: OrderItemStock[]) {
   for (const item of items.filter(withProductId)) {
-    const result = await tx.product.updateMany({
-      where: { id: item.productId, stock: { gte: item.quantity } },
-      data: { stock: { decrement: item.quantity } }
-    });
+    const result = item.variantId
+      ? await tx.productVariant.updateMany({
+          where: { id: item.variantId, productId: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } }
+        })
+      : await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } }
+        });
 
     if (result.count === 0) {
-      throw new ApiError(`${item.nameEn} does not have enough stock to reactivate this order.`, 409);
+      const label = item.variantNameEn ? `${item.nameEn} (${item.variantNameEn})` : item.nameEn;
+      throw new ApiError(`${label} does not have enough stock to reactivate this order.`, 409);
+    }
+
+    if (item.variantId) {
+      const productResult = await tx.product.updateMany({
+        where: { id: item.productId, stock: { gte: item.quantity } },
+        data: { stock: { decrement: item.quantity } }
+      });
+
+      if (productResult.count === 0) {
+        throw new ApiError(`${item.nameEn} inventory is out of sync. Please try again.`, 409);
+      }
     }
   }
 }
