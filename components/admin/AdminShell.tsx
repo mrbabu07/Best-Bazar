@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   BarChart3,
   Bell,
@@ -35,7 +36,7 @@ export function AdminShell({
   children,
   locale,
   dictionary,
-  adminName = "Omar Khan",
+  adminName = "Admin",
   pendingOrders = 0
 }: AdminShellProps) {
   const pathname = usePathname();
@@ -166,13 +167,14 @@ export function AdminShell({
               <Boxes size={16} />
               <span className="hidden lg:inline">Storefront</span>
             </Link>
-            <Link
-              href={`/${locale}/login`}
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: `/${locale}/login` })}
               className="inline-flex h-10 items-center gap-2 rounded-md border border-red-100 px-3 text-xs font-bold text-sale hover:bg-red-50"
             >
               <LogOut size={16} />
               <span className="hidden lg:inline">Logout</span>
-            </Link>
+            </button>
           </div>
         </header>
 

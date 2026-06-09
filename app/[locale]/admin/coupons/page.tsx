@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { notFound } from "next/navigation";
+import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -75,13 +76,11 @@ export default async function AdminCouponsPage({ params }: { params: { locale: s
                       </Badge>
                     </td>
                     <td className="px-5 py-4">
-                      <button
-                        type="button"
-                        className="grid h-9 w-9 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                        aria-label="Delete coupon"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <AdminDeleteButton
+                        endpoint={`/api/admin/coupons/${coupon.id}`}
+                        label={`Delete coupon ${coupon.code}?`}
+                        successMessage="Coupon deleted"
+                      />
                     </td>
                   </tr>
                 ))}

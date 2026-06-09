@@ -1,7 +1,8 @@
 import Image from "next/image";
 import type { Metadata } from "next";
-import { GripVertical, ImagePlus, Plus, Trash2 } from "lucide-react";
+import { GripVertical, ImagePlus, Plus } from "lucide-react";
 import { notFound } from "next/navigation";
+import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -67,13 +68,11 @@ export default async function AdminBannersPage({ params }: { params: { locale: s
                   <Badge tone="gold">#{index + 1}</Badge>
                 </div>
               </div>
-              <button
-                type="button"
-                className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                aria-label="Delete banner"
-              >
-                <Trash2 size={16} />
-              </button>
+              <AdminDeleteButton
+                endpoint={`/api/admin/banners/${banner.id}`}
+                label={`Delete banner ${banner.titleEn}?`}
+                successMessage="Banner deleted"
+              />
             </article>
           ))}
         </section>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CalendarDays, Printer, Search } from "lucide-react";
 import { notFound } from "next/navigation";
+import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -83,11 +84,7 @@ export default async function AdminOrdersPage({ params }: { params: { locale: st
                       </Badge>
                     </td>
                     <td className="px-5 py-4">
-                      <select defaultValue={order.orderStatus} className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm">
-                        {["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"].map((status) => (
-                          <option key={status}>{status}</option>
-                        ))}
-                      </select>
+                      <AdminOrderStatusSelect orderId={order.id} initialStatus={order.orderStatus} />
                     </td>
                     <td className="px-5 py-4 font-bold text-navy">
                       {formatCurrency(Number(order.total), "AED", locale)}

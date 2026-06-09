@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { ShieldCheck, UserX } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminUserActions } from "@/components/admin/AdminUserActions";
 import { Badge } from "@/components/ui/Badge";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
@@ -70,10 +70,7 @@ export default async function AdminUsersPage({ params }: { params: { locale: str
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <select defaultValue={user.role} className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm">
-                      <option>USER</option>
-                      <option>ADMIN</option>
-                    </select>
+                    <Badge tone={user.role === "ADMIN" ? "gold" : "neutral"}>{user.role}</Badge>
                   </td>
                   <td className="px-5 py-4 text-neutral-600">{user.phone}</td>
                   <td className="px-5 py-4 font-bold text-navy">{user._count.orders}</td>
@@ -81,13 +78,7 @@ export default async function AdminUsersPage({ params }: { params: { locale: str
                     <Badge tone={user.isBanned ? "red" : "green"}>{user.isBanned ? "Banned" : "Active"}</Badge>
                   </td>
                   <td className="px-5 py-4">
-                    <button
-                      type="button"
-                      className="inline-flex h-9 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy hover:bg-gold-50"
-                    >
-                      {user.isBanned ? <ShieldCheck size={15} /> : <UserX size={15} />}
-                      {user.isBanned ? "Unban" : "Ban"}
-                    </button>
+                    <AdminUserActions userId={user.id} initialRole={user.role} initialIsBanned={user.isBanned} />
                   </td>
                 </tr>
               ))}
