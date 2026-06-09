@@ -46,8 +46,18 @@ Open `http://localhost:3000/en`.
 npm run type-check
 npm run lint
 npm run build
+npm run db:generate
+npm run db:push
+npm run db:seed
 ```
 
 ## Environment
 
 Copy `.env.example` to `.env.local`, then fill in Neon PostgreSQL, NextAuth, Google OAuth, Cloudinary, Stripe, and email credentials.
+
+For Prisma CLI commands, also keep `DATABASE_URL` available in an ignored `.env` file. The current Neon schema has been pushed and seeded.
+
+Seeded admin login for local development:
+
+- Email: `admin@bestbazar.ae`
+- Password: `Admin123!`
