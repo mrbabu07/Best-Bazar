@@ -31,6 +31,7 @@ const cardCopy = {
 
 export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
   const labels = cardCopy[locale];
+  const colorLabel = locale === "ar" ? "الألوان" : "Colors";
   const hydrated = useHydrated();
   const addItem = useCartStore((state) => state.addItem);
   const storedCurrency = usePreferencesStore((state) => state.currency);
@@ -91,6 +92,33 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
             </p>
           ) : null}
         </div>
+
+        {product.variants.length ? (
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold text-neutral-500">{colorLabel}</p>
+            <div className="flex flex-wrap justify-end gap-1.5">
+              {product.variants.slice(0, 5).map((variant) => (
+                <Link
+                  key={variant.id}
+                  href={`/${locale}/shop?color=${encodeURIComponent(variant.name.en.toLowerCase())}`}
+                  title={`${getLocalized(variant.name, locale)} (${variant.stock})`}
+                  className="grid h-6 w-6 place-items-center rounded-full border border-neutral-200 bg-white shadow-sm transition hover:scale-110 hover:border-gold-400"
+                  aria-label={getLocalized(variant.name, locale)}
+                >
+                  <span
+                    className="h-4 w-4 rounded-full border border-white"
+                    style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
+                  />
+                </Link>
+              ))}
+              {product.variants.length > 5 ? (
+                <span className="grid h-6 min-w-6 place-items-center rounded-full bg-paper px-1.5 text-[10px] font-bold text-neutral-500">
+                  +{product.variants.length - 5}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         <Button
           className="mt-4 w-full"

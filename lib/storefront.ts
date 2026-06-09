@@ -19,8 +19,15 @@ const productInclude = {
   specifications: { orderBy: { sortOrder: "asc" } }
 } satisfies Prisma.ProductInclude;
 
+const productListInclude = {
+  category: true,
+  images: { orderBy: { sortOrder: "asc" } },
+  variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } }
+} satisfies Prisma.ProductInclude;
+
 type CategoryRecord = Prisma.CategoryGetPayload<{ include: typeof categoryInclude }>;
 type ProductRecord = Prisma.ProductGetPayload<{ include: typeof productInclude }>;
+type ProductListRecord = Prisma.ProductGetPayload<{ include: typeof productListInclude }>;
 
 const storefrontCache = {
   revalidate: 60,
@@ -44,7 +51,7 @@ export function mapStoreCategory(category: CategoryRecord): Category {
   };
 }
 
-export function mapStoreProduct(product: ProductRecord): Product {
+export function mapStoreProduct(product: ProductRecord | ProductListRecord): Product {
   const images = product.images.length
     ? product.images.map((image) => ({
         url: safeRemoteImage(image.url, fallbackProductImage),
@@ -76,7 +83,7 @@ export function mapStoreProduct(product: ProductRecord): Product {
     sku: product.sku,
     brand: product.brand,
     variants,
-    specifications: product.specifications.map((specification) => ({
+    specifications: ("specifications" in product ? product.specifications : []).map((specification) => ({
       key: { en: specification.keyEn, ar: specification.keyAr },
       value: { en: specification.valueEn, ar: specification.valueAr }
     })),
@@ -243,7 +250,7 @@ const getCachedStoreProducts = unstable_cache(
     const filters = JSON.parse(filtersJson) as StoreProductFilters;
     const products = await prisma.product.findMany({
       where: getProductWhere(filters),
-      include: productInclude,
+      include: productListInclude,
       orderBy: getProductOrder(filters.sort)
     });
 
@@ -260,7 +267,7 @@ export async function getStoreProducts(filters: StoreProductFilters = {}) {
 async function readFeaturedProducts(limit = 4) {
   const products = await prisma.product.findMany({
     where: { isActive: true, isFeatured: true },
-    include: productInclude,
+    include: productListInclude,
     orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
     take: limit
   });
@@ -276,7 +283,7 @@ export const getFeaturedProducts = unstable_cache(readFeaturedProducts, ["featur
 async function readNewArrivals(limit = 4) {
   const products = await prisma.product.findMany({
     where: { isActive: true },
-    include: productInclude,
+    include: productListInclude,
     orderBy: { createdAt: "desc" },
     take: limit
   });
@@ -355,7 +362,7 @@ async function readRelatedProducts(categorySlug: string, productId: string, limi
       category: { slug: categorySlug },
       id: { not: productId }
     },
-    include: productInclude,
+    include: productListInclude,
     orderBy: [{ isFeatured: "desc" }, { rating: "desc" }],
     take: limit
   });

@@ -57,10 +57,13 @@ const cartCopy = {
 
 export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   const labels = cartCopy[locale];
+  const shippingAreaLabel = locale === "ar" ? "منطقة الشحن" : "Shipping area";
+  const deliveryLabel = locale === "ar" ? "التوصيل" : "Delivery";
   const hydrated = useHydrated();
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [emirate, setEmirate] = useState("Dubai");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const storedItems = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -74,7 +77,12 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
-  const shipping = getShippingCost(shippingSettings, "Dubai", subtotal);
+  const shippingOptions = shippingSettings.shippingRates;
+  const selectedShippingRate =
+    shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
+    shippingOptions[0];
+  const selectedEmirate = selectedShippingRate?.emirate ?? emirate;
+  const shipping = getShippingCost(shippingSettings, selectedEmirate, subtotal);
   const total = Math.max(subtotal + shipping - discount, 0);
 
   useEffect(() => {
@@ -237,13 +245,49 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
               {labels.applied(appliedCoupon)}
             </p>
           ) : null}
+          <div className="mt-5 grid gap-2">
+            <p className="text-sm font-bold text-navy">{shippingAreaLabel}</p>
+            <div className="grid gap-2">
+              {shippingOptions.map((rate) => {
+                const selected = rate.emirate === selectedEmirate;
+                const displayCost =
+                  subtotal > 0 && subtotal < shippingSettings.freeShippingThreshold ? rate.cost : 0;
+
+                return (
+                  <button
+                    key={rate.emirate}
+                    type="button"
+                    onClick={() => setEmirate(rate.emirate)}
+                    aria-pressed={selected}
+                    className={`grid gap-1 rounded-md border p-3 text-sm transition ${
+                      selected
+                        ? "border-gold-400 bg-gold-50 text-navy"
+                        : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
+                    } ${locale === "ar" ? "text-right" : "text-left"}`}
+                  >
+                    <span className="flex items-center justify-between gap-3 font-bold">
+                      <span>{rate.emirate}</span>
+                      <span>{formatCurrency(displayCost, currency, locale, currencyRates)}</span>
+                    </span>
+                    {rate.deliveryDays ? (
+                      <span className="text-xs font-semibold text-neutral-500">
+                        {deliveryLabel}: {rate.deliveryDays}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="mt-5 grid gap-3 text-sm">
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>
               <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-neutral-500">{dictionary.common.shipping}</span>
+              <span className="text-neutral-500">
+                {dictionary.common.shipping} ({selectedEmirate})
+              </span>
               <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">

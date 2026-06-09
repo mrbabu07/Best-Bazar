@@ -48,12 +48,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
   }
 
   const dictionary = getDictionary(locale);
-  const [featuredProducts, newArrivals, categories] = await Promise.all([
+  const [featuredProducts, newArrivals, categories, banners] = await Promise.all([
     getFeaturedProducts(4),
     getNewArrivals(4),
-    getStoreCategories()
+    getStoreCategories(),
+    getActiveBanners(1)
   ]);
-  const [heroBanner] = await getActiveBanners(1);
+  const [heroBanner] = banners;
   const heroImage = safeRemoteImage(heroBanner?.desktopImage, fallbackHeroImage);
   const heroTitle = heroBanner ? (locale === "ar" ? heroBanner.titleAr : heroBanner.titleEn) : dictionary.home.title;
   const heroSubtitle = heroBanner

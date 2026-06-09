@@ -94,6 +94,69 @@ const products = [
   }
 ];
 
+const productVariants = {
+  "desert-gold-watch": [
+    {
+      colorNameEn: "Gold",
+      colorNameAr: "ذهبي",
+      colorHex: "#d4af37",
+      sku: "BB-DGW-001-GOLD",
+      stock: 10,
+      sortOrder: 0,
+      isActive: true
+    },
+    {
+      colorNameEn: "Black",
+      colorNameAr: "أسود",
+      colorHex: "#111827",
+      sku: "BB-DGW-001-BLACK",
+      stock: 8,
+      sortOrder: 1,
+      isActive: true
+    }
+  ],
+  "royal-oud-perfume": [
+    {
+      colorNameEn: "Amber",
+      colorNameAr: "عنبر",
+      colorHex: "#b45309",
+      sku: "BB-ROP-002-AMBER",
+      stock: 5,
+      sortOrder: 0,
+      isActive: true
+    },
+    {
+      colorNameEn: "Rose",
+      colorNameAr: "وردي",
+      colorHex: "#fb7185",
+      sku: "BB-ROP-002-ROSE",
+      stock: 4,
+      sortOrder: 1,
+      isActive: true
+    }
+  ],
+  "smart-travel-headphones": [
+    {
+      colorNameEn: "Black",
+      colorNameAr: "أسود",
+      colorHex: "#111827",
+      sku: "BB-STH-003-BLACK",
+      stock: 18,
+      sortOrder: 0,
+      isActive: true
+    },
+    {
+      colorNameEn: "Silver",
+      colorNameAr: "فضي",
+      colorHex: "#cbd5e1",
+      sku: "BB-STH-003-SILVER",
+      stock: 16,
+      sortOrder: 1,
+      isActive: true
+    }
+  ]
+};
+
 async function main() {
   const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD;
   const seedUserPassword = process.env.SEED_USER_PASSWORD;
@@ -147,7 +210,7 @@ async function main() {
       where: { slug: product.categorySlug }
     });
 
-    await prisma.product.upsert({
+    const savedProduct = await prisma.product.upsert({
       where: { slug: product.slug },
       update: {
         nameEn: product.nameEn,
@@ -200,6 +263,25 @@ async function main() {
         }
       }
     });
+
+    for (const variant of productVariants[product.slug] ?? []) {
+      await prisma.productVariant.upsert({
+        where: { sku: variant.sku },
+        update: {
+          productId: savedProduct.id,
+          colorNameEn: variant.colorNameEn,
+          colorNameAr: variant.colorNameAr,
+          colorHex: variant.colorHex,
+          stock: variant.stock,
+          sortOrder: variant.sortOrder,
+          isActive: variant.isActive
+        },
+        create: {
+          productId: savedProduct.id,
+          ...variant
+        }
+      });
+    }
   }
 
   await prisma.coupon.upsert({
