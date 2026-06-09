@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { KeyRound } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { BackButton } from "@/components/ui/BackButton";
 import { getDictionary, isLocale } from "@/lib/i18n";
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
@@ -24,6 +25,7 @@ export default function ForgotPasswordPage({ params }: { params: { locale: strin
   return (
     <main className="mx-auto grid min-h-[70vh] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-md rounded-lg border border-neutral-200 bg-white p-6 shadow-soft">
+        <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}/login`} className="mb-5" />
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-gold-100 text-navy">
           <KeyRound size={22} />
         </div>

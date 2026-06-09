@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LockKeyhole } from "lucide-react";
 import { notFound } from "next/navigation";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { BackButton } from "@/components/ui/BackButton";
 import { getDictionary, isLocale } from "@/lib/i18n";
 
 type LoginPageProps = {
@@ -32,6 +33,7 @@ export default function LoginPage({ params, searchParams }: LoginPageProps) {
   return (
     <main className="mx-auto grid min-h-[70vh] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-md rounded-lg border border-neutral-200 bg-white p-6 shadow-soft">
+        <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}`} className="mb-5" />
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-gold-100 text-navy">
           <LockKeyhole size={22} />
         </div>

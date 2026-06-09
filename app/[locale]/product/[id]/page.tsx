@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductDetail } from "@/components/product/ProductDetail";
 import { ProductReviews } from "@/components/product/ProductReviews";
+import { BackButton } from "@/components/ui/BackButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getProductBySlugOrId, getProductReviews, getRelatedProducts } from "@/lib/storefront";
@@ -47,6 +48,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <BackButton
+        label={locale === "ar" ? "رجوع" : "Back"}
+        fallbackHref={`/${locale}/shop`}
+        className="mb-6"
+      />
       <ProductDetail product={product} locale={locale} dictionary={dictionary} />
 
       <ProductReviews

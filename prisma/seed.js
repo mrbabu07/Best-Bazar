@@ -157,6 +157,51 @@ const productVariants = {
   ]
 };
 
+const banners = [
+  {
+    id: "home-hero-1",
+    titleEn: "Dubai Gold Weekend",
+    titleAr: "عطلة ذهب دبي",
+    subtitleEn: "Premium picks for fast Dubai delivery.",
+    subtitleAr: "اختيارات فاخرة بتوصيل سريع داخل دبي.",
+    buttonTextEn: "Shop now",
+    buttonTextAr: "تسوق الآن",
+    buttonLink: "/shop?tag=sale",
+    desktopImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=85",
+    mobileImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=85",
+    sortOrder: 1,
+    isActive: true
+  },
+  {
+    id: "home-hero-2",
+    titleEn: "Fresh Tech Arrivals",
+    titleAr: "وصلت تقنيات جديدة",
+    subtitleEn: "Smart accessories, headphones, and travel essentials with live stock.",
+    subtitleAr: "إكسسوارات ذكية وسماعات ومستلزمات سفر مع توفر مباشر.",
+    buttonTextEn: "Explore tech",
+    buttonTextAr: "اكتشف التقنية",
+    buttonLink: "/shop?category=electronics",
+    desktopImage: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=1800&q=85",
+    mobileImage: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=900&q=85",
+    sortOrder: 2,
+    isActive: true
+  },
+  {
+    id: "home-hero-3",
+    titleEn: "Luxury Gifts Ready",
+    titleAr: "هدايا فاخرة جاهزة",
+    subtitleEn: "Curated watches, perfumes, and premium finds for special moments.",
+    subtitleAr: "ساعات وعطور واختيارات فاخرة للمناسبات الخاصة.",
+    buttonTextEn: "Shop gifts",
+    buttonTextAr: "تسوق الهدايا",
+    buttonLink: "/shop?category=luxury",
+    desktopImage: "https://images.unsplash.com/photo-1512163143273-bde0e3cc7407?auto=format&fit=crop&w=1800&q=85",
+    mobileImage: "https://images.unsplash.com/photo-1512163143273-bde0e3cc7407?auto=format&fit=crop&w=900&q=85",
+    sortOrder: 3,
+    isActive: true
+  }
+];
+
 async function main() {
   const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD;
   const seedUserPassword = process.env.SEED_USER_PASSWORD;
@@ -315,6 +360,14 @@ async function main() {
       isActive: true
     }
   });
+
+  for (const banner of banners.filter((item) => item.id !== "home-hero-1")) {
+    await prisma.banner.upsert({
+      where: { id: banner.id },
+      update: banner,
+      create: banner
+    });
+  }
 
   await prisma.setting.upsert({
     where: { id: "store-settings" },

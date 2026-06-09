@@ -13,6 +13,7 @@ import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { defaultShippingSettings, getShippingCost } from "@/utils/shipping";
+import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
 
 type CartPageContentProps = {
@@ -127,6 +128,9 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   if (items.length === 0) {
     return (
       <main className="mx-auto min-h-[70vh] max-w-4xl px-4 py-16 text-center sm:px-6 lg:px-8">
+        <div className="mb-5 text-left rtl:text-right">
+          <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}/shop`} />
+        </div>
         <div className="rounded-lg border border-neutral-200 bg-white p-10 shadow-soft">
           <h1 className="text-3xl font-bold text-navy">{dictionary.cart.emptyTitle}</h1>
           <p className="mt-3 text-neutral-600">{dictionary.cart.emptySubtitle}</p>
@@ -144,6 +148,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
+        <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}/shop`} className="mb-4" />
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">
           {dictionary.nav.cart}
         </p>

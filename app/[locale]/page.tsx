@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
@@ -52,73 +52,43 @@ export default async function HomePage({ params }: { params: { locale: string } 
     getFeaturedProducts(4),
     getNewArrivals(4),
     getStoreCategories(),
-    getActiveBanners(1)
+    getActiveBanners(3)
   ]);
-  const [heroBanner] = banners;
-  const heroImage = safeRemoteImage(heroBanner?.desktopImage, fallbackHeroImage);
-  const heroTitle = heroBanner ? (locale === "ar" ? heroBanner.titleAr : heroBanner.titleEn) : dictionary.home.title;
-  const heroSubtitle = heroBanner
-    ? locale === "ar"
-      ? heroBanner.subtitleAr || dictionary.home.subtitle
-      : heroBanner.subtitleEn || dictionary.home.subtitle
-    : dictionary.home.subtitle;
-  const heroButtonText = heroBanner
-    ? locale === "ar"
-      ? heroBanner.buttonTextAr || dictionary.actions.shopNow
-      : heroBanner.buttonTextEn || dictionary.actions.shopNow
-    : dictionary.actions.shopNow;
-  const heroLink = getLocalizedPath(locale, heroBanner?.buttonLink);
+  const heroSlides: HeroSlide[] = banners.map((banner) => ({
+    id: banner.id,
+    title: locale === "ar" ? banner.titleAr : banner.titleEn,
+    subtitle:
+      locale === "ar"
+        ? banner.subtitleAr || dictionary.home.subtitle
+        : banner.subtitleEn || dictionary.home.subtitle,
+    buttonText:
+      locale === "ar"
+        ? banner.buttonTextAr || dictionary.actions.shopNow
+        : banner.buttonTextEn || dictionary.actions.shopNow,
+    href: getLocalizedPath(locale, banner.buttonLink),
+    desktopImage: safeRemoteImage(banner.desktopImage, fallbackHeroImage),
+    mobileImage: safeRemoteImage(banner.mobileImage, "")
+  }));
+  const fallbackSlide: HeroSlide = {
+    id: "fallback",
+    title: dictionary.home.title,
+    subtitle: dictionary.home.subtitle,
+    buttonText: dictionary.actions.shopNow,
+    href: `/${locale}/shop`,
+    desktopImage: fallbackHeroImage
+  };
 
   return (
     <main>
-      <section className="relative min-h-[calc(100svh-9rem)] overflow-hidden">
-        <Image
-          src={heroImage}
-          alt={heroTitle}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/68 to-navy/15 rtl:bg-gradient-to-l" />
-        <div className="relative mx-auto flex min-h-[calc(100svh-9rem)] max-w-7xl items-center px-4 py-20 sm:px-6 lg:px-8">
-          <div className="max-w-3xl text-white">
-            <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-gold-200">
-              <Sparkles size={17} />
-              {dictionary.home.eyebrow}
-            </p>
-            <h1 className="mt-5 text-5xl font-bold sm:text-6xl lg:text-7xl">{heroTitle}</h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-white/84 sm:text-lg">
-              {heroSubtitle}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href={heroLink}
-                className="inline-flex h-12 items-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-6 text-sm font-bold text-navy shadow-soft hover:from-gold-400 hover:to-gold-200"
-              >
-                {heroButtonText}
-                <ArrowRight size={18} className="rtl:rotate-180" />
-              </Link>
-              <Link
-                href={`/${locale}/shop?tag=new`}
-                className="inline-flex h-12 items-center gap-2 rounded-md border border-white/30 px-6 text-sm font-bold text-white backdrop-blur hover:bg-white/10"
-              >
-                <Truck size={18} />
-                {dictionary.actions.viewCollection}
-              </Link>
-            </div>
-            <div className="mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
-              {[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree].map(
-                (metric) => (
-                  <div key={metric} className="border-l border-gold-300/60 pl-4 text-sm font-semibold text-white/90 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4">
-                    {metric}
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSlider
+        locale={locale}
+        eyebrow={dictionary.home.eyebrow}
+        slides={heroSlides}
+        fallbackSlide={fallbackSlide}
+        secondaryHref={`/${locale}/shop?tag=new`}
+        secondaryLabel={dictionary.actions.viewCollection}
+        metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
+      />
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <SectionHeader

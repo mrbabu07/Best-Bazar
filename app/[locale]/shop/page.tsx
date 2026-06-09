@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFilters } from "@/components/product/ProductFilters";
+import { BackButton } from "@/components/ui/BackButton";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { getStoreBrands, getStoreCategories, getStoreProducts, getStoreVariantColors } from "@/lib/storefront";
 
@@ -51,6 +52,11 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
+          <BackButton
+            label={locale === "ar" ? "رجوع" : "Back"}
+            fallbackHref={`/${locale}`}
+            className="mb-4"
+          />
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">
             {dictionary.nav.shop}
           </p>

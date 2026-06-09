@@ -6,6 +6,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { AccountProfileForm } from "@/components/account/AccountProfileForm";
 import { CancelOrderButton } from "@/components/account/CancelOrderButton";
+import { BackButton } from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
@@ -173,6 +174,7 @@ export default async function AccountPage({ params }: { params: { locale: string
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
+        <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}`} className="mb-4" />
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">
           {dictionary.nav.account}
         </p>
