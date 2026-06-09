@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
@@ -19,25 +19,54 @@ type CartPageContentProps = {
 
 export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   const [coupon, setCoupon] = useState("");
-  const [couponApplied, setCouponApplied] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const subtotal = useCartStore((state) => state.subtotal());
   const currency = usePreferencesStore((state) => state.currency);
   const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 20;
-  const discount = couponApplied ? Math.min(50, subtotal) : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
 
-  const applyCoupon = () => {
-    if (coupon.trim().toUpperCase() === "DUBAI50") {
-      setCouponApplied(true);
-      toast.success("Coupon applied");
+  useEffect(() => {
+    setAppliedCoupon("");
+    setDiscount(0);
+  }, [subtotal]);
+
+  const applyCoupon = async () => {
+    const code = coupon.trim();
+
+    if (!code) {
+      toast.error(locale === "ar" ? "أدخل رمز القسيمة." : "Enter a coupon code.");
       return;
     }
 
-    setCouponApplied(false);
-    toast.error("Try DUBAI50");
+    setApplyingCoupon(true);
+
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal })
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.valid) {
+        throw new Error(result.message ?? result.error ?? "Coupon is not valid.");
+      }
+
+      setAppliedCoupon(result.code ?? code.toUpperCase());
+      setDiscount(Number(result.discount ?? 0));
+      toast.success(locale === "ar" ? "تم تطبيق القسيمة" : "Coupon applied");
+    } catch (error) {
+      setAppliedCoupon("");
+      setDiscount(0);
+      toast.error(error instanceof Error ? error.message : "Coupon is not valid.");
+    } finally {
+      setApplyingCoupon(false);
+    }
   };
 
   if (items.length === 0) {
@@ -134,10 +163,15 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
               placeholder={dictionary.cart.coupon}
               className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
-            <Button onClick={applyCoupon} variant="secondary">
-              {dictionary.actions.apply}
+            <Button onClick={applyCoupon} variant="secondary" disabled={applyingCoupon}>
+              {applyingCoupon ? (locale === "ar" ? "جار..." : "Checking...") : dictionary.actions.apply}
             </Button>
           </div>
+          {appliedCoupon ? (
+            <p className="mt-2 text-xs font-semibold text-emerald-700">
+              {locale === "ar" ? `تم تطبيق ${appliedCoupon}` : `${appliedCoupon} applied`}
+            </p>
+          ) : null}
           <div className="mt-5 grid gap-3 text-sm">
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>

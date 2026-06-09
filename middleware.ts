@@ -34,17 +34,18 @@ function isAdminPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
-async function hasAdminToken(request: NextRequest) {
+function isAccountPath(pathname: string) {
+  return pathname === "/account" || pathname.startsWith("/account/");
+}
+
+async function getAuthToken(request: NextRequest) {
   try {
-    const token = await getToken({
+    return getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET
     });
-    const role = (token as { role?: string } | null)?.role;
-
-    return role === "admin";
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -69,9 +70,16 @@ export async function middleware(request: NextRequest) {
     const locale = getPreferredLocale(request);
 
     if (isAdminPath(pathname)) {
-      if (!(await hasAdminToken(request))) {
+      const token = await getAuthToken(request);
+      const role = (token as { role?: string } | null)?.role;
+
+      if (role !== "admin") {
         return redirectToLogin(request, locale, `/${locale}${pathname}${request.nextUrl.search}`);
       }
+    }
+
+    if (isAccountPath(pathname) && !(await getAuthToken(request))) {
+      return redirectToLogin(request, locale, `/${locale}${pathname}${request.nextUrl.search}`);
     }
 
     const redirectUrl = request.nextUrl.clone();
@@ -83,10 +91,17 @@ export async function middleware(request: NextRequest) {
   const normalizedPath = withoutLocale(pathname, pathLocale);
 
   if (isAdminPath(normalizedPath)) {
-    if (await hasAdminToken(request)) {
+    const token = await getAuthToken(request);
+    const role = (token as { role?: string } | null)?.role;
+
+    if (role === "admin") {
       return NextResponse.next();
     }
 
+    return redirectToLogin(request, pathLocale, `${pathname}${request.nextUrl.search}`);
+  }
+
+  if (isAccountPath(normalizedPath) && !(await getAuthToken(request))) {
     return redirectToLogin(request, pathLocale, `${pathname}${request.nextUrl.search}`);
   }
 
