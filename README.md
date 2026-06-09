@@ -50,6 +50,7 @@ npm run db:generate
 npm run db:push
 npm run db:seed
 npm run db:studio
+npm run admin:ensure
 ```
 
 ## Environment
@@ -65,6 +66,7 @@ Copy `.env.example` to `.env.local`, then fill in the values you need:
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` for card payments
 - `EMAIL_SERVER` and `EMAIL_FROM` for order and password-reset emails
 - `SEED_ADMIN_PASSWORD` and `SEED_USER_PASSWORD` for local seed accounts
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optional `ADMIN_NAME` for the admin bootstrap command
 
 For Prisma CLI commands, keep `DATABASE_URL` available in an ignored `.env` file as well.
 
@@ -77,6 +79,13 @@ admin@bestbazar.ae
 ```
 
 The password is read from ignored env as `SEED_ADMIN_PASSWORD`.
+
+To create or reset another admin account without committing credentials, set `ADMIN_EMAIL` and
+`ADMIN_PASSWORD` in ignored env, then run:
+
+```bash
+npm run admin:ensure
+```
 
 ## Production Notes
 
