@@ -1,4 +1,4 @@
-import type { Category, Order, Product, User } from "@/lib/types";
+import type { Category, Coupon, Order, Product, User } from "@/lib/types";
 
 export const categories: Category[] = [
   {
@@ -480,6 +480,42 @@ export const users: User[] = [
     isBanned: true,
     orders: 1,
     createdAt: "2026-04-18"
+  }
+];
+
+export const coupons: Coupon[] = [
+  {
+    id: "cpn-dubai50",
+    code: "DUBAI50",
+    discountType: "fixed",
+    discountValue: 50,
+    minOrderAmount: 250,
+    maxUses: 500,
+    usedCount: 146,
+    expiryDate: "2026-07-31",
+    isActive: true
+  },
+  {
+    id: "cpn-gold10",
+    code: "GOLD10",
+    discountType: "percent",
+    discountValue: 10,
+    minOrderAmount: 500,
+    maxUses: 300,
+    usedCount: 84,
+    expiryDate: "2026-08-15",
+    isActive: true
+  },
+  {
+    id: "cpn-welcome",
+    code: "WELCOME25",
+    discountType: "fixed",
+    discountValue: 25,
+    minOrderAmount: 150,
+    maxUses: 1000,
+    usedCount: 1000,
+    expiryDate: "2026-06-30",
+    isActive: false
   }
 ];
 

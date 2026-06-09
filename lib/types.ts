@@ -107,3 +107,15 @@ export type User = {
   orders: number;
   createdAt: string;
 };
+
+export type Coupon = {
+  id: string;
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  minOrderAmount: number;
+  maxUses: number;
+  usedCount: number;
+  expiryDate: string;
+  isActive: boolean;
+};
