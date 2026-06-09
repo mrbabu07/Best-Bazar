@@ -5,7 +5,10 @@ import { getSitemapProducts } from "@/lib/storefront";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://best-bazar.vercel.app";
   const publicRoutes = ["", "/shop", "/cart", "/checkout", "/account"];
-  const products = await getSitemapProducts();
+  const products = await getSitemapProducts().catch((error) => {
+    console.error("Unable to load product URLs for sitemap.", error);
+    return [];
+  });
 
   const routeEntries = locales.flatMap((locale) =>
     publicRoutes.map((route) => ({

@@ -50,6 +50,17 @@ export type Product = {
   createdAt: string;
 };
 
+export type ProductReview = {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  user: {
+    name: string;
+    image?: string;
+  };
+};
+
 export type OrderStatus =
   | "pending"
   | "confirmed"

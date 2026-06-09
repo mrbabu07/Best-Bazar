@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import type { Category, Product } from "@/lib/types";
+import type { Category, Product, ProductReview } from "@/lib/types";
 
 const fallbackCategoryImage =
   "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=80";
@@ -20,8 +20,13 @@ const productInclude = {
   specifications: { orderBy: { sortOrder: "asc" } }
 } satisfies Prisma.ProductInclude;
 
+const reviewInclude = {
+  user: { select: { name: true, image: true } }
+} satisfies Prisma.ReviewInclude;
+
 type CategoryRecord = Prisma.CategoryGetPayload<{ include: typeof categoryInclude }>;
 type ProductRecord = Prisma.ProductGetPayload<{ include: typeof productInclude }>;
+type ReviewRecord = Prisma.ReviewGetPayload<{ include: typeof reviewInclude }>;
 
 function toNumber(value: Prisma.Decimal | number | null | undefined) {
   return value == null ? undefined : Number(value);
@@ -71,6 +76,19 @@ export function mapStoreProduct(product: ProductRecord): Product {
     rating: Number(product.rating),
     reviewCount: product.reviewCount,
     createdAt: product.createdAt.toISOString()
+  };
+}
+
+export function mapStoreReview(review: ReviewRecord): ProductReview {
+  return {
+    id: review.id,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt.toISOString(),
+    user: {
+      name: review.user.name ?? "Best Bazar customer",
+      image: review.user.image ?? undefined
+    }
   };
 }
 
@@ -214,6 +232,17 @@ export async function getProductBySlugOrId(id: string) {
   });
 
   return product ? mapStoreProduct(product) : null;
+}
+
+export async function getProductReviews(productId: string, limit = 12) {
+  const reviews = await prisma.review.findMany({
+    where: { productId, isApproved: true },
+    include: reviewInclude,
+    orderBy: { createdAt: "desc" },
+    take: limit
+  });
+
+  return reviews.map(mapStoreReview);
 }
 
 export async function getRelatedProducts(categorySlug: string, productId: string, limit = 4) {
