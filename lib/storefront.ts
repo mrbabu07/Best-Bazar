@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
-import type { Category, Product } from "@/lib/types";
+import type { Category, Product, ProductColor } from "@/lib/types";
 
 const categoryInclude = {
   products: {
@@ -120,9 +120,46 @@ export const getStoreBrands = unstable_cache(readStoreBrands, ["store-brands"], 
   tags: ["storefront", "products"]
 });
 
+async function readStoreVariantColors() {
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      isActive: true,
+      stock: { gt: 0 },
+      product: { isActive: true }
+    },
+    select: {
+      colorNameEn: true,
+      colorNameAr: true,
+      colorHex: true
+    },
+    orderBy: [{ sortOrder: "asc" }, { colorNameEn: "asc" }]
+  });
+  const colors = new Map<string, ProductColor>();
+
+  for (const variant of variants) {
+    const key = variant.colorNameEn.trim().toLowerCase();
+    const current = colors.get(key);
+
+    colors.set(key, {
+      key,
+      name: current?.name ?? { en: variant.colorNameEn, ar: variant.colorNameAr },
+      colorHex: current?.colorHex ?? variant.colorHex ?? undefined,
+      count: (current?.count ?? 0) + 1
+    });
+  }
+
+  return Array.from(colors.values());
+}
+
+export const getStoreVariantColors = unstable_cache(readStoreVariantColors, ["store-variant-colors"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
+
 export type StoreProductFilters = {
   category?: string;
   brand?: string;
+  color?: string;
   rating?: string;
   priceMax?: string;
   search?: string;
@@ -133,6 +170,7 @@ export type StoreProductFilters = {
 function getProductWhere(filters: StoreProductFilters = {}) {
   const rating = filters.rating ? Number(filters.rating) : undefined;
   const priceMax = filters.priceMax ? Number(filters.priceMax) : undefined;
+  const color = filters.color?.trim();
   const search = filters.search?.trim();
   const tag = filters.tag?.trim();
 
@@ -140,6 +178,17 @@ function getProductWhere(filters: StoreProductFilters = {}) {
     isActive: true,
     ...(filters.category ? { category: { slug: filters.category } } : {}),
     ...(filters.brand ? { brand: filters.brand } : {}),
+    ...(color
+      ? {
+          variants: {
+            some: {
+              isActive: true,
+              stock: { gt: 0 },
+              colorNameEn: { equals: color, mode: "insensitive" }
+            }
+          }
+        }
+      : {}),
     ...(rating && Number.isFinite(rating) ? { rating: { gte: rating } } : {}),
     ...(priceMax && Number.isFinite(priceMax) ? { price: { lte: priceMax } } : {}),
     ...(tag ? { tags: { has: tag } } : {}),
@@ -180,6 +229,7 @@ function stableProductFilters(filters: StoreProductFilters = {}) {
   return JSON.stringify({
     brand: filters.brand ?? "",
     category: filters.category ?? "",
+    color: filters.color?.trim().toLowerCase() ?? "",
     priceMax: filters.priceMax ?? "",
     rating: filters.rating ?? "",
     search: filters.search ?? "",

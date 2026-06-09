@@ -19,7 +19,7 @@ type CheckoutPageContentProps = {
   stripeEnabled: boolean;
 };
 
-type CheckoutFieldName = "name" | "email" | "phone" | "street" | "city" | "emirate" | "country";
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -40,6 +40,8 @@ const checkoutCopy = {
     checkoutFailed: "Checkout failed",
     stripeUrlMissing: "Stripe checkout URL was not returned.",
     notes: "Notes",
+    shippingArea: "Shipping area",
+    delivery: "Delivery",
     applied: (code: string) => `${code} applied`,
     fields: {
       name: "Full name",
@@ -47,7 +49,6 @@ const checkoutCopy = {
       phone: "Phone",
       street: "Street address",
       city: "City",
-      emirate: "Emirate",
       country: "Country"
     }
   },
@@ -61,6 +62,8 @@ const checkoutCopy = {
     checkoutFailed: "فشل إتمام الطلب",
     stripeUrlMissing: "لم يتم إنشاء رابط الدفع عبر سترايب.",
     notes: "ملاحظات",
+    shippingArea: "منطقة الشحن",
+    delivery: "التوصيل",
     applied: (code: string) => `تم تطبيق ${code}`,
     fields: {
       name: "الاسم الكامل",
@@ -68,7 +71,6 @@ const checkoutCopy = {
       phone: "الهاتف",
       street: "عنوان الشارع",
       city: "المدينة",
-      emirate: "الإمارة",
       country: "الدولة"
     }
   }
@@ -84,6 +86,8 @@ const checkoutCopy = {
     checkoutFailed: string;
     stripeUrlMissing: string;
     notes: string;
+    shippingArea: string;
+    delivery: string;
     applied: (code: string) => string;
     fields: Record<CheckoutFieldName, string>;
   }
@@ -111,7 +115,12 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
-  const shipping = getShippingCost(shippingSettings, emirate, subtotal);
+  const shippingOptions = shippingSettings.shippingRates;
+  const selectedShippingRate =
+    shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
+    shippingOptions[0];
+  const selectedEmirate = selectedShippingRate?.emirate ?? emirate;
+  const shipping = getShippingCost(shippingSettings, selectedEmirate, subtotal);
   const total = Math.max(subtotal + shipping - discount, 0);
 
   useEffect(() => {
@@ -229,7 +238,6 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address" },
     { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", defaultValue: "Dubai" },
-    { name: "emirate", label: labels.fields.emirate, type: "text", autoComplete: "address-level1", defaultValue: "Dubai" },
     { name: "country", label: labels.fields.country, type: "text", autoComplete: "country-name", defaultValue: "UAE" }
   ];
 
@@ -248,6 +256,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <input type="hidden" name="emirate" value={selectedEmirate} readOnly />
               {fields.map((field) => (
                 <label key={field.name} className="grid gap-2 text-sm font-semibold text-navy">
                   {field.label}
@@ -256,12 +265,45 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                     type={field.type}
                     autoComplete={field.autoComplete}
                     defaultValue={field.defaultValue}
-                    onChange={field.name === "emirate" ? (event) => setEmirate(event.target.value) : undefined}
                     required
                     className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                   />
                 </label>
               ))}
+              <div className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                <p>{labels.shippingArea}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {shippingOptions.map((rate) => {
+                    const selected = rate.emirate === selectedEmirate;
+                    const displayCost =
+                      subtotal > 0 && subtotal < shippingSettings.freeShippingThreshold ? rate.cost : 0;
+
+                    return (
+                      <button
+                        key={rate.emirate}
+                        type="button"
+                        onClick={() => setEmirate(rate.emirate)}
+                        aria-pressed={selected}
+                        className={`grid min-h-20 gap-1 rounded-md border p-3 transition ${
+                          selected
+                            ? "border-gold-400 bg-gold-50 text-navy"
+                            : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
+                        } ${locale === "ar" ? "text-right" : "text-left"}`}
+                      >
+                        <span className="flex items-center justify-between gap-3 text-sm font-bold">
+                          <span>{rate.emirate}</span>
+                          <span>{formatCurrency(displayCost, currency, locale, currencyRates)}</span>
+                        </span>
+                        {rate.deliveryDays ? (
+                          <span className="text-xs font-semibold text-neutral-500">
+                            {labels.delivery}: {rate.deliveryDays}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 {labels.notes}
                 <textarea
@@ -351,7 +393,9 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
               <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-neutral-500">{dictionary.common.shipping}</span>
+              <span className="text-neutral-500">
+                {dictionary.common.shipping} ({selectedEmirate})
+              </span>
               <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">

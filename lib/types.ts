@@ -38,6 +38,13 @@ export type ProductVariant = {
   sortOrder: number;
 };
 
+export type ProductColor = {
+  key: string;
+  name: LocalizedText;
+  colorHex?: string;
+  count: number;
+};
+
 export type Product = {
   id: string;
   slug: string;

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFilters } from "@/components/product/ProductFilters";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { getStoreBrands, getStoreCategories, getStoreProducts } from "@/lib/storefront";
+import { getStoreBrands, getStoreCategories, getStoreProducts, getStoreVariantColors } from "@/lib/storefront";
 
 export const revalidate = 60;
 
@@ -34,15 +34,17 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const dictionary = getDictionary(locale);
   const category = readParam(searchParams, "category");
   const brand = readParam(searchParams, "brand");
+  const color = readParam(searchParams, "color");
   const rating = readParam(searchParams, "rating");
   const search = readParam(searchParams, "search");
   const sort = readParam(searchParams, "sort") ?? "featured";
   const tag = readParam(searchParams, "tag");
   const priceMax = readParam(searchParams, "priceMax");
-  const [categories, brands, listing] = await Promise.all([
+  const [categories, brands, colors, listing] = await Promise.all([
     getStoreCategories(),
     getStoreBrands(),
-    getStoreProducts({ category, brand, rating, search, sort, tag, priceMax })
+    getStoreVariantColors(),
+    getStoreProducts({ category, brand, color, rating, search, sort, tag, priceMax })
   ]);
 
   return (
@@ -66,7 +68,8 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
           dictionary={dictionary}
           categories={categories}
           brands={brands}
-          current={{ category, brand, rating, search, sort, tag, priceMax }}
+          colors={colors}
+          current={{ category, brand, color, rating, search, sort, tag, priceMax }}
         />
         <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {listing.length > 0 ? (

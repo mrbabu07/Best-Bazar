@@ -3,7 +3,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Category } from "@/lib/types";
+import type { Category, ProductColor } from "@/lib/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
@@ -13,9 +13,11 @@ type ProductFiltersProps = {
   dictionary: Dictionary;
   categories: Category[];
   brands: string[];
+  colors: ProductColor[];
   current: {
     category?: string;
     brand?: string;
+    color?: string;
     rating?: string;
     search?: string;
     sort?: string;
@@ -27,6 +29,7 @@ type ProductFiltersProps = {
 const filterCopy = {
   en: {
     all: "All",
+    color: "Color",
     sortFeatured: "Featured",
     sortNewest: "Newest",
     sortPriceAsc: "Price low to high",
@@ -34,6 +37,7 @@ const filterCopy = {
     sortRating: "Top rated"
   },
   ar: {
+    color: "اللون",
     all: "الكل",
     sortFeatured: "مميز",
     sortNewest: "الأحدث",
@@ -45,6 +49,7 @@ const filterCopy = {
   Locale,
   {
     all: string;
+    color: string;
     sortFeatured: string;
     sortNewest: string;
     sortPriceAsc: string;
@@ -58,12 +63,14 @@ export function ProductFilters({
   dictionary,
   categories,
   brands,
+  colors,
   current
 }: ProductFiltersProps) {
   const labels = filterCopy[locale];
   const router = useRouter();
   const [category, setCategory] = useState(current.category ?? "");
   const [brand, setBrand] = useState(current.brand ?? "");
+  const [color, setColor] = useState(current.color?.trim().toLowerCase() ?? "");
   const [rating, setRating] = useState(current.rating ?? "");
   const [sort, setSort] = useState(current.sort ?? "featured");
   const [priceMax, setPriceMax] = useState(current.priceMax ?? "1500");
@@ -73,6 +80,7 @@ export function ProductFilters({
 
     if (category) params.set("category", category);
     if (brand) params.set("brand", brand);
+    if (color) params.set("color", color);
     if (rating) params.set("rating", rating);
     if (current.search) params.set("search", current.search);
     if (current.tag) params.set("tag", current.tag);
@@ -121,6 +129,49 @@ export function ProductFilters({
             ))}
           </select>
         </label>
+
+        <div className="grid gap-2 text-sm font-semibold text-navy">
+          <p>{labels.color}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setColor("")}
+              aria-pressed={!color}
+              className={`inline-flex min-h-9 items-center rounded-md border px-3 text-xs font-bold transition ${
+                !color
+                  ? "border-gold-400 bg-gold-50 text-navy"
+                  : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
+              }`}
+            >
+              {labels.all}
+            </button>
+            {colors.map((item) => {
+              const selected = color === item.key;
+
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setColor(item.key)}
+                  aria-pressed={selected}
+                  title={`${getLocalized(item.name, locale)} (${item.count})`}
+                  className={`inline-flex min-h-9 max-w-full items-center gap-2 rounded-md border px-2 text-xs font-bold transition ${
+                    selected
+                      ? "border-gold-400 bg-gold-50 text-navy"
+                      : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
+                  }`}
+                >
+                  <span
+                    className="h-4 w-4 shrink-0 rounded-full border border-neutral-200"
+                    style={{ backgroundColor: item.colorHex ?? "#ffffff" }}
+                  />
+                  <span className="truncate">{getLocalized(item.name, locale)}</span>
+                  <span className="text-[11px] text-neutral-400">{item.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <label className="grid gap-2 text-sm font-semibold text-navy">
           {dictionary.shop.priceRange}
