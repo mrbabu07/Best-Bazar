@@ -2,6 +2,7 @@
 
 import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
@@ -16,7 +17,9 @@ type CheckoutPageContentProps = {
 };
 
 export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentProps) {
+  const router = useRouter();
   const [payment, setPayment] = useState<"stripe" | "cod">("stripe");
+  const [loading, setLoading] = useState(false);
   const items = useCartStore((state) => state.items);
   const subtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -24,11 +27,70 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
   const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 20;
   const total = subtotal + shipping;
 
-  const submitOrder = (event: FormEvent<HTMLFormElement>) => {
+  const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    toast.success(payment === "stripe" ? "Stripe checkout ready" : "COD order drafted");
-    clearCart();
+    setLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      items: items.map((item) => ({ productId: item.id, quantity: item.quantity })),
+      shippingAddress: {
+        name: String(formData.get("name") ?? ""),
+        email: String(formData.get("email") ?? ""),
+        phone: String(formData.get("phone") ?? ""),
+        street: String(formData.get("street") ?? ""),
+        city: String(formData.get("city") ?? ""),
+        emirate: String(formData.get("emirate") ?? ""),
+        country: String(formData.get("country") ?? "UAE")
+      },
+      paymentMethod: payment === "cod" ? "COD" : "STRIPE",
+      currency,
+      couponCode: String(formData.get("couponCode") ?? "") || undefined,
+      notes: String(formData.get("notes") ?? "") || undefined
+    };
+
+    try {
+      const endpoint = payment === "stripe" ? "/api/payment/checkout" : "/api/orders";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "Checkout failed");
+      }
+
+      if (payment === "stripe") {
+        if (!result.checkoutUrl) {
+          throw new Error("Stripe checkout URL was not returned.");
+        }
+
+        window.location.href = result.checkoutUrl;
+        return;
+      }
+
+      clearCart();
+      toast.success("Order placed");
+      router.push(`/${locale}/order-confirmation/${result.id}`);
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Checkout failed");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const fields = [
+    { name: "name", label: "Full name", type: "text", autoComplete: "name" },
+    { name: "email", label: "Email", type: "email", autoComplete: "email" },
+    { name: "phone", label: "Phone", type: "tel", autoComplete: "tel" },
+    { name: "street", label: "Street address", type: "text", autoComplete: "street-address" },
+    { name: "city", label: "City", type: "text", autoComplete: "address-level2", defaultValue: "Dubai" },
+    { name: "emirate", label: "Emirate", type: "text", autoComplete: "address-level1", defaultValue: "Dubai" },
+    { name: "country", label: "Country", type: "text", autoComplete: "country-name", defaultValue: "UAE" }
+  ];
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -45,10 +107,14 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {["Full name", "Phone", "Street address", "City", "Emirate", "Country"].map((label) => (
-                <label key={label} className="grid gap-2 text-sm font-semibold text-navy">
-                  {label}
+              {fields.map((field) => (
+                <label key={field.name} className="grid gap-2 text-sm font-semibold text-navy">
+                  {field.label}
                   <input
+                    name={field.name}
+                    type={field.type}
+                    autoComplete={field.autoComplete}
+                    defaultValue={field.defaultValue}
                     required
                     className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                   />
@@ -57,6 +123,7 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 Notes
                 <textarea
+                  name="notes"
                   rows={4}
                   className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm font-medium text-neutral-700"
                 />
@@ -114,6 +181,14 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
             )}
           </div>
           <div className="mt-5 grid gap-3 border-t border-neutral-200 pt-5 text-sm">
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              {dictionary.cart.coupon}
+              <input
+                name="couponCode"
+                placeholder="DUBAI50"
+                className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+              />
+            </label>
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>
               <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale)}</span>
@@ -127,9 +202,9 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
               <span className="font-bold text-navy">{formatCurrency(total, currency, locale)}</span>
             </div>
           </div>
-          <Button type="submit" className="mt-6 w-full" disabled={items.length === 0}>
+          <Button type="submit" className="mt-6 w-full" disabled={items.length === 0 || loading}>
             <ShieldCheck size={18} />
-            {payment === "stripe" ? dictionary.checkout.stripe : dictionary.checkout.cod}
+            {loading ? "Processing..." : payment === "stripe" ? dictionary.checkout.stripe : dictionary.checkout.cod}
           </Button>
         </aside>
       </form>
