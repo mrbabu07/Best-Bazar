@@ -90,7 +90,13 @@
     "subtitle": "Profile, address book, and order history for authenticated customers.",
     "profile": "Profile",
     "addresses": "Address book",
-    "orders": "Order history"
+    "orders": "Order history",
+    "orderAction": "Action",
+    "cancelOrder": "Cancel order",
+    "cancellingOrder": "Cancelling...",
+    "cancelOrderConfirm": "Cancel this order?",
+    "cancelOrderSuccess": "Order cancelled",
+    "cancelOrderError": "Unable to cancel order."
   },
   "admin": {
     "dashboard": "Dashboard",

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { OrderStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { AccountProfileForm } from "@/components/account/AccountProfileForm";
+import { CancelOrderButton } from "@/components/account/CancelOrderButton";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
@@ -47,6 +49,10 @@ function getOrderTone(status: string) {
   }
 
   return "gold" as const;
+}
+
+function canCancelOrder(status: string) {
+  return status === OrderStatus.PENDING || status === OrderStatus.CONFIRMED;
 }
 
 export default async function AccountPage({ params }: { params: { locale: string } }) {
@@ -122,6 +128,13 @@ export default async function AccountPage({ params }: { params: { locale: string
     { id: "addresses", label: dictionary.account.addresses },
     { id: "orders", label: dictionary.account.orders }
   ];
+  const cancelOrderCopy = {
+    cancelOrder: dictionary.account.cancelOrder,
+    cancellingOrder: dictionary.account.cancellingOrder,
+    cancelOrderConfirm: dictionary.account.cancelOrderConfirm,
+    cancelOrderSuccess: dictionary.account.cancelOrderSuccess,
+    cancelOrderError: dictionary.account.cancelOrderError
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -194,6 +207,7 @@ export default async function AccountPage({ params }: { params: { locale: string
                       <th className="px-5 py-3">Items</th>
                       <th className="px-5 py-3">Status</th>
                       <th className="px-5 py-3">Total</th>
+                      <th className="px-5 py-3">{dictionary.account.orderAction}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
@@ -212,6 +226,13 @@ export default async function AccountPage({ params }: { params: { locale: string
                         </td>
                         <td className="px-5 py-4 font-bold text-navy">
                           {formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates)}
+                        </td>
+                        <td className="px-5 py-4">
+                          {canCancelOrder(order.orderStatus) ? (
+                            <CancelOrderButton orderId={order.id} copy={cancelOrderCopy} />
+                          ) : (
+                            <span className="text-neutral-400">-</span>
+                          )}
                         </td>
                       </tr>
                     ))}
