@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Globe2, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { currencyOptions, type CurrencyCode } from "@/utils/currency";
@@ -13,9 +14,10 @@ import { cn } from "@/utils/cn";
 type HeaderProps = {
   locale: Locale;
   dictionary: Dictionary;
+  settings: StorefrontFrameSettings;
 };
 
-export function Header({ locale, dictionary }: HeaderProps) {
+export function Header({ locale, dictionary, settings }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -29,6 +31,8 @@ export function Header({ locale, dictionary }: HeaderProps) {
     { label: dictionary.nav.shop, href: `/${locale}/shop` },
     { label: dictionary.nav.account, href: `/${locale}/account` }
   ];
+  const brandName = locale === "ar" ? settings.storeNameAr : settings.storeNameEn;
+  const announcement = locale === "ar" ? settings.announcementAr : settings.announcementEn;
 
   const switchLocalePath = (nextLocale: Locale) => {
     const segments = pathname.split("/");
@@ -55,9 +59,11 @@ export function Header({ locale, dictionary }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gold-100 bg-white/92 backdrop-blur-xl">
-      <div className="bg-navy px-4 py-2 text-center text-xs font-semibold text-white">
-        {dictionary.announcement}
-      </div>
+      {settings.announcementActive && announcement ? (
+        <div className="bg-navy px-4 py-2 text-center text-xs font-semibold text-white">
+          {announcement}
+        </div>
+      ) : null}
       <div className="mx-auto flex h-20 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <button
           type="button"
@@ -69,7 +75,7 @@ export function Header({ locale, dictionary }: HeaderProps) {
         </button>
 
         <Link href={`/${locale}`} className="shrink-0 text-2xl font-bold text-navy">
-          {dictionary.brand}
+          {brandName || dictionary.brand}
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">

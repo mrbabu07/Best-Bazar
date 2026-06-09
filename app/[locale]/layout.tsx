@@ -3,6 +3,7 @@ import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 import { Providers } from "./providers";
 import "../globals.css";
 
@@ -26,7 +27,26 @@ export const metadata: Metadata = {
   description: "Luxury Dubai-based online shopping experience."
 };
 
-export default function LocaleLayout({
+async function getFrameSettings() {
+  const settings = await prisma.setting.findUnique({
+    where: { id: "store-settings" }
+  });
+
+  return {
+    storeNameEn: settings?.storeNameEn ?? "Best Bazar",
+    storeNameAr: settings?.storeNameAr ?? "Best Bazar",
+    announcementEn: settings?.announcementEn ?? "",
+    announcementAr: settings?.announcementAr ?? "",
+    announcementActive: settings?.announcementActive ?? false,
+    phone: settings?.phone ?? "",
+    email: settings?.storeEmail ?? "",
+    address: settings?.address ?? "",
+    instagram: settings?.instagram ?? "",
+    facebook: settings?.facebook ?? ""
+  };
+}
+
+export default async function LocaleLayout({
   children,
   params
 }: Readonly<{
@@ -39,6 +59,7 @@ export default function LocaleLayout({
 
   const dictionary = getDictionary(params.locale);
   const isArabic = isRTL(params.locale);
+  const settings = await getFrameSettings();
 
   return (
     <html
@@ -48,7 +69,7 @@ export default function LocaleLayout({
     >
       <body className={isArabic ? "font-[var(--font-cairo)]" : "font-[var(--font-inter)]"}>
         <Providers>
-          <AppFrame locale={params.locale} dictionary={dictionary}>
+          <AppFrame locale={params.locale} dictionary={dictionary} settings={settings}>
             {children}
           </AppFrame>
         </Providers>
