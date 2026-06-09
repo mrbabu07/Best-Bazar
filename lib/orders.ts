@@ -18,8 +18,19 @@ function createOrderAccessToken() {
   return randomBytes(24).toString("hex");
 }
 
+function mergeOrderItems(items: OrderCreateInput["items"]) {
+  const quantities = new Map<string, number>();
+
+  for (const item of items) {
+    quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
+  }
+
+  return Array.from(quantities, ([productId, quantity]) => ({ productId, quantity }));
+}
+
 export async function createStoreOrder(data: OrderCreateInput, userId?: string) {
-  const productIds = data.items.map((item) => item.productId);
+  const orderItems = mergeOrderItems(data.items);
+  const productIds = orderItems.map((item) => item.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, isActive: true },
     include: { images: { orderBy: { sortOrder: "asc" }, take: 1 } }
@@ -29,7 +40,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     throw new Error("One or more products are unavailable.");
   }
 
-  const items = data.items.map((item) => {
+  const items = orderItems.map((item) => {
     const product = products.find((candidate) => candidate.id === item.productId);
 
     if (!product) {
