@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_FILE = /\.(.*)$/;
 const locales = ["en", "ar"] as const;
+type Locale = (typeof locales)[number];
 
 function isPublicPath(pathname: string) {
   return (
@@ -15,9 +16,9 @@ function isPublicPath(pathname: string) {
   );
 }
 
-function getPreferredLocale(request: NextRequest) {
+function getPreferredLocale(request: NextRequest): Locale {
   const localeCookie = request.cookies.get("NEXT_LOCALE")?.value;
-  return locales.includes(localeCookie as (typeof locales)[number]) ? localeCookie : "en";
+  return locales.includes(localeCookie as Locale) ? (localeCookie as Locale) : "en";
 }
 
 function getPathLocale(pathname: string) {
@@ -33,6 +34,28 @@ function isAdminPath(pathname: string) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
+async function hasAdminToken(request: NextRequest) {
+  try {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET
+    });
+    const role = (token as { role?: string } | null)?.role;
+
+    return role === "admin";
+  } catch {
+    return false;
+  }
+}
+
+function redirectToLogin(request: NextRequest, locale: string, callbackUrl: string) {
+  const loginUrl = request.nextUrl.clone();
+  loginUrl.pathname = `/${locale}/login`;
+  loginUrl.searchParams.set("callbackUrl", callbackUrl);
+
+  return NextResponse.redirect(loginUrl);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -44,6 +67,13 @@ export async function middleware(request: NextRequest) {
 
   if (!pathLocale) {
     const locale = getPreferredLocale(request);
+
+    if (isAdminPath(pathname)) {
+      if (!(await hasAdminToken(request))) {
+        return redirectToLogin(request, locale, `/${locale}${pathname}${request.nextUrl.search}`);
+      }
+    }
+
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = `/${locale}${pathname}`;
 
@@ -53,25 +83,11 @@ export async function middleware(request: NextRequest) {
   const normalizedPath = withoutLocale(pathname, pathLocale);
 
   if (isAdminPath(normalizedPath)) {
-    try {
-      const token = await getToken({
-        req: request,
-        secret: process.env.NEXTAUTH_SECRET
-      });
-      const role = (token as { role?: string } | null)?.role;
-
-      if (role === "admin") {
-        return NextResponse.next();
-      }
-    } catch {
-      // Missing or invalid auth configuration should fail closed for admin pages.
+    if (await hasAdminToken(request)) {
+      return NextResponse.next();
     }
 
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = `/${pathLocale}/login`;
-    loginUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
-
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, pathLocale, `${pathname}${request.nextUrl.search}`);
   }
 
   return NextResponse.next();
