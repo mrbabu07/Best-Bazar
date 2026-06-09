@@ -100,6 +100,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         discount,
         total,
         currency: data.currency,
+        locale: data.locale,
         notes: data.notes,
         items: {
           create: items.map(({ product, quantity }) => ({

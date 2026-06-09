@@ -16,14 +16,16 @@ function getEmailConfig() {
   return { server, from };
 }
 
-function getConfirmationUrl(order: OrderWithItems) {
+export function getOrderConfirmationUrl(order: OrderWithItems) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL;
 
   if (!siteUrl || !order.accessToken) {
     return null;
   }
 
-  return `${siteUrl.replace(/\/$/, "")}/en/order-confirmation/${order.id}?token=${order.accessToken}`;
+  const locale = order.locale === "ar" ? "ar" : "en";
+
+  return `${siteUrl.replace(/\/$/, "")}/${locale}/order-confirmation/${order.id}?token=${order.accessToken}`;
 }
 
 export async function sendOrderConfirmationEmail(order: OrderWithItems) {
@@ -37,7 +39,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   const lines = order.items
     .map((item) => `${item.quantity} x ${item.nameEn} - AED ${Number(item.price).toFixed(2)}`)
     .join("\n");
-  const confirmationUrl = getConfirmationUrl(order);
+  const confirmationUrl = getOrderConfirmationUrl(order);
 
   await transporter.sendMail({
     from: config.from,

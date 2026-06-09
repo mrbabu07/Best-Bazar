@@ -178,6 +178,7 @@ model Order {
   discount        Decimal       @default(0) @db.Decimal(10, 2)
   total           Decimal       @db.Decimal(10, 2)
   currency        String        @default("AED")
+  locale          String        @default("en")
   notes           String?       @db.Text
   internalNotes   String?       @db.Text
   stripeSessionId String?
