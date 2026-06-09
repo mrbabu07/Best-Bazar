@@ -8,7 +8,7 @@ Best Bazar is a Dubai-focused bilingual ecommerce application built with Next.js
 - Database-backed home, shop, product, cart, checkout, account, and order-confirmation pages.
 - Product search, category/brand/rating/price filters, related products, customer reviews, and review submission.
 - Persistent cart, coupon validation, dynamic shipping rules, AED/BDT/USD currency conversion, COD checkout, and Stripe checkout when configured.
-- Customer registration, login, editable profile/address details, order history, password reset, and protected account pages.
+- Customer registration, login, editable profile/address details, order history, password reset, protected account pages, and private order-confirmation links.
 - Admin dashboard for products, categories, banners, coupons, orders, users, settings, uploads, order status changes, role/ban controls, and invoice printing.
 - Store settings for branding, announcements, contact details, social links, SEO, shipping rates, and exchange rates.
 - Cloudinary image uploads and optional order/password-reset emails through SMTP.

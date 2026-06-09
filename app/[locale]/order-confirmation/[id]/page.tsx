@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CheckCircle2, PackageCheck } from "lucide-react";
+import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
+import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
@@ -11,6 +13,9 @@ type OrderConfirmationPageProps = {
   params: {
     locale: string;
     id: string;
+  };
+  searchParams?: {
+    token?: string;
   };
 };
 
@@ -21,7 +26,7 @@ export function generateMetadata({ params }: OrderConfirmationPageProps): Metada
   };
 }
 
-export default async function OrderConfirmationPage({ params }: OrderConfirmationPageProps) {
+export default async function OrderConfirmationPage({ params, searchParams }: OrderConfirmationPageProps) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -29,6 +34,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
   }
 
   const dictionary = getDictionary(locale);
+  const session = await getServerSession(authOptions);
   const [order, settings] = await Promise.all([
     prisma.order.findUnique({
       where: { id: params.id },
@@ -41,6 +47,14 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
   ]);
 
   if (!order) {
+    notFound();
+  }
+
+  const hasValidToken = Boolean(order.accessToken && searchParams?.token === order.accessToken);
+  const isOrderOwner = Boolean(order.userId && session?.user.id === order.userId);
+  const isAdmin = session?.user.role === "admin";
+
+  if (!hasValidToken && !isOrderOwner && !isAdmin) {
     notFound();
   }
 

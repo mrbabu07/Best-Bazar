@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { DiscountType, OrderStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { orderCreateSchema } from "@/lib/validations/store";
@@ -8,6 +9,10 @@ export type OrderCreateInput = z.infer<typeof orderCreateSchema>;
 
 function createOrderNumber() {
   return `BB-${Date.now().toString().slice(-8)}`;
+}
+
+function createOrderAccessToken() {
+  return randomBytes(24).toString("hex");
 }
 
 export async function createStoreOrder(data: OrderCreateInput, userId?: string) {
@@ -68,6 +73,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     const order = await tx.order.create({
       data: {
         orderNumber: createOrderNumber(),
+        accessToken: createOrderAccessToken(),
         userId,
         customerName: data.shippingAddress.name,
         customerEmail: data.shippingAddress.email,

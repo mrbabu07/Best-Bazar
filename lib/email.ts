@@ -16,6 +16,16 @@ function getEmailConfig() {
   return { server, from };
 }
 
+function getConfirmationUrl(order: OrderWithItems) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL;
+
+  if (!siteUrl || !order.accessToken) {
+    return null;
+  }
+
+  return `${siteUrl.replace(/\/$/, "")}/en/order-confirmation/${order.id}?token=${order.accessToken}`;
+}
+
 export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   const config = getEmailConfig();
 
@@ -27,6 +37,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   const lines = order.items
     .map((item) => `${item.quantity} x ${item.nameEn} - AED ${Number(item.price).toFixed(2)}`)
     .join("\n");
+  const confirmationUrl = getConfirmationUrl(order);
 
   await transporter.sendMail({
     from: config.from,
@@ -44,7 +55,8 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
       `Subtotal: AED ${Number(order.subtotal).toFixed(2)}`,
       `Shipping: AED ${Number(order.shippingCost).toFixed(2)}`,
       `Discount: AED ${Number(order.discount).toFixed(2)}`,
-      `Total: AED ${Number(order.total).toFixed(2)}`
+      `Total: AED ${Number(order.total).toFixed(2)}`,
+      ...(confirmationUrl ? ["", `Order link: ${confirmationUrl}`] : [])
     ].join("\n")
   });
 

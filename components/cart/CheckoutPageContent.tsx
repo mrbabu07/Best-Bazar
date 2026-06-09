@@ -130,7 +130,8 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
 
       clearCart();
       toast.success("Order placed");
-      router.push(`/${locale}/order-confirmation/${result.id}`);
+      const tokenQuery = result.accessToken ? `?token=${encodeURIComponent(result.accessToken)}` : "";
+      router.push(`/${locale}/order-confirmation/${result.id}${tokenQuery}`);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Checkout failed");

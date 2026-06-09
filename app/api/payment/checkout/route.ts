@@ -43,7 +43,7 @@ export async function POST(request: Request) {
           }
         }
       ],
-      success_url: `${siteUrl}/en/order-confirmation/${order.id}?status=success`,
+      success_url: `${siteUrl}/en/order-confirmation/${order.id}?status=success&token=${order.accessToken}`,
       cancel_url: `${siteUrl}/en/checkout?status=cancelled`
     });
 
