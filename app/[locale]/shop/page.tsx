@@ -8,6 +8,10 @@ import { getStoreBrands, getStoreCategories, getStoreProducts, getStoreVariantCo
 
 export const revalidate = 60;
 
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "ar" }];
+}
+
 type ShopPageProps = {
   params: { locale: string };
   searchParams?: Record<string, string | string[] | undefined>;

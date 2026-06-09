@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { authOptions } from "@/lib/auth";
+import { getOptionalServerSession } from "@/lib/auth-session";
 import { createStoreOrder } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
 import { getSiteUrl, getStripe } from "@/lib/stripe";
@@ -17,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOptionalServerSession(request);
     const data = orderCreateSchema.parse(await request.json());
     const order = await createStoreOrder({ ...data, paymentMethod: "STRIPE" }, session?.user.id);
     const siteUrl = getSiteUrl();

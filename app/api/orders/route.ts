@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
+import { getOptionalServerSession } from "@/lib/auth-session";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { createStoreOrder } from "@/lib/orders";
@@ -27,7 +28,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getOptionalServerSession(request);
     const data = orderCreateSchema.parse(await request.json());
     const order = await createStoreOrder(data, session?.user.id);
 

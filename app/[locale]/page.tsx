@@ -11,6 +11,10 @@ import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategori
 
 export const revalidate = 60;
 
+export function generateStaticParams() {
+  return [{ locale: "en" }, { locale: "ar" }];
+}
+
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   const title = params.locale === "ar" ? "بيست بازار" : "Best Bazar";
 

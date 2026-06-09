@@ -5,6 +5,13 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { fallbackProductImage } from "@/lib/images";
 import type { LocalizedText, Product, ProductVariant } from "@/lib/types";
 
+export type CartProductInput = Pick<Product, "id" | "slug" | "name" | "images" | "stock" | "price" | "brand">;
+
+export type CartVariantInput = Pick<
+  ProductVariant,
+  "id" | "name" | "colorHex" | "imageUrl" | "sku" | "stock"
+>;
+
 export type CartItem = {
   id: string;
   productId?: string;
@@ -23,7 +30,7 @@ export type CartItem = {
 
 type CartState = {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
+  addItem: (product: CartProductInput, quantity?: number, variant?: CartVariantInput) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;

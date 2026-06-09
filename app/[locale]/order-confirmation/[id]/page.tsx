@@ -1,11 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CheckCircle2, PackageCheck } from "lucide-react";
-import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/Badge";
-import { authOptions } from "@/lib/auth";
+import { getOptionalServerSession } from "@/lib/auth-session";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { formatOrderStatus, formatPaymentStatus } from "@/lib/order-labels";
 import { prisma } from "@/lib/prisma";
@@ -63,7 +62,6 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
 
   const dictionary = getDictionary(locale);
   const labels = confirmationCopy[locale];
-  const session = await getServerSession(authOptions);
   const [order, settings] = await Promise.all([
     prisma.order.findUnique({
       where: { id: params.id },
@@ -80,6 +78,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
   }
 
   const hasValidToken = Boolean(order.accessToken && searchParams?.token === order.accessToken);
+  const session = hasValidToken ? null : await getOptionalServerSession();
   const isOrderOwner = Boolean(order.userId && session?.user.id === order.userId);
   const isAdmin = session?.user.role === "admin";
 

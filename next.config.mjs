@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
+  compress: true,
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",
@@ -11,6 +15,9 @@ const nextConfig = {
         hostname: "res.cloudinary.com"
       }
     ]
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react"]
   }
 };
 
