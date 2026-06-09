@@ -44,8 +44,8 @@ export default function LoginPage({ params, searchParams }: LoginPageProps) {
           </h1>
           <p className="mt-2 text-sm leading-6 text-neutral-600">
             {locale === "ar"
-              ? "استخدم حساب مسؤول للمتابعة إلى لوحة الإدارة."
-              : "Use an admin account to continue to the dashboard."}
+              ? "سجّل الدخول أو أنشئ حساباً لمتابعة الطلبات والعناوين."
+              : "Sign in or create an account to manage orders, addresses, and admin tools."}
           </p>
         </div>
 
