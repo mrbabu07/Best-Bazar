@@ -1,5 +1,18 @@
 import type { Metadata } from "next";
-import { DollarSign, PackageCheck, ShoppingCart, Truck } from "lucide-react";
+import Link from "next/link";
+import {
+  Boxes,
+  DollarSign,
+  ImagePlus,
+  PackageCheck,
+  Settings,
+  ShoppingCart,
+  Star,
+  Tags,
+  TicketPercent,
+  Truck,
+  Users
+} from "lucide-react";
 import { OrderStatus } from "@prisma/client";
 import { AdminMetricCard } from "@/components/admin/AdminMetricCard";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -82,6 +95,44 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     })
   );
   const maxRevenue = Math.max(...revenueSeries, 1);
+  const controlGroups = [
+    {
+      title: locale === "ar" ? "إدارة الكتالوج" : "Catalog control",
+      description: locale === "ar" ? "المنتجات والتصنيفات والمخزون." : "Products, categories, and inventory.",
+      icon: Boxes,
+      links: [
+        { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: PackageCheck },
+        { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags }
+      ]
+    },
+    {
+      title: locale === "ar" ? "إدارة الطلبات" : "Order control",
+      description: locale === "ar" ? "الطلبات والتحديثات والتقييمات." : "Orders, fulfillment, and reviews.",
+      icon: ShoppingCart,
+      links: [
+        { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Truck },
+        { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews`, icon: Star }
+      ]
+    },
+    {
+      title: locale === "ar" ? "العملاء والعروض" : "Customers and promos",
+      description: locale === "ar" ? "المستخدمون والقسائم والعروض." : "Users, coupons, and campaigns.",
+      icon: Users,
+      links: [
+        { label: dictionary.admin.users, href: `/${locale}/admin/users`, icon: Users },
+        { label: dictionary.admin.coupons, href: `/${locale}/admin/coupons`, icon: TicketPercent }
+      ]
+    },
+    {
+      title: locale === "ar" ? "واجهة المتجر" : "Storefront control",
+      description: locale === "ar" ? "البانرات والإعدادات العامة." : "Hero banners and store settings.",
+      icon: ImagePlus,
+      links: [
+        { label: locale === "ar" ? "البانرات" : "Banners", href: `/${locale}/admin/banners`, icon: ImagePlus },
+        { label: dictionary.admin.settings, href: `/${locale}/admin/settings`, icon: Settings }
+      ]
+    }
+  ];
 
   return (
     <div>
@@ -90,6 +141,58 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
         title={dictionary.admin.dashboard}
         subtitle="Revenue, order, inventory, and fulfillment overview for the last 30 days."
       />
+
+      <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">
+              {locale === "ar" ? "مركز التحكم" : "Control center"}
+            </p>
+            <h2 className="mt-2 text-xl font-bold text-navy">
+              {locale === "ar" ? "كل جزء منفصل مثل لوحة تجارة إلكترونية" : "Separate ecommerce management areas"}
+            </h2>
+          </div>
+          <Badge tone="gold">{locale === "ar" ? "إدارة سريعة" : "Quick manage"}</Badge>
+        </div>
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {controlGroups.map((group) => {
+            const GroupIcon = group.icon;
+
+            return (
+              <div key={group.title} className="rounded-lg border border-neutral-200 bg-paper p-4">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-md bg-gold-100 text-gold-800">
+                    <GroupIcon size={19} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-navy">{group.title}</h3>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{group.description}</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2">
+                  {group.links.map((item) => {
+                    const ItemIcon = item.icon;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex h-10 items-center justify-between gap-3 rounded-md bg-white px-3 text-sm font-bold text-navy transition hover:bg-gold-50"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <ItemIcon size={16} className="text-gold-700" />
+                          {item.label}
+                        </span>
+                        <span className="text-gold-700">-&gt;</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetricCard
