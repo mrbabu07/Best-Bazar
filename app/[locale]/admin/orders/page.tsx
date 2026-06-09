@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Prisma } from "@prisma/client";
 import { Search } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
 export const metadata: Metadata = {
   title: "Order Management | Best Bazar"
@@ -23,6 +24,25 @@ type AdminOrdersPageProps = {
 function readParam(searchParams: AdminOrdersPageProps["searchParams"], key: string) {
   const value = searchParams?.[key];
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getCurrency(currency: string): CurrencyCode {
+  return currency === "BDT" || currency === "USD" ? currency : "AED";
+}
+
+function buildOrderHref(locale: string, searchParams: AdminOrdersPageProps["searchParams"], selectedId: string) {
+  const params = new URLSearchParams();
+
+  for (const key of ["search", "status", "from", "to"]) {
+    const value = readParam(searchParams, key);
+
+    if (value) {
+      params.set(key, value);
+    }
+  }
+
+  params.set("selected", selectedId);
+  return `/${locale}/admin/orders?${params.toString()}`;
 }
 
 function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"]) {
@@ -68,14 +88,26 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
   const status = readParam(searchParams, "status") ?? "";
   const from = readParam(searchParams, "from") ?? "";
   const to = readParam(searchParams, "to") ?? "";
+  const selectedId = readParam(searchParams, "selected");
   const where = buildOrderWhere(searchParams);
-  const orders = await prisma.order.findMany({
-    where,
-    include: { items: true },
-    orderBy: { createdAt: "desc" },
-    take: 50
+  const [orders, settings] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: { items: true },
+      orderBy: { createdAt: "desc" },
+      take: 50
+    }),
+    prisma.setting.findUnique({
+      where: { id: "store-settings" },
+      select: { aedToBdt: true, aedToUsd: true }
+    })
+  ]);
+  const selectedOrder = orders.find((order) => order.id === selectedId) ?? orders[0];
+  const currencyRates = normalizeCurrencyRates({
+    AED: 1,
+    BDT: settings?.aedToBdt,
+    USD: settings?.aedToUsd
   });
-  const selectedOrder = orders[0];
   const selectedTotals = selectedOrder
     ? [
         { label: dictionary.common.subtotal, value: Number(selectedOrder.subtotal), tone: "normal" },
@@ -150,9 +182,19 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {orders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-5 py-4 font-bold text-navy">{order.orderNumber}</td>
-                    <td className="px-5 py-4 text-neutral-600">{order.customerName}</td>
+                  <tr key={order.id} className={order.id === selectedOrder?.id ? "bg-gold-50/70" : undefined}>
+                    <td className="px-5 py-4 font-bold text-navy">
+                      <Link
+                        href={buildOrderHref(locale, searchParams, order.id)}
+                        className="hover:text-gold-700"
+                      >
+                        {order.orderNumber}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-4 text-neutral-600">
+                      <p className="font-semibold text-navy">{order.customerName}</p>
+                      <p className="mt-1 text-xs text-neutral-500">{order.customerEmail}</p>
+                    </td>
                     <td className="px-5 py-4">
                       <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>
                         {order.paymentStatus}
@@ -162,7 +204,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       <AdminOrderStatusSelect orderId={order.id} initialStatus={order.orderStatus} />
                     </td>
                     <td className="px-5 py-4 font-bold text-navy">
-                      {formatCurrency(Number(order.total), "AED", locale)}
+                      {formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates)}
                     </td>
                   </tr>
                 ))}
@@ -187,7 +229,14 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                     <span className="text-neutral-600">
                       {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
                     </span>
-                    <span className="font-bold text-navy">{formatCurrency(Number(item.price) * item.quantity, "AED", locale)}</span>
+                    <span className="font-bold text-navy">
+                      {formatCurrency(
+                        Number(item.price) * item.quantity,
+                        getCurrency(selectedOrder.currency),
+                        locale,
+                        currencyRates
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -201,7 +250,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       {item.label}
                     </span>
                     <span className={item.tone === "strong" ? "font-bold text-navy" : "font-semibold text-navy"}>
-                      {formatCurrency(item.value, "AED", locale)}
+                      {formatCurrency(item.value, getCurrency(selectedOrder.currency), locale, currencyRates)}
                     </span>
                   </div>
                 ))}
