@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
+import { notFound } from "next/navigation";
+import { AppFrame } from "@/components/layout/AppFrame";
+import { getDictionary, isLocale, isRTL, locales } from "@/lib/i18n";
+import { Providers } from "./providers";
 import "../globals.css";
 
 const inter = Inter({
@@ -22,6 +26,10 @@ export const metadata: Metadata = {
   description: "Luxury Dubai-based online shopping experience."
 };
 
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
 export default function LocaleLayout({
   children,
   params
@@ -29,7 +37,12 @@ export default function LocaleLayout({
   children: React.ReactNode;
   params: { locale: string };
 }>) {
-  const isArabic = params.locale === "ar";
+  if (!isLocale(params.locale)) {
+    notFound();
+  }
+
+  const dictionary = getDictionary(params.locale);
+  const isArabic = isRTL(params.locale);
 
   return (
     <html
@@ -38,7 +51,11 @@ export default function LocaleLayout({
       className={`${inter.variable} ${cairo.variable}`}
     >
       <body className={isArabic ? "font-[var(--font-cairo)]" : "font-[var(--font-inter)]"}>
-        {children}
+        <Providers>
+          <AppFrame locale={params.locale} dictionary={dictionary}>
+            {children}
+          </AppFrame>
+        </Providers>
       </body>
     </html>
   );

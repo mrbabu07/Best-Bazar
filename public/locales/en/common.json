@@ -1,0 +1,115 @@
+{
+  "brand": "Best Bazar",
+  "announcement": "Free Dubai delivery on orders above AED 250",
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "account": "Account",
+    "admin": "Admin",
+    "cart": "Cart",
+    "search": "Search products"
+  },
+  "actions": {
+    "shopNow": "Shop now",
+    "viewCollection": "View collection",
+    "addToCart": "Add to cart",
+    "viewDetails": "View details",
+    "checkout": "Checkout",
+    "continueShopping": "Continue shopping",
+    "apply": "Apply",
+    "save": "Save changes",
+    "print": "Print invoice",
+    "preview": "Preview"
+  },
+  "common": {
+    "featured": "Featured",
+    "newArrivals": "New arrivals",
+    "categories": "Categories",
+    "sale": "Sale",
+    "inStock": "In stock",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock",
+    "reviews": "reviews",
+    "quantity": "Quantity",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "discount": "Discount",
+    "total": "Total"
+  },
+  "home": {
+    "eyebrow": "Dubai luxury marketplace",
+    "title": "Best Bazar",
+    "subtitle": "Curated essentials, gifting, fashion, electronics, and premium home goods delivered across Dubai with a polished bilingual shopping experience.",
+    "heroMetricOne": "1,200+ products",
+    "heroMetricTwo": "Same-day Dubai delivery",
+    "heroMetricThree": "AED, BDT, USD pricing",
+    "featuredTitle": "Featured products",
+    "featuredSubtitle": "High-demand picks prepared for a premium online store launch.",
+    "categoryTitle": "Shop by category",
+    "categorySubtitle": "Clean paths for customers to find luxury, lifestyle, and gifting collections.",
+    "arrivalTitle": "New arrivals",
+    "arrivalSubtitle": "Fresh products staged with frontend-ready commerce states."
+  },
+  "shop": {
+    "title": "Shop products",
+    "subtitle": "Browse the storefront with category, brand, price, and rating controls prepared for API integration.",
+    "filters": "Filters",
+    "category": "Category",
+    "brand": "Brand",
+    "priceRange": "Price range",
+    "rating": "Rating",
+    "sort": "Sort",
+    "results": "products found"
+  },
+  "product": {
+    "details": "Product details",
+    "specifications": "Specifications",
+    "reviews": "Customer reviews",
+    "related": "Related products",
+    "secure": "Secure checkout",
+    "delivery": "Dubai delivery",
+    "returns": "Easy returns"
+  },
+  "cart": {
+    "title": "Shopping cart",
+    "emptyTitle": "Your cart is empty",
+    "emptySubtitle": "Add premium products from the shop to start checkout.",
+    "coupon": "Coupon code",
+    "summary": "Order summary"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "subtitle": "Shipping details, payment choice, and order summary are ready for backend connection.",
+    "shippingInfo": "Shipping information",
+    "payment": "Payment method",
+    "stripe": "Stripe card payment",
+    "cod": "Cash on delivery"
+  },
+  "account": {
+    "title": "My account",
+    "subtitle": "Profile, address book, and order history for authenticated customers.",
+    "profile": "Profile",
+    "addresses": "Address book",
+    "orders": "Order history"
+  },
+  "admin": {
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "categories": "Categories",
+    "orders": "Orders",
+    "users": "Users",
+    "settings": "Settings",
+    "coupons": "Coupons",
+    "revenue": "Revenue",
+    "pendingOrders": "Pending orders",
+    "deliveredOrders": "Delivered orders",
+    "lowStock": "Low stock alerts",
+    "recentOrders": "Recent orders",
+    "revenueChart": "Revenue chart"
+  },
+  "footer": {
+    "tagline": "A bilingual Dubai ecommerce frontend built for luxury, clarity, and scale.",
+    "contact": "Dubai, United Arab Emirates",
+    "newsletter": "Newsletter"
+  }
+}
