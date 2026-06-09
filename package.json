@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
-    "dev": "next dev",
+    "dev": "node scripts/dev-server.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
