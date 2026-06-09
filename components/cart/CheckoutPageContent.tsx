@@ -1,7 +1,7 @@
 "use client";
 
 import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -21,6 +21,10 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
   const router = useRouter();
   const [payment, setPayment] = useState<"stripe" | "cod">("stripe");
   const [emirate, setEmirate] = useState("Dubai");
+  const [coupon, setCoupon] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
   const items = useCartStore((state) => state.items);
   const subtotal = useCartStore((state) => state.subtotal());
@@ -29,7 +33,55 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
   const currencyRates = usePreferencesStore((state) => state.currencyRates);
   const shippingSettings = usePreferencesStore((state) => state.shippingSettings);
   const shipping = getShippingCost(shippingSettings, emirate, subtotal);
-  const total = subtotal + shipping;
+  const total = Math.max(subtotal + shipping - discount, 0);
+
+  useEffect(() => {
+    setAppliedCoupon("");
+    setDiscount(0);
+  }, [subtotal]);
+
+  const updateCoupon = (value: string) => {
+    setCoupon(value);
+
+    if (appliedCoupon && value.trim().toUpperCase() !== appliedCoupon) {
+      setAppliedCoupon("");
+      setDiscount(0);
+    }
+  };
+
+  const applyCoupon = async () => {
+    const code = coupon.trim();
+
+    if (!code) {
+      toast.error(locale === "ar" ? "أدخل رمز القسيمة." : "Enter a coupon code.");
+      return;
+    }
+
+    setApplyingCoupon(true);
+
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal })
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.valid) {
+        throw new Error(result.message ?? result.error ?? "Coupon is not valid.");
+      }
+
+      setAppliedCoupon(result.code ?? code.toUpperCase());
+      setDiscount(Number(result.discount ?? 0));
+      toast.success(locale === "ar" ? "تم تطبيق القسيمة" : "Coupon applied");
+    } catch (error) {
+      setAppliedCoupon("");
+      setDiscount(0);
+      toast.error(error instanceof Error ? error.message : "Coupon is not valid.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
 
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -49,7 +101,7 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
       },
       paymentMethod: payment === "cod" ? "COD" : "STRIPE",
       currency,
-      couponCode: String(formData.get("couponCode") ?? "") || undefined,
+      couponCode: appliedCoupon || coupon.trim() || undefined,
       notes: String(formData.get("notes") ?? "") || undefined
     };
 
@@ -188,12 +240,24 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
           <div className="mt-5 grid gap-3 border-t border-neutral-200 pt-5 text-sm">
             <label className="grid gap-2 text-sm font-semibold text-navy">
               {dictionary.cart.coupon}
-              <input
-                name="couponCode"
-                placeholder="DUBAI50"
-                className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-              />
+              <div className="flex gap-2">
+                <input
+                  name="couponCode"
+                  value={coupon}
+                  onChange={(event) => updateCoupon(event.target.value)}
+                  placeholder="DUBAI50"
+                  className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+                />
+                <Button type="button" variant="secondary" onClick={applyCoupon} disabled={applyingCoupon || subtotal <= 0}>
+                  {applyingCoupon ? (locale === "ar" ? "جار..." : "Checking...") : dictionary.actions.apply}
+                </Button>
+              </div>
             </label>
+            {appliedCoupon ? (
+              <p className="text-xs font-semibold text-emerald-700">
+                {locale === "ar" ? `تم تطبيق ${appliedCoupon}` : `${appliedCoupon} applied`}
+              </p>
+            ) : null}
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>
               <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
@@ -201,6 +265,10 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.shipping}</span>
               <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale, currencyRates)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-500">{dictionary.common.discount}</span>
+              <span className="font-semibold text-navy">-{formatCurrency(discount, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between text-base">
               <span className="font-bold text-navy">{dictionary.common.total}</span>

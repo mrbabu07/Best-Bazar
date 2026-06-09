@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     const order = await createStoreOrder({ ...data, paymentMethod: "STRIPE" }, session?.user.id);
     const siteUrl = getSiteUrl();
 
+    const total = Number(order.total);
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: order.customerEmail,
@@ -29,17 +30,19 @@ export async function POST(request: Request) {
         orderId: order.id,
         orderNumber: order.orderNumber
       },
-      line_items: order.items.map((item) => ({
-        quantity: item.quantity,
-        price_data: {
-          currency: "aed",
-          unit_amount: Math.round(Number(item.price) * 100),
-          product_data: {
-            name: item.nameEn,
-            images: item.image ? [item.image] : undefined
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "aed",
+            unit_amount: Math.round(total * 100),
+            product_data: {
+              name: `Best Bazar order ${order.orderNumber}`,
+              description: `${order.items.length} item${order.items.length === 1 ? "" : "s"} including shipping and discounts`
+            }
           }
         }
-      })),
+      ],
       success_url: `${siteUrl}/en/order-confirmation/${order.id}?status=success`,
       cancel_url: `${siteUrl}/en/checkout?status=cancelled`
     });
