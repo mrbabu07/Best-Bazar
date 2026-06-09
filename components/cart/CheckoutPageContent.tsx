@@ -109,6 +109,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       },
       paymentMethod: payment === "cod" ? "COD" : "STRIPE",
       currency,
+      locale,
       couponCode: appliedCoupon || coupon.trim() || undefined,
       notes: String(formData.get("notes") ?? "") || undefined
     };

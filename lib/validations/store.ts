@@ -18,6 +18,7 @@ export const orderCreateSchema = z.object({
   }),
   paymentMethod: z.enum(["STRIPE", "COD"]),
   currency: z.enum(["AED", "BDT", "USD"]).default("AED"),
+  locale: z.enum(["en", "ar"]).default("en"),
   couponCode: z.string().trim().optional(),
   notes: z.string().trim().optional()
 });

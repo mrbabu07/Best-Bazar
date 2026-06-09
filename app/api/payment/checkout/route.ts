@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const data = orderCreateSchema.parse(await request.json());
     const order = await createStoreOrder({ ...data, paymentMethod: "STRIPE" }, session?.user.id);
     const siteUrl = getSiteUrl();
+    const checkoutLocale = data.locale;
 
     const total = Number(order.total);
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -43,8 +44,8 @@ export async function POST(request: Request) {
           }
         }
       ],
-      success_url: `${siteUrl}/en/order-confirmation/${order.id}?status=success&token=${order.accessToken}`,
-      cancel_url: `${siteUrl}/en/checkout?status=cancelled`
+      success_url: `${siteUrl}/${checkoutLocale}/order-confirmation/${order.id}?status=success&token=${order.accessToken}`,
+      cancel_url: `${siteUrl}/${checkoutLocale}/checkout?status=cancelled`
     });
 
     await prisma.order.update({
