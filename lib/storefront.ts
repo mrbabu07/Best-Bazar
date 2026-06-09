@@ -1,12 +1,8 @@
 import type { Prisma } from "@prisma/client";
+import { fallbackCategoryImage, fallbackProductImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
 import type { Category, Product } from "@/lib/types";
-
-const fallbackCategoryImage =
-  "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=80";
-const fallbackProductImage =
-  "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=1000&q=80";
 
 const categoryInclude = {
   products: {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { fallbackProductImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -113,7 +114,13 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
               className="grid gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:grid-cols-[120px_1fr_auto]"
             >
               <div className="relative aspect-square overflow-hidden rounded-md bg-neutral-100">
-                <Image src={item.image} alt={getLocalized(item.name, locale)} fill sizes="120px" className="object-cover" />
+                <Image
+                  src={item.image || fallbackProductImage}
+                  alt={getLocalized(item.name, locale)}
+                  fill
+                  sizes="120px"
+                  className="object-cover"
+                />
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">

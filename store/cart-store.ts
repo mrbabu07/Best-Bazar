@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { fallbackProductImage } from "@/lib/images";
 import type { LocalizedText, Product } from "@/lib/types";
 
 export type CartItem = {
@@ -54,7 +55,7 @@ export const useCartStore = create<CartState>()(
                 id: product.id,
                 slug: product.slug,
                 name: product.name,
-                image: product.images[0]?.url ?? "",
+                image: product.images[0]?.url || fallbackProductImage,
                 price: product.price,
                 brand: product.brand,
                 stock: product.stock,
