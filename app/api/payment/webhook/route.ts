@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { updateOrderStatus } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 
@@ -42,13 +43,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ received: true });
       }
 
-      const order = await prisma.order.update({
-        where: { id: existingOrder.id },
-        data: {
-          paymentStatus: PaymentStatus.PAID,
-          orderStatus: OrderStatus.CONFIRMED
-        },
-        include: { items: true }
+      const order = await updateOrderStatus({
+        orderId: existingOrder.id,
+        orderStatus: OrderStatus.CONFIRMED,
+        paymentStatus: PaymentStatus.PAID
       });
       await sendOrderConfirmationEmail(order);
     }
@@ -58,12 +56,19 @@ export async function POST(request: Request) {
     const session = event.data.object;
 
     if (session.id) {
-      await prisma.order.updateMany({
+      const existingOrder = await prisma.order.findFirst({
         where: { stripeSessionId: session.id },
-        data: {
-          paymentStatus: PaymentStatus.FAILED
-        }
+        select: { id: true }
       });
+
+      if (existingOrder) {
+        await updateOrderStatus({
+          orderId: existingOrder.id,
+          orderStatus: OrderStatus.CANCELLED,
+          paymentStatus: PaymentStatus.FAILED,
+          internalNotes: "Stripe checkout expired before payment."
+        });
+      }
     }
   }
 

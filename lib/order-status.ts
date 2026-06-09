@@ -1,4 +1,4 @@
-import { OrderStatus, type OrderItem, type Prisma } from "@prisma/client";
+import { OrderStatus, type OrderItem, type PaymentStatus, type Prisma } from "@prisma/client";
 import { ApiError } from "@/lib/api/admin";
 import { prisma } from "@/lib/prisma";
 
@@ -9,6 +9,7 @@ type OrderItemStock = Pick<OrderItem, "productId" | "quantity" | "nameEn">;
 type UpdateOrderStatusInput = {
   orderId: string;
   orderStatus: OrderStatus;
+  paymentStatus?: PaymentStatus;
   internalNotes?: string | null;
   userId?: string;
   allowedCurrentStatuses?: readonly OrderStatus[];
@@ -16,10 +17,12 @@ type UpdateOrderStatusInput = {
 
 function orderData(
   orderStatus: OrderStatus,
+  paymentStatus?: PaymentStatus,
   internalNotes?: string | null
 ): Prisma.OrderUpdateManyMutationInput {
   return {
     orderStatus,
+    ...(paymentStatus !== undefined ? { paymentStatus } : {}),
     ...(internalNotes !== undefined ? { internalNotes } : {})
   };
 }
@@ -53,6 +56,7 @@ async function reserveStock(tx: Prisma.TransactionClient, items: OrderItemStock[
 export async function updateOrderStatus({
   orderId,
   orderStatus,
+  paymentStatus,
   internalNotes,
   userId,
   allowedCurrentStatuses
@@ -74,7 +78,7 @@ export async function updateOrderStatus({
       throw new ApiError("This order can no longer be cancelled from your account.", 409);
     }
 
-    const data = orderData(orderStatus, internalNotes);
+    const data = orderData(orderStatus, paymentStatus, internalNotes);
 
     if (orderStatus === OrderStatus.CANCELLED && !order.stockRestored) {
       const result = await tx.order.updateMany({
