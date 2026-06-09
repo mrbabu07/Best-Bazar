@@ -60,6 +60,17 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const selectedVariant = product.variants.find((variant) => variant.id === selectedVariantId);
+  const selectedVariantImage = selectedVariant?.imageUrl
+    ? {
+        url: selectedVariant.imageUrl,
+        alt: `${getLocalized(product.name, locale)} - ${getLocalized(selectedVariant.name, locale)}`
+      }
+    : null;
+  const galleryImages = selectedVariantImage
+    ? [selectedVariantImage, ...product.images.filter((image) => image.url !== selectedVariantImage.url)]
+    : product.images;
+  const safeActiveImage = Math.min(activeImage, galleryImages.length - 1);
+  const activeGalleryImage = galleryImages[safeActiveImage] ?? product.images[0];
   const availableStock = selectedVariant?.stock ?? product.stock;
   const stockTone = availableStock > 10 ? "green" : availableStock > 0 ? "gold" : "red";
   const stockLabel =
@@ -78,6 +89,9 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
     const variant = product.variants.find((item) => item.id === variantId);
 
     setSelectedVariantId(variantId);
+    if (variant?.imageUrl) {
+      setActiveImage(0);
+    }
     setQuantity((value) => Math.max(1, Math.min(value, variant?.stock ?? product.stock)));
   };
 
@@ -86,8 +100,8 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
       <div>
         <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100 shadow-soft">
           <Image
-            src={product.images[activeImage].url}
-            alt={product.images[activeImage].alt}
+            src={activeGalleryImage.url}
+            alt={activeGalleryImage.alt}
             fill
             sizes="(min-width: 1024px) 52vw, 100vw"
             className="object-cover"
@@ -95,13 +109,13 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           />
         </div>
         <div className="mt-4 grid grid-cols-4 gap-3">
-          {product.images.map((image, index) => (
+          {galleryImages.map((image, index) => (
             <button
-              key={image.url}
+              key={`${image.url}-${index}`}
               type="button"
               onClick={() => setActiveImage(index)}
               className={`relative aspect-square overflow-hidden rounded-md border ${
-                index === activeImage ? "border-gold-500" : "border-neutral-200"
+                index === safeActiveImage ? "border-gold-500" : "border-neutral-200"
               }`}
               aria-label={image.alt}
             >
@@ -161,6 +175,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                     type="button"
                     onClick={() => selectVariant(variant.id)}
                     disabled={variant.stock <= 0}
+                    aria-pressed={selected}
                     className={`inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
                       selected ? "border-gold-500 bg-gold-50 text-navy" : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
                     }`}

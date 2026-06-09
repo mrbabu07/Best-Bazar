@@ -32,6 +32,7 @@ export type ProductVariant = {
   id: string;
   name: LocalizedText;
   colorHex?: string;
+  imageUrl?: string;
   sku?: string;
   stock: number;
   isActive: boolean;

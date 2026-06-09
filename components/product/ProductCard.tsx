@@ -54,47 +54,47 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
           src={product.images[0].url}
           alt={product.images[0].alt}
           fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 50vw"
           className="object-cover transition duration-500 group-hover:scale-105"
         />
-        <div className="absolute left-3 top-3 flex gap-2 rtl:left-auto rtl:right-3">
+        <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 sm:left-3 sm:top-3 rtl:left-auto rtl:right-2 sm:rtl:right-3">
           {product.isFeatured ? <Badge tone="gold">{dictionary.common.featured}</Badge> : null}
           {hasSale ? <Badge tone="red">{dictionary.common.sale}</Badge> : null}
         </div>
       </Link>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">
+      <div className="p-3 sm:p-4">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-gold-700 sm:text-xs sm:tracking-[0.16em]">
               {product.brand}
             </p>
             <Link
               href={`/${locale}/product/${product.slug}`}
-              className="mt-1 line-clamp-2 block min-h-12 text-base font-bold text-navy hover:text-gold-700"
+              className="mt-1 line-clamp-2 block min-h-10 text-sm font-bold leading-5 text-navy hover:text-gold-700 sm:min-h-12 sm:text-base sm:leading-6"
             >
               {getLocalized(product.name, locale)}
             </Link>
           </div>
-          <div className="flex items-center gap-1 text-sm font-semibold text-navy">
-            <Star size={15} className="fill-gold-400 text-gold-400" />
+          <div className="flex shrink-0 items-center gap-1 text-xs font-semibold text-navy sm:text-sm">
+            <Star size={14} className="fill-gold-400 text-gold-400" />
             {product.rating.toFixed(1)}
           </div>
         </div>
 
-        <div className="mt-3 flex items-end gap-2">
-          <p className="text-lg font-bold text-navy">
+        <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+          <p className="text-base font-bold text-navy sm:text-lg">
             {formatCurrency(product.price, currency, locale, currencyRates)}
           </p>
           {product.comparePrice ? (
-            <p className="text-sm text-neutral-400 line-through">
+            <p className="text-xs text-neutral-400 line-through sm:text-sm">
               {formatCurrency(product.comparePrice, currency, locale, currencyRates)}
             </p>
           ) : null}
         </div>
 
         {product.variants.length ? (
-          <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="mt-3 flex items-center justify-between gap-2 sm:gap-3">
             <p className="text-xs font-bold text-neutral-500">{colorLabel}</p>
             <div className="flex flex-wrap justify-end gap-1.5">
               {product.variants.slice(0, 5).map((variant) => (
@@ -102,17 +102,17 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
                   key={variant.id}
                   href={`/${locale}/shop?color=${encodeURIComponent(variant.name.en.toLowerCase())}`}
                   title={`${getLocalized(variant.name, locale)} (${variant.stock})`}
-                  className="grid h-6 w-6 place-items-center rounded-full border border-neutral-200 bg-white shadow-sm transition hover:scale-110 hover:border-gold-400"
+                  className="grid h-5 w-5 place-items-center rounded-full border border-neutral-200 bg-white shadow-sm transition hover:scale-110 hover:border-gold-400 sm:h-6 sm:w-6"
                   aria-label={getLocalized(variant.name, locale)}
                 >
                   <span
-                    className="h-4 w-4 rounded-full border border-white"
+                    className="h-3.5 w-3.5 rounded-full border border-white sm:h-4 sm:w-4"
                     style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
                   />
                 </Link>
               ))}
               {product.variants.length > 5 ? (
-                <span className="grid h-6 min-w-6 place-items-center rounded-full bg-paper px-1.5 text-[10px] font-bold text-neutral-500">
+                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-paper px-1 text-[9px] font-bold text-neutral-500 sm:h-6 sm:min-w-6 sm:px-1.5 sm:text-[10px]">
                   +{product.variants.length - 5}
                 </span>
               ) : null}
@@ -121,7 +121,7 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
         ) : null}
 
         <Button
-          className="mt-4 w-full"
+          className="mt-3 h-10 w-full px-2 text-xs sm:mt-4 sm:h-11 sm:px-5 sm:text-sm"
           onClick={handleAdd}
           disabled={availableStock <= 0}
           variant={availableStock <= 0 ? "secondary" : "primary"}

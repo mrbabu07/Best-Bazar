@@ -97,7 +97,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
             title={dictionary.home.categoryTitle}
             subtitle={dictionary.home.categorySubtitle}
           />
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
             {categories.map((category) => (
               <Link
                 key={category.id}
@@ -113,9 +113,9 @@ export default async function HomePage({ params }: { params: { locale: string } 
                     className="object-cover transition duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className="p-4">
-                  <h3 className="font-bold text-navy">{getLocalized(category.name, locale)}</h3>
-                  <p className="mt-1 text-sm text-neutral-500">{category.productCount} {dictionary.shop.results}</p>
+                <div className="p-3 sm:p-4">
+                  <h3 className="text-sm font-bold text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
+                  <p className="mt-1 text-xs text-neutral-500 sm:text-sm">{category.productCount} {dictionary.shop.results}</p>
                 </div>
               </Link>
             ))}
@@ -134,7 +134,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
             </Link>
           }
         />
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
           ))}
@@ -147,7 +147,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
           title={dictionary.home.arrivalTitle}
           subtitle={dictionary.home.arrivalSubtitle}
         />
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {newArrivals.map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
           ))}

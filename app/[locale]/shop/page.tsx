@@ -77,13 +77,13 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
           colors={colors}
           current={{ category, brand, color, rating, search, sort, tag, priceMax }}
         />
-        <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
           {listing.length > 0 ? (
             listing.map((product) => (
               <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
             ))
           ) : (
-            <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft sm:col-span-2 xl:col-span-3">
+            <div className="col-span-2 rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft xl:col-span-3">
               <h2 className="text-xl font-bold text-navy">
                 {locale === "ar" ? "لم يتم العثور على منتجات" : "No products found"}
               </h2>

@@ -41,10 +41,11 @@ export async function POST(_request: Request, { params }: RouteContext) {
           create: original.images.map(({ url, alt, sortOrder }) => ({ url, alt, sortOrder }))
         },
         variants: {
-          create: original.variants.map(({ colorNameEn, colorNameAr, colorHex, sku, stock, sortOrder, isActive }) => ({
+          create: original.variants.map(({ colorNameEn, colorNameAr, colorHex, imageUrl, sku, stock, sortOrder, isActive }) => ({
             colorNameEn,
             colorNameAr,
             colorHex,
+            imageUrl,
             sku: sku ? `${sku}-COPY-${suffix}` : null,
             stock,
             sortOrder,

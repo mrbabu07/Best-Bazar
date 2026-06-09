@@ -7,7 +7,7 @@ export default function ShopLoading() {
       <Skeleton className="mt-4 h-5 w-96 max-w-full" />
       <div className="mt-8 grid gap-8 lg:grid-cols-[280px_1fr]">
         <Skeleton className="h-96" />
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}

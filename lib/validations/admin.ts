@@ -42,6 +42,7 @@ export const productVariantSchema = z.object({
   colorNameEn: z.string().trim().min(1),
   colorNameAr: z.string().trim().min(1),
   colorHex,
+  imageUrl: nullableImageUrl,
   sku: nullableString,
   stock: z.coerce.number().int().min(0).default(0),
   sortOrder: z.coerce.number().int().min(0).default(0),

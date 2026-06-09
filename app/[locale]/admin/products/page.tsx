@@ -67,6 +67,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       colorNameEn: variant.colorNameEn,
       colorNameAr: variant.colorNameAr,
       colorHex: variant.colorHex ?? "",
+      imageUrl: variant.imageUrl ?? "",
       sku: variant.sku ?? "",
       stock: String(variant.stock),
       sortOrder: String(variant.sortOrder),

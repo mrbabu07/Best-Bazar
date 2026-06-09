@@ -30,6 +30,7 @@ type ProductVariantForm = {
   colorNameEn: string;
   colorNameAr: string;
   colorHex: string;
+  imageUrl: string;
   sku: string;
   stock: string;
   sortOrder: string;
@@ -255,6 +256,7 @@ export function AdminProductManager({
           colorNameEn: "",
           colorNameAr: "",
           colorHex: "#000000",
+          imageUrl: "",
           sku: "",
           stock: "0",
           sortOrder: String(current.variants.length),
@@ -333,6 +335,7 @@ export function AdminProductManager({
           colorNameEn: variant.colorNameEn,
           colorNameAr: variant.colorNameAr,
           colorHex: variant.colorHex || null,
+          imageUrl: variant.imageUrl || null,
           sku: variant.sku || null,
           stock: Number(variant.stock || 0),
           sortOrder: Number(variant.sortOrder || index),
@@ -712,6 +715,13 @@ export function AdminProductManager({
             {form.variants.length ? (
               form.variants.map((variant, index) => (
                 <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
+                  <AdminImageUploadField
+                    label={`${variant.colorNameEn || "Color"} image`}
+                    value={variant.imageUrl}
+                    onChange={(value) => updateVariant(index, "imageUrl", value)}
+                    previewAlt={`${form.nameEn || "Product"} ${variant.colorNameEn || "color"}`}
+                    aspectClassName="aspect-square"
+                  />
                   <div className="grid gap-3 sm:grid-cols-[1fr_1fr_92px]">
                     <input
                       value={variant.colorNameEn}

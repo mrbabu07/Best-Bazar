@@ -66,7 +66,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <section className="mt-16">
         <SectionHeader title={dictionary.product.related} subtitle={getLocalized(product.description, locale)} />
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {related.map((item) => (
             <ProductCard key={item.id} product={item} locale={locale} dictionary={dictionary} />
           ))}

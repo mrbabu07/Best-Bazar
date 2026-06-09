@@ -147,7 +147,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
             variantSku: variant?.sku,
             price: product.price,
             quantity,
-            image: product.images[0]?.url
+            image: variant?.imageUrl ?? product.images[0]?.url
           }))
         }
       },

@@ -68,7 +68,7 @@ export const useCartStore = create<CartState>()(
                 variantName: variant?.name,
                 variantColorHex: variant?.colorHex,
                 variantSku: variant?.sku,
-                image: product.images[0]?.url || fallbackProductImage,
+                image: variant?.imageUrl || product.images[0]?.url || fallbackProductImage,
                 price: product.price,
                 brand: product.brand,
                 stock: availableStock,

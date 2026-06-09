@@ -58,15 +58,20 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
         alt: image.alt ?? product.nameEn
       }))
     : [{ url: fallbackProductImage, alt: product.nameEn }];
-  const variants = product.variants.map((variant) => ({
-    id: variant.id,
-    name: { en: variant.colorNameEn, ar: variant.colorNameAr },
-    colorHex: variant.colorHex ?? undefined,
-    sku: variant.sku ?? undefined,
-    stock: variant.stock,
-    isActive: variant.isActive,
-    sortOrder: variant.sortOrder
-  }));
+  const variants = product.variants.map((variant) => {
+    const imageUrl = safeRemoteImage(variant.imageUrl, "");
+
+    return {
+      id: variant.id,
+      name: { en: variant.colorNameEn, ar: variant.colorNameAr },
+      colorHex: variant.colorHex ?? undefined,
+      imageUrl: imageUrl || undefined,
+      sku: variant.sku ?? undefined,
+      stock: variant.stock,
+      isActive: variant.isActive,
+      sortOrder: variant.sortOrder
+    };
+  });
   const variantStock = variants.reduce((total, variant) => total + variant.stock, 0);
 
   return {
