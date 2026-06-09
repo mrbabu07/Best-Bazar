@@ -1,0 +1,286 @@
+"use client";
+
+import Image from "next/image";
+import { Edit, GripVertical, Plus, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
+import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import type { Locale } from "@/lib/i18n";
+
+export type AdminCategoryRow = {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  slug: string;
+  image: string;
+  parentCategoryId: string;
+  parentCategoryNameEn: string;
+  productCount: number;
+  subcategoryCount: number;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+type CategoryForm = {
+  nameEn: string;
+  nameAr: string;
+  slug: string;
+  image: string;
+  parentCategoryId: string;
+  sortOrder: string;
+  isActive: boolean;
+};
+
+type AdminCategoryManagerProps = {
+  locale: Locale;
+  categories: AdminCategoryRow[];
+  saveLabel: string;
+};
+
+const emptyForm: CategoryForm = {
+  nameEn: "",
+  nameAr: "",
+  slug: "",
+  image: "",
+  parentCategoryId: "",
+  sortOrder: "0",
+  isActive: true
+};
+
+function fromCategory(category: AdminCategoryRow): CategoryForm {
+  return {
+    nameEn: category.nameEn,
+    nameAr: category.nameAr,
+    slug: category.slug,
+    image: category.image,
+    parentCategoryId: category.parentCategoryId,
+    sortOrder: String(category.sortOrder),
+    isActive: category.isActive
+  };
+}
+
+function getDisplayName(category: AdminCategoryRow, locale: Locale) {
+  return locale === "ar" ? category.nameAr : category.nameEn;
+}
+
+export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCategoryManagerProps) {
+  const router = useRouter();
+  const [selectedId, setSelectedId] = useState("");
+  const [form, setForm] = useState<CategoryForm>(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === selectedId),
+    [categories, selectedId]
+  );
+
+  const updateForm = <Key extends keyof CategoryForm>(key: Key, value: CategoryForm[Key]) => {
+    setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const startCreate = () => {
+    setSelectedId("");
+    setForm(emptyForm);
+  };
+
+  const startEdit = (category: AdminCategoryRow) => {
+    setSelectedId(category.id);
+    setForm(fromCategory(category));
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+
+    const payload = {
+      nameEn: form.nameEn,
+      nameAr: form.nameAr,
+      slug: form.slug,
+      image: form.image || null,
+      parentCategoryId: form.parentCategoryId || null,
+      sortOrder: Number(form.sortOrder),
+      isActive: form.isActive
+    };
+    const endpoint = selectedId ? `/api/admin/categories/${selectedId}` : "/api/admin/categories";
+
+    try {
+      const response = await fetch(endpoint, {
+        method: selectedId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error ?? "Unable to save category.");
+      }
+
+      toast.success(selectedId ? "Category updated" : "Category created");
+      if (!selectedId) {
+        setForm(emptyForm);
+      }
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save category.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+      <section className="grid gap-3">
+        {categories.map((category) => (
+          <article
+            key={category.id}
+            className="grid gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:grid-cols-[auto_96px_1fr_auto]"
+          >
+            <div className="grid h-10 w-10 place-items-center rounded-md bg-paper text-neutral-400">
+              <GripVertical size={18} />
+            </div>
+            <div className="relative aspect-square overflow-hidden rounded-md bg-neutral-100">
+              {category.image ? (
+                <Image
+                  src={category.image}
+                  alt={getDisplayName(category, locale)}
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                />
+              ) : null}
+            </div>
+            <div>
+              <h2 className="font-bold text-navy">{getDisplayName(category, locale)}</h2>
+              <p className="mt-1 text-sm text-neutral-500">{category.slug}</p>
+              <p className="mt-2 text-sm text-neutral-600">
+                {category.productCount} products
+                {category.parentCategoryNameEn ? ` | parent: ${category.parentCategoryNameEn}` : ""}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-start gap-2">
+              <Badge tone={category.isActive ? "green" : "red"}>
+                {category.isActive ? "Active" : "Inactive"}
+              </Badge>
+              <Badge tone="gold">#{category.sortOrder}</Badge>
+              <button
+                type="button"
+                onClick={() => startEdit(category)}
+                className="grid h-9 w-9 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
+                aria-label={`Edit ${category.nameEn}`}
+              >
+                <Edit size={15} />
+              </button>
+              {category.productCount === 0 && category.subcategoryCount === 0 ? (
+                <AdminDeleteButton
+                  endpoint={`/api/admin/categories/${category.id}`}
+                  label={`Delete category ${category.nameEn}?`}
+                  successMessage="Category deleted"
+                />
+              ) : null}
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <aside id="category-editor" className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-navy">Category editor</h2>
+            <p className="mt-1 text-xs font-semibold text-neutral-500">
+              {selectedCategory ? `Editing ${selectedCategory.nameEn}` : "Create a new category"}
+            </p>
+          </div>
+          <Button type="button" variant="secondary" size="sm" onClick={startCreate}>
+            <Plus size={15} />
+            New
+          </Button>
+        </div>
+        <form onSubmit={submit} className="mt-5 grid gap-4">
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Name EN
+            <input
+              value={form.nameEn}
+              onChange={(event) => updateForm("nameEn", event.target.value)}
+              required
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Name AR
+            <input
+              value={form.nameAr}
+              onChange={(event) => updateForm("nameAr", event.target.value)}
+              required
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Slug
+            <input
+              value={form.slug}
+              onChange={(event) => updateForm("slug", event.target.value)}
+              required
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Sort order
+            <input
+              type="number"
+              min="0"
+              value={form.sortOrder}
+              onChange={(event) => updateForm("sortOrder", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Parent category
+            <select
+              value={form.parentCategoryId}
+              onChange={(event) => updateForm("parentCategoryId", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            >
+              <option value="">None</option>
+              {categories
+                .filter((category) => category.id !== selectedId)
+                .map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {getDisplayName(category, locale)}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <AdminImageUploadField
+            label="Category image"
+            value={form.image}
+            onChange={(value) => updateForm("image", value)}
+            previewAlt={form.nameEn}
+            aspectClassName="aspect-square"
+          />
+          <label className="flex items-center gap-2 text-sm font-semibold text-navy">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(event) => updateForm("isActive", event.target.checked)}
+              className="accent-gold-500"
+            />
+            Active
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving..." : saveLabel}
+            </Button>
+            <Button type="button" variant="secondary" onClick={startCreate}>
+              <RotateCcw size={16} />
+              Reset
+            </Button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+}
