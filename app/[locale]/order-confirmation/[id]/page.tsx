@@ -5,7 +5,8 @@ import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
-import { getDictionary, isLocale } from "@/lib/i18n";
+import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { formatOrderStatus, formatPaymentStatus } from "@/lib/order-labels";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
 
@@ -18,6 +19,32 @@ type OrderConfirmationPageProps = {
     token?: string;
   };
 };
+
+const confirmationCopy = {
+  en: {
+    title: "Your order is confirmed",
+    subtitle: "We will send order updates as your shipment is processed.",
+    payment: "Payment",
+    order: "Order",
+    total: "Total"
+  },
+  ar: {
+    title: "تم استلام طلبك",
+    subtitle: "سنرسل لك تحديثات الطلب عند معالجة الشحنة.",
+    payment: "الدفع",
+    order: "الطلب",
+    total: "الإجمالي"
+  }
+} satisfies Record<
+  Locale,
+  {
+    title: string;
+    subtitle: string;
+    payment: string;
+    order: string;
+    total: string;
+  }
+>;
 
 export function generateMetadata({ params }: OrderConfirmationPageProps): Metadata {
   return {
@@ -34,6 +61,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
   }
 
   const dictionary = getDictionary(locale);
+  const labels = confirmationCopy[locale];
   const session = await getServerSession(authOptions);
   const [order, settings] = await Promise.all([
     prisma.order.findUnique({
@@ -80,12 +108,10 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
               <CheckCircle2 size={26} />
             </div>
             <h1 className="mt-5 text-3xl font-bold text-navy">
-              {locale === "ar" ? "تم استلام طلبك" : "Your order is confirmed"}
+              {labels.title}
             </h1>
             <p className="mt-2 text-neutral-600">
-              {locale === "ar"
-                ? "سنرسل لك تحديثات الطلب عند معالجة الشحنة."
-                : "We will send order updates as your shipment is processed."}
+              {labels.subtitle}
             </p>
           </div>
           <div className="rounded-lg bg-paper p-4 text-sm">
@@ -96,19 +122,19 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
 
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           <div className="rounded-md border border-neutral-200 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Payment</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">{labels.payment}</p>
             <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"} className="mt-2">
-              {order.paymentStatus}
+              {formatPaymentStatus(order.paymentStatus, locale)}
             </Badge>
           </div>
           <div className="rounded-md border border-neutral-200 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Order</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">{labels.order}</p>
             <Badge tone={order.orderStatus === "DELIVERED" ? "green" : "blue"} className="mt-2">
-              {order.orderStatus}
+              {formatOrderStatus(order.orderStatus, locale)}
             </Badge>
           </div>
           <div className="rounded-md border border-neutral-200 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Total</p>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">{labels.total}</p>
             <p className="mt-2 font-bold text-navy">{formatCurrency(Number(order.total), currency, locale, currencyRates)}</p>
           </div>
         </div>

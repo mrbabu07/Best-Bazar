@@ -20,7 +20,17 @@ type ProductCardProps = {
   dictionary: Dictionary;
 };
 
+const cardCopy = {
+  en: {
+    addedToCart: (name: string) => `${name} added to cart`
+  },
+  ar: {
+    addedToCart: (name: string) => `تمت إضافة ${name} إلى السلة`
+  }
+} satisfies Record<Locale, { addedToCart: (name: string) => string }>;
+
 export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
+  const labels = cardCopy[locale];
   const hydrated = useHydrated();
   const addItem = useCartStore((state) => state.addItem);
   const storedCurrency = usePreferencesStore((state) => state.currency);
@@ -31,7 +41,7 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
 
   const handleAdd = () => {
     addItem(product);
-    toast.success(`${getLocalized(product.name, locale)} added to cart`);
+    toast.success(labels.addedToCart(getLocalized(product.name, locale)));
   };
 
   return (

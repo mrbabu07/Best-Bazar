@@ -19,7 +19,78 @@ type CheckoutPageContentProps = {
   stripeEnabled: boolean;
 };
 
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "city" | "emirate" | "country";
+
+type CheckoutField = {
+  name: CheckoutFieldName;
+  label: string;
+  type: string;
+  autoComplete: string;
+  defaultValue?: string;
+};
+
+const checkoutCopy = {
+  en: {
+    couponRequired: "Enter a coupon code.",
+    couponInvalid: "Coupon is not valid.",
+    couponApplied: "Coupon applied",
+    checking: "Checking...",
+    processing: "Processing...",
+    orderPlaced: "Order placed",
+    checkoutFailed: "Checkout failed",
+    stripeUrlMissing: "Stripe checkout URL was not returned.",
+    notes: "Notes",
+    applied: (code: string) => `${code} applied`,
+    fields: {
+      name: "Full name",
+      email: "Email",
+      phone: "Phone",
+      street: "Street address",
+      city: "City",
+      emirate: "Emirate",
+      country: "Country"
+    }
+  },
+  ar: {
+    couponRequired: "أدخل رمز القسيمة.",
+    couponInvalid: "رمز القسيمة غير صالح.",
+    couponApplied: "تم تطبيق القسيمة",
+    checking: "جار التحقق...",
+    processing: "جار المعالجة...",
+    orderPlaced: "تم إنشاء الطلب",
+    checkoutFailed: "فشل إتمام الطلب",
+    stripeUrlMissing: "لم يتم إنشاء رابط الدفع عبر سترايب.",
+    notes: "ملاحظات",
+    applied: (code: string) => `تم تطبيق ${code}`,
+    fields: {
+      name: "الاسم الكامل",
+      email: "البريد الإلكتروني",
+      phone: "الهاتف",
+      street: "عنوان الشارع",
+      city: "المدينة",
+      emirate: "الإمارة",
+      country: "الدولة"
+    }
+  }
+} satisfies Record<
+  Locale,
+  {
+    couponRequired: string;
+    couponInvalid: string;
+    couponApplied: string;
+    checking: string;
+    processing: string;
+    orderPlaced: string;
+    checkoutFailed: string;
+    stripeUrlMissing: string;
+    notes: string;
+    applied: (code: string) => string;
+    fields: Record<CheckoutFieldName, string>;
+  }
+>;
+
 export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: CheckoutPageContentProps) {
+  const labels = checkoutCopy[locale];
   const router = useRouter();
   const hydrated = useHydrated();
   const [payment, setPayment] = useState<"stripe" | "cod">(stripeEnabled ? "stripe" : "cod");
@@ -61,7 +132,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
     const code = coupon.trim();
 
     if (!code) {
-      toast.error(locale === "ar" ? "أدخل رمز القسيمة." : "Enter a coupon code.");
+      toast.error(labels.couponRequired);
       return;
     }
 
@@ -76,16 +147,16 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       const result = await response.json();
 
       if (!response.ok || !result.valid) {
-        throw new Error(result.message ?? result.error ?? "Coupon is not valid.");
+        throw new Error(labels.couponInvalid);
       }
 
       setAppliedCoupon(result.code ?? code.toUpperCase());
       setDiscount(Number(result.discount ?? 0));
-      toast.success(locale === "ar" ? "تم تطبيق القسيمة" : "Coupon applied");
+      toast.success(labels.couponApplied);
     } catch (error) {
       setAppliedCoupon("");
       setDiscount(0);
-      toast.error(error instanceof Error ? error.message : "Coupon is not valid.");
+      toast.error(error instanceof Error ? error.message : labels.couponInvalid);
     } finally {
       setApplyingCoupon(false);
     }
@@ -124,12 +195,12 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Checkout failed");
+        throw new Error(result.error ?? labels.checkoutFailed);
       }
 
       if (payment === "stripe") {
         if (!result.checkoutUrl) {
-          throw new Error("Stripe checkout URL was not returned.");
+          throw new Error(labels.stripeUrlMissing);
         }
 
         window.location.href = result.checkoutUrl;
@@ -137,25 +208,25 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       }
 
       clearCart();
-      toast.success("Order placed");
+      toast.success(labels.orderPlaced);
       const tokenQuery = result.accessToken ? `?token=${encodeURIComponent(result.accessToken)}` : "";
       router.push(`/${locale}/order-confirmation/${result.id}${tokenQuery}`);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Checkout failed");
+      toast.error(error instanceof Error ? error.message : labels.checkoutFailed);
     } finally {
       setLoading(false);
     }
   };
 
-  const fields = [
-    { name: "name", label: "Full name", type: "text", autoComplete: "name" },
-    { name: "email", label: "Email", type: "email", autoComplete: "email" },
-    { name: "phone", label: "Phone", type: "tel", autoComplete: "tel" },
-    { name: "street", label: "Street address", type: "text", autoComplete: "street-address" },
-    { name: "city", label: "City", type: "text", autoComplete: "address-level2", defaultValue: "Dubai" },
-    { name: "emirate", label: "Emirate", type: "text", autoComplete: "address-level1", defaultValue: "Dubai" },
-    { name: "country", label: "Country", type: "text", autoComplete: "country-name", defaultValue: "UAE" }
+  const fields: CheckoutField[] = [
+    { name: "name", label: labels.fields.name, type: "text", autoComplete: "name" },
+    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email" },
+    { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel" },
+    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address" },
+    { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", defaultValue: "Dubai" },
+    { name: "emirate", label: labels.fields.emirate, type: "text", autoComplete: "address-level1", defaultValue: "Dubai" },
+    { name: "country", label: labels.fields.country, type: "text", autoComplete: "country-name", defaultValue: "UAE" }
   ];
 
   return (
@@ -188,7 +259,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                 </label>
               ))}
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
-                Notes
+                {labels.notes}
                 <textarea
                   name="notes"
                   rows={4}
@@ -261,13 +332,13 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                   className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                 />
                 <Button type="button" variant="secondary" onClick={applyCoupon} disabled={applyingCoupon || subtotal <= 0}>
-                  {applyingCoupon ? (locale === "ar" ? "جار..." : "Checking...") : dictionary.actions.apply}
+                  {applyingCoupon ? labels.checking : dictionary.actions.apply}
                 </Button>
               </div>
             </label>
             {appliedCoupon ? (
               <p className="text-xs font-semibold text-emerald-700">
-                {locale === "ar" ? `تم تطبيق ${appliedCoupon}` : `${appliedCoupon} applied`}
+                {labels.applied(appliedCoupon)}
               </p>
             ) : null}
             <div className="flex justify-between">
@@ -289,7 +360,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
           </div>
           <Button type="submit" className="mt-6 w-full" disabled={items.length === 0 || loading}>
             <ShieldCheck size={18} />
-            {loading ? "Processing..." : payment === "stripe" ? dictionary.checkout.stripe : dictionary.checkout.cod}
+            {loading ? labels.processing : payment === "stripe" ? dictionary.checkout.stripe : dictionary.checkout.cod}
           </Button>
         </aside>
       </form>

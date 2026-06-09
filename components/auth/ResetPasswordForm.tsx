@@ -16,6 +16,7 @@ type ResetPasswordFormProps = {
 const copy = {
   en: {
     email: "Email",
+    token: "Token",
     password: "New password",
     confirm: "Confirm password",
     submit: "Reset password",
@@ -26,6 +27,7 @@ const copy = {
   },
   ar: {
     email: "البريد الإلكتروني",
+    token: "رمز التحقق",
     password: "كلمة المرور الجديدة",
     confirm: "تأكيد كلمة المرور",
     submit: "إعادة تعيين كلمة المرور",
@@ -94,7 +96,7 @@ export function ResetPasswordForm({ locale, initialEmail, initialToken }: ResetP
         </div>
       </label>
       <label className="grid gap-2 text-sm font-semibold text-navy">
-        Token
+        {labels.token}
         <input
           value={token}
           onChange={(event) => setToken(event.target.value)}

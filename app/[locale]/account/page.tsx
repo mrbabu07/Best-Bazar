@@ -8,7 +8,8 @@ import { AccountProfileForm } from "@/components/account/AccountProfileForm";
 import { CancelOrderButton } from "@/components/account/CancelOrderButton";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
-import { getDictionary, isLocale } from "@/lib/i18n";
+import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
+import { formatOrderStatus } from "@/lib/order-labels";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
@@ -55,6 +56,38 @@ function canCancelOrder(status: string) {
   return status === OrderStatus.PENDING || status === OrderStatus.CONFIRMED;
 }
 
+const accountCopy = {
+  en: {
+    defaultName: "Best Bazar customer",
+    noAddresses: "No saved addresses yet.",
+    noOrders: "No orders yet.",
+    order: "Order",
+    items: "Items",
+    status: "Status",
+    total: "Total"
+  },
+  ar: {
+    defaultName: "عميل بيست بازار",
+    noAddresses: "لا توجد عناوين محفوظة حتى الآن.",
+    noOrders: "لا توجد طلبات حتى الآن.",
+    order: "الطلب",
+    items: "المنتجات",
+    status: "الحالة",
+    total: "الإجمالي"
+  }
+} satisfies Record<
+  Locale,
+  {
+    defaultName: string;
+    noAddresses: string;
+    noOrders: string;
+    order: string;
+    items: string;
+    status: string;
+    total: string;
+  }
+>;
+
 export default async function AccountPage({ params }: { params: { locale: string } }) {
   noStore();
   const locale = params.locale;
@@ -70,6 +103,7 @@ export default async function AccountPage({ params }: { params: { locale: string
   }
 
   const dictionary = getDictionary(locale);
+  const labels = accountCopy[locale];
   const [user, settings] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
@@ -153,7 +187,7 @@ export default async function AccountPage({ params }: { params: { locale: string
               {getInitials(user.name, user.email)}
             </div>
             <div className="min-w-0">
-              <h2 className="truncate font-bold text-navy">{user.name ?? "Best Bazar customer"}</h2>
+              <h2 className="truncate font-bold text-navy">{user.name ?? labels.defaultName}</h2>
               <p className="truncate text-sm text-neutral-500">{user.email}</p>
             </div>
           </div>
@@ -188,7 +222,7 @@ export default async function AccountPage({ params }: { params: { locale: string
                 ))
               ) : (
                 <p className="text-sm text-neutral-500 sm:col-span-2">
-                  {locale === "ar" ? "لا توجد عناوين محفوظة حتى الآن." : "No saved addresses yet."}
+                  {labels.noAddresses}
                 </p>
               )}
             </div>
@@ -203,10 +237,10 @@ export default async function AccountPage({ params }: { params: { locale: string
                 <table className="min-w-full divide-y divide-neutral-200 text-sm">
                   <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.12em] text-neutral-500 rtl:text-right">
                     <tr>
-                      <th className="px-5 py-3">Order</th>
-                      <th className="px-5 py-3">Items</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3">Total</th>
+                      <th className="px-5 py-3">{labels.order}</th>
+                      <th className="px-5 py-3">{labels.items}</th>
+                      <th className="px-5 py-3">{labels.status}</th>
+                      <th className="px-5 py-3">{labels.total}</th>
                       <th className="px-5 py-3">{dictionary.account.orderAction}</th>
                     </tr>
                   </thead>
@@ -222,7 +256,9 @@ export default async function AccountPage({ params }: { params: { locale: string
                           {order.items.map((item) => (locale === "ar" ? item.nameAr : item.nameEn)).join(", ")}
                         </td>
                         <td className="px-5 py-4">
-                          <Badge tone={getOrderTone(order.orderStatus)}>{order.orderStatus}</Badge>
+                          <Badge tone={getOrderTone(order.orderStatus)}>
+                            {formatOrderStatus(order.orderStatus, locale)}
+                          </Badge>
                         </td>
                         <td className="px-5 py-4 font-bold text-navy">
                           {formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates)}
@@ -240,7 +276,7 @@ export default async function AccountPage({ params }: { params: { locale: string
                 </table>
               ) : (
                 <div className="p-6 text-sm text-neutral-500">
-                  {locale === "ar" ? "لا توجد طلبات حتى الآن." : "No orders yet."}
+                  {labels.noOrders}
                 </div>
               )}
             </div>

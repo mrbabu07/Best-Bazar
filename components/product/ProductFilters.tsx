@@ -24,6 +24,35 @@ type ProductFiltersProps = {
   };
 };
 
+const filterCopy = {
+  en: {
+    all: "All",
+    sortFeatured: "Featured",
+    sortNewest: "Newest",
+    sortPriceAsc: "Price low to high",
+    sortPriceDesc: "Price high to low",
+    sortRating: "Top rated"
+  },
+  ar: {
+    all: "الكل",
+    sortFeatured: "مميز",
+    sortNewest: "الأحدث",
+    sortPriceAsc: "السعر من الأقل إلى الأعلى",
+    sortPriceDesc: "السعر من الأعلى إلى الأقل",
+    sortRating: "الأعلى تقييما"
+  }
+} satisfies Record<
+  Locale,
+  {
+    all: string;
+    sortFeatured: string;
+    sortNewest: string;
+    sortPriceAsc: string;
+    sortPriceDesc: string;
+    sortRating: string;
+  }
+>;
+
 export function ProductFilters({
   locale,
   dictionary,
@@ -31,6 +60,7 @@ export function ProductFilters({
   brands,
   current
 }: ProductFiltersProps) {
+  const labels = filterCopy[locale];
   const router = useRouter();
   const [category, setCategory] = useState(current.category ?? "");
   const [brand, setBrand] = useState(current.brand ?? "");
@@ -67,7 +97,7 @@ export function ProductFilters({
             onChange={(event) => setCategory(event.target.value)}
             className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             {categories.map((item) => (
               <option key={item.slug} value={item.slug}>
                 {getLocalized(item.name, locale)}
@@ -83,7 +113,7 @@ export function ProductFilters({
             onChange={(event) => setBrand(event.target.value)}
             className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             {brands.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -113,7 +143,7 @@ export function ProductFilters({
             onChange={(event) => setRating(event.target.value)}
             className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
           >
-            <option value="">All</option>
+            <option value="">{labels.all}</option>
             <option value="4">4.0+</option>
             <option value="4.5">4.5+</option>
             <option value="4.8">4.8+</option>
@@ -127,11 +157,11 @@ export function ProductFilters({
             onChange={(event) => setSort(event.target.value)}
             className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
           >
-            <option value="featured">Featured</option>
-            <option value="new">Newest</option>
-            <option value="price-asc">Price low to high</option>
-            <option value="price-desc">Price high to low</option>
-            <option value="rating">Top rated</option>
+            <option value="featured">{labels.sortFeatured}</option>
+            <option value="new">{labels.sortNewest}</option>
+            <option value="price-asc">{labels.sortPriceAsc}</option>
+            <option value="price-desc">{labels.sortPriceDesc}</option>
+            <option value="rating">{labels.sortRating}</option>
           </select>
         </label>
 

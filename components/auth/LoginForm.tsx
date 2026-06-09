@@ -14,7 +14,61 @@ type LoginFormProps = {
   callbackUrl: string;
 };
 
+const copy = {
+  en: {
+    signIn: "Sign in",
+    createAccount: "Create account",
+    name: "Name",
+    email: "Email",
+    password: "Password",
+    phone: "Phone",
+    forgotPassword: "Forgot password?",
+    working: "Working...",
+    continue: "Continue",
+    invalidCredentials: "Invalid email or password.",
+    loginFailed: "Login failed",
+    signedIn: "Signed in",
+    accountCreated: "Account created",
+    accountCreationFailed: "Account creation failed."
+  },
+  ar: {
+    signIn: "تسجيل الدخول",
+    createAccount: "حساب جديد",
+    name: "الاسم",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    phone: "الهاتف",
+    forgotPassword: "نسيت كلمة المرور؟",
+    working: "جار...",
+    continue: "متابعة",
+    invalidCredentials: "بيانات الدخول غير صحيحة.",
+    loginFailed: "فشل تسجيل الدخول",
+    signedIn: "تم تسجيل الدخول",
+    accountCreated: "تم إنشاء الحساب",
+    accountCreationFailed: "تعذر إنشاء الحساب."
+  }
+} satisfies Record<
+  Locale,
+  {
+    signIn: string;
+    createAccount: string;
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    forgotPassword: string;
+    working: string;
+    continue: string;
+    invalidCredentials: string;
+    loginFailed: string;
+    signedIn: string;
+    accountCreated: string;
+    accountCreationFailed: string;
+  }
+>;
+
 export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
+  const labels = copy[locale];
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [name, setName] = useState("");
@@ -38,7 +92,7 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
       const registerResult = await registerResponse.json();
 
       if (!registerResponse.ok) {
-        const message = registerResult.error ?? "Account creation failed.";
+        const message = registerResult.error ?? labels.accountCreationFailed;
         setLoading(false);
         setError(message);
         toast.error(message);
@@ -56,13 +110,13 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
     setLoading(false);
 
     if (result?.error) {
-      const message = locale === "ar" ? "بيانات الدخول غير صحيحة." : "Invalid email or password.";
+      const message = labels.invalidCredentials;
       setError(message);
-      toast.error(locale === "ar" ? "فشل تسجيل الدخول" : "Login failed");
+      toast.error(labels.loginFailed);
       return;
     }
 
-    toast.success(mode === "register" ? "Account created" : locale === "ar" ? "تم تسجيل الدخول" : "Signed in");
+    toast.success(mode === "register" ? labels.accountCreated : labels.signedIn);
     router.push(result?.url ?? callbackUrl);
     router.refresh();
   };
@@ -71,8 +125,8 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
     <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
       <div className="grid grid-cols-2 gap-2 rounded-md bg-paper p-1">
         {[
-          ["signin", locale === "ar" ? "تسجيل الدخول" : "Sign in"],
-          ["register", locale === "ar" ? "حساب جديد" : "Create account"]
+          ["signin", labels.signIn],
+          ["register", labels.createAccount]
         ].map(([itemMode, label]) => (
           <button
             key={itemMode}
@@ -92,7 +146,7 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
 
       {mode === "register" ? (
         <label className="grid gap-2 text-sm font-semibold text-navy">
-          {locale === "ar" ? "الاسم" : "Name"}
+          {labels.name}
           <div className="relative">
             <User size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3" />
             <input
@@ -108,7 +162,7 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
       ) : null}
 
       <label className="grid gap-2 text-sm font-semibold text-navy">
-        Email
+        {labels.email}
         <div className="relative">
           <Mail size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3" />
           <input
@@ -122,7 +176,7 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
         </div>
       </label>
       <label className="grid gap-2 text-sm font-semibold text-navy">
-        Password
+        {labels.password}
         <div className="relative">
           <LockKeyhole size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3" />
           <input
@@ -138,7 +192,7 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
       </label>
       {mode === "register" ? (
         <label className="grid gap-2 text-sm font-semibold text-navy">
-          {locale === "ar" ? "الهاتف" : "Phone"}
+          {labels.phone}
           <input
             type="tel"
             value={phone}
@@ -153,22 +207,16 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
           href={`/${locale}/forgot-password`}
           className="text-right text-sm font-bold text-gold-700 hover:text-gold-800 rtl:text-left"
         >
-          {locale === "ar" ? "نسيت كلمة المرور؟" : "Forgot password?"}
+          {labels.forgotPassword}
         </Link>
       ) : null}
       {error ? <p className="text-sm font-semibold text-sale">{error}</p> : null}
       <Button type="submit" className="w-full" disabled={loading}>
         {loading
-          ? locale === "ar"
-            ? "جار..."
-            : "Working..."
+          ? labels.working
           : mode === "register"
-            ? locale === "ar"
-              ? "إنشاء الحساب"
-              : "Create account"
-            : locale === "ar"
-              ? "متابعة"
-              : "Continue"}
+            ? labels.createAccount
+            : labels.continue}
       </Button>
     </form>
   );

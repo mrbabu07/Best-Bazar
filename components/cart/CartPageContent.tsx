@@ -20,7 +20,43 @@ type CartPageContentProps = {
   dictionary: Dictionary;
 };
 
+const cartCopy = {
+  en: {
+    couponRequired: "Enter a coupon code.",
+    couponInvalid: "Coupon is not valid.",
+    couponApplied: "Coupon applied",
+    checking: "Checking...",
+    remove: "Remove",
+    decreaseQuantity: "Decrease quantity",
+    increaseQuantity: "Increase quantity",
+    applied: (code: string) => `${code} applied`
+  },
+  ar: {
+    couponRequired: "أدخل رمز القسيمة.",
+    couponInvalid: "رمز القسيمة غير صالح.",
+    couponApplied: "تم تطبيق القسيمة",
+    checking: "جار التحقق...",
+    remove: "حذف",
+    decreaseQuantity: "إنقاص الكمية",
+    increaseQuantity: "زيادة الكمية",
+    applied: (code: string) => `تم تطبيق ${code}`
+  }
+} satisfies Record<
+  Locale,
+  {
+    couponRequired: string;
+    couponInvalid: string;
+    couponApplied: string;
+    checking: string;
+    remove: string;
+    decreaseQuantity: string;
+    increaseQuantity: string;
+    applied: (code: string) => string;
+  }
+>;
+
 export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
+  const labels = cartCopy[locale];
   const hydrated = useHydrated();
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
@@ -50,7 +86,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
     const code = coupon.trim();
 
     if (!code) {
-      toast.error(locale === "ar" ? "أدخل رمز القسيمة." : "Enter a coupon code.");
+      toast.error(labels.couponRequired);
       return;
     }
 
@@ -65,16 +101,16 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
       const result = await response.json();
 
       if (!response.ok || !result.valid) {
-        throw new Error(result.message ?? result.error ?? "Coupon is not valid.");
+        throw new Error(labels.couponInvalid);
       }
 
       setAppliedCoupon(result.code ?? code.toUpperCase());
       setDiscount(Number(result.discount ?? 0));
-      toast.success(locale === "ar" ? "تم تطبيق القسيمة" : "Coupon applied");
+      toast.success(labels.couponApplied);
     } catch (error) {
       setAppliedCoupon("");
       setDiscount(0);
-      toast.error(error instanceof Error ? error.message : "Coupon is not valid.");
+      toast.error(error instanceof Error ? error.message : labels.couponInvalid);
     } finally {
       setApplyingCoupon(false);
     }
@@ -142,7 +178,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     className="grid h-full w-10 place-items-center hover:bg-gold-50"
-                    aria-label="Decrease quantity"
+                    aria-label={labels.decreaseQuantity}
                   >
                     <Minus size={15} />
                   </button>
@@ -153,7 +189,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     className="grid h-full w-10 place-items-center hover:bg-gold-50"
-                    aria-label="Increase quantity"
+                    aria-label={labels.increaseQuantity}
                   >
                     <Plus size={15} />
                   </button>
@@ -162,9 +198,10 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                   type="button"
                   onClick={() => removeItem(item.id)}
                   className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-sale hover:bg-red-50"
+                  aria-label={`${labels.remove} ${getLocalized(item.name, locale)}`}
                 >
                   <Trash2 size={16} />
-                  Remove
+                  {labels.remove}
                 </button>
               </div>
             </article>
@@ -181,12 +218,12 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
               className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
             <Button onClick={applyCoupon} variant="secondary" disabled={applyingCoupon}>
-              {applyingCoupon ? (locale === "ar" ? "جار..." : "Checking...") : dictionary.actions.apply}
+              {applyingCoupon ? labels.checking : dictionary.actions.apply}
             </Button>
           </div>
           {appliedCoupon ? (
             <p className="mt-2 text-xs font-semibold text-emerald-700">
-              {locale === "ar" ? `تم تطبيق ${appliedCoupon}` : `${appliedCoupon} applied`}
+              {labels.applied(appliedCoupon)}
             </p>
           ) : null}
           <div className="mt-5 grid gap-3 text-sm">

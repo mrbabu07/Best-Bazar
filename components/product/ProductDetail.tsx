@@ -21,7 +21,28 @@ type ProductDetailProps = {
   dictionary: Dictionary;
 };
 
+const detailCopy = {
+  en: {
+    addedToCart: (quantity: number, name: string) => `${quantity} x ${name} added to cart`,
+    decreaseQuantity: "Decrease quantity",
+    increaseQuantity: "Increase quantity"
+  },
+  ar: {
+    addedToCart: (quantity: number, name: string) => `تمت إضافة ${quantity} × ${name} إلى السلة`,
+    decreaseQuantity: "إنقاص الكمية",
+    increaseQuantity: "زيادة الكمية"
+  }
+} satisfies Record<
+  Locale,
+  {
+    addedToCart: (quantity: number, name: string) => string;
+    decreaseQuantity: string;
+    increaseQuantity: string;
+  }
+>;
+
 export function ProductDetail({ product, locale, dictionary }: ProductDetailProps) {
+  const labels = detailCopy[locale];
   const hydrated = useHydrated();
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -40,7 +61,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
   const handleAdd = () => {
     addItem(product, quantity);
-    toast.success(`${quantity} x ${getLocalized(product.name, locale)} added to cart`);
+    toast.success(labels.addedToCart(quantity, getLocalized(product.name, locale)));
   };
 
   return (
@@ -113,7 +134,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
               type="button"
               onClick={() => setQuantity((value) => Math.max(1, value - 1))}
               className="grid h-full w-12 place-items-center text-navy hover:bg-gold-50"
-              aria-label="Decrease quantity"
+              aria-label={labels.decreaseQuantity}
             >
               <Minus size={16} />
             </button>
@@ -124,7 +145,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
               type="button"
               onClick={() => setQuantity((value) => Math.min(product.stock, value + 1))}
               className="grid h-full w-12 place-items-center text-navy hover:bg-gold-50"
-              aria-label="Increase quantity"
+              aria-label={labels.increaseQuantity}
             >
               <Plus size={16} />
             </button>
