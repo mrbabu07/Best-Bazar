@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { CalendarDays, Printer, Search } from "lucide-react";
+import { Prisma } from "@prisma/client";
+import { Search } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminPrintButton } from "@/components/admin/AdminPrintButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getDictionary, isLocale } from "@/lib/i18n";
@@ -13,7 +15,48 @@ export const metadata: Metadata = {
   title: "Order Management | Best Bazar"
 };
 
-export default async function AdminOrdersPage({ params }: { params: { locale: string } }) {
+type AdminOrdersPageProps = {
+  params: { locale: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+function readParam(searchParams: AdminOrdersPageProps["searchParams"], key: string) {
+  const value = searchParams?.[key];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"]) {
+  const search = readParam(searchParams, "search")?.trim();
+  const status = readParam(searchParams, "status");
+  const from = readParam(searchParams, "from");
+  const to = readParam(searchParams, "to");
+  const createdAt: Prisma.DateTimeFilter = {};
+
+  if (from) {
+    createdAt.gte = new Date(`${from}T00:00:00.000Z`);
+  }
+
+  if (to) {
+    createdAt.lte = new Date(`${to}T23:59:59.999Z`);
+  }
+
+  return {
+    ...(search
+      ? {
+          OR: [
+            { orderNumber: { contains: search, mode: "insensitive" } },
+            { customerName: { contains: search, mode: "insensitive" } },
+            { customerEmail: { contains: search, mode: "insensitive" } },
+            { customerPhone: { contains: search, mode: "insensitive" } }
+          ]
+        }
+      : {}),
+    ...(status ? { orderStatus: status as Prisma.EnumOrderStatusFilter["equals"] } : {}),
+    ...(Object.keys(createdAt).length ? { createdAt } : {})
+  } satisfies Prisma.OrderWhereInput;
+}
+
+export default async function AdminOrdersPage({ params, searchParams }: AdminOrdersPageProps) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -21,10 +64,16 @@ export default async function AdminOrdersPage({ params }: { params: { locale: st
   }
 
   const dictionary = getDictionary(locale);
+  const search = readParam(searchParams, "search") ?? "";
+  const status = readParam(searchParams, "status") ?? "";
+  const from = readParam(searchParams, "from") ?? "";
+  const to = readParam(searchParams, "to") ?? "";
+  const where = buildOrderWhere(searchParams);
   const orders = await prisma.order.findMany({
+    where,
     include: { items: true },
     orderBy: { createdAt: "desc" },
-    take: 20
+    take: 50
   });
   const selectedOrder = orders[0];
 
@@ -36,29 +85,47 @@ export default async function AdminOrdersPage({ params }: { params: { locale: st
         subtitle="Search, filter, review order details, update status, and print invoices."
       />
 
-      <div className="mb-5 grid gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-soft md:grid-cols-[1fr_auto_auto_auto]">
+      <form
+        action={`/${locale}/admin/orders`}
+        className="mb-5 grid gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-soft md:grid-cols-[1fr_180px_160px_160px_auto]"
+      >
         <label className="relative">
           <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3" />
           <input
+            name="search"
+            defaultValue={search}
             placeholder="Search order or customer"
             className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm rtl:pl-3 rtl:pr-10"
           />
         </label>
-        <select className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm">
-          <option>All statuses</option>
-          <option>pending</option>
-          <option>processing</option>
-          <option>delivered</option>
-        </select>
-        <button
-          type="button"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold text-navy"
+        <select
+          name="status"
+          defaultValue={status}
+          className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
         >
-          <CalendarDays size={17} />
-          Date range
-        </button>
-        <Button variant="secondary">{dictionary.actions.apply}</Button>
-      </div>
+          <option value="">All statuses</option>
+          {["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"].map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+        <input
+          name="from"
+          type="date"
+          defaultValue={from}
+          className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+          aria-label="From date"
+        />
+        <input
+          name="to"
+          type="date"
+          defaultValue={to}
+          className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+          aria-label="To date"
+        />
+        <Button type="submit" variant="secondary">{dictionary.actions.apply}</Button>
+      </form>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft">
@@ -104,13 +171,7 @@ export default async function AdminOrdersPage({ params }: { params: { locale: st
               <h2 className="text-lg font-bold text-navy">{selectedOrder.orderNumber}</h2>
               <p className="mt-1 text-sm text-neutral-500">{selectedOrder.customerEmail}</p>
             </div>
-            <button
-              type="button"
-              className="grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
-              aria-label={dictionary.actions.print}
-            >
-              <Printer size={18} />
-            </button>
+            <AdminPrintButton label={dictionary.actions.print} />
           </div>
           <div className="mt-5 grid gap-4">
             {selectedOrder.items.map((item) => (
@@ -129,7 +190,6 @@ export default async function AdminOrdersPage({ params }: { params: { locale: st
               {selectedOrder.street}, {selectedOrder.emirate}
             </p>
           </div>
-          <Button className="mt-5 w-full">{dictionary.actions.save}</Button>
             </>
           ) : (
             <p className="text-sm font-semibold text-neutral-500">No orders yet.</p>
