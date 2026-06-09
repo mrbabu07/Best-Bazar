@@ -1,12 +1,41 @@
 const { execFileSync, spawn } = require("child_process");
+const crypto = require("crypto");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const root = process.cwd();
 const port = process.env.PORT || "3002";
+const rootHash = crypto.createHash("sha1").update(root.toLowerCase()).digest("hex").slice(0, 12);
+const pidFile = path.resolve(os.tmpdir(), `best-bazar-dev-${rootHash}.pid`);
 
 function escapePowerShellSingleQuote(value) {
   return value.replace(/'/g, "''");
+}
+
+function readPid(filePath) {
+  try {
+    const pid = Number(fs.readFileSync(filePath, "utf8").trim());
+    return Number.isInteger(pid) && pid > 0 ? pid : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function stopProcess(pid) {
+  if (!pid || pid === process.pid) {
+    return;
+  }
+
+  try {
+    process.kill(pid, "SIGTERM");
+  } catch {
+    // The previous dev process may already be gone.
+  }
+}
+
+function stopPreviousDevServer() {
+  stopProcess(readPid(pidFile));
 }
 
 function stopStaleNextProcesses() {
@@ -46,8 +75,10 @@ function clearWebpackCache() {
   fs.rmSync(cachePath, { recursive: true, force: true });
 }
 
+stopPreviousDevServer();
 stopStaleNextProcesses();
 clearWebpackCache();
+fs.writeFileSync(pidFile, String(process.pid));
 
 console.log(`Starting Next dev server on http://localhost:${port}`);
 
@@ -64,17 +95,26 @@ function stopChild() {
   }
 }
 
+function clearPidFile() {
+  if (readPid(pidFile) === process.pid) {
+    fs.rmSync(pidFile, { force: true });
+  }
+}
+
 process.on("SIGINT", () => {
   stopChild();
+  clearPidFile();
   process.exit(130);
 });
 
 process.on("SIGTERM", () => {
   stopChild();
+  clearPidFile();
   process.exit(143);
 });
 
 child.on("exit", (code, signal) => {
+  clearPidFile();
   if (signal) {
     process.exit(0);
   }

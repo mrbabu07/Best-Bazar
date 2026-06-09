@@ -48,8 +48,8 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
   };
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-lift">
-      <Link href={`/${locale}/product/${product.slug}`} className="relative block aspect-[4/5] bg-neutral-100">
+    <article className="group flex h-[386px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
+      <Link href={`/${locale}/product/${product.slug}`} className="relative block h-[174px] shrink-0 bg-neutral-100 sm:h-[260px] lg:h-[280px]">
         <Image
           src={product.images[0].url}
           alt={product.images[0].alt}
@@ -63,7 +63,7 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
         </div>
       </Link>
 
-      <div className="p-3 sm:p-4">
+      <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div className="min-w-0">
             <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-gold-700 sm:text-xs sm:tracking-[0.16em]">
@@ -82,7 +82,7 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <div className="mt-3 flex min-h-8 flex-wrap items-end gap-x-2 gap-y-1">
           <p className="text-base font-bold text-navy sm:text-lg">
             {formatCurrency(product.price, currency, locale, currencyRates)}
           </p>
@@ -94,7 +94,7 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
         </div>
 
         {product.variants.length ? (
-          <div className="mt-3 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="mt-3 flex min-h-8 items-center justify-between gap-2 sm:gap-3">
             <p className="text-xs font-bold text-neutral-500">{colorLabel}</p>
             <div className="flex flex-wrap justify-end gap-1.5">
               {product.variants.slice(0, 5).map((variant) => (
@@ -118,10 +118,12 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
               ) : null}
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-3 min-h-8" aria-hidden="true" />
+        )}
 
         <Button
-          className="mt-3 h-10 w-full px-2 text-xs sm:mt-4 sm:h-11 sm:px-5 sm:text-sm"
+          className="mt-auto h-10 w-full px-2 text-xs sm:h-11 sm:px-5 sm:text-sm"
           onClick={handleAdd}
           disabled={availableStock <= 0}
           variant={availableStock <= 0 ? "secondary" : "primary"}
