@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -146,6 +147,14 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
             autoComplete="tel"
           />
         </label>
+      ) : null}
+      {mode === "signin" ? (
+        <Link
+          href={`/${locale}/forgot-password`}
+          className="text-right text-sm font-bold text-gold-700 hover:text-gold-800 rtl:text-left"
+        >
+          {locale === "ar" ? "نسيت كلمة المرور؟" : "Forgot password?"}
+        </Link>
       ) : null}
       {error ? <p className="text-sm font-semibold text-sale">{error}</p> : null}
       <Button type="submit" className="w-full" disabled={loading}>

@@ -50,3 +50,38 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
 
   return { sent: true };
 }
+
+export async function sendPasswordResetEmail({
+  to,
+  name,
+  resetUrl
+}: {
+  to: string;
+  name?: string | null;
+  resetUrl: string;
+}) {
+  const config = getEmailConfig();
+
+  if (!config) {
+    return { sent: false, reason: "EMAIL_SERVER or EMAIL_FROM is not configured." };
+  }
+
+  const transporter = nodemailer.createTransport(config.server);
+
+  await transporter.sendMail({
+    from: config.from,
+    to,
+    subject: "Reset your Best Bazar password",
+    text: [
+      `Hello${name ? ` ${name}` : ""},`,
+      "",
+      "Use the secure link below to reset your Best Bazar password.",
+      "",
+      resetUrl,
+      "",
+      "This link expires in 1 hour. If you did not request a password reset, you can ignore this email."
+    ].join("\n")
+  });
+
+  return { sent: true };
+}

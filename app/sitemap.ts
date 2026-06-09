@@ -5,8 +5,8 @@ import { getSitemapProducts } from "@/lib/storefront";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://best-bazar.vercel.app";
   const publicRoutes = ["", "/shop", "/cart", "/checkout", "/account"];
-  const products = await getSitemapProducts().catch((error) => {
-    console.error("Unable to load product URLs for sitemap.", error);
+  const products = await getSitemapProducts().catch(() => {
+    console.warn("Unable to load product URLs for sitemap; using static routes only.");
     return [];
   });
 
