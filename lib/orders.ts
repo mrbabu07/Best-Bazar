@@ -51,20 +51,27 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     subtotal
   );
   let discount = 0;
-  let couponId: string | undefined;
+  let couponReservation: { id: string; maxUses: number } | undefined;
 
   if (data.couponCode) {
     const coupon = await prisma.coupon.findUnique({
       where: { code: data.couponCode.toUpperCase() }
     });
 
-    if (coupon?.isActive && coupon.expiryDate >= new Date() && coupon.usedCount < coupon.maxUses && Number(coupon.minOrderAmount) <= subtotal) {
-      discount =
-        coupon.discountType === DiscountType.PERCENT
-          ? Math.min((subtotal * Number(coupon.discountValue)) / 100, subtotal)
-          : Math.min(Number(coupon.discountValue), subtotal);
-      couponId = coupon.id;
+    if (
+      !coupon?.isActive ||
+      coupon.expiryDate < new Date() ||
+      coupon.usedCount >= coupon.maxUses ||
+      Number(coupon.minOrderAmount) > subtotal
+    ) {
+      throw new Error("Coupon is not valid.");
     }
+
+    discount =
+      coupon.discountType === DiscountType.PERCENT
+        ? Math.min((subtotal * Number(coupon.discountValue)) / 100, subtotal)
+        : Math.min(Number(coupon.discountValue), subtotal);
+    couponReservation = { id: coupon.id, maxUses: coupon.maxUses };
   }
 
   const total = Math.max(subtotal + shippingCost - discount, 0);
@@ -105,20 +112,36 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
       include: { items: true }
     });
 
-    await Promise.all(
-      items.map(({ product, quantity }) =>
-        tx.product.update({
-          where: { id: product.id },
-          data: { stock: { decrement: quantity } }
-        })
-      )
-    );
+    for (const { product, quantity } of items) {
+      const stockReservation = await tx.product.updateMany({
+        where: {
+          id: product.id,
+          isActive: true,
+          stock: { gte: quantity }
+        },
+        data: { stock: { decrement: quantity } }
+      });
 
-    if (couponId) {
-      await tx.coupon.update({
-        where: { id: couponId },
+      if (stockReservation.count === 0) {
+        throw new Error(`${product.nameEn} does not have enough stock.`);
+      }
+    }
+
+    if (couponReservation) {
+      const couponUsage = await tx.coupon.updateMany({
+        where: {
+          id: couponReservation.id,
+          isActive: true,
+          expiryDate: { gte: new Date() },
+          minOrderAmount: { lte: subtotal },
+          usedCount: { lt: couponReservation.maxUses }
+        },
         data: { usedCount: { increment: 1 } }
       });
+
+      if (couponUsage.count === 0) {
+        throw new Error("Coupon is no longer available.");
+      }
     }
 
     return order;
