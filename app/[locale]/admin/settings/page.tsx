@@ -3,15 +3,21 @@ import { ImagePlus, Link2, Save } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/Button";
-import { settings } from "@/lib/data";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/utils/currency";
 
 export const metadata: Metadata = {
   title: "Store Settings | Best Bazar"
 };
 
-export default function AdminSettingsPage({ params }: { params: { locale: string } }) {
+type ShippingRate = {
+  emirate: string;
+  cost: number;
+  deliveryDays: string;
+};
+
+export default async function AdminSettingsPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -19,6 +25,15 @@ export default function AdminSettingsPage({ params }: { params: { locale: string
   }
 
   const dictionary = getDictionary(locale);
+  const settings = await prisma.setting.findUniqueOrThrow({
+    where: { id: "store-settings" }
+  });
+  const banners = await prisma.banner.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+  });
+  const shippingRates = Array.isArray(settings.shippingRates)
+    ? (settings.shippingRates as ShippingRate[])
+    : [];
 
   return (
     <div>
@@ -40,11 +55,11 @@ export default function AdminSettingsPage({ params }: { params: { locale: string
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-semibold text-navy">
               Store name EN
-              <input defaultValue={settings.storeName.en} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+              <input defaultValue={settings.storeNameEn} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-navy">
               Store name AR
-              <input defaultValue={settings.storeName.ar} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+              <input defaultValue={settings.storeNameAr} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
             </label>
             <button
               type="button"
@@ -60,8 +75,8 @@ export default function AdminSettingsPage({ params }: { params: { locale: string
           <h2 className="text-lg font-bold text-navy">Currency rates</h2>
           <div className="mt-5 grid gap-4">
             {[
-              ["AED to BDT", "33.5"],
-              ["AED to USD", "0.272"]
+              ["AED to BDT", String(settings.aedToBdt)],
+              ["AED to USD", String(settings.aedToUsd)]
             ].map(([label, value]) => (
               <label key={label} className="grid gap-2 text-sm font-semibold text-navy">
                 {label}
@@ -77,11 +92,11 @@ export default function AdminSettingsPage({ params }: { params: { locale: string
         <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <h2 className="text-lg font-bold text-navy">Shipping rates</h2>
           <div className="mt-5 grid gap-3">
-            {settings.shippingRates.map((rate) => (
+            {shippingRates.map((rate) => (
               <div key={rate.emirate} className="grid gap-3 rounded-md bg-paper p-3 sm:grid-cols-3">
                 <input defaultValue={rate.emirate} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                <input defaultValue={rate.price} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                <input defaultValue={rate.freeAbove} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+                <input defaultValue={rate.cost} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+                <input defaultValue={rate.deliveryDays} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
               </div>
             ))}
           </div>
@@ -92,15 +107,15 @@ export default function AdminSettingsPage({ params }: { params: { locale: string
           <div className="mt-5 grid gap-4">
             <label className="grid gap-2 text-sm font-semibold text-navy">
               Phone
-              <input defaultValue={settings.contactInfo.phone} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+              <input defaultValue={settings.phone} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-navy">
               Email
-              <input defaultValue={settings.contactInfo.email} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+              <input defaultValue={settings.storeEmail} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
             </label>
             <label className="grid gap-2 text-sm font-semibold text-navy">
               Address
-              <input defaultValue={settings.contactInfo.address} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+              <input defaultValue={settings.address} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
             </label>
             {["Instagram", "Facebook", "TikTok"].map((social) => (
               <label key={social} className="grid gap-2 text-sm font-semibold text-navy">
@@ -117,12 +132,12 @@ export default function AdminSettingsPage({ params }: { params: { locale: string
         <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
           <h2 className="text-lg font-bold text-navy">Hero banners</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {settings.banners.map((banner) => (
-              <div key={banner.link} className="rounded-lg border border-neutral-200 bg-paper p-4">
+            {banners.map((banner) => (
+              <div key={banner.id} className="rounded-lg border border-neutral-200 bg-paper p-4">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input defaultValue={banner.title.en} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                  <input defaultValue={banner.title.ar} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                  <input defaultValue={banner.link} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm sm:col-span-2" />
+                  <input defaultValue={banner.titleEn} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+                  <input defaultValue={banner.titleAr} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+                  <input defaultValue={banner.buttonLink} className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm sm:col-span-2" />
                 </div>
               </div>
             ))}

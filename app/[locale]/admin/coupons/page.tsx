@@ -4,15 +4,15 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { coupons } from "@/lib/data";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/utils/currency";
 
 export const metadata: Metadata = {
   title: "Coupon Management | Best Bazar"
 };
 
-export default function AdminCouponsPage({ params }: { params: { locale: string } }) {
+export default async function AdminCouponsPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -20,6 +20,9 @@ export default function AdminCouponsPage({ params }: { params: { locale: string 
   }
 
   const dictionary = getDictionary(locale);
+  const coupons = await prisma.coupon.findMany({
+    orderBy: { createdAt: "desc" }
+  });
 
   return (
     <div>
@@ -55,17 +58,17 @@ export default function AdminCouponsPage({ params }: { params: { locale: string 
                   <tr key={coupon.id}>
                     <td className="px-5 py-4 font-bold text-navy">{coupon.code}</td>
                     <td className="px-5 py-4 text-neutral-600">
-                      {coupon.discountType === "percent"
+                      {coupon.discountType === "PERCENT"
                         ? `${coupon.discountValue}%`
-                        : formatCurrency(coupon.discountValue, "AED", locale)}
+                        : formatCurrency(Number(coupon.discountValue), "AED", locale)}
                     </td>
                     <td className="px-5 py-4 text-neutral-600">
-                      {formatCurrency(coupon.minOrderAmount, "AED", locale)}
+                      {formatCurrency(Number(coupon.minOrderAmount), "AED", locale)}
                     </td>
                     <td className="px-5 py-4 text-neutral-600">
                       {coupon.usedCount}/{coupon.maxUses}
                     </td>
-                    <td className="px-5 py-4 text-neutral-600">{coupon.expiryDate}</td>
+                    <td className="px-5 py-4 text-neutral-600">{coupon.expiryDate.toISOString().slice(0, 10)}</td>
                     <td className="px-5 py-4">
                       <Badge tone={coupon.isActive ? "green" : "red"}>
                         {coupon.isActive ? "Active" : "Inactive"}

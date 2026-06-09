@@ -5,14 +5,14 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { settings } from "@/lib/data";
 import { isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Banner Management | Best Bazar"
 };
 
-export default function AdminBannersPage({ params }: { params: { locale: string } }) {
+export default async function AdminBannersPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -20,6 +20,9 @@ export default function AdminBannersPage({ params }: { params: { locale: string 
   }
 
   const title = locale === "ar" ? "البانرات" : "Banners";
+  const banners = await prisma.banner.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+  });
 
   return (
     <div>
@@ -37,9 +40,9 @@ export default function AdminBannersPage({ params }: { params: { locale: string 
 
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <section className="grid gap-3">
-          {settings.banners.map((banner, index) => (
+          {banners.map((banner, index) => (
             <article
-              key={banner.link}
+              key={banner.id}
               className="grid gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:grid-cols-[auto_160px_1fr_auto]"
             >
               <div className="grid h-10 w-10 place-items-center rounded-md bg-paper text-neutral-400">
@@ -47,16 +50,16 @@ export default function AdminBannersPage({ params }: { params: { locale: string 
               </div>
               <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-neutral-100">
                 <Image
-                  src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=700&q=80"
-                  alt={banner.title.en}
+                  src={banner.desktopImage}
+                  alt={banner.titleEn}
                   fill
                   sizes="160px"
                   className="object-cover"
                 />
               </div>
               <div>
-                <h2 className="font-bold text-navy">{locale === "ar" ? banner.title.ar : banner.title.en}</h2>
-                <p className="mt-1 text-sm text-neutral-500">{banner.link}</p>
+                <h2 className="font-bold text-navy">{locale === "ar" ? banner.titleAr : banner.titleEn}</h2>
+                <p className="mt-1 text-sm text-neutral-500">{banner.buttonLink}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Badge tone={banner.isActive ? "green" : "red"}>
                     {banner.isActive ? "Active" : "Inactive"}

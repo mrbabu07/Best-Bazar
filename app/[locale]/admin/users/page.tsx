@@ -3,14 +3,14 @@ import { ShieldCheck, UserX } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { users } from "@/lib/data";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "User Management | Best Bazar"
 };
 
-export default function AdminUsersPage({ params }: { params: { locale: string } }) {
+export default async function AdminUsersPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -18,6 +18,21 @@ export default function AdminUsersPage({ params }: { params: { locale: string } 
   }
 
   const dictionary = getDictionary(locale);
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      avatar: true,
+      image: true,
+      phone: true,
+      isBanned: true,
+      _count: { select: { orders: true } }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50
+  });
 
   return (
     <div>
@@ -46,22 +61,22 @@ export default function AdminUsersPage({ params }: { params: { locale: string } 
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="grid h-11 w-11 place-items-center rounded-full bg-gold-100 text-sm font-bold text-navy">
-                        {user.avatar}
+                        {user.avatar ?? user.name?.slice(0, 2).toUpperCase() ?? "BB"}
                       </div>
                       <div>
-                        <p className="font-bold text-navy">{user.name}</p>
+                        <p className="font-bold text-navy">{user.name ?? "Unnamed user"}</p>
                         <p className="text-xs text-neutral-500">{user.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-4">
                     <select defaultValue={user.role} className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm">
-                      <option>user</option>
-                      <option>admin</option>
+                      <option>USER</option>
+                      <option>ADMIN</option>
                     </select>
                   </td>
                   <td className="px-5 py-4 text-neutral-600">{user.phone}</td>
-                  <td className="px-5 py-4 font-bold text-navy">{user.orders}</td>
+                  <td className="px-5 py-4 font-bold text-navy">{user._count.orders}</td>
                   <td className="px-5 py-4">
                     <Badge tone={user.isBanned ? "red" : "green"}>{user.isBanned ? "Banned" : "Active"}</Badge>
                   </td>
