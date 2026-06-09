@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFilters } from "@/components/product/ProductFilters";
-import { categories, products } from "@/lib/data";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { getStoreBrands, getStoreCategories, getStoreProducts } from "@/lib/storefront";
+
+export const dynamic = "force-dynamic";
 
 type ShopPageProps = {
   params: { locale: string };
@@ -22,7 +25,8 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
   };
 }
 
-export default function ShopPage({ params, searchParams }: ShopPageProps) {
+export default async function ShopPage({ params, searchParams }: ShopPageProps) {
+  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -33,35 +37,15 @@ export default function ShopPage({ params, searchParams }: ShopPageProps) {
   const category = readParam(searchParams, "category");
   const brand = readParam(searchParams, "brand");
   const rating = readParam(searchParams, "rating");
+  const search = readParam(searchParams, "search");
   const sort = readParam(searchParams, "sort") ?? "featured";
+  const tag = readParam(searchParams, "tag");
   const priceMax = readParam(searchParams, "priceMax");
-  const brands = Array.from(new Set(products.map((product) => product.brand))).sort();
-
-  let listing = products.filter((product) => product.isActive);
-
-  if (category) {
-    listing = listing.filter((product) => product.category === category);
-  }
-
-  if (brand) {
-    listing = listing.filter((product) => product.brand === brand);
-  }
-
-  if (rating) {
-    listing = listing.filter((product) => product.rating >= Number(rating));
-  }
-
-  if (priceMax) {
-    listing = listing.filter((product) => product.price <= Number(priceMax));
-  }
-
-  listing = [...listing].sort((first, second) => {
-    if (sort === "price-asc") return first.price - second.price;
-    if (sort === "price-desc") return second.price - first.price;
-    if (sort === "rating") return second.rating - first.rating;
-    if (sort === "new") return Date.parse(second.createdAt) - Date.parse(first.createdAt);
-    return Number(second.isFeatured) - Number(first.isFeatured);
-  });
+  const [categories, brands, listing] = await Promise.all([
+    getStoreCategories(),
+    getStoreBrands(),
+    getStoreProducts({ category, brand, rating, search, sort, tag, priceMax })
+  ]);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -84,12 +68,25 @@ export default function ShopPage({ params, searchParams }: ShopPageProps) {
           dictionary={dictionary}
           categories={categories}
           brands={brands}
-          current={{ category, brand, rating, sort, priceMax }}
+          current={{ category, brand, rating, search, sort, tag, priceMax }}
         />
         <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {listing.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
-          ))}
+          {listing.length > 0 ? (
+            listing.map((product) => (
+              <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
+            ))
+          ) : (
+            <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft sm:col-span-2 xl:col-span-3">
+              <h2 className="text-xl font-bold text-navy">
+                {locale === "ar" ? "لم يتم العثور على منتجات" : "No products found"}
+              </h2>
+              <p className="mt-2 text-sm text-neutral-500">
+                {locale === "ar"
+                  ? "جرّب فئة أو علامة تجارية أو عبارة بحث مختلفة."
+                  : "Try a different category, brand, or search term."}
+              </p>
+            </div>
+          )}
         </section>
       </div>
     </main>

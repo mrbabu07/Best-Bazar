@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
-import { getDictionary, isLocale, isRTL, locales } from "@/lib/i18n";
+import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { Providers } from "./providers";
 import "../globals.css";
 
@@ -25,10 +25,6 @@ export const metadata: Metadata = {
   },
   description: "Luxury Dubai-based online shopping experience."
 };
-
-export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
 
 export default function LocaleLayout({
   children,

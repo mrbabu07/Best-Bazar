@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
-import { products } from "@/lib/data";
 import { locales } from "@/lib/i18n";
+import { getSitemapProducts } from "@/lib/storefront";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://best-bazar.vercel.app";
   const publicRoutes = ["", "/shop", "/cart", "/checkout", "/account"];
+  const products = await getSitemapProducts();
 
   const routeEntries = locales.flatMap((locale) =>
     publicRoutes.map((route) => ({
@@ -18,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const productEntries = locales.flatMap((locale) =>
     products.map((product) => ({
       url: `${baseUrl}/${locale}/product/${product.slug}`,
-      lastModified: new Date(product.createdAt),
+      lastModified: product.updatedAt ?? product.createdAt,
       changeFrequency: "weekly" as const,
       priority: 0.7
     }))

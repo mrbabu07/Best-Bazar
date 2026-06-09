@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Globe2, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from "lucide-react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -17,7 +17,9 @@ type HeaderProps = {
 
 export function Header({ locale, dictionary }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const cartCount = useCartStore((state) => state.totalItems());
   const currency = usePreferencesStore((state) => state.currency);
   const setCurrency = usePreferencesStore((state) => state.setCurrency);
@@ -36,6 +38,19 @@ export function Header({ locale, dictionary }: HeaderProps) {
 
   const persistLocale = (nextLocale: Locale) => {
     document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000`;
+  };
+
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = search.trim();
+    const params = new URLSearchParams();
+
+    if (query) {
+      params.set("search", query);
+    }
+
+    router.push(`/${locale}/shop${params.toString() ? `?${params.toString()}` : ""}`);
+    setOpen(false);
   };
 
   return (
@@ -73,7 +88,7 @@ export function Header({ locale, dictionary }: HeaderProps) {
           ))}
         </nav>
 
-        <div className="ml-auto hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex">
+        <form onSubmit={submitSearch} className="ml-auto hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex">
           <label className="relative w-full max-w-sm">
             <Search
               size={18}
@@ -81,11 +96,13 @@ export function Header({ locale, dictionary }: HeaderProps) {
             />
             <input
               type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder={dictionary.nav.search}
               className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
             />
           </label>
-        </div>
+        </form>
 
         <div className="ml-auto flex items-center gap-2 md:ml-0">
           <select
@@ -161,6 +178,19 @@ export function Header({ locale, dictionary }: HeaderProps) {
             >
               {dictionary.nav.admin}
             </Link>
+            <form onSubmit={submitSearch} className="relative">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
+              />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={dictionary.nav.search}
+                className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
+              />
+            </form>
           </div>
         </div>
       ) : null}

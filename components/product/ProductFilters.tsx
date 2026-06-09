@@ -17,7 +17,9 @@ type ProductFiltersProps = {
     category?: string;
     brand?: string;
     rating?: string;
+    search?: string;
     sort?: string;
+    tag?: string;
     priceMax?: string;
   };
 };
@@ -42,6 +44,8 @@ export function ProductFilters({
     if (category) params.set("category", category);
     if (brand) params.set("brand", brand);
     if (rating) params.set("rating", rating);
+    if (current.search) params.set("search", current.search);
+    if (current.tag) params.set("tag", current.tag);
     if (sort && sort !== "featured") params.set("sort", sort);
     if (priceMax !== "1500") params.set("priceMax", priceMax);
 

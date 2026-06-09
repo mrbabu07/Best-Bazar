@@ -2,11 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Truck } from "lucide-react";
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { categories, products } from "@/lib/data";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
+import { getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
+
+export const dynamic = "force-dynamic";
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   const title = params.locale === "ar" ? "بيست بازار" : "Best Bazar";
@@ -17,7 +20,8 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
   };
 }
 
-export default function HomePage({ params }: { params: { locale: string } }) {
+export default async function HomePage({ params }: { params: { locale: string } }) {
+  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -25,10 +29,11 @@ export default function HomePage({ params }: { params: { locale: string } }) {
   }
 
   const dictionary = getDictionary(locale);
-  const featuredProducts = products.filter((product) => product.isFeatured).slice(0, 4);
-  const newArrivals = [...products]
-    .sort((first, second) => Date.parse(second.createdAt) - Date.parse(first.createdAt))
-    .slice(0, 4);
+  const [featuredProducts, newArrivals, categories] = await Promise.all([
+    getFeaturedProducts(4),
+    getNewArrivals(4),
+    getStoreCategories()
+  ]);
 
   return (
     <main>

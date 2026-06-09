@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductDetail } from "@/components/product/ProductDetail";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { products } from "@/lib/data";
-import { getDictionary, getLocalized, isLocale, locales } from "@/lib/i18n";
+import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
+import { getProductBySlugOrId, getRelatedProducts } from "@/lib/storefront";
+
+export const dynamic = "force-dynamic";
 
 type ProductPageProps = {
   params: {
@@ -13,45 +16,33 @@ type ProductPageProps = {
   };
 };
 
-function findProduct(id: string) {
-  return products.find((product) => product.slug === id || product.id === id);
-}
-
-export function generateStaticParams() {
-  return locales.flatMap((locale) =>
-    products.map((product) => ({
-      locale,
-      id: product.slug
-    }))
-  );
-}
-
-export function generateMetadata({ params }: ProductPageProps): Metadata {
-  const product = findProduct(params.id);
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  noStore();
+  const product = await getProductBySlugOrId(params.id);
+  const locale = params.locale === "ar" ? "ar" : "en";
 
   return {
-    title: product ? product.name[params.locale === "ar" ? "ar" : "en"] : "Product",
-    description: product ? product.description[params.locale === "ar" ? "ar" : "en"] : undefined
+    title: product ? product.name[locale] : "Product",
+    description: product ? product.description[locale] : undefined
   };
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
+  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {
     notFound();
   }
 
-  const product = findProduct(params.id);
+  const product = await getProductBySlugOrId(params.id);
 
   if (!product) {
     notFound();
   }
 
   const dictionary = getDictionary(locale);
-  const related = products
-    .filter((item) => item.category === product.category && item.id !== product.id)
-    .slice(0, 4);
+  const related = await getRelatedProducts(product.category, product.id, 4);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
