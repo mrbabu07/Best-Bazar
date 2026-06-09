@@ -17,20 +17,21 @@ export async function POST(_request: Request, { params }: RouteContext) {
         specifications: true
       }
     });
+    const suffix = Date.now();
 
     const product = await prisma.product.create({
       data: {
         nameEn: `${original.nameEn} Copy`,
-        nameAr: `${original.nameAr} نسخة`,
+        nameAr: `${original.nameAr} Copy`,
         descriptionEn: original.descriptionEn,
         descriptionAr: original.descriptionAr,
-        slug: `${original.slug}-copy-${Date.now()}`,
+        slug: `${original.slug}-copy-${suffix}`,
         categoryId: original.categoryId,
         subcategoryId: original.subcategoryId,
         price: original.price,
         comparePrice: original.comparePrice,
         stock: original.stock,
-        sku: `${original.sku}-COPY-${Date.now()}`,
+        sku: `${original.sku}-COPY-${suffix}`,
         brand: original.brand,
         tags: original.tags,
         isActive: false,
