@@ -2,7 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Copy, Edit, Eye, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlert,
+  Copy,
+  Edit,
+  Eye,
+  ImagePlus,
+  PackageCheck,
+  Palette,
+  Plus,
+  RotateCcw,
+  Search,
+  Store,
+  Trash2,
+  type LucideIcon
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -200,6 +215,55 @@ export function AdminProductManager({
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [productCategory, productSearch, productStatus, products]);
+  const currentCategory = categories.find((category) => category.id === form.categoryId);
+  const currentCategoryName = currentCategory
+    ? locale === "ar"
+      ? currentCategory.nameAr
+      : currentCategory.nameEn
+    : "No category";
+  const mainImage = form.images.find((image) => image.url.trim());
+  const activeVariants = form.variants.filter((variant) => variant.isActive && variant.colorNameEn.trim());
+  const activeVariantCount = activeVariants.length;
+  const isColorSetupReady = form.variants.length === 0 || activeVariantCount > 0;
+  const variantStock = activeVariants.reduce((total, variant) => total + Number(variant.stock || 0), 0);
+  const baseStock = Number(form.stock || 0);
+  const effectiveStock = form.variants.length ? variantStock : baseStock;
+  const isCatalogReady = Boolean(
+    form.nameEn.trim() && form.nameAr.trim() && form.slug.trim() && form.sku.trim() && form.categoryId
+  );
+  const isPricingReady = Number(form.price || 0) > 0 && effectiveStock > 0;
+  const isMediaReady = Boolean(mainImage);
+  const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && form.isActive;
+  const editorTitle = selectedProduct ? "Edit ecommerce product" : "Add ecommerce product";
+  const editorSubtitle = selectedProduct
+    ? `Updating ${selectedProduct.nameEn}`
+    : "Create the product customers will see in the shop.";
+  const productReadiness: { label: string; value: string; ready: boolean; icon: LucideIcon }[] = [
+    {
+      label: "Catalog",
+      value: isCatalogReady ? currentCategoryName : "Name, SKU, slug, category",
+      ready: isCatalogReady,
+      icon: Store
+    },
+    {
+      label: "Price & stock",
+      value: isPricingReady ? `${formatCurrency(Number(form.price || 0), "AED", locale)} / ${effectiveStock} pcs` : "Price and stock needed",
+      ready: isPricingReady,
+      icon: PackageCheck
+    },
+    {
+      label: "Media",
+      value: isMediaReady ? `${form.images.filter((image) => image.url.trim()).length} image ready` : "Main image needed",
+      ready: isMediaReady,
+      icon: ImagePlus
+    },
+    {
+      label: "Colors",
+      value: activeVariantCount ? `${activeVariantCount} color variant${activeVariantCount > 1 ? "s" : ""}` : "Optional color stock",
+      ready: isColorSetupReady,
+      icon: Palette
+    }
+  ];
 
   const updateForm = <Key extends keyof ProductForm>(key: Key, value: ProductForm[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -400,7 +464,7 @@ export function AdminProductManager({
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_540px]">
       <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft">
         <div className="grid gap-3 border-b border-neutral-200 p-4 lg:grid-cols-[1fr_180px_160px]">
           <label className="relative">
@@ -549,9 +613,10 @@ export function AdminProductManager({
       <aside id="product-editor" className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-navy">Product editor</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Store catalog</p>
+            <h2 className="mt-1 text-lg font-bold text-navy">{editorTitle}</h2>
             <p className="mt-1 text-xs font-semibold text-neutral-500">
-              {selectedProduct ? `Editing ${selectedProduct.nameEn}` : "Create a new product"}
+              {editorSubtitle}
             </p>
           </div>
           <Button type="button" variant="secondary" size="sm" onClick={startCreate}>
@@ -559,22 +624,72 @@ export function AdminProductManager({
             New
           </Button>
         </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {productReadiness.map((item) => {
+            const Icon = item.icon;
+            const StatusIcon = item.ready ? CheckCircle2 : CircleAlert;
+
+            return (
+              <div key={item.label} className="rounded-md border border-neutral-200 bg-paper p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <Icon size={16} className="text-gold-700" />
+                  <StatusIcon size={15} className={item.ready ? "text-emerald-600" : "text-gold-700"} />
+                </div>
+                <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">{item.label}</p>
+                <p className="mt-1 truncate text-xs font-semibold text-navy" title={item.value}>
+                  {item.value}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 rounded-md border border-neutral-200 bg-white p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-navy">Product setup</p>
+              <p className="mt-1 text-xs font-semibold text-neutral-500">
+                {form.variants.length
+                  ? `Stock is controlled by color variants (${variantStock} pcs total).`
+                  : "Use base stock, or add colors for color-wise stock."}
+              </p>
+            </div>
+            <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Draft"}</Badge>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addImage}>
+              <ImagePlus size={15} />
+              Image
+            </Button>
+            <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addVariant}>
+              <Palette size={15} />
+              Color
+            </Button>
+            <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addSpecification}>
+              <PackageCheck size={15} />
+              Spec
+            </Button>
+          </div>
+        </div>
+
         <form onSubmit={submit} className="mt-5 grid gap-4">
           <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">Basic information</summary>
+            <summary className="cursor-pointer text-sm font-bold text-navy">1. Catalog identity</summary>
             <div className="mt-4 grid gap-4">
           {[
-            ["nameEn", "Name EN"],
-            ["nameAr", "Name AR"],
-            ["slug", "Slug"],
-            ["sku", "SKU"],
-            ["brand", "Brand"]
-          ].map(([key, label]) => (
+            ["nameEn", "Product name EN", "Premium travel trolley"],
+            ["nameAr", "Product name AR", "Arabic product name"],
+            ["slug", "Product URL slug", "premium-travel-trolley"],
+            ["sku", "Main SKU", "BB-DXB-1001"],
+            ["brand", "Brand", "Best Bazar"]
+          ].map(([key, label, placeholder]) => (
             <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
               {label}
               <input
                 value={form[key as keyof ProductForm] as string}
                 onChange={(event) => updateForm(key as keyof ProductForm, event.target.value as never)}
+                placeholder={placeholder}
                 required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
@@ -596,18 +711,19 @@ export function AdminProductManager({
             </select>
           </label>
           <label className="grid gap-2 text-sm font-semibold text-navy">
-            Subcategory key
+            Subcategory / collection key
             <input
               value={form.subcategoryId}
               onChange={(event) => updateForm("subcategoryId", event.target.value)}
+              placeholder="dubai-deals"
               className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
           </label>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              ["price", "Price AED", "0.01"],
-              ["comparePrice", "Compare", "0.01"],
-              ["stock", "Stock", "1"]
+              ["price", "Selling price AED", "0.01"],
+              ["comparePrice", "Compare at AED", "0.01"],
+              ["stock", "Base stock", "1"]
             ].map(([key, label, step]) => (
               <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
                 {label}
@@ -628,7 +744,7 @@ export function AdminProductManager({
             <input
               value={form.tags}
               onChange={(event) => updateForm("tags", event.target.value)}
-              placeholder="featured, travel, sale"
+              placeholder="featured, dubai, sale"
               className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
           </label>
@@ -638,6 +754,7 @@ export function AdminProductManager({
               rows={4}
               value={form.descriptionEn}
               onChange={(event) => updateForm("descriptionEn", event.target.value)}
+              placeholder="Short selling description for the product page."
               required
               className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
             />
@@ -648,6 +765,7 @@ export function AdminProductManager({
               rows={4}
               value={form.descriptionAr}
               onChange={(event) => updateForm("descriptionAr", event.target.value)}
+              placeholder="Arabic product description"
               required
               className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
             />
@@ -655,11 +773,14 @@ export function AdminProductManager({
             </div>
           </details>
 
-          <details className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">Media gallery</summary>
+          <details open className="rounded-lg border border-neutral-200 bg-white p-3">
+            <summary className="cursor-pointer text-sm font-bold text-navy">2. Product media</summary>
           <div className="mt-4 grid gap-3">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-bold text-navy">Images</h3>
+              <div>
+                <h3 className="text-sm font-bold text-navy">Gallery images</h3>
+                <p className="mt-1 text-xs font-semibold text-neutral-500">First image appears on product cards.</p>
+              </div>
               <Button type="button" variant="secondary" size="sm" onClick={addImage}>
                 <Plus size={15} />
                 Add image
@@ -702,11 +823,16 @@ export function AdminProductManager({
           </div>
           </details>
 
-          <details className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">Color variants and stock</summary>
+          <details open className="rounded-lg border border-neutral-200 bg-white p-3">
+            <summary className="cursor-pointer text-sm font-bold text-navy">3. Color-wise variants and stock</summary>
           <div className="mt-4 grid gap-3">
             <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-bold text-navy">Color variants</h3>
+              <div>
+                <h3 className="text-sm font-bold text-navy">Color options</h3>
+                <p className="mt-1 text-xs font-semibold text-neutral-500">
+                  Add each color with its own image, SKU, and stock quantity.
+                </p>
+              </div>
               <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
                 <Plus size={15} />
                 Add color
@@ -726,7 +852,7 @@ export function AdminProductManager({
                     <input
                       value={variant.colorNameEn}
                       onChange={(event) => updateVariant(index, "colorNameEn", event.target.value)}
-                      placeholder="Color EN"
+                      placeholder="Color EN, e.g. Black"
                       className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                     />
                     <input
@@ -769,6 +895,7 @@ export function AdminProductManager({
                       min="0"
                       value={variant.sortOrder}
                       onChange={(event) => updateVariant(index, "sortOrder", event.target.value)}
+                      aria-label="Sort order"
                       className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                     />
                     <label className="flex h-10 items-center gap-2 text-sm font-semibold text-navy">
@@ -793,14 +920,14 @@ export function AdminProductManager({
               ))
             ) : (
               <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
-                Add colors when this product has stock per color.
+                Add colors when this product has stock per color. Customers will see the matching color image on the product page.
               </p>
             )}
           </div>
           </details>
 
           <details className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">Specifications</summary>
+            <summary className="cursor-pointer text-sm font-bold text-navy">4. Product specifications</summary>
           <div className="mt-4 grid gap-3">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-bold text-navy">Specifications</h3>
@@ -852,7 +979,7 @@ export function AdminProductManager({
           </details>
 
           <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">Publishing controls</summary>
+            <summary className="cursor-pointer text-sm font-bold text-navy">5. Storefront publishing</summary>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-navy">
             <label className="flex items-center gap-2">
               <input

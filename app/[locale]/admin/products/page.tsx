@@ -87,14 +87,14 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       <AdminPageHeader
         eyebrow={dictionary.admin.products}
         title={dictionary.admin.products}
-        subtitle="Add, edit, preview, price, feature, and manage product inventory."
+        subtitle="Create ecommerce products with gallery images, color-wise stock, pricing, and storefront publishing."
         action={
           <a
             href="#product-editor"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-semibold text-navy shadow-soft transition hover:from-gold-400 hover:to-gold-200"
           >
             <Plus size={17} />
-            Add product
+            Add ecommerce product
           </a>
         }
       />
