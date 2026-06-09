@@ -8,7 +8,10 @@ import type { z } from "zod";
 export type OrderCreateInput = z.infer<typeof orderCreateSchema>;
 
 function createOrderNumber() {
-  return `BB-${Date.now().toString().slice(-8)}`;
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const suffix = randomBytes(3).toString("hex").toUpperCase();
+
+  return `BB-${timestamp}-${suffix}`;
 }
 
 function createOrderAccessToken() {
