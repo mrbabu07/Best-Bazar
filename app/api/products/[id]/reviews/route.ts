@@ -1,9 +1,14 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { z, ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import {
+  getProductReviewSummary,
+  recalculateApprovedReviewSummary,
+  reviewUserInclude,
+  serializeStoreReview
+} from "@/lib/reviews";
 
 export const dynamic = "force-dynamic";
 
@@ -16,23 +21,6 @@ const reviewSchema = z.object({
   comment: z.string().trim().min(4).max(1000)
 });
 
-const reviewInclude = {
-  user: { select: { name: true, image: true } }
-} satisfies Prisma.ReviewInclude;
-
-function serializeReview(review: Prisma.ReviewGetPayload<{ include: typeof reviewInclude }>) {
-  return {
-    id: review.id,
-    rating: review.rating,
-    comment: review.comment,
-    createdAt: review.createdAt.toISOString(),
-    user: {
-      name: review.user.name ?? "Best Bazar customer",
-      image: review.user.image ?? undefined
-    }
-  };
-}
-
 async function findActiveProduct(id: string) {
   return prisma.product.findFirst({
     where: {
@@ -41,23 +29,6 @@ async function findActiveProduct(id: string) {
     },
     select: { id: true, rating: true, reviewCount: true }
   });
-}
-
-async function updateProductReviewSummary(tx: Prisma.TransactionClient, productId: string) {
-  const summary = await tx.review.aggregate({
-    where: { productId, isApproved: true },
-    _avg: { rating: true },
-    _count: { _all: true }
-  });
-  const rating = Number((summary._avg.rating ?? 0).toFixed(2));
-  const reviewCount = summary._count._all;
-
-  await tx.product.update({
-    where: { id: productId },
-    data: { rating, reviewCount }
-  });
-
-  return { rating, reviewCount };
 }
 
 export async function GET(_request: Request, { params }: RouteContext) {
@@ -69,7 +40,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const reviews = await prisma.review.findMany({
     where: { productId: product.id, isApproved: true },
-    include: reviewInclude,
+    include: reviewUserInclude,
     orderBy: { createdAt: "desc" },
     take: 20
   });
@@ -77,7 +48,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   return NextResponse.json({
     rating: Number(product.rating),
     reviewCount: product.reviewCount,
-    reviews: reviews.map(serializeReview)
+    reviews: reviews.map(serializeStoreReview)
   });
 }
 
@@ -99,7 +70,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const result = await prisma.$transaction(async (tx) => {
       const existingReview = await tx.review.findFirst({
         where: { productId: product.id, userId: session.user.id },
-        select: { id: true }
+        select: { id: true, isApproved: true }
       });
       const review = existingReview
         ? await tx.review.update({
@@ -107,9 +78,9 @@ export async function POST(request: Request, { params }: RouteContext) {
             data: {
               rating: data.rating,
               comment: data.comment,
-              isApproved: true
+              isApproved: false
             },
-            include: reviewInclude
+            include: reviewUserInclude
           })
         : await tx.review.create({
             data: {
@@ -117,18 +88,21 @@ export async function POST(request: Request, { params }: RouteContext) {
               userId: session.user.id,
               rating: data.rating,
               comment: data.comment,
-              isApproved: true
+              isApproved: false
             },
-            include: reviewInclude
+            include: reviewUserInclude
           });
-      const summary = await updateProductReviewSummary(tx, product.id);
+      const summary = existingReview?.isApproved
+        ? await recalculateApprovedReviewSummary(tx, product.id)
+        : await getProductReviewSummary(tx, product.id);
 
       return { review, summary };
     });
 
     return NextResponse.json({
       ...result.summary,
-      review: serializeReview(result.review)
+      pending: true,
+      review: serializeStoreReview(result.review)
     });
   } catch (error) {
     if (error instanceof ZodError) {

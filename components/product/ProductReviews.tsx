@@ -29,6 +29,7 @@ const copy = {
     submit: "Submit review",
     saving: "Saving...",
     saved: "Review saved",
+    pending: "Review submitted for approval.",
     signIn: "Sign in to leave a review.",
     failed: "Unable to save review."
   },
@@ -42,6 +43,7 @@ const copy = {
     submit: "إرسال التقييم",
     saving: "جار الحفظ...",
     saved: "تم حفظ التقييم",
+    pending: "تم إرسال التقييم للمراجعة.",
     signIn: "سجل الدخول لإضافة تقييم.",
     failed: "تعذر حفظ التقييم."
   }
@@ -79,6 +81,7 @@ export function ProductReviews({
   const [reviewCount, setReviewCount] = useState(initialReviewCount);
   const [selectedRating, setSelectedRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [pendingNotice, setPendingNotice] = useState("");
   const [saving, setSaving] = useState(false);
 
   const submitReview = async (event: FormEvent<HTMLFormElement>) => {
@@ -105,12 +108,16 @@ export function ProductReviews({
 
       setRating(Number(result.rating ?? rating));
       setReviewCount(Number(result.reviewCount ?? reviewCount));
-      setReviews((current) => [
-        result.review,
-        ...current.filter((review) => review.id !== result.review.id)
-      ]);
+      if (result.pending) {
+        setPendingNotice(labels.pending);
+      } else {
+        setReviews((current) => [
+          result.review,
+          ...current.filter((review) => review.id !== result.review.id)
+        ]);
+      }
       setComment("");
-      toast.success(labels.saved);
+      toast.success(result.pending ? labels.pending : labels.saved);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : labels.failed);
@@ -179,6 +186,7 @@ export function ProductReviews({
               className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm text-neutral-700"
             />
           </label>
+          {pendingNotice ? <p className="text-sm font-semibold text-emerald-700">{pendingNotice}</p> : null}
           <Button type="submit" disabled={saving}>
             <Send size={16} />
             {saving ? labels.saving : labels.submit}

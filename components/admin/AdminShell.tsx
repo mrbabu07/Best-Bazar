@@ -15,6 +15,7 @@ import {
   Package,
   Receipt,
   Settings,
+  Star,
   Tags,
   TicketPercent,
   Users,
@@ -51,6 +52,7 @@ export function AdminShell({
     { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package },
     { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Receipt },
     { label: dictionary.admin.users, href: `/${locale}/admin/users`, icon: Users },
+    { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews`, icon: Star },
     { label: dictionary.admin.coupons, href: `/${locale}/admin/coupons`, icon: TicketPercent },
     { label: bannersLabel, href: `/${locale}/admin/banners`, icon: ImagePlus },
     { label: dictionary.admin.settings, href: `/${locale}/admin/settings`, icon: Settings }
