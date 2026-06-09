@@ -4,7 +4,6 @@ import { ArrowRight, Sparkles, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
-import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { categories, products } from "@/lib/data";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
