@@ -5,14 +5,14 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { categories } from "@/lib/data";
-import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
+import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Category Management | Best Bazar"
 };
 
-export default function AdminCategoriesPage({ params }: { params: { locale: string } }) {
+export default async function AdminCategoriesPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -20,6 +20,13 @@ export default function AdminCategoriesPage({ params }: { params: { locale: stri
   }
 
   const dictionary = getDictionary(locale);
+  const categories = await prisma.category.findMany({
+    include: {
+      parentCategory: true,
+      _count: { select: { products: true, subcategories: true } }
+    },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+  });
 
   return (
     <div>
@@ -46,12 +53,23 @@ export default function AdminCategoriesPage({ params }: { params: { locale: stri
                 <GripVertical size={18} />
               </div>
               <div className="relative aspect-square overflow-hidden rounded-md bg-neutral-100">
-                <Image src={category.image} alt={getLocalized(category.name, locale)} fill sizes="96px" className="object-cover" />
+                {category.image ? (
+                  <Image
+                    src={category.image}
+                    alt={locale === "ar" ? category.nameAr : category.nameEn}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                ) : null}
               </div>
               <div>
-                <h2 className="font-bold text-navy">{getLocalized(category.name, locale)}</h2>
+                <h2 className="font-bold text-navy">{locale === "ar" ? category.nameAr : category.nameEn}</h2>
                 <p className="mt-1 text-sm text-neutral-500">{category.slug}</p>
-                <p className="mt-2 text-sm text-neutral-600">{category.productCount} products</p>
+                <p className="mt-2 text-sm text-neutral-600">
+                  {category._count.products} products
+                  {category.parentCategory ? ` | parent: ${category.parentCategory.nameEn}` : ""}
+                </p>
               </div>
               <div className="flex items-start gap-2">
                 <Badge tone={category.isActive ? "green" : "red"}>
@@ -77,7 +95,7 @@ export default function AdminCategoriesPage({ params }: { params: { locale: stri
               <select className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm">
                 <option>None</option>
                 {categories.map((category) => (
-                  <option key={category.id}>{getLocalized(category.name, locale)}</option>
+                  <option key={category.id}>{locale === "ar" ? category.nameAr : category.nameEn}</option>
                 ))}
               </select>
             </label>

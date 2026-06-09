@@ -5,15 +5,15 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { categories, products } from "@/lib/data";
-import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
+import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/utils/currency";
 
 export const metadata: Metadata = {
   title: "Product Management | Best Bazar"
 };
 
-export default function AdminProductsPage({ params }: { params: { locale: string } }) {
+export default async function AdminProductsPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -21,6 +21,19 @@ export default function AdminProductsPage({ params }: { params: { locale: string
   }
 
   const dictionary = getDictionary(locale);
+  const [categories, products] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }]
+    }),
+    prisma.product.findMany({
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: "asc" }, take: 1 }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 20
+    })
+  ]);
 
   return (
     <div>
@@ -57,22 +70,24 @@ export default function AdminProductsPage({ params }: { params: { locale: string
                       <div className="flex items-center gap-3">
                         <div className="relative h-14 w-14 overflow-hidden rounded-md bg-neutral-100">
                           <Image
-                            src={product.images[0].url}
-                            alt={product.images[0].alt}
+                            src={product.images[0]?.url ?? "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=400&q=80"}
+                            alt={product.images[0]?.alt ?? product.nameEn}
                             fill
                             sizes="56px"
                             className="object-cover"
                           />
                         </div>
                         <div>
-                          <p className="font-bold text-navy">{getLocalized(product.name, locale)}</p>
+                          <p className="font-bold text-navy">{locale === "ar" ? product.nameAr : product.nameEn}</p>
                           <p className="text-xs text-neutral-500">{product.sku}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-neutral-600">{product.category}</td>
+                    <td className="px-5 py-4 text-neutral-600">
+                      {locale === "ar" ? product.category.nameAr : product.category.nameEn}
+                    </td>
                     <td className="px-5 py-4 font-bold text-navy">
-                      {formatCurrency(product.price, "AED", locale)}
+                      {formatCurrency(Number(product.price), "AED", locale)}
                     </td>
                     <td className="px-5 py-4">
                       <Badge tone={product.stock <= 10 ? "red" : "green"}>{product.stock}</Badge>
@@ -114,7 +129,7 @@ export default function AdminProductsPage({ params }: { params: { locale: string
               Category
               <select className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm">
                 {categories.map((category) => (
-                  <option key={category.id}>{getLocalized(category.name, locale)}</option>
+                  <option key={category.id}>{locale === "ar" ? category.nameAr : category.nameEn}</option>
                 ))}
               </select>
             </label>
