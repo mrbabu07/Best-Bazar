@@ -1,27 +1,13 @@
-import { DiscountType, OrderStatus, PaymentStatus, type Prisma } from "@prisma/client";
+import { DiscountType, OrderStatus, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { orderCreateSchema } from "@/lib/validations/store";
+import { getShippingCost, normalizeShippingSettings } from "@/utils/shipping";
 import type { z } from "zod";
 
 export type OrderCreateInput = z.infer<typeof orderCreateSchema>;
 
 function createOrderNumber() {
   return `BB-${Date.now().toString().slice(-8)}`;
-}
-
-function getShippingCost(settings: { shippingRates: Prisma.JsonValue; freeShippingThreshold: unknown }, emirate: string, subtotal: number) {
-  const freeThreshold = Number(settings.freeShippingThreshold ?? 250);
-
-  if (subtotal >= freeThreshold) {
-    return 0;
-  }
-
-  const rates = Array.isArray(settings.shippingRates)
-    ? (settings.shippingRates as Array<{ emirate: string; cost: number }>)
-    : [];
-  const match = rates.find((rate) => rate.emirate.toLowerCase() === emirate.toLowerCase());
-
-  return Number(match?.cost ?? 20);
 }
 
 export async function createStoreOrder(data: OrderCreateInput, userId?: string) {
@@ -54,7 +40,11 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
   });
   const subtotal = items.reduce((total, item) => total + item.lineTotal, 0);
   const settings = await prisma.setting.findUniqueOrThrow({ where: { id: "store-settings" } });
-  const shippingCost = getShippingCost(settings, data.shippingAddress.emirate, subtotal);
+  const shippingCost = getShippingCost(
+    normalizeShippingSettings(settings),
+    data.shippingAddress.emirate,
+    subtotal
+  );
   let discount = 0;
   let couponId: string | undefined;
 

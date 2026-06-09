@@ -25,6 +25,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
   const currency = usePreferencesStore((state) => state.currency);
+  const currencyRates = usePreferencesStore((state) => state.currencyRates);
   const stockTone = product.stock > 10 ? "green" : product.stock > 0 ? "gold" : "red";
   const stockLabel =
     product.stock > 10
@@ -93,11 +94,11 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
         <div className="mt-6 flex items-end gap-3">
           <p className="text-3xl font-bold text-navy">
-            {formatCurrency(product.price, currency, locale)}
+            {formatCurrency(product.price, currency, locale, currencyRates)}
           </p>
           {product.comparePrice ? (
             <p className="pb-1 text-lg text-neutral-400 line-through">
-              {formatCurrency(product.comparePrice, currency, locale)}
+              {formatCurrency(product.comparePrice, currency, locale, currencyRates)}
             </p>
           ) : null}
         </div>

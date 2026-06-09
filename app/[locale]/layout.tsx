@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
+import { normalizeCurrencyRates } from "@/utils/currency";
+import { normalizeShippingSettings } from "@/utils/shipping";
 import { Providers } from "./providers";
 import "../globals.css";
 
@@ -42,7 +44,13 @@ async function getFrameSettings() {
     email: settings?.storeEmail ?? "",
     address: settings?.address ?? "",
     instagram: settings?.instagram ?? "",
-    facebook: settings?.facebook ?? ""
+    facebook: settings?.facebook ?? "",
+    currencyRates: normalizeCurrencyRates({
+      AED: 1,
+      BDT: settings?.aedToBdt,
+      USD: settings?.aedToUsd
+    }),
+    shippingSettings: normalizeShippingSettings(settings)
   };
 }
 

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
 
 type OrderConfirmationPageProps = {
   params: {
@@ -29,16 +29,27 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
   }
 
   const dictionary = getDictionary(locale);
-  const order = await prisma.order.findUnique({
-    where: { id: params.id },
-    include: { items: true }
-  });
+  const [order, settings] = await Promise.all([
+    prisma.order.findUnique({
+      where: { id: params.id },
+      include: { items: true }
+    }),
+    prisma.setting.findUnique({
+      where: { id: "store-settings" },
+      select: { aedToBdt: true, aedToUsd: true }
+    })
+  ]);
 
   if (!order) {
     notFound();
   }
 
   const currency = order.currency === "BDT" || order.currency === "USD" ? order.currency : "AED";
+  const currencyRates = normalizeCurrencyRates({
+    AED: 1,
+    BDT: settings?.aedToBdt,
+    USD: settings?.aedToUsd
+  });
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -78,7 +89,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
           </div>
           <div className="rounded-md border border-neutral-200 p-4">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">Total</p>
-            <p className="mt-2 font-bold text-navy">{formatCurrency(Number(order.total), currency, locale)}</p>
+            <p className="mt-2 font-bold text-navy">{formatCurrency(Number(order.total), currency, locale, currencyRates)}</p>
           </div>
         </div>
 
@@ -94,7 +105,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
                   {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
                 </span>
                 <span className="font-bold text-navy">
-                  {formatCurrency(Number(item.price) * item.quantity, currency, locale)}
+                  {formatCurrency(Number(item.price) * item.quantity, currency, locale, currencyRates)}
                 </span>
               </div>
             ))}

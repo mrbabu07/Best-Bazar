@@ -10,6 +10,7 @@ import { getLocalized } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { formatCurrency } from "@/utils/currency";
+import { getShippingCost } from "@/utils/shipping";
 import { Button } from "@/components/ui/Button";
 
 type CartPageContentProps = {
@@ -27,7 +28,9 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   const removeItem = useCartStore((state) => state.removeItem);
   const subtotal = useCartStore((state) => state.subtotal());
   const currency = usePreferencesStore((state) => state.currency);
-  const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 20;
+  const currencyRates = usePreferencesStore((state) => state.currencyRates);
+  const shippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const shipping = getShippingCost(shippingSettings, "Dubai", subtotal);
   const total = Math.max(subtotal + shipping - discount, 0);
 
   useEffect(() => {
@@ -116,7 +119,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                   {getLocalized(item.name, locale)}
                 </Link>
                 <p className="mt-2 font-semibold text-navy">
-                  {formatCurrency(item.price, currency, locale)}
+                  {formatCurrency(item.price, currency, locale, currencyRates)}
                 </p>
               </div>
               <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
@@ -175,20 +178,20 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
           <div className="mt-5 grid gap-3 text-sm">
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>
-              <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale)}</span>
+              <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.shipping}</span>
-              <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale)}</span>
+              <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.discount}</span>
-              <span className="font-semibold text-navy">-{formatCurrency(discount, currency, locale)}</span>
+              <span className="font-semibold text-navy">-{formatCurrency(discount, currency, locale, currencyRates)}</span>
             </div>
             <div className="border-t border-neutral-200 pt-4 text-base">
               <div className="flex justify-between">
                 <span className="font-bold text-navy">{dictionary.common.total}</span>
-                <span className="font-bold text-navy">{formatCurrency(total, currency, locale)}</span>
+                <span className="font-bold text-navy">{formatCurrency(total, currency, locale, currencyRates)}</span>
               </div>
             </div>
           </div>

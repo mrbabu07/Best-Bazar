@@ -9,6 +9,7 @@ import { getLocalized } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { formatCurrency } from "@/utils/currency";
+import { getShippingCost } from "@/utils/shipping";
 import { Button } from "@/components/ui/Button";
 
 type CheckoutPageContentProps = {
@@ -19,12 +20,15 @@ type CheckoutPageContentProps = {
 export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentProps) {
   const router = useRouter();
   const [payment, setPayment] = useState<"stripe" | "cod">("stripe");
+  const [emirate, setEmirate] = useState("Dubai");
   const [loading, setLoading] = useState(false);
   const items = useCartStore((state) => state.items);
   const subtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
   const currency = usePreferencesStore((state) => state.currency);
-  const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 20;
+  const currencyRates = usePreferencesStore((state) => state.currencyRates);
+  const shippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const shipping = getShippingCost(shippingSettings, emirate, subtotal);
   const total = subtotal + shipping;
 
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
@@ -115,6 +119,7 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
                     type={field.type}
                     autoComplete={field.autoComplete}
                     defaultValue={field.defaultValue}
+                    onChange={field.name === "emirate" ? (event) => setEmirate(event.target.value) : undefined}
                     required
                     className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                   />
@@ -174,7 +179,7 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
                     {item.quantity} x {getLocalized(item.name, locale)}
                   </span>
                   <span className="font-semibold text-navy">
-                    {formatCurrency(item.price * item.quantity, currency, locale)}
+                    {formatCurrency(item.price * item.quantity, currency, locale, currencyRates)}
                   </span>
                 </div>
               ))
@@ -191,15 +196,15 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
             </label>
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>
-              <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale)}</span>
+              <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.shipping}</span>
-              <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale)}</span>
+              <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between text-base">
               <span className="font-bold text-navy">{dictionary.common.total}</span>
-              <span className="font-bold text-navy">{formatCurrency(total, currency, locale)}</span>
+              <span className="font-bold text-navy">{formatCurrency(total, currency, locale, currencyRates)}</span>
             </div>
           </div>
           <Button type="submit" className="mt-6 w-full" disabled={items.length === 0 || loading}>

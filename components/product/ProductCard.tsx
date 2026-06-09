@@ -22,6 +22,7 @@ type ProductCardProps = {
 export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
   const addItem = useCartStore((state) => state.addItem);
   const currency = usePreferencesStore((state) => state.currency);
+  const currencyRates = usePreferencesStore((state) => state.currencyRates);
   const hasSale = product.comparePrice && product.comparePrice > product.price;
 
   const handleAdd = () => {
@@ -66,11 +67,11 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
 
         <div className="mt-3 flex items-end gap-2">
           <p className="text-lg font-bold text-navy">
-            {formatCurrency(product.price, currency, locale)}
+            {formatCurrency(product.price, currency, locale, currencyRates)}
           </p>
           {product.comparePrice ? (
             <p className="text-sm text-neutral-400 line-through">
-              {formatCurrency(product.comparePrice, currency, locale)}
+              {formatCurrency(product.comparePrice, currency, locale, currencyRates)}
             </p>
           ) : null}
         </div>

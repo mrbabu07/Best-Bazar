@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
 
 type ShippingRate = {
   emirate: string;
@@ -58,6 +58,11 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
   const router = useRouter();
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
+  const previewRates = normalizeCurrencyRates({
+    AED: 1,
+    BDT: form.aedToBdt,
+    USD: form.aedToUsd
+  });
 
   const updateForm = <Key extends keyof AdminSettingsData>(key: Key, value: AdminSettingsData[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -243,7 +248,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             />
           </label>
           <p className="text-sm text-neutral-500">
-            Preview: {formatCurrency(100, "BDT", locale)} / {formatCurrency(100, "USD", locale)}
+            Preview: {formatCurrency(100, "BDT", locale, previewRates)} / {formatCurrency(100, "USD", locale, previewRates)}
           </p>
           <div className="grid gap-3">
             {form.shippingRates.map((rate, index) => (

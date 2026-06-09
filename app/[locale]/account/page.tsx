@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency, type CurrencyCode } from "@/utils/currency";
+import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
 export const dynamic = "force-dynamic";
 
@@ -63,20 +63,32 @@ export default async function AccountPage({ params }: { params: { locale: string
   }
 
   const dictionary = getDictionary(locale);
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      orders: {
-        include: { items: true },
-        orderBy: { createdAt: "desc" },
-        take: 10
+  const [user, settings] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: {
+        orders: {
+          include: { items: true },
+          orderBy: { createdAt: "desc" },
+          take: 10
+        }
       }
-    }
-  });
+    }),
+    prisma.setting.findUnique({
+      where: { id: "store-settings" },
+      select: { aedToBdt: true, aedToUsd: true }
+    })
+  ]);
 
   if (!user) {
     redirect(`/${locale}/login?callbackUrl=/${locale}/account`);
   }
+
+  const currencyRates = normalizeCurrencyRates({
+    AED: 1,
+    BDT: settings?.aedToBdt,
+    USD: settings?.aedToUsd
+  });
 
   const profileFields = [
     { label: "Name", value: user.name ?? "" },
@@ -207,7 +219,7 @@ export default async function AccountPage({ params }: { params: { locale: string
                           <Badge tone={getOrderTone(order.orderStatus)}>{order.orderStatus}</Badge>
                         </td>
                         <td className="px-5 py-4 font-bold text-navy">
-                          {formatCurrency(Number(order.total), getCurrency(order.currency), locale)}
+                          {formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates)}
                         </td>
                       </tr>
                     ))}
