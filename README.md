@@ -57,7 +57,7 @@ Copy `.env.example` to `.env.local`, then fill in Neon PostgreSQL, NextAuth, Goo
 
 For Prisma CLI commands, also keep `DATABASE_URL` available in an ignored `.env` file. The current Neon schema has been pushed and seeded.
 
-Seeded admin login for local development:
+Seeded admin login email for local development:
 
 - Email: `admin@bestbazar.ae`
-- Password: `Admin123!`
+- Password: set in ignored env as `SEED_ADMIN_PASSWORD`

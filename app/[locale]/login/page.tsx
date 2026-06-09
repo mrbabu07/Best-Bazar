@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { LockKeyhole, Mail } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import { LoginForm } from "@/components/auth/LoginForm";
 import { getDictionary, isLocale } from "@/lib/i18n";
 
 type LoginPageProps = {
@@ -49,31 +49,7 @@ export default function LoginPage({ params, searchParams }: LoginPageProps) {
           </p>
         </div>
 
-        <form className="mt-6 grid gap-4">
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Email
-            <div className="relative">
-              <Mail size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3" />
-              <input
-                type="email"
-                className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm rtl:pl-3 rtl:pr-10"
-                placeholder="admin@bestbazar.ae"
-              />
-            </div>
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Password
-            <input
-              type="password"
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-              placeholder="********"
-            />
-          </label>
-          <Button type="submit" className="w-full">
-            {locale === "ar" ? "متابعة" : "Continue"}
-          </Button>
-        </form>
+        <LoginForm locale={locale} callbackUrl={callbackUrl} />
 
         <Link
           href={`/${locale}`}
