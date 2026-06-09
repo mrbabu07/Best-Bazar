@@ -1,11 +1,15 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { NavigationFeedback } from "@/components/layout/NavigationFeedback";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <>
+      <Suspense fallback={null}>
+        <NavigationFeedback />
+      </Suspense>
       {children}
       <Toaster
         position="top-right"

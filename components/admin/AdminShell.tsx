@@ -8,6 +8,7 @@ import {
   Bell,
   Boxes,
   Globe2,
+  Home,
   ImagePlus,
   LayoutDashboard,
   LogOut,
@@ -81,6 +82,14 @@ export function AdminShell({
         </div>
 
         <nav className="grid gap-1 px-3 py-4">
+          <Link
+            href={`/${locale}`}
+            onClick={() => setOpen(false)}
+            className="mb-2 flex items-center gap-3 rounded-md border border-white/15 bg-white/8 px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+          >
+            <Home size={18} />
+            Storefront
+          </Link>
           {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
@@ -164,10 +173,10 @@ export function AdminShell({
             </div>
             <Link
               href={`/${locale}`}
-              className="hidden h-10 items-center gap-2 rounded-md bg-navy px-3 text-xs font-bold text-white hover:bg-neutral-800 sm:inline-flex"
+              className="inline-flex h-10 items-center gap-2 rounded-md bg-navy px-3 text-xs font-bold text-white hover:bg-neutral-800"
             >
               <Boxes size={16} />
-              <span className="hidden lg:inline">Storefront</span>
+              <span className="hidden sm:inline">Storefront</span>
             </Link>
             <button
               type="button"

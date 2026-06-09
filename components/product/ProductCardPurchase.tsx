@@ -1,6 +1,7 @@
 "use client";
 
 import { ShoppingBag } from "lucide-react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { getLocalized } from "@/lib/i18n";
@@ -60,24 +61,27 @@ export function ProductCardAddButton({
   addToCartLabel
 }: ProductCardAddButtonProps) {
   const labels = purchaseCopy[locale];
+  const [adding, setAdding] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const defaultVariant = variants.find((variant) => variant.stock > 0);
   const availableStock = defaultVariant?.stock ?? product.stock;
 
   const handleAdd = () => {
+    setAdding(true);
     addItem(product, 1, defaultVariant);
     toast.success(labels.addedToCart(getLocalized(product.name, locale)));
+    window.setTimeout(() => setAdding(false), 650);
   };
 
   return (
     <Button
       className="mt-auto h-10 w-full px-2 text-xs sm:h-11 sm:px-5 sm:text-sm"
       onClick={handleAdd}
-      disabled={availableStock <= 0}
+      disabled={availableStock <= 0 || adding}
       variant={availableStock <= 0 ? "secondary" : "primary"}
     >
       <ShoppingBag size={17} />
-      {addToCartLabel}
+      {adding ? "Added" : addToCartLabel}
     </Button>
   );
 }

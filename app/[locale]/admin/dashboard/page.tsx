@@ -3,8 +3,10 @@ import Link from "next/link";
 import {
   Boxes,
   DollarSign,
+  Home,
   ImagePlus,
   PackageCheck,
+  Plus,
   Settings,
   ShoppingCart,
   Star,
@@ -13,7 +15,7 @@ import {
   Truck,
   Users
 } from "lucide-react";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, Prisma } from "@prisma/client";
 import { AdminMetricCard } from "@/components/admin/AdminMetricCard";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
@@ -79,22 +81,33 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
   ]);
 
   const today = startOfDay(new Date());
-  const revenueSeries = await Promise.all(
-    Array.from({ length: 12 }).map(async (_, index) => {
-      const day = addDays(today, index - 11);
-      const nextDay = addDays(day, 1);
-      const result = await prisma.order.aggregate({
-        where: {
-          createdAt: { gte: day, lt: nextDay },
-          orderStatus: { not: OrderStatus.CANCELLED }
-        },
-        _sum: { total: true }
-      });
-
-      return Number(result._sum.total ?? 0);
-    })
+  const chartStart = addDays(today, -11);
+  const chartEnd = addDays(today, 1);
+  const revenueRows = await prisma.$queryRaw<Array<{ day: Date; total: Prisma.Decimal | null }>>(
+    Prisma.sql`
+      SELECT date_trunc('day', "createdAt") AS day, COALESCE(SUM(total), 0) AS total
+      FROM "Order"
+      WHERE "createdAt" >= ${chartStart}
+        AND "createdAt" < ${chartEnd}
+        AND "orderStatus" <> ${OrderStatus.CANCELLED}::"OrderStatus"
+      GROUP BY day
+      ORDER BY day ASC
+    `
   );
+  const revenueByDay = new Map(
+    revenueRows.map((row) => [startOfDay(new Date(row.day)).toISOString(), Number(row.total ?? 0)])
+  );
+  const revenueSeries = Array.from({ length: 12 }).map((_, index) => {
+    const day = addDays(today, index - 11);
+    return revenueByDay.get(day.toISOString()) ?? 0;
+  });
   const maxRevenue = Math.max(...revenueSeries, 1);
+  const quickActions = [
+    { label: "View storefront", href: `/${locale}`, icon: Home, tone: "primary" },
+    { label: "Add product", href: `/${locale}/admin/products#product-editor`, icon: Plus, tone: "secondary" },
+    { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary" },
+    { label: "Shipping settings", href: `/${locale}/admin/settings`, icon: Settings, tone: "secondary" }
+  ];
   const controlGroups = [
     {
       title: locale === "ar" ? "إدارة الكتالوج" : "Catalog control",
@@ -140,6 +153,28 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
         eyebrow={dictionary.admin.dashboard}
         title={dictionary.admin.dashboard}
         subtitle="Revenue, order, inventory, and fulfillment overview for the last 30 days."
+        action={
+          <div className="flex flex-wrap gap-2">
+            {quickActions.slice(0, 2).map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={
+                    item.tone === "primary"
+                      ? "inline-flex h-11 items-center justify-center gap-2 rounded-md bg-navy px-4 text-sm font-bold text-white hover:bg-neutral-800"
+                      : "inline-flex h-11 items-center justify-center gap-2 rounded-md border border-gold-200 bg-white px-4 text-sm font-bold text-navy hover:bg-gold-50"
+                  }
+                >
+                  <Icon size={17} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        }
       />
 
       <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
@@ -153,6 +188,27 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
             </h2>
           </div>
           <Badge tone="gold">{locale === "ar" ? "إدارة سريعة" : "Quick manage"}</Badge>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {quickActions.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex min-h-16 items-center justify-between gap-3 rounded-md border border-neutral-200 bg-paper px-4 py-3 text-sm font-bold text-navy transition hover:border-gold-300 hover:bg-gold-50"
+              >
+                <span className="inline-flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-md bg-white text-gold-700">
+                    <Icon size={17} />
+                  </span>
+                  {item.label}
+                </span>
+                <span className="text-gold-700">-&gt;</span>
+              </Link>
+            );
+          })}
         </div>
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {controlGroups.map((group) => {
