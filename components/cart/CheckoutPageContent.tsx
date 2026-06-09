@@ -20,7 +20,7 @@ type CheckoutPageContentProps = {
   stripeEnabled: boolean;
 };
 
-type CheckoutFieldName = "name" | "email" | "phone" | "street" | "city" | "country";
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "tower" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -90,7 +90,7 @@ const checkoutCopy = {
     shippingArea: string;
     delivery: string;
     applied: (code: string) => string;
-    fields: Record<CheckoutFieldName, string>;
+    fields: Record<Exclude<CheckoutFieldName, "apartment" | "tower">, string>;
   }
 >;
 
@@ -188,6 +188,8 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
         email: String(formData.get("email") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         street: String(formData.get("street") ?? ""),
+        apartment: String(formData.get("apartment") ?? ""),
+        tower: String(formData.get("tower") ?? ""),
         city: String(formData.get("city") ?? ""),
         emirate: String(formData.get("emirate") ?? ""),
         country: String(formData.get("country") ?? "UAE")
@@ -238,6 +240,18 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
     { name: "email", label: labels.fields.email, type: "email", autoComplete: "email" },
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address" },
+    {
+      name: "tower",
+      label: "Building / tower",
+      type: "text",
+      autoComplete: "address-line2"
+    },
+    {
+      name: "apartment",
+      label: "Apartment / villa no.",
+      type: "text",
+      autoComplete: "address-line3"
+    },
     { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", defaultValue: "Dubai" },
     { name: "country", label: labels.fields.country, type: "text", autoComplete: "country-name", defaultValue: "UAE" }
   ];
@@ -256,7 +270,15 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       <form onSubmit={submitOrder} className="grid gap-8 lg:grid-cols-[1fr_390px]">
         <section className="grid gap-6">
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-            <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
+              <div className="rounded-md bg-gold-50 px-3 py-2 text-xs font-semibold text-navy">
+                <p>Guest checkout</p>
+                <p className="mt-1 text-neutral-500">
+                  No account needed. We will email your order link.
+                </p>
+              </div>
+            </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <input type="hidden" name="emirate" value={selectedEmirate} readOnly />
               {fields.map((field) => (

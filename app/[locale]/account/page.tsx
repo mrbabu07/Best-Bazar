@@ -37,6 +37,15 @@ function getCurrency(currency: string): CurrencyCode {
   return currency === "BDT" || currency === "USD" ? currency : "AED";
 }
 
+function formatOrderAddress(order: {
+  street: string;
+  apartment?: string | null;
+  tower?: string | null;
+  city: string;
+}) {
+  return [order.street, order.tower, order.apartment, order.city].filter(Boolean).join(", ");
+}
+
 function getOrderTone(status: string) {
   if (status === "DELIVERED") {
     return "green" as const;
@@ -148,7 +157,7 @@ export default async function AccountPage({ params }: { params: { locale: string
         }
       : null,
     ...user.orders.map((order) => ({
-      title: `${order.street}, ${order.city}`,
+      title: formatOrderAddress(order),
       country: order.country
     }))
   ].filter((address, index, addresses): address is { title: string; country: string } => {

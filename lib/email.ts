@@ -44,6 +44,12 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
     })
     .join("\n");
   const confirmationUrl = getOrderConfirmationUrl(order);
+  const addressLines = [
+    order.street,
+    order.tower ? `Building/Tower: ${order.tower}` : "",
+    order.apartment ? `Apartment/Unit: ${order.apartment}` : "",
+    `${order.city}, ${order.emirate}, ${order.country}`
+  ].filter(Boolean);
 
   await transporter.sendMail({
     from: config.from,
@@ -55,6 +61,9 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
       `Order number: ${order.orderNumber}`,
       `Status: ${order.orderStatus}`,
       `Payment: ${order.paymentMethod} / ${order.paymentStatus}`,
+      "",
+      "Delivery address:",
+      ...addressLines,
       "",
       lines,
       "",

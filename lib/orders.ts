@@ -122,6 +122,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         customerEmail: data.shippingAddress.email,
         customerPhone: data.shippingAddress.phone,
         street: data.shippingAddress.street,
+        apartment: data.shippingAddress.apartment,
+        tower: data.shippingAddress.tower,
         city: data.shippingAddress.city,
         emirate: data.shippingAddress.emirate,
         country: data.shippingAddress.country,

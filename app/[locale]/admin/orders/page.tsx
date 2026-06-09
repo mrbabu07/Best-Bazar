@@ -30,6 +30,19 @@ function getCurrency(currency: string): CurrencyCode {
   return currency === "BDT" || currency === "USD" ? currency : "AED";
 }
 
+function formatAddress(order: {
+  street: string;
+  apartment?: string | null;
+  tower?: string | null;
+  city: string;
+  emirate: string;
+  country: string;
+}) {
+  return [order.street, order.tower, order.apartment, order.city, order.emirate, order.country]
+    .filter(Boolean)
+    .join(", ");
+}
+
 function buildOrderHref(locale: string, searchParams: AdminOrdersPageProps["searchParams"], selectedId: string) {
   const params = new URLSearchParams();
 
@@ -260,7 +273,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <p className="font-bold text-navy">{selectedOrder.customerName}</p>
                 <p className="text-neutral-600">{selectedOrder.customerPhone}</p>
                 <p className="text-neutral-600">
-                  {selectedOrder.street}, {selectedOrder.emirate}
+                  {formatAddress(selectedOrder)}
                 </p>
               </div>
             </>

@@ -99,6 +99,14 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
     { label: dictionary.common.discount, value: -Number(order.discount), tone: "normal" },
     { label: dictionary.common.total, value: Number(order.total), tone: "strong" }
   ];
+  const addressLines = [
+    order.street,
+    order.tower,
+    order.apartment,
+    order.city,
+    order.emirate,
+    order.country
+  ].filter(Boolean);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -140,6 +148,15 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
             <p className="mt-2 font-bold text-navy">{formatCurrency(Number(order.total), currency, locale, currencyRates)}</p>
           </div>
         </div>
+
+        <section className="mt-8 rounded-md border border-neutral-200 p-4">
+          <h2 className="text-lg font-bold text-navy">
+            Delivery address
+          </h2>
+          <p className="mt-2 text-sm font-semibold text-neutral-700">{order.customerName}</p>
+          <p className="mt-1 text-sm text-neutral-600">{order.customerPhone}</p>
+          <p className="mt-1 text-sm text-neutral-600">{addressLines.join(", ")}</p>
+        </section>
 
         <section className="mt-8">
           <h2 className="flex items-center gap-2 text-lg font-bold text-navy">

@@ -111,6 +111,8 @@ export type Order = {
   }>;
   shippingAddress: {
     street: string;
+    apartment?: string;
+    tower?: string;
     city: string;
     emirate: string;
     country: string;

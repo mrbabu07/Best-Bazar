@@ -186,6 +186,8 @@ model Order {
   customerEmail   String
   customerPhone   String
   street          String
+  apartment       String?
+  tower           String?
   city            String
   emirate         String
   country         String        @default("UAE")
