@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ImagePlus } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { imageUrlValidationMessage, isAllowedRemoteImage } from "@/lib/images";
 
 type AdminImageUploadFieldProps = {
   label: string;
@@ -21,6 +22,7 @@ export function AdminImageUploadField({
   aspectClassName = "aspect-[4/3]"
 }: AdminImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
+  const canPreview = isAllowedRemoteImage(value);
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();
@@ -52,7 +54,13 @@ export function AdminImageUploadField({
       <label className="text-sm font-semibold text-navy">{label}</label>
       {value ? (
         <div className={`relative overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 ${aspectClassName}`}>
-          <Image src={value} alt={previewAlt || label} fill sizes="360px" className="object-cover" />
+          {canPreview ? (
+            <Image src={value} alt={previewAlt || label} fill sizes="360px" className="object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center p-4 text-center text-xs font-semibold text-neutral-500">
+              {imageUrlValidationMessage}
+            </div>
+          )}
         </div>
       ) : null}
       <input

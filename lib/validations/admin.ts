@@ -1,6 +1,14 @@
 import { z } from "zod";
+import { imageUrlValidationMessage, isAllowedRemoteImage } from "@/lib/images";
 
 const nullableString = z.string().trim().optional().nullable();
+const imageUrl = z.string().trim().url().refine(isAllowedRemoteImage, imageUrlValidationMessage);
+const nullableImageUrl = z
+  .string()
+  .trim()
+  .optional()
+  .nullable()
+  .refine((value) => !value || isAllowedRemoteImage(value), imageUrlValidationMessage);
 const money = z.coerce.number().min(0);
 
 export const categorySchema = z.object({
@@ -8,7 +16,7 @@ export const categorySchema = z.object({
   nameAr: z.string().trim().min(1),
   slug: z.string().trim().min(1).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   parentCategoryId: nullableString,
-  image: nullableString,
+  image: nullableImageUrl,
   sortOrder: z.coerce.number().int().min(0).default(0),
   isActive: z.boolean().default(true)
 });
@@ -18,7 +26,7 @@ export const categoryReorderSchema = z.object({
 });
 
 export const productImageSchema = z.object({
-  url: z.string().url(),
+  url: imageUrl,
   alt: nullableString,
   sortOrder: z.coerce.number().int().min(0).default(0)
 });
@@ -82,8 +90,8 @@ export const bannerSchema = z.object({
   buttonTextEn: nullableString,
   buttonTextAr: nullableString,
   buttonLink: z.string().trim().min(1),
-  desktopImage: z.string().url(),
-  mobileImage: nullableString,
+  desktopImage: imageUrl,
+  mobileImage: nullableImageUrl,
   sortOrder: z.coerce.number().int().min(0).default(0),
   isActive: z.boolean().default(true)
 });
@@ -95,7 +103,7 @@ export const bannerReorderSchema = z.object({
 export const settingsSchema = z.object({
   storeNameEn: z.string().trim().min(1),
   storeNameAr: z.string().trim().min(1),
-  logo: nullableString,
+  logo: nullableImageUrl,
   storeEmail: z.string().email(),
   phone: z.string().trim().min(1),
   whatsapp: nullableString,
@@ -121,7 +129,7 @@ export const settingsSchema = z.object({
   metaTitleAr: nullableString,
   metaDescriptionEn: nullableString,
   metaDescriptionAr: nullableString,
-  ogImage: nullableString,
+  ogImage: nullableImageUrl,
   googleAnalyticsId: nullableString,
   facebookPixelId: nullableString
 });

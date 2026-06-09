@@ -6,6 +6,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
 
@@ -55,9 +56,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
     getStoreCategories()
   ]);
   const [heroBanner] = await getActiveBanners(1);
-  const heroImage =
-    heroBanner?.desktopImage ??
-    "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=85";
+  const heroImage = safeRemoteImage(heroBanner?.desktopImage, fallbackHeroImage);
   const heroTitle = heroBanner ? (locale === "ar" ? heroBanner.titleAr : heroBanner.titleEn) : dictionary.home.title;
   const heroSubtitle = heroBanner
     ? locale === "ar"

@@ -10,6 +10,7 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatCurrency } from "@/utils/currency";
 
@@ -83,9 +84,6 @@ type AdminProductManagerProps = {
   products: AdminProductRow[];
   saveLabel: string;
 };
-
-const fallbackProductImage =
-  "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=400&q=80";
 
 function createEmptyForm(categoryId = ""): ProductForm {
   return {
@@ -329,7 +327,7 @@ export function AdminProductManager({
                     <div className="flex items-center gap-3">
                       <div className="relative h-14 w-14 overflow-hidden rounded-md bg-neutral-100">
                         <Image
-                          src={product.images[0]?.url || fallbackProductImage}
+                          src={safeRemoteImage(product.images[0]?.url, fallbackProductImage)}
                           alt={product.images[0]?.alt || product.nameEn}
                           fill
                           sizes="56px"

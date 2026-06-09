@@ -9,6 +9,7 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
 import type { Locale } from "@/lib/i18n";
 
 export type AdminBannerRow = {
@@ -149,7 +150,7 @@ export function AdminBannerManager({ locale, banners }: AdminBannerManagerProps)
             </div>
             <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-neutral-100">
               <Image
-                src={banner.desktopImage}
+                src={safeRemoteImage(banner.desktopImage, fallbackHeroImage)}
                 alt={banner.titleEn}
                 fill
                 sizes="160px"

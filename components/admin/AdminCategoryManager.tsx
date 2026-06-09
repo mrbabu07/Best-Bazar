@@ -9,6 +9,7 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { fallbackCategoryImage, safeRemoteImage } from "@/lib/images";
 import type { Locale } from "@/lib/i18n";
 
 export type AdminCategoryRow = {
@@ -142,15 +143,13 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
               <GripVertical size={18} />
             </div>
             <div className="relative aspect-square overflow-hidden rounded-md bg-neutral-100">
-              {category.image ? (
-                <Image
-                  src={category.image}
-                  alt={getDisplayName(category, locale)}
-                  fill
-                  sizes="96px"
-                  className="object-cover"
-                />
-              ) : null}
+              <Image
+                src={safeRemoteImage(category.image, fallbackCategoryImage)}
+                alt={getDisplayName(category, locale)}
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
             <div>
               <h2 className="font-bold text-navy">{getDisplayName(category, locale)}</h2>

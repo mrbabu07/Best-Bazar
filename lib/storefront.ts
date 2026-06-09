@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import { fallbackCategoryImage, fallbackProductImage } from "@/lib/images";
+import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
 import type { Category, Product } from "@/lib/types";
@@ -29,7 +29,7 @@ export function mapStoreCategory(category: CategoryRecord): Category {
     id: category.id,
     slug: category.slug,
     name: { en: category.nameEn, ar: category.nameAr },
-    image: category.image ?? fallbackCategoryImage,
+    image: safeRemoteImage(category.image, fallbackCategoryImage),
     productCount: category.products.length,
     parentCategory: category.parentCategoryId ?? undefined,
     isActive: category.isActive,
@@ -40,7 +40,7 @@ export function mapStoreCategory(category: CategoryRecord): Category {
 export function mapStoreProduct(product: ProductRecord): Product {
   const images = product.images.length
     ? product.images.map((image) => ({
-        url: image.url,
+        url: safeRemoteImage(image.url, fallbackProductImage),
         alt: image.alt ?? product.nameEn
       }))
     : [{ url: fallbackProductImage, alt: product.nameEn }];
