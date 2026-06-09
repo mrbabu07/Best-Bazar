@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { DollarSign, PackageCheck, ShoppingCart, Truck } from "lucide-react";
+import { OrderStatus } from "@prisma/client";
 import { AdminMetricCard } from "@/components/admin/AdminMetricCard";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { adminStats, orders } from "@/lib/data";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/utils/currency";
 import { notFound } from "next/navigation";
 
@@ -12,7 +13,22 @@ export const metadata: Metadata = {
   title: "Admin Dashboard | Best Bazar"
 };
 
-export default function AdminDashboardPage({ params }: { params: { locale: string } }) {
+function startOfMonth() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+export default async function AdminDashboardPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -20,7 +36,52 @@ export default function AdminDashboardPage({ params }: { params: { locale: strin
   }
 
   const dictionary = getDictionary(locale);
-  const maxRevenue = Math.max(...adminStats.revenueSeries);
+  const [
+    monthRevenue,
+    totalOrders,
+    pendingOrders,
+    deliveredOrders,
+    totalProducts,
+    lowStockProducts,
+    recentOrders
+  ] = await Promise.all([
+    prisma.order.aggregate({
+      where: { createdAt: { gte: startOfMonth() }, orderStatus: { not: OrderStatus.CANCELLED } },
+      _sum: { total: true }
+    }),
+    prisma.order.count(),
+    prisma.order.count({ where: { orderStatus: OrderStatus.PENDING } }),
+    prisma.order.count({ where: { orderStatus: OrderStatus.DELIVERED } }),
+    prisma.product.count(),
+    prisma.product.findMany({
+      where: { stock: { lte: 10 } },
+      orderBy: { stock: "asc" },
+      take: 5
+    }),
+    prisma.order.findMany({
+      include: { items: true },
+      orderBy: { createdAt: "desc" },
+      take: 5
+    })
+  ]);
+
+  const today = startOfDay(new Date());
+  const revenueSeries = await Promise.all(
+    Array.from({ length: 12 }).map(async (_, index) => {
+      const day = addDays(today, index - 11);
+      const nextDay = addDays(day, 1);
+      const result = await prisma.order.aggregate({
+        where: {
+          createdAt: { gte: day, lt: nextDay },
+          orderStatus: { not: OrderStatus.CANCELLED }
+        },
+        _sum: { total: true }
+      });
+
+      return Number(result._sum.total ?? 0);
+    })
+  );
+  const maxRevenue = Math.max(...revenueSeries, 1);
 
   return (
     <div>
@@ -33,29 +94,29 @@ export default function AdminDashboardPage({ params }: { params: { locale: strin
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetricCard
           label={dictionary.admin.revenue}
-          value={formatCurrency(adminStats.revenue.month, "AED", locale)}
+          value={formatCurrency(Number(monthRevenue._sum.total ?? 0), "AED", locale)}
           detail="This month"
           icon={DollarSign}
           tone="gold"
         />
         <AdminMetricCard
           label={dictionary.admin.pendingOrders}
-          value={String(adminStats.pendingOrders)}
-          detail={`${adminStats.totalOrders} total orders`}
+          value={String(pendingOrders)}
+          detail={`${totalOrders} total orders`}
           icon={ShoppingCart}
           tone="blue"
         />
         <AdminMetricCard
           label={dictionary.admin.deliveredOrders}
-          value={String(adminStats.deliveredOrders)}
+          value={String(deliveredOrders)}
           detail="Completed successfully"
           icon={Truck}
           tone="green"
         />
         <AdminMetricCard
           label={dictionary.admin.lowStock}
-          value={String(adminStats.lowStockProducts.length)}
-          detail={`${adminStats.totalProducts} active products`}
+          value={String(lowStockProducts.length)}
+          detail={`${totalProducts} active products`}
           icon={PackageCheck}
           tone="red"
         />
@@ -68,7 +129,7 @@ export default function AdminDashboardPage({ params }: { params: { locale: strin
             <Badge tone="gold">30 days</Badge>
           </div>
           <div className="mt-6 flex h-72 items-end gap-2">
-            {adminStats.revenueSeries.map((value, index) => (
+            {revenueSeries.map((value, index) => (
               <div key={`${value}-${index}`} className="flex flex-1 flex-col items-center gap-2">
                 <div
                   className="w-full rounded-t-md bg-gradient-to-t from-gold-600 to-gold-300"
@@ -83,10 +144,15 @@ export default function AdminDashboardPage({ params }: { params: { locale: strin
         <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <h2 className="text-lg font-bold text-navy">{dictionary.admin.lowStock}</h2>
           <div className="mt-4 grid gap-3">
-            {adminStats.lowStockProducts.map((product) => (
+            {lowStockProducts.length === 0 ? (
+              <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">
+                No low stock products.
+              </p>
+            ) : null}
+            {lowStockProducts.map((product) => (
               <div key={product.id} className="flex items-center justify-between gap-4 rounded-md bg-paper p-3">
                 <div>
-                  <p className="font-semibold text-navy">{product.name.en}</p>
+                  <p className="font-semibold text-navy">{locale === "ar" ? product.nameAr : product.nameEn}</p>
                   <p className="text-xs text-neutral-500">{product.sku}</p>
                 </div>
                 <Badge tone={product.stock <= 5 ? "red" : "gold"}>{product.stock} left</Badge>
@@ -112,22 +178,22 @@ export default function AdminDashboardPage({ params }: { params: { locale: strin
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {orders.map((order) => (
+              {recentOrders.map((order) => (
                 <tr key={order.id}>
                   <td className="px-5 py-4 font-bold text-navy">{order.orderNumber}</td>
-                  <td className="px-5 py-4 text-neutral-600">{order.customer.name}</td>
+                  <td className="px-5 py-4 text-neutral-600">{order.customerName}</td>
                   <td className="px-5 py-4">
-                    <Badge tone={order.paymentStatus === "paid" ? "green" : "gold"}>
+                    <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>
                       {order.paymentStatus}
                     </Badge>
                   </td>
                   <td className="px-5 py-4">
-                    <Badge tone={order.orderStatus === "delivered" ? "green" : "blue"}>
+                    <Badge tone={order.orderStatus === "DELIVERED" ? "green" : "blue"}>
                       {order.orderStatus}
                     </Badge>
                   </td>
                   <td className="px-5 py-4 font-bold text-navy">
-                    {formatCurrency(order.total, "AED", locale)}
+                    {formatCurrency(Number(order.total), "AED", locale)}
                   </td>
                 </tr>
               ))}

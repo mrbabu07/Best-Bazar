@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth";
 import type { ReactNode } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { authOptions } from "@/lib/auth";
-import { adminStats } from "@/lib/data";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +27,16 @@ export default async function AdminLayout({
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/dashboard`);
   }
 
+  const pendingOrders = await prisma.order.count({
+    where: { orderStatus: "PENDING" }
+  });
+
   return (
     <AdminShell
       locale={locale}
       dictionary={getDictionary(locale)}
       adminName={session.user.name ?? "Admin"}
-      pendingOrders={adminStats.pendingOrders}
+      pendingOrders={pendingOrders}
     >
       {children}
     </AdminShell>
