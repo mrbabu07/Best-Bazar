@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
-import { formatCurrency } from "@/utils/currency";
-import { getShippingCost } from "@/utils/shipping";
+import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
+import { defaultShippingSettings, getShippingCost } from "@/utils/shipping";
 import { Button } from "@/components/ui/Button";
 
 type CheckoutPageContentProps = {
@@ -20,6 +21,7 @@ type CheckoutPageContentProps = {
 
 export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: CheckoutPageContentProps) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const [payment, setPayment] = useState<"stripe" | "cod">(stripeEnabled ? "stripe" : "cod");
   const [emirate, setEmirate] = useState("Dubai");
   const [coupon, setCoupon] = useState("");
@@ -27,12 +29,17 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
   const [discount, setDiscount] = useState(0);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
-  const items = useCartStore((state) => state.items);
-  const subtotal = useCartStore((state) => state.subtotal());
+  const storedItems = useCartStore((state) => state.items);
+  const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
-  const currency = usePreferencesStore((state) => state.currency);
-  const currencyRates = usePreferencesStore((state) => state.currencyRates);
-  const shippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const storedCurrency = usePreferencesStore((state) => state.currency);
+  const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
+  const storedShippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const items = hydrated ? storedItems : [];
+  const subtotal = hydrated ? storedSubtotal : 0;
+  const currency = hydrated ? storedCurrency : "AED";
+  const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
+  const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
   const shipping = getShippingCost(shippingSettings, emirate, subtotal);
   const total = Math.max(subtotal + shipping - discount, 0);
 

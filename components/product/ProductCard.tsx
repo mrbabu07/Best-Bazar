@@ -7,9 +7,10 @@ import toast from "react-hot-toast";
 import type { Product } from "@/lib/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
-import { formatCurrency } from "@/utils/currency";
+import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -20,9 +21,12 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
+  const hydrated = useHydrated();
   const addItem = useCartStore((state) => state.addItem);
-  const currency = usePreferencesStore((state) => state.currency);
-  const currencyRates = usePreferencesStore((state) => state.currencyRates);
+  const storedCurrency = usePreferencesStore((state) => state.currency);
+  const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
+  const currency = hydrated ? storedCurrency : "AED";
+  const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const hasSale = product.comparePrice && product.comparePrice > product.price;
 
   const handleAdd = () => {

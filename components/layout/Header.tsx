@@ -6,6 +6,7 @@ import { Globe2, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from "luc
 import { type FormEvent, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { currencyOptions, type CurrencyCode } from "@/utils/currency";
@@ -20,11 +21,14 @@ type HeaderProps = {
 export function Header({ locale, dictionary, settings }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const cartCount = useCartStore((state) => state.totalItems());
-  const currency = usePreferencesStore((state) => state.currency);
+  const storedCartCount = useCartStore((state) => state.totalItems());
+  const storedCurrency = usePreferencesStore((state) => state.currency);
   const setCurrency = usePreferencesStore((state) => state.setCurrency);
+  const cartCount = hydrated ? storedCartCount : 0;
+  const currency = hydrated ? storedCurrency : "AED";
 
   const navItems = [
     { label: dictionary.nav.home, href: `/${locale}` },

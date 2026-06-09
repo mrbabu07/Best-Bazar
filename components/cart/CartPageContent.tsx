@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
-import { formatCurrency } from "@/utils/currency";
-import { getShippingCost } from "@/utils/shipping";
+import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
+import { defaultShippingSettings, getShippingCost } from "@/utils/shipping";
 import { Button } from "@/components/ui/Button";
 
 type CartPageContentProps = {
@@ -19,17 +20,23 @@ type CartPageContentProps = {
 };
 
 export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
+  const hydrated = useHydrated();
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
-  const items = useCartStore((state) => state.items);
+  const storedItems = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
-  const subtotal = useCartStore((state) => state.subtotal());
-  const currency = usePreferencesStore((state) => state.currency);
-  const currencyRates = usePreferencesStore((state) => state.currencyRates);
-  const shippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const storedSubtotal = useCartStore((state) => state.subtotal());
+  const storedCurrency = usePreferencesStore((state) => state.currency);
+  const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
+  const storedShippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const items = hydrated ? storedItems : [];
+  const subtotal = hydrated ? storedSubtotal : 0;
+  const currency = hydrated ? storedCurrency : "AED";
+  const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
+  const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
   const shipping = getShippingCost(shippingSettings, "Dubai", subtotal);
   const total = Math.max(subtotal + shipping - discount, 0);
 

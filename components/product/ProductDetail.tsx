@@ -8,9 +8,10 @@ import toast from "react-hot-toast";
 import type { Product } from "@/lib/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
-import { formatCurrency } from "@/utils/currency";
+import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -21,11 +22,14 @@ type ProductDetailProps = {
 };
 
 export function ProductDetail({ product, locale, dictionary }: ProductDetailProps) {
+  const hydrated = useHydrated();
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
-  const currency = usePreferencesStore((state) => state.currency);
-  const currencyRates = usePreferencesStore((state) => state.currencyRates);
+  const storedCurrency = usePreferencesStore((state) => state.currency);
+  const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
+  const currency = hydrated ? storedCurrency : "AED";
+  const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const stockTone = product.stock > 10 ? "green" : product.stock > 0 ? "gold" : "red";
   const stockLabel =
     product.stock > 10
