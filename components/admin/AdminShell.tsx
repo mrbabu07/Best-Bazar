@@ -4,9 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Bell,
   Boxes,
   Globe2,
+  ImagePlus,
   LayoutDashboard,
+  LogOut,
   Menu,
   Package,
   Receipt,
@@ -24,21 +27,31 @@ type AdminShellProps = {
   children: ReactNode;
   locale: Locale;
   dictionary: Dictionary;
+  adminName?: string;
+  pendingOrders?: number;
 };
 
-export function AdminShell({ children, locale, dictionary }: AdminShellProps) {
+export function AdminShell({
+  children,
+  locale,
+  dictionary,
+  adminName = "Omar Khan",
+  pendingOrders = 0
+}: AdminShellProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const nextLocale = locale === "en" ? "ar" : "en";
-  const switchLocalePath = pathname.replace(`/${locale}/`, `/${nextLocale}/`);
+  const switchLocalePath = pathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
+  const bannersLabel = locale === "ar" ? "البانرات" : "Banners";
 
   const navItems = [
     { label: dictionary.admin.dashboard, href: `/${locale}/admin/dashboard`, icon: LayoutDashboard },
-    { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package },
     { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags },
+    { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package },
     { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Receipt },
     { label: dictionary.admin.users, href: `/${locale}/admin/users`, icon: Users },
     { label: dictionary.admin.coupons, href: `/${locale}/admin/coupons`, icon: TicketPercent },
+    { label: bannersLabel, href: `/${locale}/admin/banners`, icon: ImagePlus },
     { label: dictionary.admin.settings, href: `/${locale}/admin/settings`, icon: Settings }
   ];
 
@@ -97,7 +110,7 @@ export function AdminShell({ children, locale, dictionary }: AdminShellProps) {
       ) : null}
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gold-100 bg-white/92 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-gold-100 bg-white/92 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -109,11 +122,23 @@ export function AdminShell({ children, locale, dictionary }: AdminShellProps) {
             </button>
             <div className="flex items-center gap-2 text-sm font-bold text-navy">
               <BarChart3 size={18} className="text-gold-700" />
-              Admin Console
+              <span className="hidden sm:inline">Admin Console</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              className="relative grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
+              aria-label="Notifications"
+            >
+              <Bell size={17} />
+              {pendingOrders > 0 ? (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
+                  {pendingOrders}
+                </span>
+              ) : null}
+            </button>
             <Link
               href={switchLocalePath}
               className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy hover:bg-gold-50"
@@ -121,12 +146,32 @@ export function AdminShell({ children, locale, dictionary }: AdminShellProps) {
               <Globe2 size={16} />
               {nextLocale.toUpperCase()}
             </Link>
+            <div className="hidden min-w-0 items-center gap-3 rounded-md border border-neutral-200 bg-paper px-3 py-1.5 md:flex">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gold-100 text-xs font-bold text-navy">
+                {adminName
+                  .split(" ")
+                  .map((part) => part[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-navy">{adminName}</p>
+                <p className="text-xs font-semibold text-neutral-500">Admin</p>
+              </div>
+            </div>
             <Link
               href={`/${locale}`}
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-navy px-3 text-xs font-bold text-white hover:bg-neutral-800"
+              className="hidden h-10 items-center gap-2 rounded-md bg-navy px-3 text-xs font-bold text-white hover:bg-neutral-800 sm:inline-flex"
             >
               <Boxes size={16} />
-              Storefront
+              <span className="hidden lg:inline">Storefront</span>
+            </Link>
+            <Link
+              href={`/${locale}/login`}
+              className="inline-flex h-10 items-center gap-2 rounded-md border border-red-100 px-3 text-xs font-bold text-sale hover:bg-red-50"
+            >
+              <LogOut size={16} />
+              <span className="hidden lg:inline">Logout</span>
             </Link>
           </div>
         </header>

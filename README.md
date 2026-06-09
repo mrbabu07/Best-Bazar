@@ -1,6 +1,6 @@
 # Best Bazar
 
-Best Bazar is a Dubai-focused ecommerce frontend built with Next.js 14, TypeScript, Tailwind CSS, Zustand, bilingual locale routing, RTL support, and multi-currency pricing.
+Best Bazar is a Dubai-focused ecommerce project built with Next.js 14, TypeScript, Tailwind CSS, Zustand, bilingual locale routing, RTL support, multi-currency pricing, and Neon PostgreSQL for the database layer.
 
 ## Frontend Status
 
@@ -18,7 +18,7 @@ Completed:
 - English and Arabic dictionaries in `public/locales`
 - SEO metadata routes: `sitemap.xml` and `robots.txt`
 
-Backend/API, MongoDB models, NextAuth, Stripe, Cloudinary, and email sending are planned for the next phase.
+Backend/API, NextAuth auth routes, Stripe, Cloudinary, and email sending are planned for the next phase.
 
 ## Tech Stack
 
@@ -29,6 +29,7 @@ Backend/API, MongoDB models, NextAuth, Stripe, Cloudinary, and email sending are
 - lucide-react
 - react-hot-toast
 - next-i18next-compatible locale assets
+- Neon PostgreSQL via `DATABASE_URL`
 
 ## Getting Started
 
@@ -49,4 +50,4 @@ npm run build
 
 ## Environment
 
-Copy `.env.example` to `.env.local` when backend integrations begin, then fill in MongoDB, NextAuth, Google OAuth, Cloudinary, Stripe, and email credentials.
+Copy `.env.example` to `.env.local`, then fill in Neon PostgreSQL, NextAuth, Google OAuth, Cloudinary, Stripe, and email credentials.
