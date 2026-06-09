@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
@@ -20,6 +21,11 @@ const productInclude = {
 
 type CategoryRecord = Prisma.CategoryGetPayload<{ include: typeof categoryInclude }>;
 type ProductRecord = Prisma.ProductGetPayload<{ include: typeof productInclude }>;
+
+const storefrontCache = {
+  revalidate: 60,
+  tags: ["storefront"]
+};
 
 function toNumber(value: Prisma.Decimal | number | null | undefined) {
   return value == null ? undefined : Number(value);
@@ -83,7 +89,7 @@ export function mapStoreProduct(product: ProductRecord): Product {
   };
 }
 
-export async function getStoreCategories() {
+async function readStoreCategories() {
   const categories = await prisma.category.findMany({
     where: { isActive: true },
     include: categoryInclude,
@@ -93,7 +99,12 @@ export async function getStoreCategories() {
   return categories.map(mapStoreCategory);
 }
 
-export async function getStoreBrands() {
+export const getStoreCategories = unstable_cache(readStoreCategories, ["store-categories"], {
+  ...storefrontCache,
+  tags: ["storefront", "categories"]
+});
+
+async function readStoreBrands() {
   const brands = await prisma.product.findMany({
     where: { isActive: true },
     distinct: ["brand"],
@@ -103,6 +114,11 @@ export async function getStoreBrands() {
 
   return brands.map((item) => item.brand);
 }
+
+export const getStoreBrands = unstable_cache(readStoreBrands, ["store-brands"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
 
 export type StoreProductFilters = {
   category?: string;
@@ -160,17 +176,38 @@ function getProductOrder(sort = "featured") {
   return [{ isFeatured: "desc" }, { createdAt: "desc" }] satisfies Prisma.ProductOrderByWithRelationInput[];
 }
 
-export async function getStoreProducts(filters: StoreProductFilters = {}) {
-  const products = await prisma.product.findMany({
-    where: getProductWhere(filters),
-    include: productInclude,
-    orderBy: getProductOrder(filters.sort)
+function stableProductFilters(filters: StoreProductFilters = {}) {
+  return JSON.stringify({
+    brand: filters.brand ?? "",
+    category: filters.category ?? "",
+    priceMax: filters.priceMax ?? "",
+    rating: filters.rating ?? "",
+    search: filters.search ?? "",
+    sort: filters.sort ?? "",
+    tag: filters.tag ?? ""
   });
-
-  return products.map(mapStoreProduct);
 }
 
-export async function getFeaturedProducts(limit = 4) {
+const getCachedStoreProducts = unstable_cache(
+  async (filtersJson: string) => {
+    const filters = JSON.parse(filtersJson) as StoreProductFilters;
+    const products = await prisma.product.findMany({
+      where: getProductWhere(filters),
+      include: productInclude,
+      orderBy: getProductOrder(filters.sort)
+    });
+
+    return products.map(mapStoreProduct);
+  },
+  ["store-products"],
+  { ...storefrontCache, tags: ["storefront", "products"] }
+);
+
+export async function getStoreProducts(filters: StoreProductFilters = {}) {
+  return getCachedStoreProducts(stableProductFilters(filters));
+}
+
+async function readFeaturedProducts(limit = 4) {
   const products = await prisma.product.findMany({
     where: { isActive: true, isFeatured: true },
     include: productInclude,
@@ -181,7 +218,12 @@ export async function getFeaturedProducts(limit = 4) {
   return products.map(mapStoreProduct);
 }
 
-export async function getNewArrivals(limit = 4) {
+export const getFeaturedProducts = unstable_cache(readFeaturedProducts, ["featured-products"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
+
+async function readNewArrivals(limit = 4) {
   const products = await prisma.product.findMany({
     where: { isActive: true },
     include: productInclude,
@@ -192,7 +234,12 @@ export async function getNewArrivals(limit = 4) {
   return products.map(mapStoreProduct);
 }
 
-export async function getActiveBanners(limit = 3) {
+export const getNewArrivals = unstable_cache(readNewArrivals, ["new-arrivals"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
+
+async function readActiveBanners(limit = 3) {
   return prisma.banner.findMany({
     where: { isActive: true },
     select: {
@@ -213,7 +260,12 @@ export async function getActiveBanners(limit = 3) {
   });
 }
 
-export async function getProductBySlugOrId(id: string) {
+export const getActiveBanners = unstable_cache(readActiveBanners, ["active-banners"], {
+  ...storefrontCache,
+  tags: ["storefront", "banners"]
+});
+
+async function readProductBySlugOrId(id: string) {
   const product = await prisma.product.findFirst({
     where: {
       isActive: true,
@@ -225,7 +277,12 @@ export async function getProductBySlugOrId(id: string) {
   return product ? mapStoreProduct(product) : null;
 }
 
-export async function getProductReviews(productId: string, limit = 12) {
+export const getProductBySlugOrId = unstable_cache(readProductBySlugOrId, ["product-by-slug-or-id"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
+
+async function readProductReviews(productId: string, limit = 12) {
   const reviews = await prisma.review.findMany({
     where: { productId, isApproved: true },
     include: reviewUserInclude,
@@ -236,7 +293,12 @@ export async function getProductReviews(productId: string, limit = 12) {
   return reviews.map(serializeStoreReview);
 }
 
-export async function getRelatedProducts(categorySlug: string, productId: string, limit = 4) {
+export const getProductReviews = unstable_cache(readProductReviews, ["product-reviews"], {
+  ...storefrontCache,
+  tags: ["storefront", "reviews"]
+});
+
+async function readRelatedProducts(categorySlug: string, productId: string, limit = 4) {
   const products = await prisma.product.findMany({
     where: {
       isActive: true,
@@ -251,7 +313,12 @@ export async function getRelatedProducts(categorySlug: string, productId: string
   return products.map(mapStoreProduct);
 }
 
-export async function getSitemapProducts() {
+export const getRelatedProducts = unstable_cache(readRelatedProducts, ["related-products"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
+
+async function readSitemapProducts() {
   return prisma.product.findMany({
     where: { isActive: true },
     select: {
@@ -262,3 +329,8 @@ export async function getSitemapProducts() {
     orderBy: { updatedAt: "desc" }
   });
 }
+
+export const getSitemapProducts = unstable_cache(readSitemapProducts, ["sitemap-products"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});

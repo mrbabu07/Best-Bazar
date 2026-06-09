@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFilters } from "@/components/product/ProductFilters";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { getStoreBrands, getStoreCategories, getStoreProducts } from "@/lib/storefront";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type ShopPageProps = {
   params: { locale: string };
@@ -26,7 +25,6 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
 }
 
 export default async function ShopPage({ params, searchParams }: ShopPageProps) {
-  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {

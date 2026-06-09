@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Truck } from "lucide-react";
 import type { Metadata } from "next";
-import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -10,7 +9,7 @@ import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   const title = params.locale === "ar" ? "بيست بازار" : "Best Bazar";
@@ -42,7 +41,6 @@ function getLocalizedPath(locale: string, href?: string | null) {
 }
 
 export default async function HomePage({ params }: { params: { locale: string } }) {
-  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {

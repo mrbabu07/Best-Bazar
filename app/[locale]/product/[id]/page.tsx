@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductDetail } from "@/components/product/ProductDetail";
@@ -8,7 +7,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getProductBySlugOrId, getProductReviews, getRelatedProducts } from "@/lib/storefront";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type ProductPageProps = {
   params: {
@@ -18,7 +17,6 @@ type ProductPageProps = {
 };
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  noStore();
   const product = await getProductBySlugOrId(params.id);
   const locale = params.locale === "ar" ? "ar" : "en";
 
@@ -29,7 +27,6 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {

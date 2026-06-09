@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
@@ -54,6 +55,11 @@ async function getFrameSettings() {
   };
 }
 
+const getCachedFrameSettings = unstable_cache(getFrameSettings, ["frame-settings"], {
+  revalidate: 60,
+  tags: ["settings"]
+});
+
 export default async function LocaleLayout({
   children,
   params
@@ -67,7 +73,7 @@ export default async function LocaleLayout({
 
   const dictionary = getDictionary(params.locale);
   const isArabic = isRTL(params.locale);
-  const settings = await getFrameSettings();
+  const settings = await getCachedFrameSettings();
 
   return (
     <html
