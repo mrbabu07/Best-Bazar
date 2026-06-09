@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
-import { getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
+import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +18,26 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
     title,
     description: "Dubai luxury ecommerce storefront for premium products."
   };
+}
+
+function getLocalizedPath(locale: string, href?: string | null) {
+  if (!href) {
+    return `/${locale}/shop`;
+  }
+
+  if (href.startsWith("http")) {
+    return href;
+  }
+
+  if (href.startsWith("/en/") || href.startsWith("/ar/")) {
+    return href.replace(/^\/(en|ar)/, `/${locale}`);
+  }
+
+  if (href.startsWith("/")) {
+    return `/${locale}${href}`;
+  }
+
+  return `/${locale}/${href}`;
 }
 
 export default async function HomePage({ params }: { params: { locale: string } }) {
@@ -34,13 +54,29 @@ export default async function HomePage({ params }: { params: { locale: string } 
     getNewArrivals(4),
     getStoreCategories()
   ]);
+  const [heroBanner] = await getActiveBanners(1);
+  const heroImage =
+    heroBanner?.desktopImage ??
+    "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=85";
+  const heroTitle = heroBanner ? (locale === "ar" ? heroBanner.titleAr : heroBanner.titleEn) : dictionary.home.title;
+  const heroSubtitle = heroBanner
+    ? locale === "ar"
+      ? heroBanner.subtitleAr || dictionary.home.subtitle
+      : heroBanner.subtitleEn || dictionary.home.subtitle
+    : dictionary.home.subtitle;
+  const heroButtonText = heroBanner
+    ? locale === "ar"
+      ? heroBanner.buttonTextAr || dictionary.actions.shopNow
+      : heroBanner.buttonTextEn || dictionary.actions.shopNow
+    : dictionary.actions.shopNow;
+  const heroLink = getLocalizedPath(locale, heroBanner?.buttonLink);
 
   return (
     <main>
       <section className="relative min-h-[calc(100svh-9rem)] overflow-hidden">
         <Image
-          src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=85"
-          alt="Dubai skyline at sunset"
+          src={heroImage}
+          alt={heroTitle}
           fill
           priority
           sizes="100vw"
@@ -53,16 +89,16 @@ export default async function HomePage({ params }: { params: { locale: string } 
               <Sparkles size={17} />
               {dictionary.home.eyebrow}
             </p>
-            <h1 className="mt-5 text-5xl font-bold sm:text-6xl lg:text-7xl">{dictionary.home.title}</h1>
+            <h1 className="mt-5 text-5xl font-bold sm:text-6xl lg:text-7xl">{heroTitle}</h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-white/84 sm:text-lg">
-              {dictionary.home.subtitle}
+              {heroSubtitle}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href={`/${locale}/shop`}
+                href={heroLink}
                 className="inline-flex h-12 items-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-6 text-sm font-bold text-navy shadow-soft hover:from-gold-400 hover:to-gold-200"
               >
-                {dictionary.actions.shopNow}
+                {heroButtonText}
                 <ArrowRight size={18} className="rtl:rotate-180" />
               </Link>
               <Link

@@ -183,6 +183,27 @@ export async function getNewArrivals(limit = 4) {
   return products.map(mapStoreProduct);
 }
 
+export async function getActiveBanners(limit = 3) {
+  return prisma.banner.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      titleEn: true,
+      titleAr: true,
+      subtitleEn: true,
+      subtitleAr: true,
+      buttonTextEn: true,
+      buttonTextAr: true,
+      buttonLink: true,
+      desktopImage: true,
+      mobileImage: true,
+      sortOrder: true
+    },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    take: limit
+  });
+}
+
 export async function getProductBySlugOrId(id: string) {
   const product = await prisma.product.findFirst({
     where: {
