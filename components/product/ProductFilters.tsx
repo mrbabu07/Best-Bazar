@@ -1,6 +1,6 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Category, ProductColor } from "@/lib/types";
@@ -72,6 +72,7 @@ export function ProductFilters({
   const [brand, setBrand] = useState(current.brand ?? "");
   const [color, setColor] = useState(current.color?.trim().toLowerCase() ?? "");
   const [rating, setRating] = useState(current.rating ?? "");
+  const [search, setSearch] = useState(current.search ?? "");
   const [sort, setSort] = useState(current.sort ?? "featured");
   const [priceMax, setPriceMax] = useState(current.priceMax ?? "1500");
 
@@ -82,7 +83,7 @@ export function ProductFilters({
     if (brand) params.set("brand", brand);
     if (color) params.set("color", color);
     if (rating) params.set("rating", rating);
-    if (current.search) params.set("search", current.search);
+    if (search.trim()) params.set("search", search.trim());
     if (current.tag) params.set("tag", current.tag);
     if (sort && sort !== "featured") params.set("sort", sort);
     if (priceMax !== "1500") params.set("priceMax", priceMax);
@@ -98,6 +99,23 @@ export function ProductFilters({
       </div>
 
       <div className="mt-5 grid gap-4">
+        <label className="grid gap-2 text-sm font-semibold text-navy">
+          {dictionary.nav.search}
+          <span className="relative">
+            <Search
+              size={17}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={dictionary.nav.search}
+              className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm font-medium text-neutral-700 rtl:pl-3 rtl:pr-10"
+            />
+          </span>
+        </label>
+
         <label className="grid gap-2 text-sm font-semibold text-navy">
           {dictionary.shop.category}
           <select

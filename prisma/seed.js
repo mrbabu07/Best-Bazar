@@ -51,7 +51,7 @@ const products = [
     categorySlug: "luxury",
     price: "1190",
     comparePrice: "1390",
-    stock: 18,
+    stock: 28,
     sku: "BB-DGW-001",
     brand: "Aurum Dubai",
     isFeatured: true,
@@ -68,7 +68,7 @@ const products = [
     categorySlug: "beauty",
     price: "420",
     comparePrice: "520",
-    stock: 9,
+    stock: 15,
     sku: "BB-ROP-002",
     brand: "Majlis Scents",
     isFeatured: true,
@@ -84,7 +84,7 @@ const products = [
     descriptionAr: "سماعات لاسلكية بعزل ضوضاء مناسبة للرحلات الطويلة والمكالمات والموسيقى.",
     categorySlug: "electronics",
     price: "690",
-    stock: 34,
+    stock: 64,
     sku: "BB-STH-003",
     brand: "Nomad Tech",
     isFeatured: true,
@@ -113,6 +113,24 @@ const productVariants = {
       stock: 8,
       sortOrder: 1,
       isActive: true
+    },
+    {
+      colorNameEn: "Rose Gold",
+      colorNameAr: "ذهبي وردي",
+      colorHex: "#b76e79",
+      sku: "BB-DGW-001-ROSE-GOLD",
+      stock: 6,
+      sortOrder: 2,
+      isActive: true
+    },
+    {
+      colorNameEn: "Navy",
+      colorNameAr: "كحلي",
+      colorHex: "#1e3a8a",
+      sku: "BB-DGW-001-NAVY",
+      stock: 4,
+      sortOrder: 3,
+      isActive: true
     }
   ],
   "royal-oud-perfume": [
@@ -133,6 +151,24 @@ const productVariants = {
       stock: 4,
       sortOrder: 1,
       isActive: true
+    },
+    {
+      colorNameEn: "Brown",
+      colorNameAr: "بني",
+      colorHex: "#7c2d12",
+      sku: "BB-ROP-002-BROWN",
+      stock: 3,
+      sortOrder: 2,
+      isActive: true
+    },
+    {
+      colorNameEn: "Red",
+      colorNameAr: "أحمر",
+      colorHex: "#dc2626",
+      sku: "BB-ROP-002-RED",
+      stock: 3,
+      sortOrder: 3,
+      isActive: true
     }
   ],
   "smart-travel-headphones": [
@@ -152,6 +188,42 @@ const productVariants = {
       sku: "BB-STH-003-SILVER",
       stock: 16,
       sortOrder: 1,
+      isActive: true
+    },
+    {
+      colorNameEn: "Blue",
+      colorNameAr: "أزرق",
+      colorHex: "#2563eb",
+      sku: "BB-STH-003-BLUE",
+      stock: 10,
+      sortOrder: 2,
+      isActive: true
+    },
+    {
+      colorNameEn: "White",
+      colorNameAr: "أبيض",
+      colorHex: "#ffffff",
+      sku: "BB-STH-003-WHITE",
+      stock: 8,
+      sortOrder: 3,
+      isActive: true
+    },
+    {
+      colorNameEn: "Purple",
+      colorNameAr: "بنفسجي",
+      colorHex: "#7c3aed",
+      sku: "BB-STH-003-PURPLE",
+      stock: 7,
+      sortOrder: 4,
+      isActive: true
+    },
+    {
+      colorNameEn: "Graphite",
+      colorNameAr: "جرافيت",
+      colorHex: "#374151",
+      sku: "BB-STH-003-GRAPHITE",
+      stock: 5,
+      sortOrder: 5,
       isActive: true
     }
   ]

@@ -90,24 +90,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
         metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
       />
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <SectionHeader
-          eyebrow={dictionary.common.featured}
-          title={dictionary.home.featuredTitle}
-          subtitle={dictionary.home.featuredSubtitle}
-          action={
-            <Link href={`/${locale}/shop`} className="text-sm font-bold text-gold-700 hover:text-gold-800">
-              {dictionary.actions.viewCollection}
-            </Link>
-          }
-        />
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
-          ))}
-        </div>
-      </section>
-
       <section className="bg-white py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeader
@@ -138,6 +120,24 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </Link>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <SectionHeader
+          eyebrow={dictionary.common.featured}
+          title={dictionary.home.featuredTitle}
+          subtitle={dictionary.home.featuredSubtitle}
+          action={
+            <Link href={`/${locale}/shop`} className="text-sm font-bold text-gold-700 hover:text-gold-800">
+              {dictionary.actions.viewCollection}
+            </Link>
+          }
+        />
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
+          ))}
         </div>
       </section>
 
