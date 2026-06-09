@@ -15,11 +15,12 @@ import { Button } from "@/components/ui/Button";
 type CheckoutPageContentProps = {
   locale: Locale;
   dictionary: Dictionary;
+  stripeEnabled: boolean;
 };
 
-export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentProps) {
+export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: CheckoutPageContentProps) {
   const router = useRouter();
-  const [payment, setPayment] = useState<"stripe" | "cod">("stripe");
+  const [payment, setPayment] = useState<"stripe" | "cod">(stripeEnabled ? "stripe" : "cod");
   const [emirate, setEmirate] = useState("Dubai");
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
@@ -191,18 +192,20 @@ export function CheckoutPageContent({ locale, dictionary }: CheckoutPageContentP
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="stripe"
-                  checked={payment === "stripe"}
-                  onChange={() => setPayment("stripe")}
-                  className="accent-gold-500"
-                />
-                <CreditCard size={20} className="text-gold-700" />
-                <span className="text-sm font-bold text-navy">{dictionary.checkout.stripe}</span>
-              </label>
+              {stripeEnabled ? (
+                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="stripe"
+                    checked={payment === "stripe"}
+                    onChange={() => setPayment("stripe")}
+                    className="accent-gold-500"
+                  />
+                  <CreditCard size={20} className="text-gold-700" />
+                  <span className="text-sm font-bold text-navy">{dictionary.checkout.stripe}</span>
+                </label>
+              ) : null}
               <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
                 <input
                   type="radio"

@@ -15,5 +15,11 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     notFound();
   }
 
-  return <CheckoutPageContent locale={params.locale} dictionary={getDictionary(params.locale)} />;
+  return (
+    <CheckoutPageContent
+      locale={params.locale}
+      dictionary={getDictionary(params.locale)}
+      stripeEnabled={Boolean(process.env.STRIPE_SECRET_KEY)}
+    />
+  );
 }
