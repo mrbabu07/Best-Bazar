@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Globe2, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { Bell, Globe2, LayoutDashboard, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
@@ -23,6 +23,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const router = useRouter();
   const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
@@ -37,6 +38,40 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   ];
   const brandName = locale === "ar" ? settings.storeNameAr : settings.storeNameEn;
   const announcement = locale === "ar" ? settings.announcementAr : settings.announcementEn;
+  const dubaiRate =
+    settings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
+    settings.shippingSettings.shippingRates[0];
+  const freeShippingThreshold = settings.shippingSettings.freeShippingThreshold;
+  const storefrontNotifications = [
+    ...(settings.announcementActive && announcement
+      ? [
+          {
+            title: locale === "ar" ? "إعلان المتجر" : "Store announcement",
+            detail: announcement
+          }
+        ]
+      : []),
+    {
+      title: locale === "ar" ? "توصيل دبي" : "Dubai delivery",
+      detail: dubaiRate?.deliveryDays
+        ? `${dubaiRate.emirate}: ${dubaiRate.deliveryDays} days`
+        : locale === "ar"
+          ? "توصيل داخل الإمارات"
+          : "UAE delivery available"
+    },
+    {
+      title: locale === "ar" ? "توصيل مجاني" : "Free shipping",
+      detail: `${locale === "ar" ? "فوق" : "Above"} AED ${freeShippingThreshold}`
+    },
+    ...(cartCount > 0
+      ? [
+          {
+            title: locale === "ar" ? "السلة" : "Cart reminder",
+            detail: `${cartCount} ${locale === "ar" ? "منتج في السلة" : "item ready in cart"}`
+          }
+        ]
+      : [])
+  ];
 
   const switchLocalePath = (nextLocale: Locale) => {
     const segments = pathname.split("/");
@@ -153,6 +188,51 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <User size={18} />
           </Link>
 
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen((value) => !value)}
+              className="relative grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
+              aria-label={locale === "ar" ? "الإشعارات" : "Notifications"}
+              aria-expanded={notificationsOpen}
+            >
+              <Bell size={18} />
+              {storefrontNotifications.length > 0 ? (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
+                  {storefrontNotifications.length}
+                </span>
+              ) : null}
+            </button>
+            {notificationsOpen ? (
+              <div className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-neutral-200 bg-white p-3 text-left shadow-lift rtl:left-0 rtl:right-auto rtl:text-right">
+                <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-2">
+                  <p className="text-sm font-bold text-navy">{locale === "ar" ? "الإشعارات" : "Notifications"}</p>
+                  <button
+                    type="button"
+                    onClick={() => setNotificationsOpen(false)}
+                    className="grid h-7 w-7 place-items-center rounded-md text-neutral-500 hover:bg-paper"
+                    aria-label="Close notifications"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <div className="mt-2 grid gap-2">
+                  {storefrontNotifications.map((item) => (
+                    <div key={`${item.title}-${item.detail}`} className="rounded-md bg-paper p-3">
+                      <div className="flex items-start gap-2">
+                        <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-navy">{item.title}</p>
+                          <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
           <Link
             href={`/${locale}/cart`}
             className="relative grid h-10 w-10 place-items-center rounded-md bg-navy text-white hover:bg-neutral-800"
@@ -188,6 +268,16 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             >
               {dictionary.nav.admin}
             </Link>
+            <button
+              type="button"
+              onClick={() => setNotificationsOpen((value) => !value)}
+              className="flex items-center justify-between rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
+            >
+              <span>{locale === "ar" ? "الإشعارات" : "Notifications"}</span>
+              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
+                {storefrontNotifications.length}
+              </span>
+            </button>
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
