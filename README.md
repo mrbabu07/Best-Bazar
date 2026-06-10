@@ -2,6 +2,8 @@
 
 Best Bazar is a Dubai-focused bilingual ecommerce application built with Next.js 14, TypeScript, Tailwind CSS, Prisma, Neon PostgreSQL, NextAuth, Cloudinary uploads, Stripe checkout support, optional SMTP email, and Zustand cart/preferences state.
 
+For a full AI/developer handoff guide, see [AI_PROJECT_DOCUMENTATION.md](./AI_PROJECT_DOCUMENTATION.md).
+
 ## Current Features
 
 - Localized storefront routes for English and Arabic with RTL support.
