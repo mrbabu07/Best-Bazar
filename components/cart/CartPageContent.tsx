@@ -12,6 +12,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
+import { defaultShippingSettings } from "@/utils/shipping";
 import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
 
@@ -29,9 +30,13 @@ const cartCopy = {
     remove: "Remove",
     decreaseQuantity: "Decrease quantity",
     increaseQuantity: "Increase quantity",
+    freeShippingQualified: "You qualify for FREE shipping!",
+    addForFreeShipping: (amount: string) => `Add ${amount} more for FREE shipping!`,
     applied: (code: string) => `${code} applied`
   },
   ar: {
+    freeShippingQualified: "You qualify for FREE shipping!",
+    addForFreeShipping: (amount: string) => `Add ${amount} more for FREE shipping!`,
     couponRequired: "أدخل رمز القسيمة.",
     couponInvalid: "رمز القسيمة غير صالح.",
     couponApplied: "تم تطبيق القسيمة",
@@ -51,6 +56,8 @@ const cartCopy = {
     remove: string;
     decreaseQuantity: string;
     increaseQuantity: string;
+    freeShippingQualified: string;
+    addForFreeShipping: (amount: string) => string;
     applied: (code: string) => string;
   }
 >;
@@ -68,10 +75,18 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
+  const storedShippingSettings = usePreferencesStore((state) => state.shippingSettings);
   const items = hydrated ? storedItems : [];
   const subtotal = hydrated ? storedSubtotal : 0;
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
+  const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
+  const dubaiFreeFrom =
+    shippingSettings.shippingRates.find((rate) => rate.key === "dubai")?.freeFrom ??
+    shippingSettings.freeShippingThreshold;
+  const freeShippingThreshold = Math.max(dubaiFreeFrom, 1);
+  const freeShippingRemaining = Math.max(0, freeShippingThreshold - subtotal);
+  const freeShippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
   const total = Math.max(subtotal - discount, 0);
 
   useEffect(() => {
@@ -142,6 +157,25 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
         </p>
         <h1 className="mt-2 text-3xl font-bold text-navy">{dictionary.cart.title}</h1>
       </div>
+
+      {freeShippingRemaining > 0 ? (
+        <div className="mb-6 rounded-lg border border-gold-200 bg-gold-50 p-4">
+          <div className="flex items-center justify-between gap-4 text-sm font-bold text-navy">
+            <p>{labels.addForFreeShipping(formatCurrency(freeShippingRemaining, currency, locale, currencyRates))}</p>
+            <span>{Math.round(freeShippingProgress)}%</span>
+          </div>
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gold-100">
+            <div
+              className="h-full rounded-full bg-gold-500 transition-all duration-300"
+              style={{ width: `${freeShippingProgress}%` }}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-sm font-bold text-emerald-800">{labels.freeShippingQualified}</p>
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <section className="grid gap-4">
