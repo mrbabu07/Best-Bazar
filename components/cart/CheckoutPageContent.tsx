@@ -133,17 +133,22 @@ function StripePaymentForm({
       return;
     }
 
-    setConfirming(true);
+    try {
+      setConfirming(true);
 
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: returnUrl
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: returnUrl
+        }
+      });
+
+      if (result.error) {
+        toast.error(result.error.message ?? "Payment failed. Please check your card details.");
+        setConfirming(false);
       }
-    });
-
-    if (result.error) {
-      toast.error(result.error.message ?? "Payment failed. Please check your card details.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Payment failed. Please try again.");
       setConfirming(false);
     }
   };

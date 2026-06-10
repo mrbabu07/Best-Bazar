@@ -69,7 +69,7 @@ export function HeroSlider({
           alt={activeSlide.title}
           fill
           priority
-          sizes="100vw"
+          sizes="(max-width: 639px) 100vw, 1px"
           className="object-cover sm:hidden"
         />
       ) : null}
@@ -79,7 +79,7 @@ export function HeroSlider({
         alt={activeSlide.title}
         fill
         priority
-        sizes="100vw"
+        sizes={activeSlide.mobileImage ? "(min-width: 640px) 100vw, 1px" : "100vw"}
         className={activeSlide.mobileImage ? "hidden object-cover sm:block" : "object-cover"}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/68 to-navy/15 rtl:bg-gradient-to-l" />
