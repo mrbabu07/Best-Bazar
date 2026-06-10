@@ -49,6 +49,12 @@ export type ProductColor = {
   count: number;
 };
 
+export type ProductSize = {
+  key: string;
+  name: LocalizedText;
+  count: number;
+};
+
 export type Product = {
   id: string;
   slug: string;

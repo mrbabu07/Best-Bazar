@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
-import type { Category, Product, ProductColor } from "@/lib/types";
+import type { Category, Product, ProductColor, ProductSize } from "@/lib/types";
 
 const categoryInclude = {
   products: {
@@ -189,41 +189,124 @@ export const getStoreVariantColors = unstable_cache(readStoreVariantColors, ["st
   tags: ["storefront", "products"]
 });
 
+async function readStoreVariantSizes() {
+  const variants = await prisma.productVariant.findMany({
+    where: {
+      isActive: true,
+      stock: { gt: 0 },
+      product: { isActive: true },
+      OR: [{ sizeKey: { not: null } }, { sizeNameEn: { not: null } }, { sizeNameAr: { not: null } }]
+    },
+    select: {
+      sizeKey: true,
+      sizeNameEn: true,
+      sizeNameAr: true
+    },
+    orderBy: [{ sortOrder: "asc" }, { sizeNameEn: "asc" }]
+  });
+  const sizes = new Map<string, ProductSize>();
+
+  for (const variant of variants) {
+    const labelEn = variant.sizeNameEn?.trim() || variant.sizeNameAr?.trim() || variant.sizeKey?.trim() || "";
+
+    if (!labelEn) {
+      continue;
+    }
+
+    const key = (variant.sizeKey?.trim() || labelEn).toLowerCase();
+    const current = sizes.get(key);
+
+    sizes.set(key, {
+      key,
+      name: current?.name ?? {
+        en: labelEn,
+        ar: variant.sizeNameAr?.trim() || labelEn
+      },
+      count: (current?.count ?? 0) + 1
+    });
+  }
+
+  return Array.from(sizes.values());
+}
+
+export const getStoreVariantSizes = unstable_cache(readStoreVariantSizes, ["store-variant-sizes"], {
+  ...storefrontCache,
+  tags: ["storefront", "products"]
+});
+
 export type StoreProductFilters = {
   category?: string;
   brand?: string;
   color?: string;
+  size?: string;
   rating?: string;
+  priceMin?: string;
   priceMax?: string;
   search?: string;
   sort?: string;
   tag?: string;
 };
 
+function csvValues(value?: string) {
+  return (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function getProductWhere(filters: StoreProductFilters = {}) {
   const rating = filters.rating ? Number(filters.rating) : undefined;
+  const priceMin = filters.priceMin ? Number(filters.priceMin) : undefined;
   const priceMax = filters.priceMax ? Number(filters.priceMax) : undefined;
-  const color = filters.color?.trim();
+  const colors = csvValues(filters.color);
+  const sizes = csvValues(filters.size);
   const search = filters.search?.trim();
   const tag = filters.tag?.trim();
+  const price: Prisma.DecimalFilter = {};
+  const variantClauses: Prisma.ProductVariantWhereInput[] = [];
+
+  if (priceMin !== undefined && Number.isFinite(priceMin)) {
+    price.gte = priceMin;
+  }
+
+  if (priceMax !== undefined && Number.isFinite(priceMax)) {
+    price.lte = priceMax;
+  }
+
+  if (colors.length) {
+    variantClauses.push({
+      OR: colors.map((color) => ({
+        colorNameEn: { equals: color, mode: "insensitive" }
+      }))
+    });
+  }
+
+  if (sizes.length) {
+    variantClauses.push({
+      OR: sizes.flatMap((size) => [
+        { sizeKey: { equals: size, mode: "insensitive" } },
+        { sizeNameEn: { equals: size, mode: "insensitive" } }
+      ])
+    });
+  }
 
   return {
     isActive: true,
     ...(filters.category ? { category: { slug: filters.category } } : {}),
     ...(filters.brand ? { brand: filters.brand } : {}),
-    ...(color
+    ...(variantClauses.length
       ? {
           variants: {
             some: {
               isActive: true,
               stock: { gt: 0 },
-              colorNameEn: { equals: color, mode: "insensitive" }
+              AND: variantClauses
             }
           }
         }
       : {}),
     ...(rating && Number.isFinite(rating) ? { rating: { gte: rating } } : {}),
-    ...(priceMax && Number.isFinite(priceMax) ? { price: { lte: priceMax } } : {}),
+    ...(Object.keys(price).length ? { price } : {}),
     ...(tag ? { tags: { has: tag } } : {}),
     ...(search
       ? {
@@ -263,6 +346,8 @@ function stableProductFilters(filters: StoreProductFilters = {}) {
     brand: filters.brand ?? "",
     category: filters.category ?? "",
     color: filters.color?.trim().toLowerCase() ?? "",
+    size: filters.size?.trim().toLowerCase() ?? "",
+    priceMin: filters.priceMin ?? "",
     priceMax: filters.priceMax ?? "",
     rating: filters.rating ?? "",
     search: filters.search ?? "",

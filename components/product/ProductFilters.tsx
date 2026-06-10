@@ -2,11 +2,11 @@
 
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import type { Category, ProductColor } from "@/lib/types";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
-import { Button } from "@/components/ui/Button";
+import type { Category, ProductColor, ProductSize } from "@/lib/types";
 
 type ProductFiltersProps = {
   locale: Locale;
@@ -14,14 +14,17 @@ type ProductFiltersProps = {
   categories: Category[];
   brands: string[];
   colors: ProductColor[];
+  sizes: ProductSize[];
   current: {
     category?: string;
     brand?: string;
     color?: string;
+    size?: string;
     rating?: string;
     search?: string;
     sort?: string;
     tag?: string;
+    priceMin?: string;
     priceMax?: string;
   };
 };
@@ -29,7 +32,11 @@ type ProductFiltersProps = {
 const filterCopy = {
   en: {
     all: "All",
+    clear: "Clear",
     color: "Color",
+    size: "Size",
+    minPrice: "Min AED",
+    maxPrice: "Max AED",
     sortFeatured: "Featured",
     sortNewest: "Newest",
     sortPriceAsc: "Price low to high",
@@ -37,19 +44,27 @@ const filterCopy = {
     sortRating: "Top rated"
   },
   ar: {
-    color: "اللون",
-    all: "الكل",
-    sortFeatured: "مميز",
-    sortNewest: "الأحدث",
-    sortPriceAsc: "السعر من الأقل إلى الأعلى",
-    sortPriceDesc: "السعر من الأعلى إلى الأقل",
-    sortRating: "الأعلى تقييما"
+    all: "All",
+    clear: "Clear",
+    color: "Color",
+    size: "Size",
+    minPrice: "Min AED",
+    maxPrice: "Max AED",
+    sortFeatured: "Featured",
+    sortNewest: "Newest",
+    sortPriceAsc: "Price low to high",
+    sortPriceDesc: "Price high to low",
+    sortRating: "Top rated"
   }
 } satisfies Record<
   Locale,
   {
     all: string;
+    clear: string;
     color: string;
+    size: string;
+    minPrice: string;
+    maxPrice: string;
     sortFeatured: string;
     sortNewest: string;
     sortPriceAsc: string;
@@ -58,37 +73,87 @@ const filterCopy = {
   }
 >;
 
+function splitFilter(value?: string) {
+  return (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeFilterValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function hasFilterValue(values: string[], value: string) {
+  const normalized = normalizeFilterValue(value);
+
+  return values.some((item) => normalizeFilterValue(item) === normalized);
+}
+
+function toggleFilterValue(values: string[], value: string) {
+  return hasFilterValue(values, value)
+    ? values.filter((item) => normalizeFilterValue(item) !== normalizeFilterValue(value))
+    : [...values, value];
+}
+
 export function ProductFilters({
   locale,
   dictionary,
   categories,
   brands,
   colors,
+  sizes,
   current
 }: ProductFiltersProps) {
   const labels = filterCopy[locale];
   const router = useRouter();
   const [category, setCategory] = useState(current.category ?? "");
   const [brand, setBrand] = useState(current.brand ?? "");
-  const [color, setColor] = useState(current.color?.trim().toLowerCase() ?? "");
+  const [selectedColors, setSelectedColors] = useState(() => splitFilter(current.color));
+  const [selectedSizes, setSelectedSizes] = useState(() => splitFilter(current.size));
   const [rating, setRating] = useState(current.rating ?? "");
   const [search, setSearch] = useState(current.search ?? "");
   const [sort, setSort] = useState(current.sort ?? "featured");
-  const [priceMax, setPriceMax] = useState(current.priceMax ?? "1500");
+  const [priceMin, setPriceMin] = useState(current.priceMin ?? "");
+  const [priceMax, setPriceMax] = useState(current.priceMax ?? "");
+  const [priceTouched, setPriceTouched] = useState(false);
 
-  const applyFilters = () => {
+  const buildParams = useCallback(() => {
     const params = new URLSearchParams();
 
     if (category) params.set("category", category);
     if (brand) params.set("brand", brand);
-    if (color) params.set("color", color);
+    if (selectedColors.length) params.set("color", selectedColors.join(","));
+    if (selectedSizes.length) params.set("size", selectedSizes.join(","));
     if (rating) params.set("rating", rating);
     if (search.trim()) params.set("search", search.trim());
     if (current.tag) params.set("tag", current.tag);
     if (sort && sort !== "featured") params.set("sort", sort);
-    if (priceMax !== "1500") params.set("priceMax", priceMax);
+    if (priceMin.trim()) params.set("priceMin", priceMin.trim());
+    if (priceMax.trim()) params.set("priceMax", priceMax.trim());
+
+    return params;
+  }, [brand, category, current.tag, priceMax, priceMin, rating, search, selectedColors, selectedSizes, sort]);
+
+  const pushFilters = useCallback(() => {
+    const params = buildParams();
 
     router.push(`/${locale}/shop${params.toString() ? `?${params.toString()}` : ""}`);
+  }, [buildParams, locale, router]);
+
+  useEffect(() => {
+    if (!priceTouched) {
+      return;
+    }
+
+    const timeout = window.setTimeout(pushFilters, 500);
+
+    return () => window.clearTimeout(timeout);
+  }, [priceMax, priceMin, priceTouched, pushFilters]);
+
+  const applyFilters = () => {
+    setPriceTouched(false);
+    pushFilters();
   };
 
   return (
@@ -149,14 +214,25 @@ export function ProductFilters({
         </label>
 
         <div className="grid gap-2 text-sm font-semibold text-navy">
-          <p>{labels.color}</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <p>{labels.color}</p>
+            {selectedColors.length ? (
+              <button
+                type="button"
+                onClick={() => setSelectedColors([])}
+                className="text-xs font-bold text-gold-700 hover:text-gold-800"
+              >
+                {labels.clear}
+              </button>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => setColor("")}
-              aria-pressed={!color}
-              className={`inline-flex min-h-9 items-center rounded-md border px-3 text-xs font-bold transition ${
-                !color
+              onClick={() => setSelectedColors([])}
+              aria-pressed={!selectedColors.length}
+              className={`inline-flex h-10 items-center rounded-md border px-3 text-xs font-bold transition ${
+                !selectedColors.length
                   ? "border-gold-400 bg-gold-50 text-navy"
                   : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
               }`}
@@ -164,45 +240,104 @@ export function ProductFilters({
               {labels.all}
             </button>
             {colors.map((item) => {
-              const selected = color === item.key;
+              const value = item.name.en;
+              const selected = hasFilterValue(selectedColors, value);
 
               return (
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => setColor(item.key)}
+                  onClick={() => setSelectedColors((currentValues) => toggleFilterValue(currentValues, value))}
                   aria-pressed={selected}
                   title={`${getLocalized(item.name, locale)} (${item.count})`}
-                  className={`inline-flex min-h-9 max-w-full items-center gap-2 rounded-md border px-2 text-xs font-bold transition ${
-                    selected
-                      ? "border-gold-400 bg-gold-50 text-navy"
-                      : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
-                  }`}
+                  className="group grid max-w-20 justify-items-center gap-1 text-center text-[11px] font-bold text-neutral-600"
                 >
                   <span
-                    className="h-4 w-4 shrink-0 rounded-full border border-neutral-200"
+                    className={`h-6 w-6 rounded-full border-2 shadow-sm transition group-hover:scale-110 ${
+                      selected ? "scale-110 border-navy ring-2 ring-gold-200" : "border-white ring-1 ring-neutral-200"
+                    }`}
                     style={{ backgroundColor: item.colorHex ?? "#ffffff" }}
                   />
-                  <span className="truncate">{getLocalized(item.name, locale)}</span>
-                  <span className="text-[11px] text-neutral-400">{item.count}</span>
+                  <span className={selected ? "text-navy" : "text-neutral-500"}>
+                    {getLocalized(item.name, locale)} ({item.count})
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
+        {sizes.length ? (
+          <div className="grid gap-2 text-sm font-semibold text-navy">
+            <div className="flex items-center justify-between gap-3">
+              <p>{labels.size}</p>
+              {selectedSizes.length ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedSizes([])}
+                  className="text-xs font-bold text-gold-700 hover:text-gold-800"
+                >
+                  {labels.clear}
+                </button>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((item) => {
+                const selected = hasFilterValue(selectedSizes, item.key);
+
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setSelectedSizes((currentValues) => toggleFilterValue(currentValues, item.key))}
+                    aria-pressed={selected}
+                    title={`${getLocalized(item.name, locale)} (${item.count})`}
+                    className={`inline-flex h-9 items-center rounded-md border px-3 text-xs font-bold transition ${
+                      selected
+                        ? "border-navy bg-navy text-white"
+                        : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
+                    }`}
+                  >
+                    {getLocalized(item.name, locale)}
+                    <span className={selected ? "ml-1 text-white/70" : "ml-1 text-neutral-400"}>{item.count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         <label className="grid gap-2 text-sm font-semibold text-navy">
           {dictionary.shop.priceRange}
-          <input
-            type="range"
-            min="100"
-            max="1500"
-            step="50"
-            value={priceMax}
-            onChange={(event) => setPriceMax(event.target.value)}
-            className="accent-gold-500"
-          />
-          <span className="text-xs text-neutral-500">AED 100 - AED {priceMax}</span>
+          <span className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              min="0"
+              step="10"
+              value={priceMin}
+              onChange={(event) => {
+                setPriceTouched(true);
+                setPriceMin(event.target.value);
+              }}
+              placeholder={labels.minPrice}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+            />
+            <input
+              type="number"
+              min="0"
+              step="10"
+              value={priceMax}
+              onChange={(event) => {
+                setPriceTouched(true);
+                setPriceMax(event.target.value);
+              }}
+              placeholder={labels.maxPrice}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+            />
+          </span>
+          <span className="text-xs text-neutral-500">
+            {priceMin || "0"} AED - {priceMax || "Any"} AED
+          </span>
         </label>
 
         <label className="grid gap-2 text-sm font-semibold text-navy">

@@ -4,7 +4,13 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFilters } from "@/components/product/ProductFilters";
 import { BackButton } from "@/components/ui/BackButton";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { getStoreBrands, getStoreCategories, getStoreProducts, getStoreVariantColors } from "@/lib/storefront";
+import {
+  getStoreBrands,
+  getStoreCategories,
+  getStoreProducts,
+  getStoreVariantColors,
+  getStoreVariantSizes
+} from "@/lib/storefront";
 
 export const revalidate = 60;
 
@@ -40,16 +46,19 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const category = readParam(searchParams, "category");
   const brand = readParam(searchParams, "brand");
   const color = readParam(searchParams, "color");
+  const size = readParam(searchParams, "size");
   const rating = readParam(searchParams, "rating");
   const search = readParam(searchParams, "search");
   const sort = readParam(searchParams, "sort") ?? "featured";
   const tag = readParam(searchParams, "tag");
+  const priceMin = readParam(searchParams, "priceMin");
   const priceMax = readParam(searchParams, "priceMax");
-  const [categories, brands, colors, listing] = await Promise.all([
+  const [categories, brands, colors, sizes, listing] = await Promise.all([
     getStoreCategories(),
     getStoreBrands(),
     getStoreVariantColors(),
-    getStoreProducts({ category, brand, color, rating, search, sort, tag, priceMax })
+    getStoreVariantSizes(),
+    getStoreProducts({ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax })
   ]);
 
   return (
@@ -79,7 +88,8 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
           categories={categories}
           brands={brands}
           colors={colors}
-          current={{ category, brand, color, rating, search, sort, tag, priceMax }}
+          sizes={sizes}
+          current={{ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax }}
         />
         <section className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
           {listing.length > 0 ? (
