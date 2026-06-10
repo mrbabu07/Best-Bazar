@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, Globe2, LayoutDashboard, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -25,9 +25,11 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [liveSettings, setLiveSettings] = useState(settings);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const setCurrency = usePreferencesStore((state) => state.setCurrency);
+  const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
   const cartCount = hydrated ? storedCartCount : 0;
   const currency = hydrated ? storedCurrency : "AED";
 
@@ -36,14 +38,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     { label: dictionary.nav.shop, href: `/${locale}/shop` },
     { label: dictionary.nav.account, href: `/${locale}/account` }
   ];
-  const brandName = locale === "ar" ? settings.storeNameAr : settings.storeNameEn;
-  const announcement = locale === "ar" ? settings.announcementAr : settings.announcementEn;
+  const brandName = locale === "ar" ? liveSettings.storeNameAr : liveSettings.storeNameEn;
+  const announcement = locale === "ar" ? liveSettings.announcementAr : liveSettings.announcementEn;
   const dubaiRate =
-    settings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
-    settings.shippingSettings.shippingRates[0];
-  const freeShippingThreshold = settings.shippingSettings.freeShippingThreshold;
+    liveSettings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
+    liveSettings.shippingSettings.shippingRates[0];
+  const freeShippingThreshold = liveSettings.shippingSettings.freeShippingThreshold;
   const storefrontNotifications = [
-    ...(settings.announcementActive && announcement
+    ...(liveSettings.announcementActive && announcement
       ? [
           {
             title: locale === "ar" ? "إعلان المتجر" : "Store announcement",
@@ -73,6 +75,68 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       : [])
   ];
 
+  useEffect(() => {
+    setLiveSettings(settings);
+  }, [settings]);
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshNotifications = async () => {
+      try {
+        const response = await fetch("/api/settings", { cache: "no-store" });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        if (!active || !data) {
+          return;
+        }
+
+        const shippingRates = Array.isArray(data.shippingRates)
+          ? (data.shippingRates as Record<string, unknown>[])
+              .map((rate: Record<string, unknown>) => ({
+                emirate: typeof rate.emirate === "string" ? rate.emirate : "",
+                cost: Number(rate.cost ?? 0),
+                deliveryDays: typeof rate.deliveryDays === "string" ? rate.deliveryDays : undefined
+              }))
+              .filter((rate) => rate.emirate)
+          : settings.shippingSettings.shippingRates;
+        const nextSettings = {
+          ...settings,
+          storeNameEn: data.storeNameEn ?? settings.storeNameEn,
+          storeNameAr: data.storeNameAr ?? settings.storeNameAr,
+          announcementEn: data.announcementEn ?? "",
+          announcementAr: data.announcementAr ?? "",
+          announcementActive: Boolean(data.announcementActive),
+          shippingSettings: {
+            freeShippingThreshold: Number(data.freeShippingThreshold ?? settings.shippingSettings.freeShippingThreshold),
+            shippingRates: shippingRates.length ? shippingRates : settings.shippingSettings.shippingRates
+          }
+        };
+
+        setLiveSettings(nextSettings);
+        setStorefrontSettings({
+          currencyRates: settings.currencyRates,
+          shippingSettings: nextSettings.shippingSettings
+        });
+      } catch {
+        // Keep the last known notification data when the live refresh fails.
+      }
+    };
+
+    void refreshNotifications();
+    const interval = window.setInterval(refreshNotifications, 15000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [setStorefrontSettings, settings]);
+
   const switchLocalePath = (nextLocale: Locale) => {
     const segments = pathname.split("/");
     segments[1] = nextLocale;
@@ -98,7 +162,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gold-100 bg-white/92 backdrop-blur-xl">
-      {settings.announcementActive && announcement ? (
+      {liveSettings.announcementActive && announcement ? (
         <div className="bg-navy px-4 py-2 text-center text-xs font-semibold text-white">
           {announcement}
         </div>

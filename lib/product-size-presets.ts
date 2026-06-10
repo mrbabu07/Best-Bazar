@@ -17,6 +17,16 @@ const sizePresets: Array<{
   sizes: ProductSizeOption[];
 }> = [
   {
+    keywords: ["burka", "burqa", "abaya", "jilbab", "khimar", "kaftan", "modest"],
+    sizes: ["Length 50", "Length 52", "Length 54", "Length 56", "Length 58", "Length 60", "Length 62"].map(
+      (size) => ({
+        key: size.toLowerCase().replace(/\s+/g, "-"),
+        nameEn: size,
+        nameAr: size
+      })
+    )
+  },
+  {
     keywords: ["shoe", "footwear", "sneaker", "sandal", "boot"],
     sizes: ["EU 36", "EU 37", "EU 38", "EU 39", "EU 40", "EU 41", "EU 42", "EU 43", "EU 44", "EU 45", "EU 46"].map(
       (size) => ({ key: size.toLowerCase().replace(/\s+/g, "-"), nameEn: size, nameAr: size })
