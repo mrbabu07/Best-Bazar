@@ -27,16 +27,24 @@ export default async function AdminLayout({
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/dashboard`);
   }
 
-  const pendingOrders = await prisma.order.count({
-    where: { orderStatus: "PENDING" }
-  });
+  const [pendingOrders, pendingReviews, lowStockProducts] = await Promise.all([
+    prisma.order.count({
+      where: { orderStatus: "PENDING" }
+    }),
+    prisma.review.count({
+      where: { isApproved: false }
+    }),
+    prisma.product.count({
+      where: { isActive: true, stock: { lte: 10 } }
+    })
+  ]);
 
   return (
     <AdminShell
       locale={locale}
       dictionary={getDictionary(locale)}
       adminName={session.user.name ?? "Admin"}
-      pendingOrders={pendingOrders}
+      notifications={{ pendingOrders, pendingReviews, lowStockProducts }}
     >
       {children}
     </AdminShell>

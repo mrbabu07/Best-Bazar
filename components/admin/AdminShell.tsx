@@ -31,7 +31,11 @@ type AdminShellProps = {
   locale: Locale;
   dictionary: Dictionary;
   adminName?: string;
-  pendingOrders?: number;
+  notifications?: {
+    pendingOrders: number;
+    pendingReviews: number;
+    lowStockProducts: number;
+  };
 };
 
 export function AdminShell({
@@ -39,7 +43,7 @@ export function AdminShell({
   locale,
   dictionary,
   adminName = "Admin",
-  pendingOrders = 0
+  notifications = { pendingOrders: 0, pendingReviews: 0, lowStockProducts: 0 }
 }: AdminShellProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -47,17 +51,18 @@ export function AdminShell({
   const switchLocalePath = pathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
   const bannersLabel = locale === "ar" ? "البانرات" : "Banners";
 
-  const notificationsLabel =
-    pendingOrders > 0 ? `Notifications (${pendingOrders > 99 ? "99+" : pendingOrders})` : "Notifications";
+  const totalNotifications =
+    notifications.pendingOrders + notifications.pendingReviews + notifications.lowStockProducts;
+  const formatCount = (count: number) => (count > 99 ? "99+" : String(count));
 
   const navItems = [
     { label: dictionary.admin.dashboard, href: `/${locale}/admin/dashboard`, icon: LayoutDashboard },
-    { label: notificationsLabel, href: `/${locale}/admin/orders?status=PENDING`, icon: Bell },
+    { label: "Notifications", href: `/${locale}/admin/dashboard#notifications`, icon: Bell, count: totalNotifications },
     { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags },
-    { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package },
-    { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Receipt },
+    { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package, count: notifications.lowStockProducts },
+    { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Receipt, count: notifications.pendingOrders },
     { label: dictionary.admin.users, href: `/${locale}/admin/users`, icon: Users },
-    { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews`, icon: Star },
+    { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews`, icon: Star, count: notifications.pendingReviews },
     { label: dictionary.admin.coupons, href: `/${locale}/admin/coupons`, icon: TicketPercent },
     { label: bannersLabel, href: `/${locale}/admin/banners`, icon: ImagePlus },
     { label: dictionary.admin.settings, href: `/${locale}/admin/settings`, icon: Settings }
@@ -95,8 +100,10 @@ export function AdminShell({
             Storefront
           </Link>
           {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const itemPath = item.href.split(/[?#]/)[0];
+            const active = pathname === itemPath || pathname.startsWith(`${itemPath}/`);
             const Icon = item.icon;
+            const count = "count" in item ? item.count ?? 0 : 0;
 
             return (
               <Link
@@ -109,7 +116,17 @@ export function AdminShell({
                 )}
               >
                 <Icon size={18} />
-                {item.label}
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                {count > 0 ? (
+                  <span
+                    className={cn(
+                      "grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1 text-[10px] font-bold",
+                      active ? "bg-navy text-white" : "bg-sale text-white"
+                    )}
+                  >
+                    {formatCount(count)}
+                  </span>
+                ) : null}
               </Link>
             );
           })}
@@ -144,15 +161,15 @@ export function AdminShell({
 
           <div className="flex min-w-0 items-center gap-2">
             <Link
-              href={`/${locale}/admin/orders?status=PENDING`}
+              href={`/${locale}/admin/dashboard#notifications`}
               className="relative inline-flex h-10 items-center justify-center gap-2 rounded-md border border-gold-200 px-3 text-navy hover:bg-gold-50"
-              aria-label={`Notifications: ${pendingOrders} pending orders`}
+              aria-label={`Notifications: ${totalNotifications} total alerts`}
             >
               <Bell size={17} />
               <span className="hidden text-xs font-bold xl:inline">Notifications</span>
-              {pendingOrders > 0 ? (
+              {totalNotifications > 0 ? (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                  {pendingOrders > 99 ? "99+" : pendingOrders}
+                  {formatCount(totalNotifications)}
                 </span>
               ) : null}
             </Link>

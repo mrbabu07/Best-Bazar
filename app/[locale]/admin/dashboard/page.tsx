@@ -61,6 +61,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     deliveredOrders,
     totalProducts,
     lowStockCount,
+    pendingReviews,
     lowStockProducts,
     recentOrders
   ] = await Promise.all([
@@ -73,6 +74,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     prisma.order.count({ where: { orderStatus: OrderStatus.DELIVERED } }),
     prisma.product.count({ where: { isActive: true } }),
     prisma.product.count({ where: { isActive: true, stock: { lte: 10 } } }),
+    prisma.review.count({ where: { isApproved: false } }),
     prisma.product.findMany({
       where: { isActive: true, stock: { lte: 10 } },
       orderBy: { stock: "asc" },
@@ -107,11 +109,12 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     return revenueByDay.get(day.toISOString()) ?? 0;
   });
   const maxRevenue = Math.max(...revenueSeries, 1);
+  const notificationCount = pendingOrders + lowStockCount + pendingReviews;
   const quickActions = [
     { label: "View storefront", href: `/${locale}`, icon: Home, tone: "primary" },
     { label: "Add product", href: `/${locale}/admin/products/new`, icon: Plus, tone: "secondary" },
     { label: "Export sales", href: "/api/admin/reports/sales", icon: Download, tone: "secondary" },
-    { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary" },
+    { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary", count: pendingOrders },
     { label: "Shipping settings", href: `/${locale}/admin/settings`, icon: Settings, tone: "secondary" }
   ];
   const controlGroups = [
@@ -120,7 +123,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
       description: locale === "ar" ? "المنتجات والتصنيفات والمخزون." : "Products, categories, and inventory.",
       icon: Boxes,
       links: [
-        { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: PackageCheck },
+        { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: PackageCheck, count: lowStockCount },
         { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags }
       ]
     },
@@ -129,8 +132,8 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
       description: locale === "ar" ? "الطلبات والتحديثات والتقييمات." : "Orders, fulfillment, and reviews.",
       icon: ShoppingCart,
       links: [
-        { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Truck },
-        { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews`, icon: Star }
+        { label: dictionary.admin.orders, href: `/${locale}/admin/orders?status=PENDING`, icon: Truck, count: pendingOrders },
+        { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews?status=pending`, icon: Star, count: pendingReviews }
       ]
     },
     {
@@ -168,6 +171,14 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
       href: `/${locale}/admin/products`,
       icon: AlertTriangle,
       tone: lowStockCount > 0 ? "gold" : "green"
+    },
+    {
+      label: "Pending reviews",
+      value: pendingReviews,
+      detail: "Need approval",
+      href: `/${locale}/admin/reviews?status=pending`,
+      icon: Star,
+      tone: pendingReviews > 0 ? "gold" : "green"
     }
   ] as const;
 
@@ -217,6 +228,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
           <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
             {quickActions.map((item) => {
               const Icon = item.icon;
+              const count = "count" in item ? item.count ?? 0 : 0;
 
               return (
                 <Link
@@ -230,20 +242,23 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                     </span>
                     <span className="truncate">{item.label}</span>
                   </span>
-                  <span className="text-gold-700">-&gt;</span>
+                  <span className="inline-flex items-center gap-2">
+                    {count > 0 ? (
+                      <Badge tone="red">{count > 99 ? "99+" : count}</Badge>
+                    ) : null}
+                    <span className="text-gold-700">-&gt;</span>
+                  </span>
                 </Link>
               );
             })}
           </div>
-          <div className="rounded-md border border-gold-100 bg-gold-50 p-4">
+          <div id="notifications" className="scroll-mt-24 rounded-md border border-gold-100 bg-gold-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Bell size={18} className="text-gold-800" />
                 <h3 className="font-bold text-navy">Notifications</h3>
               </div>
-              <Badge tone={pendingOrders + lowStockCount > 0 ? "red" : "green"}>
-                {pendingOrders + lowStockCount}
-              </Badge>
+              <Badge tone={notificationCount > 0 ? "red" : "green"}>{notificationCount}</Badge>
             </div>
             <div className="mt-3 grid gap-2">
               {notificationItems.map((item) => {
@@ -287,6 +302,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                 <div className="mt-4 grid gap-2">
                   {group.links.map((item) => {
                     const ItemIcon = item.icon;
+                    const count = "count" in item ? item.count ?? 0 : 0;
 
                     return (
                       <Link
@@ -294,11 +310,16 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                         href={item.href}
                         className="flex h-10 items-center justify-between gap-3 rounded-md bg-white px-3 text-sm font-bold text-navy transition hover:bg-gold-50"
                       >
-                        <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex min-w-0 items-center gap-2">
                           <ItemIcon size={16} className="text-gold-700" />
-                          {item.label}
+                          <span className="truncate">{item.label}</span>
                         </span>
-                        <span className="text-gold-700">-&gt;</span>
+                        <span className="inline-flex shrink-0 items-center gap-2">
+                          {count > 0 ? (
+                            <Badge tone="red">{count > 99 ? "99+" : count}</Badge>
+                          ) : null}
+                          <span className="text-gold-700">-&gt;</span>
+                        </span>
                       </Link>
                     );
                   })}
