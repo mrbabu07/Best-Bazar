@@ -17,6 +17,13 @@ type CheckoutResult = {
   stripeSessionId?: string;
 };
 
+type PaymentIntentResult = {
+  clientSecret: string;
+  providerReference: string;
+};
+
+export type StripeMode = "payment_element" | "hosted_checkout";
+
 const redirectPaymentMethods: readonly PaymentMethod[] = [
   PaymentMethod.STRIPE,
   PaymentMethod.TABBY,
@@ -38,6 +45,10 @@ export function getPaymentAvailability() {
     bankTransfer: process.env.BANK_TRANSFER_ENABLED === "true" || Boolean(process.env.BANK_TRANSFER_INSTRUCTIONS),
     bankTransferInstructions: process.env.BANK_TRANSFER_INSTRUCTIONS ?? ""
   };
+}
+
+export function getStripeMode(): StripeMode {
+  return process.env.STRIPE_MODE === "hosted_checkout" ? "hosted_checkout" : "payment_element";
 }
 
 export function assertRedirectPaymentConfigured(method: RedirectPaymentMethod) {
@@ -64,7 +75,7 @@ function orderLocale(order: OrderWithItems) {
   return order.locale === "ar" ? "ar" : "en";
 }
 
-function orderReturnUrl(order: OrderWithItems) {
+export function getOrderReturnUrl(order: OrderWithItems) {
   const siteUrl = getSiteUrl().replace(/\/$/, "");
   const locale = orderLocale(order);
 
@@ -143,7 +154,7 @@ async function createStripeCheckout(order: OrderWithItems): Promise<CheckoutResu
         }
       }
     ],
-    success_url: orderReturnUrl(order),
+    success_url: getOrderReturnUrl(order),
     cancel_url: cancelUrl(order)
   });
 
@@ -155,6 +166,33 @@ async function createStripeCheckout(order: OrderWithItems): Promise<CheckoutResu
     checkoutUrl: session.url,
     providerReference: session.id,
     stripeSessionId: session.id
+  };
+}
+
+export async function createStripePaymentIntent(order: OrderWithItems): Promise<PaymentIntentResult> {
+  const stripe = getStripe();
+
+  if (!stripe) {
+    throw new Error("Stripe is not configured.");
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: Math.round(Number(order.total) * 100),
+    currency: "aed",
+    receipt_email: order.customerEmail,
+    metadata: {
+      orderId: order.id,
+      orderNumber: order.orderNumber
+    }
+  });
+
+  if (!paymentIntent.client_secret) {
+    throw new Error("Stripe payment intent client secret was not returned.");
+  }
+
+  return {
+    clientSecret: paymentIntent.client_secret,
+    providerReference: paymentIntent.id
   };
 }
 
@@ -215,7 +253,7 @@ async function createTabbyCheckout(order: OrderWithItems): Promise<CheckoutResul
       lang: orderLocale(order),
       merchant_code: merchantCode,
       merchant_urls: {
-        success: orderReturnUrl(order),
+        success: getOrderReturnUrl(order),
         cancel: cancelUrl(order, "tabby-cancelled"),
         failure: cancelUrl(order, "tabby-failed")
       },
@@ -281,7 +319,7 @@ async function createTamaraCheckout(order: OrderWithItems): Promise<CheckoutResu
       country_code: "AE",
       description: `Best Bazar order ${order.orderNumber}`,
       merchant_url: {
-        success: orderReturnUrl(order),
+        success: getOrderReturnUrl(order),
         failure: cancelUrl(order, "tamara-failed"),
         cancel: cancelUrl(order, "tamara-cancelled"),
         notification: `${getSiteUrl().replace(/\/$/, "")}/api/payment/webhook/tamara`

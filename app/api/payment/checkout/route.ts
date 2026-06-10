@@ -6,6 +6,9 @@ import { createStoreOrder } from "@/lib/orders";
 import {
   assertRedirectPaymentConfigured,
   createRedirectCheckout,
+  createStripePaymentIntent,
+  getOrderReturnUrl,
+  getStripeMode,
   isRedirectPaymentMethod
 } from "@/lib/payment-gateways";
 import { prisma } from "@/lib/prisma";
@@ -26,6 +29,25 @@ export async function POST(request: Request) {
     assertRedirectPaymentConfigured(method);
 
     const order = await createStoreOrder({ ...data, paymentMethod: method }, session?.user.id);
+
+    if (method === PaymentMethod.STRIPE && getStripeMode() === "payment_element") {
+      const paymentIntent = await createStripePaymentIntent(order);
+
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentProviderReference: paymentIntent.providerReference
+        }
+      });
+
+      return NextResponse.json({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        clientSecret: paymentIntent.clientSecret,
+        orderConfirmUrl: getOrderReturnUrl(order)
+      });
+    }
+
     const checkout = await createRedirectCheckout(method, order);
 
     await prisma.order.update({

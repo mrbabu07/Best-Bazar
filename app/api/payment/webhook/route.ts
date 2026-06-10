@@ -56,6 +56,31 @@ export async function POST(request: Request) {
     }
   }
 
+  if (event.type === "payment_intent.succeeded") {
+    const paymentIntent = event.data.object;
+    const orderId = paymentIntent.metadata?.orderId;
+
+    if (orderId) {
+      const existingOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { id: true, paymentStatus: true }
+      });
+
+      if (existingOrder && existingOrder.paymentStatus !== PaymentStatus.PAID) {
+        const order = await updateOrderStatus({
+          orderId: existingOrder.id,
+          orderStatus: OrderStatus.CONFIRMED,
+          paymentStatus: PaymentStatus.PAID
+        });
+
+        await Promise.allSettled([
+          sendOrderConfirmationEmail(order),
+          sendOrderMessagingNotifications(order, "created")
+        ]);
+      }
+    }
+  }
+
   if (event.type === "checkout.session.expired") {
     const session = event.data.object;
 

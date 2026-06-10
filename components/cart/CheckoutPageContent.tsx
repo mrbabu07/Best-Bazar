@@ -1,5 +1,7 @@
 "use client";
 
+import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { CalendarClock, CreditCard, HandCoins, Landmark, ShieldCheck, Wallet, WalletCards } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,6 +16,10 @@ import { defaultShippingSettings, getShippingFee } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
 import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
+
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
 
 type CheckoutPageContentProps = {
   locale: Locale;
@@ -105,6 +111,60 @@ const checkoutCopy = {
 
 type PaymentOptionKey = "stripe" | "cod" | "tabby" | "tamara" | "paypal" | "bank_transfer";
 
+type StripePaymentState = {
+  clientSecret: string;
+  orderNumber: string;
+  orderConfirmUrl: string;
+};
+
+function StripePaymentForm({
+  orderNumber,
+  returnUrl
+}: {
+  orderNumber: string;
+  returnUrl: string;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [confirming, setConfirming] = useState(false);
+
+  const confirmPayment = async () => {
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setConfirming(true);
+
+    const result = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: returnUrl
+      }
+    });
+
+    if (result.error) {
+      toast.error(result.error.message ?? "Payment failed. Please check your card details.");
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <div className="mt-5 rounded-lg border border-gold-200 bg-gold-50 p-4">
+      <div className="mb-4">
+        <p className="text-sm font-bold text-navy">Secure card payment</p>
+        <p className="mt-1 text-xs font-semibold text-neutral-600">
+          Order {orderNumber}. Card, Apple Pay, and Google Pay appear here when Stripe supports the device.
+        </p>
+      </div>
+      <PaymentElement />
+      <Button type="button" className="mt-4 w-full" onClick={confirmPayment} disabled={!stripe || confirming}>
+        <ShieldCheck size={18} />
+        {confirming ? "Confirming..." : "Confirm card payment"}
+      </Button>
+    </div>
+  );
+}
+
 export function CheckoutPageContent({ locale, dictionary, paymentAvailability }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
@@ -118,6 +178,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const [discount, setDiscount] = useState(0);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [stripePayment, setStripePayment] = useState<StripePaymentState | null>(null);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -251,6 +312,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   }, [subtotal]);
 
   useEffect(() => {
+    setStripePayment(null);
+  }, [appliedCoupon, discount, emirate, payment, subtotal]);
+
+  useEffect(() => {
     if (payment === "cod" && !shippingQuote.codAvailable) {
       const nextPayment: PaymentOptionKey = paymentAvailability.stripe
         ? "stripe"
@@ -350,8 +415,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     };
 
     try {
-      const usesHostedCheckout = ["stripe", "tabby", "tamara", "paypal"].includes(payment);
-      const endpoint = usesHostedCheckout ? "/api/payment/checkout" : "/api/orders";
+      const usesHostedCheckout = ["tabby", "tamara", "paypal"].includes(payment);
+      const usesPaymentEndpoint = payment === "stripe" || usesHostedCheckout;
+      const endpoint = usesPaymentEndpoint ? "/api/payment/checkout" : "/api/orders";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -361,6 +427,25 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
       if (!response.ok) {
         throw new Error(result.error ?? labels.checkoutFailed);
+      }
+
+      if (payment === "stripe") {
+        if (result.clientSecret && result.orderConfirmUrl) {
+          setStripePayment({
+            clientSecret: result.clientSecret,
+            orderNumber: result.orderNumber ?? result.orderId,
+            orderConfirmUrl: result.orderConfirmUrl
+          });
+          toast.success("Enter your card details below.");
+          return;
+        }
+
+        if (result.checkoutUrl) {
+          window.location.href = result.checkoutUrl;
+          return;
+        }
+
+        throw new Error(labels.stripeUrlMissing);
       }
 
       if (usesHostedCheckout) {
@@ -555,6 +640,28 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
             <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
               Dubai-ready methods are controlled by environment variables. Online methods redirect to hosted checkout when configured.
             </p>
+            {stripePayment ? (
+              stripePromise ? (
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret: stripePayment.clientSecret,
+                    appearance: {
+                      theme: "stripe"
+                    }
+                  }}
+                >
+                  <StripePaymentForm
+                    orderNumber={stripePayment.orderNumber}
+                    returnUrl={stripePayment.orderConfirmUrl}
+                  />
+                </Elements>
+              ) : (
+                <p className="mt-4 rounded-md border border-red-100 bg-red-50 p-3 text-sm font-bold text-sale">
+                  Stripe publishable key is missing. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to enable inline card payment.
+                </p>
+              )
+            ) : null}
           </div>
         </section>
 
@@ -617,9 +724,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
               <span className="font-bold text-navy">{formatCurrency(total, currency, locale, currencyRates)}</span>
             </div>
           </div>
-          <Button type="submit" className="mt-6 w-full" disabled={items.length === 0 || loading}>
+          <Button
+            type="submit"
+            className="mt-6 w-full"
+            disabled={items.length === 0 || loading || Boolean(stripePayment && payment === "stripe")}
+          >
             <ShieldCheck size={18} />
-            {loading ? labels.processing : paymentButtonLabel()}
+            {stripePayment && payment === "stripe"
+              ? "Payment form ready"
+              : loading
+                ? labels.processing
+                : paymentButtonLabel()}
           </Button>
         </aside>
       </form>
