@@ -112,7 +112,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     }),
     prisma.setting.findUnique({
       where: { id: "store-settings" },
-      select: { aedToBdt: true, aedToUsd: true }
+      select: { aedToBdt: true, aedToUsd: true, trn: true }
     })
   ]);
   const selectedOrder = orders.find((order) => order.id === selectedId) ?? orders[0];
@@ -126,6 +126,15 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         { label: dictionary.common.subtotal, value: Number(selectedOrder.subtotal), tone: "normal" },
         { label: dictionary.common.shipping, value: Number(selectedOrder.shippingCost), tone: "normal" },
         { label: dictionary.common.discount, value: -Number(selectedOrder.discount), tone: "normal" },
+        ...(Number(selectedOrder.vatAmount) > 0
+          ? [
+              {
+                label: `VAT included (${Number(selectedOrder.vatRate).toFixed(2)}%)`,
+                value: Number(selectedOrder.vatAmount),
+                tone: "normal"
+              }
+            ]
+          : []),
         { label: dictionary.common.total, value: Number(selectedOrder.total), tone: "strong" }
       ]
     : [];
@@ -233,6 +242,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               <div className="mb-5 hidden border-b border-neutral-200 pb-4 admin-print-block">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Invoice</p>
                 <h1 className="mt-1 text-2xl font-bold text-navy">Best Bazar</h1>
+                {settings?.trn ? <p className="mt-1 text-sm font-semibold text-neutral-600">TRN: {settings.trn}</p> : null}
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div>

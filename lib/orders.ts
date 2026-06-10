@@ -119,6 +119,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
   }
 
   const total = Math.max(subtotal + shippingCost - discount, 0);
+  const vatRate = Math.max(Number(settings.vatRate ?? 0), 0);
+  const vatAmount = vatRate > 0 ? (total * vatRate) / (100 + vatRate) : 0;
 
   return prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
@@ -142,6 +144,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         subtotal,
         shippingCost,
         discount,
+        vatRate,
+        vatAmount,
         total,
         currency: data.currency,
         locale: data.locale,

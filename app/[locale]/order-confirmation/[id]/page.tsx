@@ -69,7 +69,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
     }),
     prisma.setting.findUnique({
       where: { id: "store-settings" },
-      select: { aedToBdt: true, aedToUsd: true }
+      select: { aedToBdt: true, aedToUsd: true, trn: true }
     })
   ]);
 
@@ -96,6 +96,9 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
     { label: dictionary.common.subtotal, value: Number(order.subtotal), tone: "normal" },
     { label: dictionary.common.shipping, value: Number(order.shippingCost), tone: "normal" },
     { label: dictionary.common.discount, value: -Number(order.discount), tone: "normal" },
+    ...(Number(order.vatAmount) > 0
+      ? [{ label: `VAT included (${Number(order.vatRate).toFixed(2)}%)`, value: Number(order.vatAmount), tone: "normal" }]
+      : []),
     { label: dictionary.common.total, value: Number(order.total), tone: "strong" }
   ];
   const addressLines = [
@@ -157,6 +160,9 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
           <p className="mt-1 text-sm text-neutral-600">{addressLines.join(", ")}</p>
           {order.deliverySlot ? (
             <p className="mt-2 text-sm font-bold text-gold-700">Delivery slot: {order.deliverySlot}</p>
+          ) : null}
+          {settings?.trn ? (
+            <p className="mt-2 text-sm font-semibold text-neutral-600">Seller TRN: {settings.trn}</p>
           ) : null}
         </section>
 

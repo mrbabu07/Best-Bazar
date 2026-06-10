@@ -30,6 +30,8 @@ type TrackOrderResult = {
   subtotal: number;
   shippingCost: number;
   discount: number;
+  vatRate: number;
+  vatAmount: number;
   total: number;
   currency: string;
   createdAt: string;
@@ -190,6 +192,7 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
                 ["Subtotal", order.subtotal],
                 ["Shipping", order.shippingCost],
                 ["Discount", -order.discount],
+                ...(order.vatAmount > 0 ? [[`VAT included (${order.vatRate}%)`, order.vatAmount]] : []),
                 ["Total", order.total]
               ].map(([label, value]) => (
                 <div key={label} className={label === "Total" ? "flex justify-between text-base" : "flex justify-between"}>

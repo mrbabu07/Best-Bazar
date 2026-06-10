@@ -127,6 +127,8 @@ export type Order = {
   subtotal: number;
   shippingCost: number;
   discount: number;
+  vatRate?: number;
+  vatAmount?: number;
   total: number;
   currency: CurrencyCode;
   notes?: string;

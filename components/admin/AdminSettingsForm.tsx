@@ -22,6 +22,8 @@ export type AdminSettingsData = {
   storeEmail: string;
   phone: string;
   whatsapp: string;
+  trn: string;
+  vatRate: string;
   address: string;
   instagram: string;
   facebook: string;
@@ -102,6 +104,8 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       storeEmail: form.storeEmail,
       phone: form.phone,
       whatsapp: nullable(form.whatsapp),
+      trn: nullable(form.trn),
+      vatRate: Number(form.vatRate),
       address: form.address,
       instagram: nullable(form.instagram),
       facebook: nullable(form.facebook),
@@ -247,6 +251,32 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
           </label>
+          <div className="grid gap-4 rounded-md border border-gold-100 bg-gold-50 p-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              VAT rate %
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={form.vatRate}
+                onChange={(event) => updateForm("vatRate", event.target.value)}
+                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              TRN
+              <input
+                value={form.trn}
+                onChange={(event) => updateForm("trn", event.target.value)}
+                placeholder="VAT registration number"
+                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+              />
+            </label>
+            <p className="text-xs font-semibold leading-5 text-neutral-600 sm:col-span-2">
+              VAT is shown as included on invoices when the rate is greater than 0. Set the rate to 0 if the business is not VAT registered.
+            </p>
+          </div>
           <p className="text-sm text-neutral-500">
             Preview: {formatCurrency(100, "BDT", locale, previewRates)} / {formatCurrency(100, "USD", locale, previewRates)}
           </p>

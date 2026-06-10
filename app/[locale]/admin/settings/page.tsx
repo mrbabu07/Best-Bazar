@@ -37,6 +37,8 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
     storeEmail: settings.storeEmail,
     phone: settings.phone,
     whatsapp: settings.whatsapp ?? "",
+    trn: settings.trn ?? "",
+    vatRate: String(settings.vatRate),
     address: settings.address,
     instagram: settings.instagram ?? "",
     facebook: settings.facebook ?? "",

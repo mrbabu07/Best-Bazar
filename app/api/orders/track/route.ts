@@ -46,6 +46,8 @@ export async function POST(request: Request) {
       subtotal: Number(order.subtotal),
       shippingCost: Number(order.shippingCost),
       discount: Number(order.discount),
+      vatRate: Number(order.vatRate),
+      vatAmount: Number(order.vatAmount),
       total: Number(order.total),
       currency: order.currency,
       createdAt: order.createdAt.toISOString(),

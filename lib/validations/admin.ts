@@ -129,6 +129,8 @@ export const settingsSchema = z.object({
   storeEmail: z.string().email(),
   phone: z.string().trim().min(1),
   whatsapp: nullableString,
+  trn: nullableString,
+  vatRate: money,
   address: z.string().trim().min(1),
   instagram: nullableString,
   facebook: nullableString,
