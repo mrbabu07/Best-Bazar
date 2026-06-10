@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { defaultShippingSettings, getShippingCost } from "@/utils/shipping";
+import { cn } from "@/utils/cn";
 import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
 
@@ -454,17 +455,21 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {paymentOptions.map((option) => {
                 const Icon = option.icon;
+                const selected = payment === option.key;
 
                 return (
                   <label
                     key={option.key}
                     title={option.detail}
-                    className={`flex min-h-[64px] cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-3 hover:border-gold-300 ${
-                      option.enabled ? "" : "cursor-not-allowed opacity-60"
-                    }`}
+                    className={cn(
+                      "group relative flex min-h-[78px] cursor-pointer items-center gap-3 overflow-hidden rounded-lg border bg-white p-3.5 transition",
+                      "hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-soft",
+                      selected && "border-gold-500 bg-gold-50 shadow-soft ring-1 ring-gold-200",
+                      !option.enabled && "cursor-not-allowed bg-neutral-50 opacity-65 hover:translate-y-0 hover:border-neutral-200 hover:shadow-none"
+                    )}
                   >
                     <input
                       type="radio"
@@ -473,17 +478,37 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                       checked={payment === option.key}
                       onChange={() => setPayment(option.key)}
                       disabled={!option.enabled}
-                      className="shrink-0 accent-gold-500"
+                      className="sr-only"
                     />
-                    <Icon size={20} className="shrink-0 text-gold-700" />
+                    <span
+                      className={cn(
+                        "grid h-11 w-11 shrink-0 place-items-center rounded-md border transition",
+                        selected
+                          ? "border-navy bg-navy text-white"
+                          : "border-gold-100 bg-paper text-gold-700 group-hover:bg-gold-50",
+                        !option.enabled && "border-neutral-200 bg-white text-neutral-400"
+                      )}
+                    >
+                      <Icon size={20} />
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold text-navy">{option.label}</span>
-                      {!option.enabled ? (
-                        <span className="mt-1 block truncate text-xs font-semibold text-neutral-500">
-                          Set env vars to enable
-                        </span>
-                      ) : null}
+                      <span
+                        className={cn(
+                          "mt-1 inline-flex h-6 max-w-full items-center rounded-md px-2 text-[11px] font-bold",
+                          option.enabled ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-500"
+                        )}
+                      >
+                        <span className="truncate">{option.enabled ? "Available" : "Setup needed"}</span>
+                      </span>
                     </span>
+                    <span
+                      className={cn(
+                        "absolute right-3 top-3 h-4 w-4 rounded-full border transition rtl:left-3 rtl:right-auto",
+                        selected ? "border-gold-700 bg-gold-500 shadow-[inset_0_0_0_3px_white]" : "border-neutral-300 bg-white"
+                      )}
+                      aria-hidden="true"
+                    />
                   </label>
                 );
               })}
