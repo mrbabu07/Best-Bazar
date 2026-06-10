@@ -194,8 +194,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const paymentOptions = [
     {
       key: "stripe" as const,
-      label: "Card / Apple Pay / Google Pay",
-      detail: "Stripe Checkout for cards and wallets.",
+      label: "Card payment",
+      detail: "Visa, Mastercard, Apple Pay, and Google Pay through Stripe.",
       icon: CreditCard,
       enabled: paymentAvailability.stripe
     },
@@ -454,14 +454,15 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
               {paymentOptions.map((option) => {
                 const Icon = option.icon;
 
                 return (
                   <label
                     key={option.key}
-                    className={`flex cursor-pointer items-start gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300 ${
+                    title={option.detail}
+                    className={`flex min-h-[64px] cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-3 hover:border-gold-300 ${
                       option.enabled ? "" : "cursor-not-allowed opacity-60"
                     }`}
                   >
@@ -472,14 +473,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                       checked={payment === option.key}
                       onChange={() => setPayment(option.key)}
                       disabled={!option.enabled}
-                      className="mt-1 accent-gold-500"
+                      className="shrink-0 accent-gold-500"
                     />
-                    <Icon size={20} className="mt-0.5 shrink-0 text-gold-700" />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-bold text-navy">{option.label}</span>
-                      <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">
-                        {option.enabled ? option.detail : "Set payment env vars to enable"}
-                      </span>
+                    <Icon size={20} className="shrink-0 text-gold-700" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-navy">{option.label}</span>
+                      {!option.enabled ? (
+                        <span className="mt-1 block truncate text-xs font-semibold text-neutral-500">
+                          Set env vars to enable
+                        </span>
+                      ) : null}
                     </span>
                   </label>
                 );
