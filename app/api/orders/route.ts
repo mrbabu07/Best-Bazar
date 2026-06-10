@@ -31,14 +31,17 @@ export async function POST(request: Request) {
   try {
     const session = await getOptionalServerSession(request);
     const data = orderCreateSchema.parse(await request.json());
+
+    if (!["COD", "BANK_TRANSFER"].includes(data.paymentMethod)) {
+      return NextResponse.json({ error: "Use the payment checkout endpoint for online payment methods." }, { status: 400 });
+    }
+
     const order = await createStoreOrder(data, session?.user.id);
 
-    if (data.paymentMethod !== "STRIPE") {
-      await Promise.allSettled([
-        sendOrderConfirmationEmail(order),
-        sendOrderMessagingNotifications(order, "created")
-      ]);
-    }
+    await Promise.allSettled([
+      sendOrderConfirmationEmail(order),
+      sendOrderMessagingNotifications(order, "created")
+    ]);
 
     return NextResponse.json(JSON.parse(JSON.stringify(order)), { status: 201 });
   } catch (error) {

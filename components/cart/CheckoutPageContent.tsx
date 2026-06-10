@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, CreditCard, HandCoins, ShieldCheck, WalletCards } from "lucide-react";
+import { CalendarClock, CreditCard, HandCoins, Landmark, ShieldCheck, Wallet, WalletCards } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -17,7 +17,15 @@ import { Button } from "@/components/ui/Button";
 type CheckoutPageContentProps = {
   locale: Locale;
   dictionary: Dictionary;
-  stripeEnabled: boolean;
+  paymentAvailability: {
+    stripe: boolean;
+    tabby: boolean;
+    tamara: boolean;
+    paypal: boolean;
+    cod: boolean;
+    bankTransfer: boolean;
+    bankTransferInstructions: string;
+  };
 };
 
 type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "tower" | "city" | "country";
@@ -39,7 +47,7 @@ const checkoutCopy = {
     processing: "Processing...",
     orderPlaced: "Order placed",
     checkoutFailed: "Checkout failed",
-    stripeUrlMissing: "Stripe checkout URL was not returned.",
+    stripeUrlMissing: "Payment checkout URL was not returned.",
     notes: "Notes",
     shippingArea: "Shipping area",
     delivery: "Delivery",
@@ -94,11 +102,15 @@ const checkoutCopy = {
   }
 >;
 
-export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: CheckoutPageContentProps) {
+type PaymentOptionKey = "stripe" | "cod" | "tabby" | "tamara" | "paypal" | "bank_transfer";
+
+export function CheckoutPageContent({ locale, dictionary, paymentAvailability }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
   const hydrated = useHydrated();
-  const [payment, setPayment] = useState<"stripe" | "cod" | "tabby" | "tamara">(stripeEnabled ? "stripe" : "cod");
+  const initialPayment: PaymentOptionKey =
+    paymentAvailability.stripe ? "stripe" : paymentAvailability.cod ? "cod" : "bank_transfer";
+  const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
   const [emirate, setEmirate] = useState("Dubai");
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
@@ -144,6 +156,14 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       return "TAMARA";
     }
 
+    if (payment === "paypal") {
+      return "PAYPAL";
+    }
+
+    if (payment === "bank_transfer") {
+      return "BANK_TRANSFER";
+    }
+
     return "STRIPE";
   };
 
@@ -156,8 +176,65 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
       return dictionary.checkout.cod;
     }
 
-    return payment === "tabby" ? "Place order with Tabby" : "Place order with Tamara";
+    if (payment === "tabby") {
+      return "Pay with Tabby";
+    }
+
+    if (payment === "tamara") {
+      return "Pay with Tamara";
+    }
+
+    if (payment === "paypal") {
+      return "Pay with PayPal";
+    }
+
+    return "Place bank transfer order";
   };
+
+  const paymentOptions = [
+    {
+      key: "stripe" as const,
+      label: "Card / Apple Pay / Google Pay",
+      detail: "Stripe Checkout for cards and wallets.",
+      icon: CreditCard,
+      enabled: paymentAvailability.stripe
+    },
+    {
+      key: "cod" as const,
+      label: dictionary.checkout.cod,
+      detail: "Pay cash when your Dubai delivery arrives.",
+      icon: HandCoins,
+      enabled: paymentAvailability.cod
+    },
+    {
+      key: "tabby" as const,
+      label: "Tabby",
+      detail: "Pay in installments through Tabby hosted checkout.",
+      icon: WalletCards,
+      enabled: paymentAvailability.tabby
+    },
+    {
+      key: "tamara" as const,
+      label: "Tamara",
+      detail: "Pay later through Tamara hosted checkout.",
+      icon: CalendarClock,
+      enabled: paymentAvailability.tamara
+    },
+    {
+      key: "paypal" as const,
+      label: "PayPal",
+      detail: "PayPal wallet hosted approval and capture.",
+      icon: Wallet,
+      enabled: paymentAvailability.paypal
+    },
+    {
+      key: "bank_transfer" as const,
+      label: "Bank transfer",
+      detail: paymentAvailability.bankTransferInstructions || "Manual transfer after order confirmation.",
+      icon: Landmark,
+      enabled: paymentAvailability.bankTransfer
+    }
+  ];
 
   useEffect(() => {
     setAppliedCoupon("");
@@ -238,7 +315,8 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
     };
 
     try {
-      const endpoint = payment === "stripe" ? "/api/payment/checkout" : "/api/orders";
+      const usesHostedCheckout = ["stripe", "tabby", "tamara", "paypal"].includes(payment);
+      const endpoint = usesHostedCheckout ? "/api/payment/checkout" : "/api/orders";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -250,7 +328,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
         throw new Error(result.error ?? labels.checkoutFailed);
       }
 
-      if (payment === "stripe") {
+      if (usesHostedCheckout) {
         if (!result.checkoutUrl) {
           throw new Error(labels.stripeUrlMissing);
         }
@@ -377,59 +455,38 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {stripeEnabled ? (
-                <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="stripe"
-                    checked={payment === "stripe"}
-                    onChange={() => setPayment("stripe")}
-                    className="accent-gold-500"
-                  />
-                  <CreditCard size={20} className="text-gold-700" />
-                  <span className="text-sm font-bold text-navy">{dictionary.checkout.stripe}</span>
-                </label>
-              ) : null}
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="cod"
-                  checked={payment === "cod"}
-                  onChange={() => setPayment("cod")}
-                  className="accent-gold-500"
-                />
-                <HandCoins size={20} className="text-gold-700" />
-                <span className="text-sm font-bold text-navy">{dictionary.checkout.cod}</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="tabby"
-                  checked={payment === "tabby"}
-                  onChange={() => setPayment("tabby")}
-                  className="accent-gold-500"
-                />
-                <WalletCards size={20} className="text-gold-700" />
-                <span className="text-sm font-bold text-navy">Tabby</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
-                <input
-                  type="radio"
-                  name="payment"
-                  value="tamara"
-                  checked={payment === "tamara"}
-                  onChange={() => setPayment("tamara")}
-                  className="accent-gold-500"
-                />
-                <CalendarClock size={20} className="text-gold-700" />
-                <span className="text-sm font-bold text-navy">Tamara</span>
-              </label>
+              {paymentOptions.map((option) => {
+                const Icon = option.icon;
+
+                return (
+                  <label
+                    key={option.key}
+                    className={`flex cursor-pointer items-start gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300 ${
+                      option.enabled ? "" : "cursor-not-allowed opacity-60"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      value={option.key}
+                      checked={payment === option.key}
+                      onChange={() => setPayment(option.key)}
+                      disabled={!option.enabled}
+                      className="mt-1 accent-gold-500"
+                    />
+                    <Icon size={20} className="mt-0.5 shrink-0 text-gold-700" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-navy">{option.label}</span>
+                      <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">
+                        {option.enabled ? option.detail : "Set payment env vars to enable"}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
             <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
-              Tabby and Tamara orders are saved as pending pay-later requests until gateway credentials are connected.
+              Dubai-ready methods are controlled by environment variables. Online methods redirect to hosted checkout when configured.
             </p>
           </div>
         </section>

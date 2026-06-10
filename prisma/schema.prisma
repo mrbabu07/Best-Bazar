@@ -17,6 +17,8 @@ enum PaymentMethod {
   COD
   TABBY
   TAMARA
+  PAYPAL
+  BANK_TRANSFER
 }
 
 enum PaymentStatus {
@@ -217,6 +219,8 @@ model Order {
   notes           String?       @db.Text
   internalNotes   String?       @db.Text
   stripeSessionId String?
+  paymentProviderReference String?
+  paymentCheckoutUrl String?
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   items           OrderItem[]
   createdAt       DateTime      @default(now())

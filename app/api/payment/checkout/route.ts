@@ -1,61 +1,46 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { PaymentMethod } from "@prisma/client";
 import { getOptionalServerSession } from "@/lib/auth-session";
 import { createStoreOrder } from "@/lib/orders";
+import {
+  assertRedirectPaymentConfigured,
+  createRedirectCheckout,
+  isRedirectPaymentMethod
+} from "@/lib/payment-gateways";
 import { prisma } from "@/lib/prisma";
-import { getSiteUrl, getStripe } from "@/lib/stripe";
 import { orderCreateSchema } from "@/lib/validations/store";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const stripe = getStripe();
-
-  if (!stripe) {
-    return NextResponse.json({ error: "Stripe is not configured." }, { status: 503 });
-  }
-
   try {
     const session = await getOptionalServerSession(request);
     const data = orderCreateSchema.parse(await request.json());
-    const order = await createStoreOrder({ ...data, paymentMethod: "STRIPE" }, session?.user.id);
-    const siteUrl = getSiteUrl();
-    const checkoutLocale = data.locale;
+    const method = data.paymentMethod as PaymentMethod;
 
-    const total = Number(order.total);
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: order.customerEmail,
-      metadata: {
-        orderId: order.id,
-        orderNumber: order.orderNumber
-      },
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "aed",
-            unit_amount: Math.round(total * 100),
-            product_data: {
-              name: `Best Bazar order ${order.orderNumber}`,
-              description: `${order.items.length} item${order.items.length === 1 ? "" : "s"} including shipping and discounts`
-            }
-          }
-        }
-      ],
-      success_url: `${siteUrl}/${checkoutLocale}/order-confirmation/${order.id}?status=success&token=${order.accessToken}`,
-      cancel_url: `${siteUrl}/${checkoutLocale}/checkout?status=cancelled`
-    });
+    if (!isRedirectPaymentMethod(method)) {
+      return NextResponse.json({ error: "Use the order endpoint for manual payment methods." }, { status: 400 });
+    }
+
+    assertRedirectPaymentConfigured(method);
+
+    const order = await createStoreOrder({ ...data, paymentMethod: method }, session?.user.id);
+    const checkout = await createRedirectCheckout(method, order);
 
     await prisma.order.update({
       where: { id: order.id },
-      data: { stripeSessionId: checkoutSession.id }
+      data: {
+        stripeSessionId: checkout.stripeSessionId,
+        paymentProviderReference: checkout.providerReference,
+        paymentCheckoutUrl: checkout.checkoutUrl
+      }
     });
 
     return NextResponse.json({
       orderId: order.id,
       orderNumber: order.orderNumber,
-      checkoutUrl: checkoutSession.url
+      checkoutUrl: checkout.checkoutUrl
     });
   } catch (error) {
     if (error instanceof ZodError) {
@@ -63,7 +48,9 @@ export async function POST(request: Request) {
     }
 
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      const status = error.message.includes("not configured") ? 503 : 400;
+
+      return NextResponse.json({ error: error.message }, { status });
     }
 
     return NextResponse.json({ error: "Unable to start checkout." }, { status: 500 });

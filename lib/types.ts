@@ -126,7 +126,7 @@ export type Order = {
     country: string;
   };
   deliverySlot?: string;
-  paymentMethod: "stripe" | "cod" | "tabby" | "tamara";
+  paymentMethod: "stripe" | "cod" | "tabby" | "tamara" | "paypal" | "bank_transfer";
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   subtotal: number;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckoutPageContent } from "@/components/cart/CheckoutPageContent";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { getPaymentAvailability } from "@/lib/payment-gateways";
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return {
@@ -19,7 +20,7 @@ export default function CheckoutPage({ params }: { params: { locale: string } })
     <CheckoutPageContent
       locale={params.locale}
       dictionary={getDictionary(params.locale)}
-      stripeEnabled={Boolean(process.env.STRIPE_SECRET_KEY)}
+      paymentAvailability={getPaymentAvailability()}
     />
   );
 }
