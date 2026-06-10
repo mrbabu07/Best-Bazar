@@ -26,6 +26,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [liveSettings, setLiveSettings] = useState(settings);
+  const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const setCurrency = usePreferencesStore((state) => state.setCurrency);
@@ -45,11 +46,13 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     liveSettings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
     liveSettings.shippingSettings.shippingRates[0];
   const freeShippingThreshold = liveSettings.shippingSettings.freeShippingThreshold;
+  const dismissedStorageKey = `best-bazar-dismissed-notifications:${locale}`;
   const storefrontNotifications = [
     ...(liveSettings.announcementActive && announcement
       ? [
           {
             title: locale === "ar" ? "إعلان المتجر" : "Store announcement",
+            id: `announcement:${announcement}`,
             detail: announcement,
             href: `/${locale}/shop`
           }
@@ -57,6 +60,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       : []),
     {
       title: locale === "ar" ? "توصيل دبي" : "Dubai delivery",
+      id: `delivery:${dubaiRate?.emirate ?? "uae"}:${dubaiRate?.deliveryDays ?? "available"}`,
       detail: dubaiRate?.deliveryDays
         ? `${dubaiRate.emirate}: ${dubaiRate.deliveryDays} days`
         : locale === "ar"
@@ -66,6 +70,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     },
     {
       title: locale === "ar" ? "توصيل مجاني" : "Free shipping",
+      id: `free-shipping:${freeShippingThreshold}`,
       detail: `${locale === "ar" ? "فوق" : "Above"} AED ${freeShippingThreshold}`,
       href: `/${locale}/checkout`
     },
@@ -73,16 +78,27 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       ? [
           {
             title: locale === "ar" ? "السلة" : "Cart reminder",
+            id: `cart:${cartCount}`,
             detail: `${cartCount} ${locale === "ar" ? "منتج في السلة" : "item ready in cart"}`,
             href: `/${locale}/cart`
           }
         ]
       : [])
   ];
+  const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
 
   useEffect(() => {
     setLiveSettings(settings);
   }, [settings]);
+
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(dismissedStorageKey) ?? "[]");
+      setDismissedNotifications(Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : []);
+    } catch {
+      setDismissedNotifications([]);
+    }
+  }, [dismissedStorageKey]);
 
   useEffect(() => {
     let active = true;
@@ -164,6 +180,20 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
     router.push(`/${locale}/shop${params.toString() ? `?${params.toString()}` : ""}`);
     setOpen(false);
+  };
+
+  const dismissNotification = (id: string) => {
+    setDismissedNotifications((current) => {
+      const next = Array.from(new Set([...current, id]));
+
+      try {
+        window.localStorage.setItem(dismissedStorageKey, JSON.stringify(next));
+      } catch {
+        // The in-memory state still hides the notification for this session.
+      }
+
+      return next;
+    });
   };
 
   return (
@@ -267,9 +297,9 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               aria-expanded={notificationsOpen}
             >
               <Bell size={18} />
-              {storefrontNotifications.length > 0 ? (
+              {visibleNotifications.length > 0 ? (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                  {storefrontNotifications.length}
+                  {visibleNotifications.length}
                 </span>
               ) : null}
             </button>
@@ -287,22 +317,36 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                   </button>
                 </div>
                 <div className="mt-2 grid gap-2">
-                  {storefrontNotifications.map((item) => (
-                    <Link
-                      key={`${item.title}-${item.detail}`}
-                      href={item.href}
-                      onClick={() => setNotificationsOpen(false)}
-                      className="rounded-md bg-paper p-3 transition hover:bg-gold-50"
-                    >
-                      <div className="flex items-start gap-2">
-                        <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-navy">{item.title}</p>
-                          <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
-                        </div>
+                  {visibleNotifications.length > 0 ? (
+                    visibleNotifications.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-start gap-2 rounded-md bg-paper p-3 transition hover:bg-gold-50"
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={() => setNotificationsOpen(false)}
+                          className="flex min-w-0 flex-1 items-start gap-2"
+                        >
+                          <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-navy">{item.title}</p>
+                            <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
+                          </div>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => dismissNotification(item.id)}
+                          className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-neutral-400 hover:bg-white hover:text-sale"
+                          aria-label="Dismiss notification"
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
-                    </Link>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">No notifications</p>
+                  )}
                 </div>
               </div>
             ) : null}
@@ -350,7 +394,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             >
               <span>{locale === "ar" ? "الإشعارات" : "Notifications"}</span>
               <span className="grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                {storefrontNotifications.length}
+                {visibleNotifications.length}
               </span>
             </button>
             <form onSubmit={submitSearch} className="relative">
