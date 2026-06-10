@@ -120,7 +120,8 @@ export type Order = {
     emirate: string;
     country: string;
   };
-  paymentMethod: "stripe" | "cod";
+  deliverySlot?: string;
+  paymentMethod: "stripe" | "cod" | "tabby" | "tamara";
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   subtotal: number;

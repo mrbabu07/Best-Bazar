@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
+import { CalendarClock, CreditCard, HandCoins, ShieldCheck, WalletCards } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -98,7 +98,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
   const labels = checkoutCopy[locale];
   const router = useRouter();
   const hydrated = useHydrated();
-  const [payment, setPayment] = useState<"stripe" | "cod">(stripeEnabled ? "stripe" : "cod");
+  const [payment, setPayment] = useState<"stripe" | "cod" | "tabby" | "tamara">(stripeEnabled ? "stripe" : "cod");
   const [emirate, setEmirate] = useState("Dubai");
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
@@ -126,6 +126,38 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
   const shippingSummary = selectedShippingRate?.deliveryDays
     ? `${labels.delivery}: ${selectedShippingRate.deliveryDays}`
     : labels.delivery;
+  const deliverySlotOptions =
+    selectedEmirate.trim().toLowerCase() === "dubai"
+      ? ["Today 6 PM - 10 PM", "Tomorrow 9 AM - 1 PM", "Tomorrow 1 PM - 5 PM", "Tomorrow 5 PM - 9 PM"]
+      : ["Standard delivery 10 AM - 6 PM", "Evening delivery 5 PM - 9 PM"];
+
+  const paymentMethod = () => {
+    if (payment === "cod") {
+      return "COD";
+    }
+
+    if (payment === "tabby") {
+      return "TABBY";
+    }
+
+    if (payment === "tamara") {
+      return "TAMARA";
+    }
+
+    return "STRIPE";
+  };
+
+  const paymentButtonLabel = () => {
+    if (payment === "stripe") {
+      return dictionary.checkout.stripe;
+    }
+
+    if (payment === "cod") {
+      return dictionary.checkout.cod;
+    }
+
+    return payment === "tabby" ? "Place order with Tabby" : "Place order with Tamara";
+  };
 
   useEffect(() => {
     setAppliedCoupon("");
@@ -197,7 +229,8 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
         emirate: String(formData.get("emirate") ?? ""),
         country: String(formData.get("country") ?? "UAE")
       },
-      paymentMethod: payment === "cod" ? "COD" : "STRIPE",
+      deliverySlot: String(formData.get("deliverySlot") ?? "") || undefined,
+      paymentMethod: paymentMethod(),
       currency,
       locale,
       couponCode: appliedCoupon || coupon.trim() || undefined,
@@ -317,6 +350,20 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                 </div>
               </div>
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                Delivery slot
+                <select
+                  name="deliverySlot"
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+                >
+                  {deliverySlotOptions.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 {labels.notes}
                 <textarea
                   name="notes"
@@ -356,7 +403,34 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                 <HandCoins size={20} className="text-gold-700" />
                 <span className="text-sm font-bold text-navy">{dictionary.checkout.cod}</span>
               </label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="tabby"
+                  checked={payment === "tabby"}
+                  onChange={() => setPayment("tabby")}
+                  className="accent-gold-500"
+                />
+                <WalletCards size={20} className="text-gold-700" />
+                <span className="text-sm font-bold text-navy">Tabby</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-neutral-200 p-4 hover:border-gold-300">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="tamara"
+                  checked={payment === "tamara"}
+                  onChange={() => setPayment("tamara")}
+                  className="accent-gold-500"
+                />
+                <CalendarClock size={20} className="text-gold-700" />
+                <span className="text-sm font-bold text-navy">Tamara</span>
+              </label>
             </div>
+            <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
+              Tabby and Tamara orders are saved as pending pay-later requests until gateway credentials are connected.
+            </p>
           </div>
         </section>
 
@@ -421,7 +495,7 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
           </div>
           <Button type="submit" className="mt-6 w-full" disabled={items.length === 0 || loading}>
             <ShieldCheck size={18} />
-            {loading ? labels.processing : payment === "stripe" ? dictionary.checkout.stripe : dictionary.checkout.cod}
+            {loading ? labels.processing : paymentButtonLabel()}
           </Button>
         </aside>
       </form>

@@ -57,6 +57,7 @@ export async function POST(request: Request) {
         emirate: order.emirate,
         country: order.country
       },
+      deliverySlot: order.deliverySlot,
       items: order.items.map((item) => ({
         id: item.id,
         nameEn: item.nameEn,

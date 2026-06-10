@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const data = orderCreateSchema.parse(await request.json());
     const order = await createStoreOrder(data, session?.user.id);
 
-    if (data.paymentMethod === "COD") {
+    if (data.paymentMethod !== "STRIPE") {
       await sendOrderConfirmationEmail(order);
     }
 

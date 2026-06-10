@@ -41,6 +41,7 @@ type TrackOrderResult = {
     emirate: string;
     country: string;
   };
+  deliverySlot?: string | null;
   items: TrackOrderItem[];
 };
 
@@ -164,6 +165,9 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
                     .filter(Boolean)
                     .join(", ")}
                 </p>
+                {order.deliverySlot ? (
+                  <p className="mt-2 text-xs font-bold text-gold-700">{order.deliverySlot}</p>
+                ) : null}
               </div>
             </div>
 

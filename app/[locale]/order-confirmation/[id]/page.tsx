@@ -155,6 +155,9 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
           <p className="mt-2 text-sm font-semibold text-neutral-700">{order.customerName}</p>
           <p className="mt-1 text-sm text-neutral-600">{order.customerPhone}</p>
           <p className="mt-1 text-sm text-neutral-600">{addressLines.join(", ")}</p>
+          {order.deliverySlot ? (
+            <p className="mt-2 text-sm font-bold text-gold-700">Delivery slot: {order.deliverySlot}</p>
+          ) : null}
         </section>
 
         <section className="mt-8">

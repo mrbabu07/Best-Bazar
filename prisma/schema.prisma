@@ -15,6 +15,8 @@ enum UserRole {
 enum PaymentMethod {
   STRIPE
   COD
+  TABBY
+  TAMARA
 }
 
 enum PaymentStatus {
@@ -194,6 +196,7 @@ model Order {
   city            String
   emirate         String
   country         String        @default("UAE")
+  deliverySlot    String?
   paymentMethod   PaymentMethod
   paymentStatus   PaymentStatus @default(PENDING)
   orderStatus     OrderStatus   @default(PENDING)

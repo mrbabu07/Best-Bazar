@@ -135,6 +135,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         city: data.shippingAddress.city,
         emirate: data.shippingAddress.emirate,
         country: data.shippingAddress.country,
+        deliverySlot: data.deliverySlot,
         paymentMethod: data.paymentMethod,
         paymentStatus: PaymentStatus.PENDING,
         orderStatus: OrderStatus.PENDING,

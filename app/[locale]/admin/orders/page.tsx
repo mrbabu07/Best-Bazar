@@ -212,6 +212,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>
                         {order.paymentStatus}
                       </Badge>
+                      <p className="mt-1 text-xs font-semibold text-neutral-500">{order.paymentMethod}</p>
                     </td>
                     <td className="px-5 py-4">
                       <AdminOrderStatusSelect orderId={order.id} initialStatus={order.orderStatus} />
@@ -279,6 +280,9 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <p className="text-neutral-600">
                   {formatAddress(selectedOrder)}
                 </p>
+                {selectedOrder.deliverySlot ? (
+                  <p className="font-semibold text-gold-700">Delivery slot: {selectedOrder.deliverySlot}</p>
+                ) : null}
               </div>
             </>
           ) : (

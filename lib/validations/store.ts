@@ -19,7 +19,8 @@ export const orderCreateSchema = z.object({
     emirate: z.string().trim().min(1),
     country: z.string().trim().min(1).default("UAE")
   }),
-  paymentMethod: z.enum(["STRIPE", "COD"]),
+  deliverySlot: z.string().trim().min(1).optional(),
+  paymentMethod: z.enum(["STRIPE", "COD", "TABBY", "TAMARA"]),
   currency: z.enum(["AED", "BDT", "USD"]).default("AED"),
   locale: z.enum(["en", "ar"]).default("en"),
   couponCode: z.string().trim().optional(),
