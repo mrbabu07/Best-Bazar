@@ -226,9 +226,13 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
           </div>
         </section>
 
-        <aside className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <aside className="admin-print-target rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           {selectedOrder ? (
             <>
+              <div className="mb-5 hidden border-b border-neutral-200 pb-4 admin-print-block">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Invoice</p>
+                <h1 className="mt-1 text-2xl font-bold text-navy">Best Bazar</h1>
+              </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-navy">{selectedOrder.orderNumber}</h2>

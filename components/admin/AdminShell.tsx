@@ -47,8 +47,12 @@ export function AdminShell({
   const switchLocalePath = pathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
   const bannersLabel = locale === "ar" ? "البانرات" : "Banners";
 
+  const notificationsLabel =
+    pendingOrders > 0 ? `Notifications (${pendingOrders > 99 ? "99+" : pendingOrders})` : "Notifications";
+
   const navItems = [
     { label: dictionary.admin.dashboard, href: `/${locale}/admin/dashboard`, icon: LayoutDashboard },
+    { label: notificationsLabel, href: `/${locale}/admin/orders?status=PENDING`, icon: Bell },
     { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags },
     { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package },
     { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Receipt },
@@ -139,18 +143,19 @@ export function AdminShell({
           </div>
 
           <div className="flex min-w-0 items-center gap-2">
-            <button
-              type="button"
-              className="relative grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
-              aria-label="Notifications"
+            <Link
+              href={`/${locale}/admin/orders?status=PENDING`}
+              className="relative inline-flex h-10 items-center justify-center gap-2 rounded-md border border-gold-200 px-3 text-navy hover:bg-gold-50"
+              aria-label={`Notifications: ${pendingOrders} pending orders`}
             >
               <Bell size={17} />
+              <span className="hidden text-xs font-bold xl:inline">Notifications</span>
               {pendingOrders > 0 ? (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                  {pendingOrders}
+                  {pendingOrders > 99 ? "99+" : pendingOrders}
                 </span>
               ) : null}
-            </button>
+            </Link>
             <Link
               href={switchLocalePath}
               className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy hover:bg-gold-50"

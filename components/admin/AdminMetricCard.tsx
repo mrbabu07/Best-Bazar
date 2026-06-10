@@ -24,14 +24,14 @@ export function AdminMetricCard({
   tone = "gold"
 }: AdminMetricCardProps) {
   return (
-    <article className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <article className="flex min-h-[148px] rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+      <div className="flex w-full items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-neutral-500">{label}</p>
-          <p className="mt-2 text-2xl font-bold text-navy">{value}</p>
+          <p className="mt-2 truncate text-3xl font-bold text-navy">{value}</p>
           <p className="mt-1 text-xs font-semibold text-neutral-500">{detail}</p>
         </div>
-        <div className={cn("grid h-11 w-11 place-items-center rounded-md", tones[tone])}>
+        <div className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-md", tones[tone])}>
           <Icon size={21} />
         </div>
       </div>

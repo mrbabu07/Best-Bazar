@@ -39,3 +39,38 @@ textarea {
   background: #c8a96e;
   color: #1a1a2e;
 }
+
+@media print {
+  body.admin-printing {
+    background: #ffffff !important;
+  }
+
+  body.admin-printing * {
+    visibility: hidden !important;
+  }
+
+  body.admin-printing .admin-print-target,
+  body.admin-printing .admin-print-target * {
+    visibility: visible !important;
+  }
+
+  body.admin-printing .admin-print-target {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  body.admin-printing .admin-print-hide,
+  body.admin-printing .admin-print-hide * {
+    display: none !important;
+  }
+
+  body.admin-printing .admin-print-block {
+    display: block !important;
+  }
+}
