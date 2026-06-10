@@ -1,79 +1,217 @@
-export type ShippingRate = {
-  emirate: string;
-  cost: number;
-  deliveryDays?: string;
+export type EmirateOption = {
+  key: string;
+  nameEn: string;
+  nameAr: string;
 };
+
+export type ShippingRate = {
+  key: string;
+  emirate: string;
+  nameEn: string;
+  nameAr: string;
+  cost: number;
+  freeFrom: number;
+  deliveryDays: string;
+  codAvailable: boolean;
+};
+
+export type ShippingRateRecord = Record<
+  string,
+  {
+    fee?: unknown;
+    cost?: unknown;
+    freeFrom?: unknown;
+    days?: unknown;
+    deliveryDays?: unknown;
+    cod?: unknown;
+    codAvailable?: unknown;
+  }
+>;
 
 export type ShippingSettings = {
   freeShippingThreshold: number;
   shippingRates: ShippingRate[];
 };
 
+export type ShippingQuote = {
+  fee: number;
+  isFree: boolean;
+  estimatedDays: string;
+  codAvailable: boolean;
+  rate: ShippingRate;
+};
+
+export const UAE_EMIRATES: EmirateOption[] = [
+  { key: "dubai", nameEn: "Dubai", nameAr: "Dubai" },
+  { key: "abudhabi", nameEn: "Abu Dhabi", nameAr: "Abu Dhabi" },
+  { key: "sharjah", nameEn: "Sharjah", nameAr: "Sharjah" },
+  { key: "ajman", nameEn: "Ajman", nameAr: "Ajman" },
+  { key: "rak", nameEn: "Ras Al Khaimah", nameAr: "Ras Al Khaimah" },
+  { key: "fujairah", nameEn: "Fujairah", nameAr: "Fujairah" },
+  { key: "uaq", nameEn: "Umm Al Quwain", nameAr: "Umm Al Quwain" }
+];
+
+const defaultRateRecord: ShippingRateRecord = {
+  dubai: { fee: 15, freeFrom: 200, days: "1-2", cod: true },
+  abudhabi: { fee: 20, freeFrom: 250, days: "2-3", cod: true },
+  sharjah: { fee: 15, freeFrom: 200, days: "1-2", cod: true },
+  ajman: { fee: 15, freeFrom: 200, days: "1-2", cod: true },
+  rak: { fee: 25, freeFrom: 300, days: "2-3", cod: true },
+  fujairah: { fee: 25, freeFrom: 300, days: "3-4", cod: false },
+  uaq: { fee: 25, freeFrom: 300, days: "3-4", cod: false }
+};
+
 export const defaultShippingSettings: ShippingSettings = {
   freeShippingThreshold: 250,
-  shippingRates: [
-    { emirate: "Dubai", cost: 20, deliveryDays: "1-2" },
-    { emirate: "Abu Dhabi", cost: 35, deliveryDays: "2-3" },
-    { emirate: "Sharjah", cost: 25, deliveryDays: "1-3" },
-    { emirate: "Ajman", cost: 30, deliveryDays: "2-3" },
-    { emirate: "Ras Al Khaimah", cost: 40, deliveryDays: "3-4" },
-    { emirate: "Fujairah", cost: 40, deliveryDays: "3-4" },
-    { emirate: "Umm Al Quwain", cost: 35, deliveryDays: "3-4" }
-  ]
+  shippingRates: normalizeShippingRateRecord(defaultRateRecord, 250)
 };
 
 function normalizeMoney(value: unknown, fallback: number) {
   const number = Number(value);
+
   return Number.isFinite(number) && number >= 0 ? number : fallback;
 }
 
-function normalizeRate(value: unknown): ShippingRate | null {
+function normalizeText(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback;
+}
+
+function normalizeBoolean(value: unknown, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function emirateByKey(key: string) {
+  return UAE_EMIRATES.find((item) => item.key === key);
+}
+
+function emirateKey(value: string) {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const match = UAE_EMIRATES.find(
+    (item) =>
+      item.key === normalized ||
+      item.nameEn.toLowerCase().replace(/[^a-z0-9]/g, "") === normalized ||
+      item.nameAr.toLowerCase().replace(/[^a-z0-9]/g, "") === normalized
+  );
+
+  return match?.key ?? normalized;
+}
+
+function normalizeShippingRateRecord(record: ShippingRateRecord, fallbackFreeFrom: number): ShippingRate[] {
+  return UAE_EMIRATES.map((emirate) => {
+    const value = record[emirate.key] ?? {};
+
+    return {
+      key: emirate.key,
+      emirate: emirate.nameEn,
+      nameEn: emirate.nameEn,
+      nameAr: emirate.nameAr,
+      cost: normalizeMoney(value.fee ?? value.cost, 0),
+      freeFrom: normalizeMoney(value.freeFrom, fallbackFreeFrom),
+      deliveryDays: normalizeText(value.days ?? value.deliveryDays, "1-2"),
+      codAvailable: normalizeBoolean(value.cod ?? value.codAvailable, true)
+    };
+  });
+}
+
+function normalizeLegacyRate(value: unknown, fallbackFreeFrom: number): ShippingRate | null {
   if (!value || typeof value !== "object") {
     return null;
   }
 
   const rate = value as Record<string, unknown>;
-  const emirate = typeof rate.emirate === "string" ? rate.emirate.trim() : "";
+  const emirateName = normalizeText(rate.emirate ?? rate.nameEn, "");
 
-  if (!emirate) {
+  if (!emirateName) {
     return null;
   }
 
+  const key = emirateKey(emirateName);
+  const emirate = emirateByKey(key);
+
   return {
-    emirate,
-    cost: normalizeMoney(rate.cost, 0),
-    deliveryDays: typeof rate.deliveryDays === "string" ? rate.deliveryDays : undefined
+    key,
+    emirate: emirate?.nameEn ?? emirateName,
+    nameEn: emirate?.nameEn ?? emirateName,
+    nameAr: emirate?.nameAr ?? emirateName,
+    cost: normalizeMoney(rate.fee ?? rate.cost, 0),
+    freeFrom: normalizeMoney(rate.freeFrom, fallbackFreeFrom),
+    deliveryDays: normalizeText(rate.days ?? rate.deliveryDays, "1-2"),
+    codAvailable: normalizeBoolean(rate.cod ?? rate.codAvailable, true)
   };
+}
+
+function normalizeShippingRates(value: unknown, fallbackFreeFrom: number): ShippingRate[] {
+  if (Array.isArray(value)) {
+    const rates = value
+      .map((rate) => normalizeLegacyRate(rate, fallbackFreeFrom))
+      .filter((rate): rate is ShippingRate => Boolean(rate));
+
+    return rates.length ? rates : defaultShippingSettings.shippingRates;
+  }
+
+  if (value && typeof value === "object") {
+    return normalizeShippingRateRecord(value as ShippingRateRecord, fallbackFreeFrom);
+  }
+
+  return defaultShippingSettings.shippingRates;
 }
 
 export function normalizeShippingSettings(settings?: Partial<{
   freeShippingThreshold: unknown;
   shippingRates: unknown;
 }> | null): ShippingSettings {
-  const rates = Array.isArray(settings?.shippingRates)
-    ? settings.shippingRates.map(normalizeRate).filter((rate): rate is ShippingRate => Boolean(rate))
-    : defaultShippingSettings.shippingRates;
+  const freeShippingThreshold = normalizeMoney(
+    settings?.freeShippingThreshold,
+    defaultShippingSettings.freeShippingThreshold
+  );
 
   return {
-    freeShippingThreshold: normalizeMoney(
-      settings?.freeShippingThreshold,
-      defaultShippingSettings.freeShippingThreshold
-    ),
-    shippingRates: rates.length ? rates : defaultShippingSettings.shippingRates
+    freeShippingThreshold,
+    shippingRates: normalizeShippingRates(settings?.shippingRates, freeShippingThreshold)
+  };
+}
+
+export function getShippingFee(
+  emirate: string,
+  subtotal: number,
+  shippingRates?: unknown,
+  freeShippingThreshold = defaultShippingSettings.freeShippingThreshold
+): ShippingQuote {
+  const settings = normalizeShippingSettings({
+    freeShippingThreshold,
+    shippingRates
+  });
+  const key = emirateKey(emirate);
+  const rate =
+    settings.shippingRates.find((item) => item.key === key) ??
+    settings.shippingRates.find((item) => item.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
+    settings.shippingRates[0] ??
+    defaultShippingSettings.shippingRates[0];
+  const freeFrom = rate.freeFrom || settings.freeShippingThreshold;
+  const isFree = subtotal <= 0 || subtotal >= freeFrom;
+
+  return {
+    fee: isFree ? 0 : rate.cost,
+    isFree,
+    estimatedDays: rate.deliveryDays,
+    codAvailable: rate.codAvailable,
+    rate
   };
 }
 
 export function getShippingCost(settings: ShippingSettings, emirate: string, subtotal: number) {
-  const normalized = normalizeShippingSettings(settings);
+  return getShippingFee(emirate, subtotal, settings.shippingRates, settings.freeShippingThreshold).fee;
+}
 
-  if (subtotal <= 0 || subtotal >= normalized.freeShippingThreshold) {
-    return 0;
-  }
+export function shippingRatesToRecord(rates: ShippingRate[]): ShippingRateRecord {
+  return rates.reduce<ShippingRateRecord>((record, rate) => {
+    record[rate.key] = {
+      fee: rate.cost,
+      freeFrom: rate.freeFrom,
+      days: rate.deliveryDays,
+      cod: rate.codAvailable
+    };
 
-  const normalizedEmirate = emirate.trim().toLowerCase();
-  const rate = normalized.shippingRates.find(
-    (item) => item.emirate.trim().toLowerCase() === normalizedEmirate
-  );
-
-  return rate?.cost ?? normalized.shippingRates[0]?.cost ?? 0;
+    return record;
+  }, {});
 }

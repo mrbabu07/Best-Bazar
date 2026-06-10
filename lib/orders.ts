@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
-import { DiscountType, OrderStatus, PaymentStatus } from "@prisma/client";
+import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { orderCreateSchema } from "@/lib/validations/store";
-import { getShippingCost, normalizeShippingSettings } from "@/utils/shipping";
+import { getShippingFee } from "@/utils/shipping";
 import type { z } from "zod";
 
 export type OrderCreateInput = z.infer<typeof orderCreateSchema>;
@@ -89,11 +89,17 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
   });
   const subtotal = items.reduce((total, item) => total + item.lineTotal, 0);
   const settings = await prisma.setting.findUniqueOrThrow({ where: { id: "store-settings" } });
-  const shippingCost = getShippingCost(
-    normalizeShippingSettings(settings),
+  const shippingQuote = getShippingFee(
     data.shippingAddress.emirate,
-    subtotal
+    subtotal,
+    settings.shippingRates,
+    Number(settings.freeShippingThreshold)
   );
+  const shippingCost = shippingQuote.fee;
+
+  if (data.paymentMethod === PaymentMethod.COD && !shippingQuote.codAvailable) {
+    throw new Error(`Cash on delivery is not available for ${shippingQuote.rate.emirate}.`);
+  }
   let discount = 0;
   let couponReservation: { id: string; maxUses: number } | undefined;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Save, Trash2 } from "lucide-react";
+import { Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
@@ -8,11 +8,16 @@ import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField"
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
 import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
+import { shippingRatesToRecord } from "@/utils/shipping";
 
 type ShippingRate = {
-  emirate: string;
+  key: string;
+  nameEn: string;
+  nameAr: string;
   cost: string;
+  freeFrom: string;
   deliveryDays: string;
+  codAvailable: boolean;
 };
 
 export type AdminSettingsData = {
@@ -70,26 +75,12 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const updateRate = (index: number, key: keyof ShippingRate, value: string) => {
+  const updateRate = (index: number, key: keyof ShippingRate, value: string | boolean) => {
     setForm((current) => ({
       ...current,
       shippingRates: current.shippingRates.map((rate, rateIndex) =>
         rateIndex === index ? { ...rate, [key]: value } : rate
       )
-    }));
-  };
-
-  const addRate = () => {
-    setForm((current) => ({
-      ...current,
-      shippingRates: [...current.shippingRates, { emirate: "", cost: "0", deliveryDays: "1-2 days" }]
-    }));
-  };
-
-  const removeRate = (index: number) => {
-    setForm((current) => ({
-      ...current,
-      shippingRates: current.shippingRates.filter((_, rateIndex) => rateIndex !== index)
     }));
   };
 
@@ -117,11 +108,18 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       aedToBdt: Number(form.aedToBdt),
       aedToUsd: Number(form.aedToUsd),
       freeShippingThreshold: Number(form.freeShippingThreshold),
-      shippingRates: form.shippingRates.map((rate) => ({
-        emirate: rate.emirate,
-        cost: Number(rate.cost),
-        deliveryDays: rate.deliveryDays
-      })),
+      shippingRates: shippingRatesToRecord(
+        form.shippingRates.map((rate) => ({
+          key: rate.key,
+          emirate: rate.nameEn,
+          nameEn: rate.nameEn,
+          nameAr: rate.nameAr,
+          cost: Number(rate.cost),
+          freeFrom: Number(rate.freeFrom),
+          deliveryDays: rate.deliveryDays,
+          codAvailable: rate.codAvailable
+        }))
+      ),
       metaTitleEn: nullable(form.metaTitleEn),
       metaTitleAr: nullable(form.metaTitleAr),
       metaDescriptionEn: nullable(form.metaDescriptionEn),
@@ -280,47 +278,73 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
           <p className="text-sm text-neutral-500">
             Preview: {formatCurrency(100, "BDT", locale, previewRates)} / {formatCurrency(100, "USD", locale, previewRates)}
           </p>
-          <div className="grid gap-3">
-            {form.shippingRates.map((rate, index) => (
-              <div key={`${rate.emirate}-${index}`} className="grid gap-3 rounded-md bg-paper p-3 sm:grid-cols-[1fr_100px_1fr_auto]">
-                <input
-                  value={rate.emirate}
-                  onChange={(event) => updateRate(index, "emirate", event.target.value)}
-                  placeholder="Emirate"
-                  required
-                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={rate.cost}
-                  onChange={(event) => updateRate(index, "cost", event.target.value)}
-                  placeholder="Cost"
-                  required
-                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                />
-                <input
-                  value={rate.deliveryDays}
-                  onChange={(event) => updateRate(index, "deliveryDays", event.target.value)}
-                  placeholder="Delivery"
-                  required
-                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeRate(index)}
-                  className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                  aria-label="Remove shipping rate"
-                >
-                  <Trash2 size={15} />
-                </button>
-              </div>
-            ))}
+          <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+            <table className="min-w-[760px] divide-y divide-neutral-200 text-sm">
+              <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                <tr>
+                  <th className="px-3 py-3">Emirate</th>
+                  <th className="px-3 py-3">Shipping Fee (AED)</th>
+                  <th className="px-3 py-3">Free Shipping From (AED)</th>
+                  <th className="px-3 py-3">Est. Days</th>
+                  <th className="px-3 py-3">COD Available</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {form.shippingRates.map((rate, index) => (
+                  <tr key={rate.key} className="align-middle">
+                    <td className="px-3 py-3">
+                      <p className="font-bold text-navy">{locale === "ar" ? rate.nameAr : rate.nameEn}</p>
+                      <p className="mt-1 text-xs font-semibold text-neutral-400">{rate.key}</p>
+                    </td>
+                    <td className="px-3 py-3">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={rate.cost}
+                        onChange={(event) => updateRate(index, "cost", event.target.value)}
+                        required
+                        className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={rate.freeFrom}
+                        onChange={(event) => updateRate(index, "freeFrom", event.target.value)}
+                        required
+                        className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <input
+                        value={rate.deliveryDays}
+                        onChange={(event) => updateRate(index, "deliveryDays", event.target.value)}
+                        required
+                        className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                    </td>
+                    <td className="px-3 py-3">
+                      <label className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-3 text-xs font-bold text-navy">
+                        <input
+                          type="checkbox"
+                          checked={rate.codAvailable}
+                          onChange={(event) => updateRate(index, "codAvailable", event.target.checked)}
+                          className="accent-gold-500"
+                        />
+                        COD
+                      </label>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <Button type="button" variant="secondary" onClick={addRate}>
-            <Plus size={16} />
-            Add rate
+          <Button type="submit" variant="secondary" disabled={saving}>
+            <Save size={16} />
+            {saving ? "Saving..." : "Save Shipping Rates"}
           </Button>
         </div>
       </section>

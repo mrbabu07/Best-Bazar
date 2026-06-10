@@ -10,7 +10,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
-import { defaultShippingSettings, getShippingCost } from "@/utils/shipping";
+import { defaultShippingSettings, getShippingFee } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
 import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
@@ -134,11 +134,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
     shippingOptions[0];
   const selectedEmirate = selectedShippingRate?.emirate ?? emirate;
-  const shipping = getShippingCost(shippingSettings, selectedEmirate, subtotal);
+  const shippingQuote = getShippingFee(
+    selectedEmirate,
+    subtotal,
+    shippingSettings.shippingRates,
+    shippingSettings.freeShippingThreshold
+  );
+  const shipping = shippingQuote.fee;
   const total = Math.max(subtotal + shipping - discount, 0);
-  const shippingSummary = selectedShippingRate?.deliveryDays
-    ? `${labels.delivery}: ${selectedShippingRate.deliveryDays}`
-    : labels.delivery;
+  const shippingSummary = shippingQuote.isFree
+    ? `Shipping to ${shippingQuote.rate.emirate}: FREE shipping!`
+    : `Shipping to ${shippingQuote.rate.emirate}: AED ${shipping.toFixed(0)} (${shippingQuote.estimatedDays} days)`;
   const deliverySlotOptions =
     selectedEmirate.trim().toLowerCase() === "dubai"
       ? ["Today 6 PM - 10 PM", "Tomorrow 9 AM - 1 PM", "Tomorrow 1 PM - 5 PM", "Tomorrow 5 PM - 9 PM"]
@@ -203,9 +209,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     {
       key: "cod" as const,
       label: dictionary.checkout.cod,
-      detail: "Pay cash when your Dubai delivery arrives.",
+      detail: shippingQuote.codAvailable
+        ? "Pay cash when your Dubai delivery arrives."
+        : `COD is unavailable for ${shippingQuote.rate.emirate}.`,
       icon: HandCoins,
-      enabled: paymentAvailability.cod
+      enabled: paymentAvailability.cod && shippingQuote.codAvailable
     },
     {
       key: "tabby" as const,
@@ -241,6 +249,32 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     setAppliedCoupon("");
     setDiscount(0);
   }, [subtotal]);
+
+  useEffect(() => {
+    if (payment === "cod" && !shippingQuote.codAvailable) {
+      const nextPayment: PaymentOptionKey = paymentAvailability.stripe
+        ? "stripe"
+        : paymentAvailability.tabby
+          ? "tabby"
+          : paymentAvailability.tamara
+            ? "tamara"
+            : paymentAvailability.paypal
+              ? "paypal"
+              : paymentAvailability.bankTransfer
+                ? "bank_transfer"
+                : "cod";
+
+      setPayment(nextPayment);
+    }
+  }, [
+    payment,
+    paymentAvailability.bankTransfer,
+    paymentAvailability.paypal,
+    paymentAvailability.stripe,
+    paymentAvailability.tabby,
+    paymentAvailability.tamara,
+    shippingQuote.codAvailable
+  ]);
 
   const updateCoupon = (value: string) => {
     setCoupon(value);
@@ -427,6 +461,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   <span>{shippingSummary}</span>
                   <span>{formatCurrency(shipping, currency, locale, currencyRates)}</span>
                 </div>
+                {!shippingQuote.codAvailable ? (
+                  <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-sale">
+                    COD is unavailable for {shippingQuote.rate.emirate}. Please choose card, PayPal, Tabby, Tamara, or bank transfer.
+                  </p>
+                ) : null}
               </div>
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 Delivery slot

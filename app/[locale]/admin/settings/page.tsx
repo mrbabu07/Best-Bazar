@@ -5,15 +5,10 @@ import { AdminSettingsForm } from "@/components/admin/AdminSettingsForm";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
+import { normalizeShippingSettings } from "@/utils/shipping";
 
 export const metadata: Metadata = {
   title: "Store Settings | Best Bazar"
-};
-
-type ShippingRate = {
-  emirate: string;
-  cost: number;
-  deliveryDays: string;
 };
 
 export default async function AdminSettingsPage({ params }: { params: { locale: string } }) {
@@ -27,9 +22,7 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
   const settings = await prisma.setting.findUniqueOrThrow({
     where: { id: "store-settings" }
   });
-  const shippingRates = Array.isArray(settings.shippingRates)
-    ? (settings.shippingRates as ShippingRate[])
-    : [];
+  const shippingSettings = normalizeShippingSettings(settings);
   const settingsData = {
     storeNameEn: settings.storeNameEn,
     storeNameAr: settings.storeNameAr,
@@ -50,10 +43,14 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
     aedToBdt: String(settings.aedToBdt),
     aedToUsd: String(settings.aedToUsd),
     freeShippingThreshold: String(settings.freeShippingThreshold),
-    shippingRates: shippingRates.map((rate) => ({
-      emirate: rate.emirate,
+    shippingRates: shippingSettings.shippingRates.map((rate) => ({
+      key: rate.key,
+      nameEn: rate.nameEn,
+      nameAr: rate.nameAr,
       cost: String(rate.cost),
-      deliveryDays: rate.deliveryDays
+      freeFrom: String(rate.freeFrom),
+      deliveryDays: rate.deliveryDays,
+      codAvailable: rate.codAvailable
     })),
     metaTitleEn: settings.metaTitleEn ?? "",
     metaTitleAr: settings.metaTitleAr ?? "",

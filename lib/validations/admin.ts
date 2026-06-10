@@ -10,6 +10,16 @@ const nullableImageUrl = z
   .nullable()
   .refine((value) => !value || isAllowedRemoteImage(value), imageUrlValidationMessage);
 const money = z.coerce.number().min(0);
+const shippingRateSchema = z.object({
+  emirate: z.string().trim().min(1).optional(),
+  cost: money.optional(),
+  fee: money.optional(),
+  freeFrom: money.optional(),
+  deliveryDays: z.string().trim().min(1).optional(),
+  days: z.string().trim().min(1).optional(),
+  cod: z.boolean().optional(),
+  codAvailable: z.boolean().optional()
+});
 
 export const categorySchema = z.object({
   nameEn: z.string().trim().min(1),
@@ -147,13 +157,7 @@ export const settingsSchema = z.object({
   aedToBdt: money,
   aedToUsd: money,
   freeShippingThreshold: money,
-  shippingRates: z.array(
-    z.object({
-      emirate: z.string().trim().min(1),
-      cost: money,
-      deliveryDays: z.string().trim().min(1)
-    })
-  ),
+  shippingRates: z.union([z.array(shippingRateSchema), z.record(shippingRateSchema)]),
   metaTitleEn: nullableString,
   metaTitleAr: nullableString,
   metaDescriptionEn: nullableString,

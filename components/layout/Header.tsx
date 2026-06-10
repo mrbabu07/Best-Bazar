@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { currencyOptions, type CurrencyCode } from "@/utils/currency";
 import { cn } from "@/utils/cn";
+import { normalizeShippingSettings } from "@/utils/shipping";
 
 type HeaderProps = {
   locale: Locale;
@@ -117,15 +118,10 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           return;
         }
 
-        const shippingRates = Array.isArray(data.shippingRates)
-          ? (data.shippingRates as Record<string, unknown>[])
-              .map((rate: Record<string, unknown>) => ({
-                emirate: typeof rate.emirate === "string" ? rate.emirate : "",
-                cost: Number(rate.cost ?? 0),
-                deliveryDays: typeof rate.deliveryDays === "string" ? rate.deliveryDays : undefined
-              }))
-              .filter((rate) => rate.emirate)
-          : settings.shippingSettings.shippingRates;
+        const shippingSettings = normalizeShippingSettings({
+          freeShippingThreshold: data.freeShippingThreshold ?? settings.shippingSettings.freeShippingThreshold,
+          shippingRates: data.shippingRates ?? settings.shippingSettings.shippingRates
+        });
         const nextSettings = {
           ...settings,
           storeNameEn: data.storeNameEn ?? settings.storeNameEn,
@@ -134,10 +130,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           announcementEn: data.announcementEn ?? "",
           announcementAr: data.announcementAr ?? "",
           announcementActive: Boolean(data.announcementActive),
-          shippingSettings: {
-            freeShippingThreshold: Number(data.freeShippingThreshold ?? settings.shippingSettings.freeShippingThreshold),
-            shippingRates: shippingRates.length ? shippingRates : settings.shippingSettings.shippingRates
-          }
+          shippingSettings
         };
 
         setLiveSettings(nextSettings);
