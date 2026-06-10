@@ -42,6 +42,7 @@ async function getFrameSettings() {
     announcementAr: settings?.announcementAr ?? "",
     announcementActive: settings?.announcementActive ?? false,
     phone: settings?.phone ?? "",
+    whatsapp: settings?.whatsapp ?? "",
     email: settings?.storeEmail ?? "",
     address: settings?.address ?? "",
     instagram: settings?.instagram ?? "",

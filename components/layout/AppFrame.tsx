@@ -5,6 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { WhatsAppQuickButton } from "@/components/layout/WhatsAppQuickButton";
 import { usePreferencesStore } from "@/store/preferences-store";
 import type { CurrencyRates } from "@/utils/currency";
 import type { ShippingSettings } from "@/utils/shipping";
@@ -16,6 +17,7 @@ export type StorefrontFrameSettings = {
   announcementAr: string;
   announcementActive: boolean;
   phone: string;
+  whatsapp: string;
   email: string;
   address: string;
   instagram: string;
@@ -48,6 +50,7 @@ export function AppFrame({ children, locale, dictionary, settings }: AppFramePro
       {isAdmin ? null : <Header locale={locale} dictionary={dictionary} settings={settings} />}
       {children}
       {isAdmin ? null : <Footer locale={locale} dictionary={dictionary} settings={settings} />}
+      {isAdmin ? null : <WhatsAppQuickButton locale={locale} phone={settings.whatsapp} />}
     </div>
   );
 }

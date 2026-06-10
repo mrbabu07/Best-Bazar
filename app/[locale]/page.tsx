@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CreditCard, HandCoins, RotateCcw, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -93,6 +94,31 @@ export default async function HomePage({ params }: { params: { locale: string } 
         secondaryLabel={dictionary.actions.viewCollection}
         metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
       />
+
+      <section className="border-y border-gold-100 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-3 px-4 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+          {[
+            { icon: HandCoins, title: "Cash on delivery", detail: "Pay when your Dubai order arrives." },
+            { icon: Truck, title: "Fast Dubai delivery", detail: "Area-based delivery timing at checkout." },
+            { icon: CreditCard, title: "Secure payment", detail: "Card and flexible payment options." },
+            { icon: RotateCcw, title: "Return support", detail: "Clear support flow for returns and exchanges." }
+          ].map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <div key={item.title} className="flex min-h-20 items-start gap-3 rounded-md bg-paper px-4 py-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white text-gold-700">
+                  <Icon size={19} />
+                </span>
+                <span>
+                  <span className="block text-sm font-bold text-navy">{item.title}</span>
+                  <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <section className="bg-white py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

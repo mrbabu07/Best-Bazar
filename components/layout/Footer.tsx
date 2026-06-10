@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
 
@@ -58,6 +58,15 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             <Link href={`/${locale}/cart`} className="hover:text-navy">
               {dictionary.nav.cart}
             </Link>
+            <Link href={`/${locale}/track-order`} className="hover:text-navy">
+              Track order
+            </Link>
+            <Link href={`/${locale}/privacy`} className="hover:text-navy">
+              Privacy policy
+            </Link>
+            <Link href={`/${locale}/terms`} className="hover:text-navy">
+              Terms
+            </Link>
           </div>
         </div>
 
@@ -78,6 +87,17 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
               <Mail size={16} />
               {settings.email}
             </p>
+            {settings.whatsapp ? (
+              <Link
+                href={`https://wa.me/${settings.whatsapp.replace(/[^\d]/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 hover:text-navy"
+              >
+                <MessageCircle size={16} />
+                WhatsApp support
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

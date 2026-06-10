@@ -36,6 +36,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const navItems = [
     { label: dictionary.nav.home, href: `/${locale}` },
     { label: dictionary.nav.shop, href: `/${locale}/shop` },
+    { label: "Track order", href: `/${locale}/track-order` },
     { label: dictionary.nav.account, href: `/${locale}/account` }
   ];
   const brandName = locale === "ar" ? liveSettings.storeNameAr : liveSettings.storeNameEn;
@@ -109,6 +110,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           ...settings,
           storeNameEn: data.storeNameEn ?? settings.storeNameEn,
           storeNameAr: data.storeNameAr ?? settings.storeNameAr,
+          whatsapp: typeof data.whatsapp === "string" ? data.whatsapp : settings.whatsapp,
           announcementEn: data.announcementEn ?? "",
           announcementAr: data.announcementAr ?? "",
           announcementActive: Boolean(data.announcementActive),
