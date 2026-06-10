@@ -27,10 +27,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
 import { formatCurrency } from "@/utils/currency";
 
 export type AdminProductCategory = {
   id: string;
+  slug: string;
   nameEn: string;
   nameAr: string;
 };
@@ -45,6 +47,9 @@ type ProductVariantForm = {
   colorNameEn: string;
   colorNameAr: string;
   colorHex: string;
+  sizeKey: string;
+  sizeNameEn: string;
+  sizeNameAr: string;
   imageUrl: string;
   sku: string;
   stock: string;
@@ -168,6 +173,16 @@ function getCategoryName(product: AdminProductRow, locale: Locale) {
   return locale === "ar" ? product.categoryNameAr : product.categoryNameEn;
 }
 
+const customSizeValue = "__custom__";
+
+function sizeFields(size?: ProductSizeOption) {
+  return {
+    sizeKey: size?.key ?? "",
+    sizeNameEn: size?.nameEn ?? "",
+    sizeNameAr: size?.nameAr ?? ""
+  };
+}
+
 export function AdminProductManager({
   locale,
   dictionary,
@@ -223,6 +238,8 @@ export function AdminProductManager({
       ? currentCategory.nameAr
       : currentCategory.nameEn
     : "No category";
+  const sizeOptions = getCategorySizeOptions(currentCategory);
+  const sizeRequired = !isSingleDefaultSize(sizeOptions);
   const mainImage = form.images.find((image) => image.url.trim());
   const activeVariants = form.variants.filter((variant) => variant.isActive && variant.colorNameEn.trim());
   const activeVariantCount = activeVariants.length;
@@ -260,8 +277,8 @@ export function AdminProductManager({
       icon: ImagePlus
     },
     {
-      label: "Colors",
-      value: activeVariantCount ? `${activeVariantCount} color variant${activeVariantCount > 1 ? "s" : ""}` : "Optional color stock",
+      label: "Variants",
+      value: activeVariantCount ? `${activeVariantCount} stock row${activeVariantCount > 1 ? "s" : ""}` : "Optional color/size stock",
       ready: isColorSetupReady,
       icon: Palette
     }
@@ -308,6 +325,21 @@ export function AdminProductManager({
     }));
   };
 
+  const updateVariantSize = (index: number, value: string) => {
+    const size = sizeOptions.find((option) => option.key === value);
+
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.map((variant, variantIndex) =>
+        variantIndex === index
+          ? value === customSizeValue
+            ? { ...variant, sizeKey: "", sizeNameEn: "", sizeNameAr: "" }
+            : { ...variant, ...sizeFields(size) }
+          : variant
+      )
+    }));
+  };
+
   const addVariant = () => {
     setForm((current) => ({
       ...current,
@@ -317,6 +349,7 @@ export function AdminProductManager({
           colorNameEn: "",
           colorNameAr: "",
           colorHex: "#000000",
+          ...sizeFields(sizeOptions[0]),
           imageUrl: "",
           sku: "",
           stock: "0",
@@ -396,6 +429,9 @@ export function AdminProductManager({
           colorNameEn: variant.colorNameEn,
           colorNameAr: variant.colorNameAr,
           colorHex: variant.colorHex || null,
+          sizeKey: variant.sizeKey || null,
+          sizeNameEn: variant.sizeNameEn || null,
+          sizeNameAr: variant.sizeNameAr || null,
           imageUrl: variant.imageUrl || null,
           sku: variant.sku || null,
           stock: Number(variant.stock || 0),
@@ -653,8 +689,8 @@ export function AdminProductManager({
                   <p className="text-sm font-bold text-navy">Product setup</p>
                   <p className="mt-1 text-xs font-semibold text-neutral-500">
                     {form.variants.length
-                      ? `Stock is controlled by color variants (${variantStock} pcs total).`
-                      : "Use base stock, or add colors for color-wise stock."}
+                      ? `Stock is controlled by variant rows (${variantStock} pcs total).`
+                      : "Use base stock, or add color/size rows for variant stock."}
                   </p>
                 </div>
                 <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Draft"}</Badge>
@@ -666,7 +702,7 @@ export function AdminProductManager({
                 </Button>
                 <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addVariant}>
                   <Palette size={15} />
-                  Color
+                  Stock
                 </Button>
                 <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addSpecification}>
                   <PackageCheck size={15} />
@@ -712,6 +748,25 @@ export function AdminProductManager({
                   ))}
                 </select>
               </label>
+              <div className="rounded-md border border-neutral-200 bg-paper p-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-bold text-navy">Size options for {currentCategoryName}</p>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">Used by variant stock rows.</p>
+                  </div>
+                  <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? "Size required" : "One size"}</Badge>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {sizeOptions.map((size) => (
+                    <span
+                      key={size.key}
+                      className="inline-flex h-8 items-center rounded-md border border-neutral-200 bg-white px-3 text-xs font-bold text-navy"
+                    >
+                      {locale === "ar" ? size.nameAr : size.nameEn}
+                    </span>
+                  ))}
+                </div>
+              </div>
               <label className="grid gap-2 text-sm font-semibold text-navy">
                 Subcategory / collection key
                 <input
@@ -826,18 +881,18 @@ export function AdminProductManager({
               </details>
 
               <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-                <summary className="cursor-pointer text-sm font-bold text-navy">3. Color-wise variants and stock</summary>
+                <summary className="cursor-pointer text-sm font-bold text-navy">3. Color, size, and stock rows</summary>
               <div className="mt-4 grid gap-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-navy">Color options</h3>
+                    <h3 className="text-sm font-bold text-navy">Variant stock rows</h3>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Add each color with its own image, SKU, and stock quantity.
+                      Add each color and size combination with its own image, SKU, and stock quantity.
                     </p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
                     <Plus size={15} />
-                    Add color
+                    Add row
                   </Button>
                 </div>
                 {form.variants.length ? (
@@ -876,6 +931,37 @@ export function AdminProductManager({
                             aria-label="Color"
                           />
                         </label>
+                      </div>
+                      <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
+                        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                          Size preset
+                          <select
+                            value={sizeOptions.some((size) => size.key === variant.sizeKey) ? variant.sizeKey : customSizeValue}
+                            onChange={(event) => updateVariantSize(index, event.target.value)}
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                          >
+                            {sizeOptions.map((size) => (
+                              <option key={size.key} value={size.key}>
+                                {locale === "ar" ? size.nameAr : size.nameEn}
+                              </option>
+                            ))}
+                            <option value={customSizeValue}>Custom size</option>
+                          </select>
+                        </label>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <input
+                            value={variant.sizeNameEn}
+                            onChange={(event) => updateVariant(index, "sizeNameEn", event.target.value)}
+                            placeholder="Size EN, e.g. M"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={variant.sizeNameAr}
+                            onChange={(event) => updateVariant(index, "sizeNameAr", event.target.value)}
+                            placeholder="Size AR"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                        </div>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-[1fr_96px_96px_auto_auto]">
                         <input
@@ -922,7 +1008,7 @@ export function AdminProductManager({
                   ))
                 ) : (
                   <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
-                    Add colors when this product has stock per color. Customers will see the matching color image on the product page.
+                    Add rows when this product has color, size, or stock-specific options. Customers will see matching images and size choices on the product page.
                   </p>
                 )}
               </div>
@@ -1019,7 +1105,7 @@ export function AdminProductManager({
             <div className="rounded-md border border-neutral-200 bg-paper p-4">
               <p className="text-sm font-bold text-navy">Add product is now a dedicated page.</p>
               <p className="mt-2 text-sm leading-6 text-neutral-600">
-                Use the professional create workflow for images, color-wise variants, stock, pricing, and publishing.
+                Use the professional create workflow for images, category-wise sizes, color/size stock, pricing, and publishing.
               </p>
             </div>
             <Link

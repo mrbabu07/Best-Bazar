@@ -16,6 +16,11 @@ type ProductCardProps = {
 export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
   const colorLabel = locale === "ar" ? "الألوان" : "Colors";
   const hasSale = product.comparePrice && product.comparePrice > product.price;
+  const colorSwatches = product.variants.reduce<typeof product.variants>((items, variant) => {
+    const key = variant.colorName.en.trim().toLowerCase();
+
+    return items.some((item) => item.colorName.en.trim().toLowerCase() === key) ? items : [...items, variant];
+  }, []);
   const cartProduct = {
     id: product.id,
     slug: product.slug,
@@ -74,13 +79,13 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
           <div className="mt-3 flex min-h-8 items-center justify-between gap-2 sm:gap-3">
             <p className="text-xs font-bold text-neutral-500">{colorLabel}</p>
             <div className="flex flex-wrap justify-end gap-1.5">
-              {product.variants.slice(0, 5).map((variant) => (
+              {colorSwatches.slice(0, 5).map((variant) => (
                 <Link
                   key={variant.id}
-                  href={`/${locale}/shop?color=${encodeURIComponent(variant.name.en.toLowerCase())}`}
-                  title={`${getLocalized(variant.name, locale)} (${variant.stock})`}
+                  href={`/${locale}/shop?color=${encodeURIComponent(variant.colorName.en.toLowerCase())}`}
+                  title={`${getLocalized(variant.colorName, locale)} (${variant.stock})`}
                   className="grid h-5 w-5 place-items-center rounded-full border border-neutral-200 bg-white shadow-sm transition hover:scale-110 hover:border-gold-400 sm:h-6 sm:w-6"
-                  aria-label={getLocalized(variant.name, locale)}
+                  aria-label={getLocalized(variant.colorName, locale)}
                 >
                   <span
                     className="h-3.5 w-3.5 rounded-full border border-white sm:h-4 sm:w-4"
@@ -88,9 +93,9 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
                   />
                 </Link>
               ))}
-              {product.variants.length > 5 ? (
+              {colorSwatches.length > 5 ? (
                 <span className="grid h-5 min-w-5 place-items-center rounded-full bg-paper px-1 text-[9px] font-bold text-neutral-500 sm:h-6 sm:min-w-6 sm:px-1.5 sm:text-[10px]">
-                  +{product.variants.length - 5}
+                  +{colorSwatches.length - 5}
                 </span>
               ) : null}
             </div>

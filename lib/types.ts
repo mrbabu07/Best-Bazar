@@ -31,7 +31,10 @@ export type ProductSpecification = {
 export type ProductVariant = {
   id: string;
   name: LocalizedText;
+  colorName: LocalizedText;
   colorHex?: string;
+  sizeKey?: string;
+  sizeName?: LocalizedText;
   imageUrl?: string;
   sku?: string;
   stock: number;

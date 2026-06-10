@@ -153,6 +153,9 @@ model ProductVariant {
   colorNameEn String
   colorNameAr String
   colorHex    String?
+  sizeKey     String?
+  sizeNameEn  String?
+  sizeNameAr  String?
   imageUrl    String?
   sku         String?     @unique
   stock       Int         @default(0)

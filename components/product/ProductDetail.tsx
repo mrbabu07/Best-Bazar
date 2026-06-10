@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Minus, Plus, RefreshCcw, ShieldCheck, ShoppingBag, Star, Truck } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import type { Product } from "@/lib/types";
+import type { Product, ProductVariant } from "@/lib/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -47,6 +47,22 @@ const detailCopy = {
   }
 >;
 
+function variantColorKey(variant: ProductVariant) {
+  return variant.colorName.en.trim().toLowerCase();
+}
+
+function variantSizeKey(variant: ProductVariant) {
+  return variant.sizeKey ?? variant.sizeName?.en.trim().toLowerCase() ?? "";
+}
+
+function uniqueVariantsBy(variants: ProductVariant[], getKey: (variant: ProductVariant) => string) {
+  return variants.reduce<ProductVariant[]>((items, variant) => {
+    const key = getKey(variant);
+
+    return items.some((item) => getKey(item) === key) ? items : [...items, variant];
+  }, []);
+}
+
 export function ProductDetail({ product, locale, dictionary }: ProductDetailProps) {
   const labels = detailCopy[locale];
   const firstAvailableVariant = product.variants.find((variant) => variant.stock > 0) ?? product.variants[0];
@@ -60,6 +76,16 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const selectedVariant = product.variants.find((variant) => variant.id === selectedVariantId);
+  const hasSizedVariants = product.variants.some((variant) => variant.sizeName);
+  const colorOptions = uniqueVariantsBy(product.variants, variantColorKey);
+  const selectedColorKey = selectedVariant ? variantColorKey(selectedVariant) : "";
+  const selectedSizeKey = selectedVariant ? variantSizeKey(selectedVariant) : "";
+  const sizeOptions = hasSizedVariants
+    ? uniqueVariantsBy(
+        product.variants.filter((variant) => variantColorKey(variant) === selectedColorKey),
+        variantSizeKey
+      )
+    : [];
   const selectedVariantImage = selectedVariant?.imageUrl
     ? {
         url: selectedVariant.imageUrl,
@@ -93,6 +119,36 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
       setActiveImage(0);
     }
     setQuantity((value) => Math.max(1, Math.min(value, variant?.stock ?? product.stock)));
+  };
+
+  const selectColor = (variant: ProductVariant) => {
+    const colorKey = variantColorKey(variant);
+    const sameSizeVariant = product.variants.find(
+      (item) => variantColorKey(item) === colorKey && variantSizeKey(item) === selectedSizeKey && item.stock > 0
+    );
+    const nextVariant =
+      sameSizeVariant ??
+      product.variants.find((item) => variantColorKey(item) === colorKey && item.stock > 0) ??
+      product.variants.find((item) => variantColorKey(item) === colorKey);
+
+    if (nextVariant) {
+      selectVariant(nextVariant.id);
+    }
+  };
+
+  const selectSize = (variant: ProductVariant) => {
+    const sizeKey = variantSizeKey(variant);
+    const nextVariant =
+      product.variants.find(
+        (item) => variantColorKey(item) === selectedColorKey && variantSizeKey(item) === sizeKey && item.stock > 0
+      ) ??
+      product.variants.find(
+        (item) => variantColorKey(item) === selectedColorKey && variantSizeKey(item) === sizeKey
+      );
+
+    if (nextVariant) {
+      selectVariant(nextVariant.id);
+    }
   };
 
   return (
@@ -166,15 +222,18 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
               <p className="text-xs font-semibold text-neutral-500">{labels.stockForColor(availableStock)}</p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {product.variants.map((variant) => {
-                const selected = variant.id === selectedVariantId;
+              {colorOptions.map((variant) => {
+                const selected = variantColorKey(variant) === selectedColorKey;
+                const colorStock = product.variants
+                  .filter((item) => variantColorKey(item) === variantColorKey(variant))
+                  .reduce((total, item) => total + item.stock, 0);
 
                 return (
                   <button
                     key={variant.id}
                     type="button"
-                    onClick={() => selectVariant(variant.id)}
-                    disabled={variant.stock <= 0}
+                    onClick={() => selectColor(variant)}
+                    disabled={colorStock <= 0}
                     aria-pressed={selected}
                     className={`inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
                       selected ? "border-gold-500 bg-gold-50 text-navy" : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
@@ -184,11 +243,38 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                       className="h-4 w-4 rounded-full border border-neutral-200"
                       style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
                     />
-                    {getLocalized(variant.name, locale)}
+                    {getLocalized(variant.colorName, locale)}
                   </button>
                 );
               })}
             </div>
+            {hasSizedVariants ? (
+              <div className="mt-4">
+                <p className="text-sm font-bold text-navy">Size</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {sizeOptions.map((variant) => {
+                    const selected = variantSizeKey(variant) === selectedSizeKey;
+
+                    return (
+                      <button
+                        key={`${variant.id}-${variantSizeKey(variant)}`}
+                        type="button"
+                        onClick={() => selectSize(variant)}
+                        disabled={variant.stock <= 0}
+                        aria-pressed={selected}
+                        className={`inline-flex h-10 items-center rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                          selected
+                            ? "border-gold-500 bg-gold-50 text-navy"
+                            : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
+                        }`}
+                      >
+                        {getLocalized(variant.sizeName ?? variant.name, locale)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

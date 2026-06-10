@@ -60,11 +60,18 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
     : [{ url: fallbackProductImage, alt: product.nameEn }];
   const variants = product.variants.map((variant) => {
     const imageUrl = safeRemoteImage(variant.imageUrl, "");
+    const sizeNameEn = variant.sizeNameEn?.trim();
+    const sizeNameAr = variant.sizeNameAr?.trim();
+    const nameEn = [variant.colorNameEn, sizeNameEn].filter(Boolean).join(" / ");
+    const nameAr = [variant.colorNameAr, sizeNameAr].filter(Boolean).join(" / ");
 
     return {
       id: variant.id,
-      name: { en: variant.colorNameEn, ar: variant.colorNameAr },
+      name: { en: nameEn, ar: nameAr },
+      colorName: { en: variant.colorNameEn, ar: variant.colorNameAr },
       colorHex: variant.colorHex ?? undefined,
+      sizeKey: variant.sizeKey ?? undefined,
+      sizeName: sizeNameEn || sizeNameAr ? { en: sizeNameEn ?? sizeNameAr ?? "", ar: sizeNameAr ?? sizeNameEn ?? "" } : undefined,
       imageUrl: imageUrl || undefined,
       sku: variant.sku ?? undefined,
       stock: variant.stock,

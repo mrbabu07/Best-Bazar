@@ -20,6 +20,7 @@ import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField"
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
 import { formatCurrency } from "@/utils/currency";
 
 type ProductImageForm = {
@@ -32,6 +33,9 @@ type ProductVariantForm = {
   colorNameEn: string;
   colorNameAr: string;
   colorHex: string;
+  sizeKey: string;
+  sizeNameEn: string;
+  sizeNameAr: string;
   imageUrl: string;
   sku: string;
   stock: string;
@@ -70,6 +74,7 @@ type ProductForm = {
 
 type ProductCategory = {
   id: string;
+  slug: string;
   nameEn: string;
   nameAr: string;
 };
@@ -111,6 +116,16 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+const customSizeValue = "__custom__";
+
+function sizeFields(size?: ProductSizeOption) {
+  return {
+    sizeKey: size?.key ?? "",
+    sizeNameEn: size?.nameEn ?? "",
+    sizeNameAr: size?.nameAr ?? ""
+  };
+}
+
 export function AdminProductCreateForm({ locale, categories, productsHref }: AdminProductCreateFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<ProductForm>(() => createEmptyForm(categories[0]?.id ?? ""));
@@ -122,6 +137,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       ? currentCategory.nameAr
       : currentCategory.nameEn
     : "No category";
+  const sizeOptions = getCategorySizeOptions(currentCategory);
+  const sizeRequired = !isSingleDefaultSize(sizeOptions);
   const activeVariants = form.variants.filter((variant) => variant.isActive && variant.colorNameEn.trim());
   const activeVariantCount = activeVariants.length;
   const variantStock = activeVariants.reduce((total, variant) => total + Number(variant.stock || 0), 0);
@@ -135,7 +152,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const isVariantSetupReady = form.variants.every(
     (variant) =>
       (!variant.colorNameEn.trim() && !variant.colorNameAr.trim()) ||
-      (variant.colorNameEn.trim() && variant.colorNameAr.trim())
+      (variant.colorNameEn.trim() &&
+        variant.colorNameAr.trim() &&
+        (!sizeRequired || variant.sizeNameEn.trim() || variant.sizeNameAr.trim()))
   );
   const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && isVariantSetupReady && form.isActive;
   const readiness: { label: string; value: string; ready: boolean; icon: LucideIcon }[] = [
@@ -158,8 +177,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       icon: ImagePlus
     },
     {
-      label: "Colors",
-      value: activeVariantCount ? `${activeVariantCount} color option${activeVariantCount > 1 ? "s" : ""}` : "Optional variants",
+      label: "Variants",
+      value: activeVariantCount ? `${activeVariantCount} stock row${activeVariantCount > 1 ? "s" : ""}` : "Optional variants",
       ready: isVariantSetupReady,
       icon: Palette
     }
@@ -216,6 +235,21 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     }));
   };
 
+  const updateVariantSize = (index: number, value: string) => {
+    const size = sizeOptions.find((option) => option.key === value);
+
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.map((variant, variantIndex) =>
+        variantIndex === index
+          ? value === customSizeValue
+            ? { ...variant, sizeKey: "", sizeNameEn: "", sizeNameAr: "" }
+            : { ...variant, ...sizeFields(size) }
+          : variant
+      )
+    }));
+  };
+
   const addVariant = () => {
     setForm((current) => ({
       ...current,
@@ -225,6 +259,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           colorNameEn: "",
           colorNameAr: "",
           colorHex: "#000000",
+          ...sizeFields(sizeOptions[0]),
           imageUrl: "",
           sku: "",
           stock: "0",
@@ -277,7 +312,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     }
 
     if (!isVariantSetupReady) {
-      toast.error("Complete both English and Arabic color names, or remove the empty color row.");
+      toast.error("Complete color and size fields, or remove the empty stock row.");
       return;
     }
 
@@ -315,6 +350,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           colorNameEn: variant.colorNameEn,
           colorNameAr: variant.colorNameAr,
           colorHex: variant.colorHex || null,
+          sizeKey: variant.sizeKey || null,
+          sizeNameEn: variant.sizeNameEn || null,
+          sizeNameAr: variant.sizeNameAr || null,
           imageUrl: variant.imageUrl || null,
           sku: variant.sku || null,
           stock: Number(variant.stock || 0),
@@ -437,6 +475,27 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 ))}
               </select>
             </label>
+            <div className="rounded-md border border-neutral-200 bg-paper p-3 text-sm sm:col-span-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-bold text-navy">Size options for {currentCategoryName}</p>
+                  <p className="mt-1 text-xs font-semibold text-neutral-500">
+                    These presets update when the category changes. Custom size is also available in each stock row.
+                  </p>
+                </div>
+                <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? "Size required" : "One size"}</Badge>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {sizeOptions.map((size) => (
+                  <span
+                    key={size.key}
+                    className="inline-flex h-8 items-center rounded-md border border-neutral-200 bg-white px-3 text-xs font-bold text-navy"
+                  >
+                    {locale === "ar" ? size.nameAr : size.nameEn}
+                  </span>
+                ))}
+              </div>
+            </div>
             <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
               Subcategory / collection key
               <input
@@ -585,12 +644,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 4</p>
-              <h2 className="mt-1 text-xl font-bold text-navy">Color-wise variants</h2>
-              <p className="mt-1 text-sm text-neutral-600">Use this when each color needs its own image, SKU, and stock.</p>
+              <h2 className="mt-1 text-xl font-bold text-navy">Color and size stock rows</h2>
+              <p className="mt-1 text-sm text-neutral-600">Each row can control one color, size, image, SKU, and stock quantity.</p>
             </div>
             <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
               <Plus size={15} />
-              Add color
+              Add stock row
             </Button>
           </div>
 
@@ -629,6 +688,41 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                         onChange={(event) => updateVariant(index, "colorHex", event.target.value)}
                         aria-label="Color"
                         className="h-7 w-10 cursor-pointer bg-transparent"
+                      />
+                    </label>
+                  </div>
+                  <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:grid-cols-[180px_1fr_1fr]">
+                    <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                      Size preset
+                      <select
+                        value={sizeOptions.some((size) => size.key === variant.sizeKey) ? variant.sizeKey : customSizeValue}
+                        onChange={(event) => updateVariantSize(index, event.target.value)}
+                        className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                      >
+                        {sizeOptions.map((size) => (
+                          <option key={size.key} value={size.key}>
+                            {locale === "ar" ? size.nameAr : size.nameEn}
+                          </option>
+                        ))}
+                        <option value={customSizeValue}>Custom size</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                      Size EN
+                      <input
+                        value={variant.sizeNameEn}
+                        onChange={(event) => updateVariant(index, "sizeNameEn", event.target.value)}
+                        placeholder="M, EU 42, 100 ml"
+                        className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                      Size AR
+                      <input
+                        value={variant.sizeNameAr}
+                        onChange={(event) => updateVariant(index, "sizeNameAr", event.target.value)}
+                        placeholder="Arabic size"
+                        className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
                       />
                     </label>
                   </div>
@@ -677,7 +771,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               ))
             ) : (
               <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-4 text-sm font-semibold text-neutral-500">
-                No color variants yet. Add color rows only when the product has color-wise stock.
+                No variant rows yet. Add rows when the product has color, size, or stock-specific options.
               </p>
             )}
           </div>
@@ -804,7 +898,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </Button>
           <Button type="button" variant="secondary" size="sm" className="px-2" onClick={addVariant}>
             <Palette size={15} />
-            Color
+            Stock
           </Button>
           <Button type="button" variant="secondary" size="sm" className="px-2" onClick={addSpecification}>
             <PackageCheck size={15} />

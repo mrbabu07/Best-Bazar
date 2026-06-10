@@ -25,6 +25,7 @@ export default async function AdminNewProductPage({ params }: { params: { locale
   });
   const categoryRows = categories.map((category) => ({
     id: category.id,
+    slug: category.slug,
     nameEn: category.nameEn,
     nameAr: category.nameAr
   }));
@@ -35,7 +36,7 @@ export default async function AdminNewProductPage({ params }: { params: { locale
       <AdminPageHeader
         eyebrow={dictionary.admin.products}
         title="Add ecommerce product"
-        subtitle="Build one complete product with gallery images, color-wise variants, stock, pricing, and storefront controls."
+        subtitle="Build one complete product with gallery images, category-wise sizes, color/size stock rows, pricing, and storefront controls."
         backLabel="Back"
         backHref={productsHref}
         action={

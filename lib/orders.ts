@@ -35,6 +35,14 @@ function mergeOrderItems(items: OrderCreateInput["items"]) {
   return Array.from(quantities.values());
 }
 
+function variantNameEn(variant: { colorNameEn: string; sizeNameEn?: string | null }) {
+  return [variant.colorNameEn, variant.sizeNameEn].filter(Boolean).join(" / ");
+}
+
+function variantNameAr(variant: { colorNameAr: string; sizeNameAr?: string | null; sizeNameEn?: string | null }) {
+  return [variant.colorNameAr, variant.sizeNameAr ?? variant.sizeNameEn].filter(Boolean).join(" / ");
+}
+
 export async function createStoreOrder(data: OrderCreateInput, userId?: string) {
   const orderItems = mergeOrderItems(data.items);
   const productIds = orderItems.map((item) => item.productId);
@@ -62,13 +70,13 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
       : undefined;
 
     if (product.variants.length && !variant) {
-      throw new Error(`Choose an available color for ${product.nameEn}.`);
+      throw new Error(`Choose an available color and size for ${product.nameEn}.`);
     }
 
     const availableStock = variant?.stock ?? product.stock;
 
     if (availableStock < item.quantity) {
-      const label = variant ? `${product.nameEn} (${variant.colorNameEn})` : product.nameEn;
+      const label = variant ? `${product.nameEn} (${variantNameEn(variant)})` : product.nameEn;
       throw new Error(`${label} does not have enough stock.`);
     }
 
@@ -143,8 +151,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
             variantId: variant?.id,
             nameEn: product.nameEn,
             nameAr: product.nameAr,
-            variantNameEn: variant?.colorNameEn,
-            variantNameAr: variant?.colorNameAr,
+            variantNameEn: variant ? variantNameEn(variant) : undefined,
+            variantNameAr: variant ? variantNameAr(variant) : undefined,
             variantColorHex: variant?.colorHex,
             variantSku: variant?.sku,
             price: product.price,
@@ -177,7 +185,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
           });
 
       if (stockReservation.count === 0) {
-        const label = variant ? `${product.nameEn} (${variant.colorNameEn})` : product.nameEn;
+          const label = variant ? `${product.nameEn} (${variantNameEn(variant)})` : product.nameEn;
         throw new Error(`${label} does not have enough stock.`);
       }
 

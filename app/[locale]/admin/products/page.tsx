@@ -36,6 +36,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
   ]);
   const categoryRows = categories.map((category) => ({
     id: category.id,
+    slug: category.slug,
     nameEn: category.nameEn,
     nameAr: category.nameAr
   }));
@@ -67,6 +68,9 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       colorNameEn: variant.colorNameEn,
       colorNameAr: variant.colorNameAr,
       colorHex: variant.colorHex ?? "",
+      sizeKey: variant.sizeKey ?? "",
+      sizeNameEn: variant.sizeNameEn ?? "",
+      sizeNameAr: variant.sizeNameAr ?? "",
       imageUrl: variant.imageUrl ?? "",
       sku: variant.sku ?? "",
       stock: String(variant.stock),
@@ -87,7 +91,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       <AdminPageHeader
         eyebrow={dictionary.admin.products}
         title={dictionary.admin.products}
-        subtitle="Create ecommerce products with gallery images, color-wise stock, pricing, and storefront publishing."
+        subtitle="Create ecommerce products with gallery images, category-wise sizes, color/size stock, pricing, and storefront publishing."
         action={
           <a
             href={`/${locale}/admin/products/new`}
