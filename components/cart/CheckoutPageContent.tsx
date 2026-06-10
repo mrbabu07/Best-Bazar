@@ -123,6 +123,9 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
   const selectedEmirate = selectedShippingRate?.emirate ?? emirate;
   const shipping = getShippingCost(shippingSettings, selectedEmirate, subtotal);
   const total = Math.max(subtotal + shipping - discount, 0);
+  const shippingSummary = selectedShippingRate?.deliveryDays
+    ? `${labels.delivery}: ${selectedShippingRate.deliveryDays}`
+    : labels.delivery;
 
   useEffect(() => {
     setAppliedCoupon("");
@@ -280,7 +283,6 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
               </div>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <input type="hidden" name="emirate" value={selectedEmirate} readOnly />
               {fields.map((field) => (
                 <label key={field.name} className="grid gap-2 text-sm font-semibold text-navy">
                   {field.label}
@@ -295,37 +297,23 @@ export function CheckoutPageContent({ locale, dictionary, stripeEnabled }: Check
                 </label>
               ))}
               <div className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
-                <p>{labels.shippingArea}</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {shippingOptions.map((rate) => {
-                    const selected = rate.emirate === selectedEmirate;
-                    const displayCost =
-                      subtotal > 0 && subtotal < shippingSettings.freeShippingThreshold ? rate.cost : 0;
-
-                    return (
-                      <button
-                        key={rate.emirate}
-                        type="button"
-                        onClick={() => setEmirate(rate.emirate)}
-                        aria-pressed={selected}
-                        className={`grid min-h-20 gap-1 rounded-md border p-3 transition ${
-                          selected
-                            ? "border-gold-400 bg-gold-50 text-navy"
-                            : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
-                        } ${locale === "ar" ? "text-right" : "text-left"}`}
-                      >
-                        <span className="flex items-center justify-between gap-3 text-sm font-bold">
-                          <span>{rate.emirate}</span>
-                          <span>{formatCurrency(displayCost, currency, locale, currencyRates)}</span>
-                        </span>
-                        {rate.deliveryDays ? (
-                          <span className="text-xs font-semibold text-neutral-500">
-                            {labels.delivery}: {rate.deliveryDays}
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
+                {labels.shippingArea}
+                <select
+                  name="emirate"
+                  value={selectedEmirate}
+                  onChange={(event) => setEmirate(event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+                >
+                  {shippingOptions.map((rate) => (
+                    <option key={rate.emirate} value={rate.emirate}>
+                      {rate.emirate}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex flex-col gap-1 rounded-md border border-neutral-200 bg-gold-50 px-3 py-2 text-xs font-semibold text-navy sm:flex-row sm:items-center sm:justify-between">
+                  <span>{shippingSummary}</span>
+                  <span>{formatCurrency(shipping, currency, locale, currencyRates)}</span>
                 </div>
               </div>
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
