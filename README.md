@@ -2,7 +2,8 @@
 
 Best Bazar is a Dubai-focused bilingual ecommerce application built with Next.js 14, TypeScript, Tailwind CSS, Prisma, Neon PostgreSQL, NextAuth, Cloudinary uploads, Stripe checkout support, optional SMTP email, and Zustand cart/preferences state.
 
-For a full AI/developer handoff guide, see [AI_PROJECT_DOCUMENTATION.md](./AI_PROJECT_DOCUMENTATION.md).
+For a step-by-step developer walkthrough, see [DEVELOPER_STEP_BY_STEP.md](./DEVELOPER_STEP_BY_STEP.md).
+For the full AI/developer handoff reference, see [AI_PROJECT_DOCUMENTATION.md](./AI_PROJECT_DOCUMENTATION.md).
 
 ## Current Features
 
@@ -40,7 +41,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open `http://localhost:3000/en`.
+Open `http://localhost:3002/en`.
 
 ## Useful Commands
 

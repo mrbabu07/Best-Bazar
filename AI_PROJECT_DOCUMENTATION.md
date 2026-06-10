@@ -4,6 +4,8 @@ Last updated: 2026-06-10
 
 This document is written for future AI agents and developers. It explains what the project is, how the pieces fit together, and where to change things without having to rediscover the whole repository.
 
+For an ordered first-day walkthrough, read `DEVELOPER_STEP_BY_STEP.md` first, then use this file as the deeper reference.
+
 ## 1. Project Summary
 
 Best Bazar is a Dubai-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, Dubai delivery controls, multiple payment methods, order tracking, invoices, notifications, and SEO.
