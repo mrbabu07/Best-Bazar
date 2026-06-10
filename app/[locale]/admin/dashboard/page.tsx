@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Bell,
   Boxes,
+  Download,
   DollarSign,
   Home,
   ImagePlus,
@@ -109,6 +110,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
   const quickActions = [
     { label: "View storefront", href: `/${locale}`, icon: Home, tone: "primary" },
     { label: "Add product", href: `/${locale}/admin/products/new`, icon: Plus, tone: "secondary" },
+    { label: "Export sales", href: "/api/admin/reports/sales", icon: Download, tone: "secondary" },
     { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary" },
     { label: "Shipping settings", href: `/${locale}/admin/settings`, icon: Settings, tone: "secondary" }
   ];

@@ -56,6 +56,11 @@ type ProductForm = {
   nameAr: string;
   descriptionEn: string;
   descriptionAr: string;
+  metaTitleEn: string;
+  metaTitleAr: string;
+  metaDescriptionEn: string;
+  metaDescriptionAr: string;
+  ogImage: string;
   slug: string;
   categoryId: string;
   subcategoryId: string;
@@ -91,6 +96,11 @@ function createEmptyForm(categoryId = ""): ProductForm {
     nameAr: "",
     descriptionEn: "",
     descriptionAr: "",
+    metaTitleEn: "",
+    metaTitleAr: "",
+    metaDescriptionEn: "",
+    metaDescriptionAr: "",
+    ogImage: "",
     slug: "",
     categoryId,
     subcategoryId: "",
@@ -323,6 +333,11 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       nameAr: form.nameAr,
       descriptionEn: form.descriptionEn,
       descriptionAr: form.descriptionAr,
+      metaTitleEn: form.metaTitleEn || null,
+      metaTitleAr: form.metaTitleAr || null,
+      metaDescriptionEn: form.metaDescriptionEn || null,
+      metaDescriptionAr: form.metaDescriptionAr || null,
+      ogImage: form.ogImage || null,
       slug: form.slug,
       categoryId: form.categoryId,
       subcategoryId: form.subcategoryId || null,
@@ -505,6 +520,65 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">SEO</p>
+            <h2 className="mt-1 text-xl font-bold text-navy">Search and sharing metadata</h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              Optional product-specific title, description, and image for Google and social sharing.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              Meta title EN
+              <input
+                value={form.metaTitleEn}
+                onChange={(event) => updateForm("metaTitleEn", event.target.value)}
+                placeholder={form.nameEn || "SEO title"}
+                className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              Meta title AR
+              <input
+                value={form.metaTitleAr}
+                onChange={(event) => updateForm("metaTitleAr", event.target.value)}
+                placeholder={form.nameAr || "Arabic SEO title"}
+                className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+              Meta description EN
+              <textarea
+                rows={3}
+                value={form.metaDescriptionEn}
+                onChange={(event) => updateForm("metaDescriptionEn", event.target.value)}
+                placeholder="Short search result description."
+                className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+              Meta description AR
+              <textarea
+                rows={3}
+                value={form.metaDescriptionAr}
+                onChange={(event) => updateForm("metaDescriptionAr", event.target.value)}
+                placeholder="Arabic search result description."
+                className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+              />
+            </label>
+            <div className="sm:col-span-2">
+              <AdminImageUploadField
+                label="Product social image"
+                value={form.ogImage}
+                onChange={(value) => updateForm("ogImage", value)}
+                previewAlt={form.metaTitleEn || form.nameEn || "Product social image"}
+                aspectClassName="aspect-[16/9]"
+              />
+            </div>
           </div>
         </section>
 

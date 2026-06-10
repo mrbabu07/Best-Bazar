@@ -71,6 +71,11 @@ export type AdminProductRow = {
   nameAr: string;
   descriptionEn: string;
   descriptionAr: string;
+  metaTitleEn: string;
+  metaTitleAr: string;
+  metaDescriptionEn: string;
+  metaDescriptionAr: string;
+  ogImage: string;
   slug: string;
   categoryId: string;
   categoryNameEn: string;
@@ -94,6 +99,11 @@ type ProductForm = {
   nameAr: string;
   descriptionEn: string;
   descriptionAr: string;
+  metaTitleEn: string;
+  metaTitleAr: string;
+  metaDescriptionEn: string;
+  metaDescriptionAr: string;
+  ogImage: string;
   slug: string;
   categoryId: string;
   subcategoryId: string;
@@ -125,6 +135,11 @@ function createEmptyForm(categoryId = ""): ProductForm {
     nameAr: "",
     descriptionEn: "",
     descriptionAr: "",
+    metaTitleEn: "",
+    metaTitleAr: "",
+    metaDescriptionEn: "",
+    metaDescriptionAr: "",
+    ogImage: "",
     slug: "",
     categoryId,
     subcategoryId: "",
@@ -148,6 +163,11 @@ function fromProduct(product: AdminProductRow): ProductForm {
     nameAr: product.nameAr,
     descriptionEn: product.descriptionEn,
     descriptionAr: product.descriptionAr,
+    metaTitleEn: product.metaTitleEn,
+    metaTitleAr: product.metaTitleAr,
+    metaDescriptionEn: product.metaDescriptionEn,
+    metaDescriptionAr: product.metaDescriptionAr,
+    ogImage: product.ogImage,
     slug: product.slug,
     categoryId: product.categoryId,
     subcategoryId: product.subcategoryId,
@@ -402,6 +422,11 @@ export function AdminProductManager({
       nameAr: form.nameAr,
       descriptionEn: form.descriptionEn,
       descriptionAr: form.descriptionAr,
+      metaTitleEn: form.metaTitleEn || null,
+      metaTitleAr: form.metaTitleAr || null,
+      metaDescriptionEn: form.metaDescriptionEn || null,
+      metaDescriptionAr: form.metaDescriptionAr || null,
+      ogImage: form.ogImage || null,
       slug: form.slug,
       categoryId: form.categoryId,
       subcategoryId: form.subcategoryId || null,
@@ -1066,8 +1091,61 @@ export function AdminProductManager({
               </div>
               </details>
 
+              <details className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">5. SEO and product schema</summary>
+                <div className="mt-4 grid gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="grid gap-2 text-sm font-semibold text-navy">
+                      Meta title EN
+                      <input
+                        value={form.metaTitleEn}
+                        onChange={(event) => updateForm("metaTitleEn", event.target.value)}
+                        placeholder={form.nameEn || "SEO title"}
+                        className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm font-semibold text-navy">
+                      Meta title AR
+                      <input
+                        value={form.metaTitleAr}
+                        onChange={(event) => updateForm("metaTitleAr", event.target.value)}
+                        placeholder={form.nameAr || "Arabic SEO title"}
+                        className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                    </label>
+                  </div>
+                  <label className="grid gap-2 text-sm font-semibold text-navy">
+                    Meta description EN
+                    <textarea
+                      rows={3}
+                      value={form.metaDescriptionEn}
+                      onChange={(event) => updateForm("metaDescriptionEn", event.target.value)}
+                      placeholder="Short search result description."
+                      className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-semibold text-navy">
+                    Meta description AR
+                    <textarea
+                      rows={3}
+                      value={form.metaDescriptionAr}
+                      onChange={(event) => updateForm("metaDescriptionAr", event.target.value)}
+                      placeholder="Arabic search result description."
+                      className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+                    />
+                  </label>
+                  <AdminImageUploadField
+                    label="Product social image"
+                    value={form.ogImage}
+                    onChange={(value) => updateForm("ogImage", value)}
+                    previewAlt={form.metaTitleEn || form.nameEn || "Product social image"}
+                    aspectClassName="aspect-[16/9]"
+                  />
+                </div>
+              </details>
+
               <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-                <summary className="cursor-pointer text-sm font-bold text-navy">5. Storefront publishing</summary>
+                <summary className="cursor-pointer text-sm font-bold text-navy">6. Storefront publishing</summary>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-navy">
                 <label className="flex items-center gap-2">
                   <input

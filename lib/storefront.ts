@@ -86,6 +86,20 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
     slug: product.slug,
     name: { en: product.nameEn, ar: product.nameAr },
     description: { en: product.descriptionEn, ar: product.descriptionAr },
+    seo: {
+      title:
+        product.metaTitleEn || product.metaTitleAr
+          ? { en: product.metaTitleEn ?? product.nameEn, ar: product.metaTitleAr ?? product.metaTitleEn ?? product.nameAr }
+          : undefined,
+      description:
+        product.metaDescriptionEn || product.metaDescriptionAr
+          ? {
+              en: product.metaDescriptionEn ?? product.descriptionEn,
+              ar: product.metaDescriptionAr ?? product.metaDescriptionEn ?? product.descriptionAr
+            }
+          : undefined,
+      ogImage: safeRemoteImage(product.ogImage, "") || undefined
+    },
     category: product.category.slug,
     subcategory: product.subcategoryId ?? undefined,
     price: Number(product.price),

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Prisma } from "@prisma/client";
-import { Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
@@ -56,6 +56,20 @@ function buildOrderHref(locale: string, searchParams: AdminOrdersPageProps["sear
 
   params.set("selected", selectedId);
   return `/${locale}/admin/orders?${params.toString()}`;
+}
+
+function buildSalesExportHref(searchParams: AdminOrdersPageProps["searchParams"]) {
+  const params = new URLSearchParams();
+
+  for (const key of ["search", "status", "from", "to"]) {
+    const value = readParam(searchParams, key);
+
+    if (value) {
+      params.set(key, value);
+    }
+  }
+
+  return `/api/admin/reports/sales${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
 function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"]) {
@@ -145,6 +159,15 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         eyebrow={dictionary.admin.orders}
         title={dictionary.admin.orders}
         subtitle="Search, filter, review order details, update status, and print invoices."
+        action={
+          <a
+            href={buildSalesExportHref(searchParams)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-gold-200 bg-white px-5 text-sm font-bold text-navy hover:bg-gold-50"
+          >
+            <Download size={17} />
+            Export CSV
+          </a>
+        }
       />
 
       <form

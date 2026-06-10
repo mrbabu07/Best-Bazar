@@ -54,6 +54,11 @@ export type Product = {
   slug: string;
   name: LocalizedText;
   description: LocalizedText;
+  seo?: {
+    title?: LocalizedText;
+    description?: LocalizedText;
+    ogImage?: string;
+  };
   category: string;
   subcategory?: string;
   price: number;

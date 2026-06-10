@@ -20,10 +20,21 @@ type ProductPageProps = {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const product = await getProductBySlugOrId(params.id);
   const locale = params.locale === "ar" ? "ar" : "en";
+  const title = product?.seo?.title?.[locale] || product?.name[locale] || "Product";
+  const description = product?.seo?.description?.[locale] || product?.description[locale];
+  const ogImage = product?.seo?.ogImage || product?.images[0]?.url;
 
   return {
-    title: product ? product.name[locale] : "Product",
-    description: product ? product.description[locale] : undefined
+    title,
+    description,
+    openGraph: product
+      ? {
+          title,
+          description,
+          type: "website",
+          images: ogImage ? [{ url: ogImage, alt: product.name[locale] }] : undefined
+        }
+      : undefined
   };
 }
 
@@ -45,9 +56,44 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getRelatedProducts(product.category, product.id, 4),
     getProductReviews(product.id)
   ]);
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "").replace(/\/$/, "");
+  const productUrl = siteUrl ? `${siteUrl}/${locale}/product/${product.slug}` : undefined;
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: getLocalized(product.name, locale),
+    description: product.seo?.description?.[locale] || getLocalized(product.description, locale),
+    sku: product.sku,
+    brand: {
+      "@type": "Brand",
+      name: product.brand
+    },
+    image: product.images.map((image) => image.url),
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "AED",
+      price: product.price.toFixed(2),
+      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: productUrl
+    },
+    ...(product.reviewCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.rating.toFixed(1),
+            reviewCount: product.reviewCount
+          }
+        }
+      : {})
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       <BackButton
         label={locale === "ar" ? "رجوع" : "Back"}
         fallbackHref={`/${locale}/shop`}

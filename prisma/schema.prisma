@@ -117,6 +117,11 @@ model Product {
   nameAr         String
   descriptionEn  String                 @db.Text
   descriptionAr  String                 @db.Text
+  metaTitleEn    String?
+  metaTitleAr    String?
+  metaDescriptionEn String?             @db.Text
+  metaDescriptionAr String?             @db.Text
+  ogImage        String?
   slug           String                 @unique
   categoryId     String
   subcategoryId  String?
