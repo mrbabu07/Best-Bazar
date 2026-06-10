@@ -50,7 +50,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       ? [
           {
             title: locale === "ar" ? "إعلان المتجر" : "Store announcement",
-            detail: announcement
+            detail: announcement,
+            href: `/${locale}/shop`
           }
         ]
       : []),
@@ -60,17 +61,20 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         ? `${dubaiRate.emirate}: ${dubaiRate.deliveryDays} days`
         : locale === "ar"
           ? "توصيل داخل الإمارات"
-          : "UAE delivery available"
+          : "UAE delivery available",
+      href: `/${locale}/checkout`
     },
     {
       title: locale === "ar" ? "توصيل مجاني" : "Free shipping",
-      detail: `${locale === "ar" ? "فوق" : "Above"} AED ${freeShippingThreshold}`
+      detail: `${locale === "ar" ? "فوق" : "Above"} AED ${freeShippingThreshold}`,
+      href: `/${locale}/checkout`
     },
     ...(cartCount > 0
       ? [
           {
             title: locale === "ar" ? "السلة" : "Cart reminder",
-            detail: `${cartCount} ${locale === "ar" ? "منتج في السلة" : "item ready in cart"}`
+            detail: `${cartCount} ${locale === "ar" ? "منتج في السلة" : "item ready in cart"}`,
+            href: `/${locale}/cart`
           }
         ]
       : [])
@@ -284,7 +288,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 </div>
                 <div className="mt-2 grid gap-2">
                   {storefrontNotifications.map((item) => (
-                    <div key={`${item.title}-${item.detail}`} className="rounded-md bg-paper p-3">
+                    <Link
+                      key={`${item.title}-${item.detail}`}
+                      href={item.href}
+                      onClick={() => setNotificationsOpen(false)}
+                      className="rounded-md bg-paper p-3 transition hover:bg-gold-50"
+                    >
                       <div className="flex items-start gap-2">
                         <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
                         <div className="min-w-0">
@@ -292,7 +301,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                           <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
