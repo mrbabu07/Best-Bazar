@@ -1,6 +1,7 @@
 import { OrderStatus, PaymentStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderMessagingNotifications } from "@/lib/notifications";
 import { updateOrderStatus } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
@@ -48,7 +49,10 @@ export async function POST(request: Request) {
         orderStatus: OrderStatus.CONFIRMED,
         paymentStatus: PaymentStatus.PAID
       });
-      await sendOrderConfirmationEmail(order);
+      await Promise.allSettled([
+        sendOrderConfirmationEmail(order),
+        sendOrderMessagingNotifications(order, "created")
+      ]);
     }
   }
 

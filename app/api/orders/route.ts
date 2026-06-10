@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
 import { getOptionalServerSession } from "@/lib/auth-session";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderMessagingNotifications } from "@/lib/notifications";
 import { prisma } from "@/lib/prisma";
 import { createStoreOrder } from "@/lib/orders";
 import { orderCreateSchema } from "@/lib/validations/store";
@@ -33,7 +34,10 @@ export async function POST(request: Request) {
     const order = await createStoreOrder(data, session?.user.id);
 
     if (data.paymentMethod !== "STRIPE") {
-      await sendOrderConfirmationEmail(order);
+      await Promise.allSettled([
+        sendOrderConfirmationEmail(order),
+        sendOrderMessagingNotifications(order, "created")
+      ]);
     }
 
     return NextResponse.json(JSON.parse(JSON.stringify(order)), { status: 201 });

@@ -2,6 +2,8 @@ import { OrderStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { ApiError, handleApiError, ok } from "@/lib/api/admin";
 import { authOptions } from "@/lib/auth";
+import { sendOrderStatusEmail } from "@/lib/email";
+import { sendOrderMessagingNotifications } from "@/lib/notifications";
 import { CUSTOMER_CANCELLABLE_ORDER_STATUSES, updateOrderStatus } from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,10 @@ export async function POST(_request: Request, { params }: RouteContext) {
       allowedCurrentStatuses: CUSTOMER_CANCELLABLE_ORDER_STATUSES,
       internalNotes: "Customer cancelled this order from their account."
     });
+    await Promise.allSettled([
+      sendOrderStatusEmail(order),
+      sendOrderMessagingNotifications(order, "status")
+    ]);
 
     return ok(order);
   } catch (error) {

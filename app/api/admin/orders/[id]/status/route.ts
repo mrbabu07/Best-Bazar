@@ -1,4 +1,6 @@
 import { handleApiError, ok, requireAdmin } from "@/lib/api/admin";
+import { sendOrderStatusEmail } from "@/lib/email";
+import { sendOrderMessagingNotifications } from "@/lib/notifications";
 import { updateOrderStatus } from "@/lib/order-status";
 import { orderStatusSchema } from "@/lib/validations/admin";
 
@@ -17,6 +19,10 @@ export async function PUT(request: Request, { params }: RouteContext) {
       orderStatus: data.orderStatus,
       internalNotes: data.internalNotes
     });
+    await Promise.allSettled([
+      sendOrderStatusEmail(order),
+      sendOrderMessagingNotifications(order, "status")
+    ]);
 
     return ok(order);
   } catch (error) {
