@@ -28,6 +28,7 @@ export function BackButton({ label, fallbackHref = "/", className }: BackButtonP
     <button
       type="button"
       onClick={goBack}
+      aria-label={resolvedLabel}
       className={cn(
         "inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 bg-white px-3 text-sm font-bold text-navy transition hover:bg-gold-50",
         className
