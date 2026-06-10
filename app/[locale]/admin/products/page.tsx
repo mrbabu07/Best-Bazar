@@ -90,7 +90,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
         subtitle="Create ecommerce products with gallery images, color-wise stock, pricing, and storefront publishing."
         action={
           <a
-            href="#product-editor"
+            href={`/${locale}/admin/products/new`}
             className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-semibold text-navy shadow-soft transition hover:from-gold-400 hover:to-gold-200"
           >
             <Plus size={17} />
@@ -105,6 +105,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
         categories={categoryRows}
         products={productRows}
         saveLabel={dictionary.actions.save}
+        createHref={`/${locale}/admin/products/new`}
       />
     </div>
   );

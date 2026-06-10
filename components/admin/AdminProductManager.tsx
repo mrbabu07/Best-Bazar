@@ -111,6 +111,7 @@ type AdminProductManagerProps = {
   categories: AdminProductCategory[];
   products: AdminProductRow[];
   saveLabel: string;
+  createHref: string;
 };
 
 function createEmptyForm(categoryId = ""): ProductForm {
@@ -172,7 +173,8 @@ export function AdminProductManager({
   dictionary,
   categories,
   products,
-  saveLabel
+  saveLabel,
+  createHref
 }: AdminProductManagerProps) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState("");
@@ -234,10 +236,10 @@ export function AdminProductManager({
   const isPricingReady = Number(form.price || 0) > 0 && effectiveStock > 0;
   const isMediaReady = Boolean(mainImage);
   const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && form.isActive;
-  const editorTitle = selectedProduct ? "Edit ecommerce product" : "Add ecommerce product";
+  const editorTitle = selectedProduct ? "Edit ecommerce product" : "Product workspace";
   const editorSubtitle = selectedProduct
     ? `Updating ${selectedProduct.nameEn}`
-    : "Create the product customers will see in the shop.";
+    : "Select a product to edit, or open the dedicated add product page.";
   const productReadiness: { label: string; value: string; ready: boolean; icon: LucideIcon }[] = [
     {
       label: "Catalog",
@@ -267,11 +269,6 @@ export function AdminProductManager({
 
   const updateForm = <Key extends keyof ProductForm>(key: Key, value: ProductForm[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
-  };
-
-  const startCreate = () => {
-    setSelectedId("");
-    setForm(createEmptyForm(categories[0]?.id ?? ""));
   };
 
   const startEdit = (product: AdminProductRow) => {
@@ -619,398 +616,427 @@ export function AdminProductManager({
               {editorSubtitle}
             </p>
           </div>
-          <Button type="button" variant="secondary" size="sm" onClick={startCreate}>
+          <Link
+            href={createHref}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gold-200 bg-white px-3 text-sm font-semibold text-navy transition hover:border-gold-400 hover:bg-gold-50"
+          >
             <Plus size={15} />
-            New
-          </Button>
+            Add
+          </Link>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {productReadiness.map((item) => {
-            const Icon = item.icon;
-            const StatusIcon = item.ready ? CheckCircle2 : CircleAlert;
+        {selectedProduct ? (
+          <>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {productReadiness.map((item) => {
+                const Icon = item.icon;
+                const StatusIcon = item.ready ? CheckCircle2 : CircleAlert;
 
-            return (
-              <div key={item.label} className="rounded-md border border-neutral-200 bg-paper p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <Icon size={16} className="text-gold-700" />
-                  <StatusIcon size={15} className={item.ready ? "text-emerald-600" : "text-gold-700"} />
-                </div>
-                <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">{item.label}</p>
-                <p className="mt-1 truncate text-xs font-semibold text-navy" title={item.value}>
-                  {item.value}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-4 rounded-md border border-neutral-200 bg-white p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-navy">Product setup</p>
-              <p className="mt-1 text-xs font-semibold text-neutral-500">
-                {form.variants.length
-                  ? `Stock is controlled by color variants (${variantStock} pcs total).`
-                  : "Use base stock, or add colors for color-wise stock."}
-              </p>
+                return (
+                  <div key={item.label} className="rounded-md border border-neutral-200 bg-paper p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <Icon size={16} className="text-gold-700" />
+                      <StatusIcon size={15} className={item.ready ? "text-emerald-600" : "text-gold-700"} />
+                    </div>
+                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">{item.label}</p>
+                    <p className="mt-1 truncate text-xs font-semibold text-navy" title={item.value}>
+                      {item.value}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
-            <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Draft"}</Badge>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addImage}>
-              <ImagePlus size={15} />
-              Image
-            </Button>
-            <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addVariant}>
-              <Palette size={15} />
-              Color
-            </Button>
-            <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addSpecification}>
-              <PackageCheck size={15} />
-              Spec
-            </Button>
-          </div>
-        </div>
 
-        <form onSubmit={submit} className="mt-5 grid gap-4">
-          <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">1. Catalog identity</summary>
-            <div className="mt-4 grid gap-4">
-          {[
-            ["nameEn", "Product name EN", "Premium travel trolley"],
-            ["nameAr", "Product name AR", "Arabic product name"],
-            ["slug", "Product URL slug", "premium-travel-trolley"],
-            ["sku", "Main SKU", "BB-DXB-1001"],
-            ["brand", "Brand", "Best Bazar"]
-          ].map(([key, label, placeholder]) => (
-            <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-              {label}
-              <input
-                value={form[key as keyof ProductForm] as string}
-                onChange={(event) => updateForm(key as keyof ProductForm, event.target.value as never)}
-                placeholder={placeholder}
-                required
-                className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-              />
-            </label>
-          ))}
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Category
-            <select
-              value={form.categoryId}
-              onChange={(event) => updateForm("categoryId", event.target.value)}
-              required
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {locale === "ar" ? category.nameAr : category.nameEn}
-                </option>
+            <div className="mt-4 rounded-md border border-neutral-200 bg-white p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-navy">Product setup</p>
+                  <p className="mt-1 text-xs font-semibold text-neutral-500">
+                    {form.variants.length
+                      ? `Stock is controlled by color variants (${variantStock} pcs total).`
+                      : "Use base stock, or add colors for color-wise stock."}
+                  </p>
+                </div>
+                <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Draft"}</Badge>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addImage}>
+                  <ImagePlus size={15} />
+                  Image
+                </Button>
+                <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addVariant}>
+                  <Palette size={15} />
+                  Color
+                </Button>
+                <Button type="button" variant="secondary" size="sm" className="w-full" onClick={addSpecification}>
+                  <PackageCheck size={15} />
+                  Spec
+                </Button>
+              </div>
+            </div>
+
+            <form onSubmit={submit} className="mt-5 grid gap-4">
+              <details open className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">1. Catalog identity</summary>
+                <div className="mt-4 grid gap-4">
+              {[
+                ["nameEn", "Product name EN", "Premium travel trolley"],
+                ["nameAr", "Product name AR", "Arabic product name"],
+                ["slug", "Product URL slug", "premium-travel-trolley"],
+                ["sku", "Main SKU", "BB-DXB-1001"],
+                ["brand", "Brand", "Best Bazar"]
+              ].map(([key, label, placeholder]) => (
+                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                  {label}
+                  <input
+                    value={form[key as keyof ProductForm] as string}
+                    onChange={(event) => updateForm(key as keyof ProductForm, event.target.value as never)}
+                    placeholder={placeholder}
+                    required
+                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                  />
+                </label>
               ))}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Subcategory / collection key
-            <input
-              value={form.subcategoryId}
-              onChange={(event) => updateForm("subcategoryId", event.target.value)}
-              placeholder="dubai-deals"
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            />
-          </label>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              ["price", "Selling price AED", "0.01"],
-              ["comparePrice", "Compare at AED", "0.01"],
-              ["stock", "Base stock", "1"]
-            ].map(([key, label, step]) => (
-              <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-                {label}
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Category
+                <select
+                  value={form.categoryId}
+                  onChange={(event) => updateForm("categoryId", event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {locale === "ar" ? category.nameAr : category.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Subcategory / collection key
                 <input
-                  type="number"
-                  min="0"
-                  step={step}
-                  value={form[key as keyof ProductForm] as string}
-                  onChange={(event) => updateForm(key as keyof ProductForm, event.target.value as never)}
-                  required={key !== "comparePrice"}
+                  value={form.subcategoryId}
+                  onChange={(event) => updateForm("subcategoryId", event.target.value)}
+                  placeholder="dubai-deals"
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />
               </label>
-            ))}
-          </div>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Tags
-            <input
-              value={form.tags}
-              onChange={(event) => updateForm("tags", event.target.value)}
-              placeholder="featured, dubai, sale"
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Description EN
-            <textarea
-              rows={4}
-              value={form.descriptionEn}
-              onChange={(event) => updateForm("descriptionEn", event.target.value)}
-              placeholder="Short selling description for the product page."
-              required
-              className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Description AR
-            <textarea
-              rows={4}
-              value={form.descriptionAr}
-              onChange={(event) => updateForm("descriptionAr", event.target.value)}
-              placeholder="Arabic product description"
-              required
-              className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
-            />
-          </label>
-            </div>
-          </details>
-
-          <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">2. Product media</summary>
-          <div className="mt-4 grid gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-bold text-navy">Gallery images</h3>
-                <p className="mt-1 text-xs font-semibold text-neutral-500">First image appears on product cards.</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  ["price", "Selling price AED", "0.01"],
+                  ["comparePrice", "Compare at AED", "0.01"],
+                  ["stock", "Base stock", "1"]
+                ].map(([key, label, step]) => (
+                  <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                    {label}
+                    <input
+                      type="number"
+                      min="0"
+                      step={step}
+                      value={form[key as keyof ProductForm] as string}
+                      onChange={(event) => updateForm(key as keyof ProductForm, event.target.value as never)}
+                      required={key !== "comparePrice"}
+                      className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                  </label>
+                ))}
               </div>
-              <Button type="button" variant="secondary" size="sm" onClick={addImage}>
-                <Plus size={15} />
-                Add image
-              </Button>
-            </div>
-            {form.images.map((image, index) => (
-              <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
-                <AdminImageUploadField
-                  label={`Image ${index + 1}`}
-                  value={image.url}
-                  onChange={(value) => updateImage(index, "url", value)}
-                  previewAlt={image.alt || form.nameEn}
-                  aspectClassName="aspect-[4/3]"
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Tags
+                <input
+                  value={form.tags}
+                  onChange={(event) => updateForm("tags", event.target.value)}
+                  placeholder="featured, dubai, sale"
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />
-                <div className="grid gap-3 sm:grid-cols-[1fr_96px_auto]">
-                  <input
-                    value={image.alt}
-                    onChange={(event) => updateImage(index, "alt", event.target.value)}
-                    placeholder="Alt text"
-                    className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    value={image.sortOrder}
-                    onChange={(event) => updateImage(index, "sortOrder", event.target.value)}
-                    className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                    aria-label="Remove image"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Description EN
+                <textarea
+                  rows={4}
+                  value={form.descriptionEn}
+                  onChange={(event) => updateForm("descriptionEn", event.target.value)}
+                  placeholder="Short selling description for the product page."
+                  required
+                  className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Description AR
+                <textarea
+                  rows={4}
+                  value={form.descriptionAr}
+                  onChange={(event) => updateForm("descriptionAr", event.target.value)}
+                  placeholder="Arabic product description"
+                  required
+                  className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+                />
+              </label>
                 </div>
-              </div>
-            ))}
-          </div>
-          </details>
+              </details>
 
-          <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">3. Color-wise variants and stock</summary>
-          <div className="mt-4 grid gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-bold text-navy">Color options</h3>
-                <p className="mt-1 text-xs font-semibold text-neutral-500">
-                  Add each color with its own image, SKU, and stock quantity.
-                </p>
-              </div>
-              <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
-                <Plus size={15} />
-                Add color
-              </Button>
-            </div>
-            {form.variants.length ? (
-              form.variants.map((variant, index) => (
-                <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
-                  <AdminImageUploadField
-                    label={`${variant.colorNameEn || "Color"} image`}
-                    value={variant.imageUrl}
-                    onChange={(value) => updateVariant(index, "imageUrl", value)}
-                    previewAlt={`${form.nameEn || "Product"} ${variant.colorNameEn || "color"}`}
-                    aspectClassName="aspect-square"
-                  />
-                  <div className="grid gap-3 sm:grid-cols-[1fr_1fr_92px]">
-                    <input
-                      value={variant.colorNameEn}
-                      onChange={(event) => updateVariant(index, "colorNameEn", event.target.value)}
-                      placeholder="Color EN, e.g. Black"
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                    <input
-                      value={variant.colorNameAr}
-                      onChange={(event) => updateVariant(index, "colorNameAr", event.target.value)}
-                      placeholder="Color AR"
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                    <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-2">
-                      <span
-                        className="h-5 w-5 rounded-full border border-neutral-300"
-                        style={{ backgroundColor: variant.colorHex || "#ffffff" }}
-                      />
-                      <input
-                        type="color"
-                        value={variant.colorHex || "#000000"}
-                        onChange={(event) => updateVariant(index, "colorHex", event.target.value)}
-                        className="h-7 w-10 cursor-pointer bg-transparent"
-                        aria-label="Color"
-                      />
-                    </label>
+              <details open className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">2. Product media</summary>
+              <div className="mt-4 grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-navy">Gallery images</h3>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">First image appears on product cards.</p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-[1fr_96px_96px_auto_auto]">
-                    <input
-                      value={variant.sku}
-                      onChange={(event) => updateVariant(index, "sku", event.target.value)}
-                      placeholder="Variant SKU"
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={variant.stock}
-                      onChange={(event) => updateVariant(index, "stock", event.target.value)}
-                      placeholder="Stock"
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={variant.sortOrder}
-                      onChange={(event) => updateVariant(index, "sortOrder", event.target.value)}
-                      aria-label="Sort order"
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                    <label className="flex h-10 items-center gap-2 text-sm font-semibold text-navy">
-                      <input
-                        type="checkbox"
-                        checked={variant.isActive}
-                        onChange={(event) => updateVariant(index, "isActive", event.target.checked)}
-                        className="accent-gold-500"
-                      />
-                      Active
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => removeVariant(index)}
-                      className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                      aria-label="Remove color"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={addImage}>
+                    <Plus size={15} />
+                    Add image
+                  </Button>
                 </div>
-              ))
-            ) : (
-              <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
-                Add colors when this product has stock per color. Customers will see the matching color image on the product page.
+                {form.images.map((image, index) => (
+                  <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
+                    <AdminImageUploadField
+                      label={`Image ${index + 1}`}
+                      value={image.url}
+                      onChange={(value) => updateImage(index, "url", value)}
+                      previewAlt={image.alt || form.nameEn}
+                      aspectClassName="aspect-[4/3]"
+                    />
+                    <div className="grid gap-3 sm:grid-cols-[1fr_96px_auto]">
+                      <input
+                        value={image.alt}
+                        onChange={(event) => updateImage(index, "alt", event.target.value)}
+                        placeholder="Alt text"
+                        className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={image.sortOrder}
+                        onChange={(event) => updateImage(index, "sortOrder", event.target.value)}
+                        className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                        aria-label="Remove image"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </details>
+
+              <details open className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">3. Color-wise variants and stock</summary>
+              <div className="mt-4 grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-navy">Color options</h3>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">
+                      Add each color with its own image, SKU, and stock quantity.
+                    </p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
+                    <Plus size={15} />
+                    Add color
+                  </Button>
+                </div>
+                {form.variants.length ? (
+                  form.variants.map((variant, index) => (
+                    <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
+                      <AdminImageUploadField
+                        label={`${variant.colorNameEn || "Color"} image`}
+                        value={variant.imageUrl}
+                        onChange={(value) => updateVariant(index, "imageUrl", value)}
+                        previewAlt={`${form.nameEn || "Product"} ${variant.colorNameEn || "color"}`}
+                        aspectClassName="aspect-square"
+                      />
+                      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_92px]">
+                        <input
+                          value={variant.colorNameEn}
+                          onChange={(event) => updateVariant(index, "colorNameEn", event.target.value)}
+                          placeholder="Color EN, e.g. Black"
+                          className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                        <input
+                          value={variant.colorNameAr}
+                          onChange={(event) => updateVariant(index, "colorNameAr", event.target.value)}
+                          placeholder="Color AR"
+                          className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                        <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-2">
+                          <span
+                            className="h-5 w-5 rounded-full border border-neutral-300"
+                            style={{ backgroundColor: variant.colorHex || "#ffffff" }}
+                          />
+                          <input
+                            type="color"
+                            value={variant.colorHex || "#000000"}
+                            onChange={(event) => updateVariant(index, "colorHex", event.target.value)}
+                            className="h-7 w-10 cursor-pointer bg-transparent"
+                            aria-label="Color"
+                          />
+                        </label>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-[1fr_96px_96px_auto_auto]">
+                        <input
+                          value={variant.sku}
+                          onChange={(event) => updateVariant(index, "sku", event.target.value)}
+                          placeholder="Variant SKU"
+                          className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          value={variant.stock}
+                          onChange={(event) => updateVariant(index, "stock", event.target.value)}
+                          placeholder="Stock"
+                          className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          value={variant.sortOrder}
+                          onChange={(event) => updateVariant(index, "sortOrder", event.target.value)}
+                          aria-label="Sort order"
+                          className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                        <label className="flex h-10 items-center gap-2 text-sm font-semibold text-navy">
+                          <input
+                            type="checkbox"
+                            checked={variant.isActive}
+                            onChange={(event) => updateVariant(index, "isActive", event.target.checked)}
+                            className="accent-gold-500"
+                          />
+                          Active
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(index)}
+                          className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                          aria-label="Remove color"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
+                    Add colors when this product has stock per color. Customers will see the matching color image on the product page.
+                  </p>
+                )}
+              </div>
+              </details>
+
+              <details className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">4. Product specifications</summary>
+              <div className="mt-4 grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-bold text-navy">Specifications</h3>
+                  <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
+                    <Plus size={15} />
+                    Add spec
+                  </Button>
+                </div>
+                {form.specifications.map((specification, index) => (
+                  <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {[
+                        ["keyEn", "Key EN"],
+                        ["keyAr", "Key AR"],
+                        ["valueEn", "Value EN"],
+                        ["valueAr", "Value AR"]
+                      ].map(([key, label]) => (
+                        <input
+                          key={key}
+                          value={specification[key as keyof ProductSpecificationForm]}
+                          onChange={(event) =>
+                            updateSpecification(index, key as keyof ProductSpecificationForm, event.target.value)
+                          }
+                          placeholder={label}
+                          className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        value={specification.sortOrder}
+                        onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
+                        className="h-10 w-24 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSpecification(index)}
+                        className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                        aria-label="Remove specification"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </details>
+
+              <details open className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">5. Storefront publishing</summary>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-navy">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(event) => updateForm("isActive", event.target.checked)}
+                    className="accent-gold-500"
+                  />
+                  Active
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.isFeatured}
+                    onChange={(event) => updateForm("isFeatured", event.target.checked)}
+                    className="accent-gold-500"
+                  />
+                  Featured
+                </label>
+              </div>
+              </details>
+              <div className="grid grid-cols-2 gap-3">
+                <Button type="submit" disabled={saving || categories.length === 0}>
+                  {saving ? "Saving..." : saveLabel}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => startEdit(selectedProduct)}>
+                  <RotateCcw size={16} />
+                  Reset
+                </Button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <div className="mt-4 grid gap-4">
+            <div className="rounded-md border border-neutral-200 bg-paper p-4">
+              <p className="text-sm font-bold text-navy">Add product is now a dedicated page.</p>
+              <p className="mt-2 text-sm leading-6 text-neutral-600">
+                Use the professional create workflow for images, color-wise variants, stock, pricing, and publishing.
               </p>
-            )}
-          </div>
-          </details>
-
-          <details className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">4. Product specifications</summary>
-          <div className="mt-4 grid gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-sm font-bold text-navy">Specifications</h3>
-              <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
-                <Plus size={15} />
-                Add spec
-              </Button>
             </div>
-            {form.specifications.map((specification, index) => (
-              <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["keyEn", "Key EN"],
-                    ["keyAr", "Key AR"],
-                    ["valueEn", "Value EN"],
-                    ["valueAr", "Value AR"]
-                  ].map(([key, label]) => (
-                    <input
-                      key={key}
-                      value={specification[key as keyof ProductSpecificationForm]}
-                      onChange={(event) =>
-                        updateSpecification(index, key as keyof ProductSpecificationForm, event.target.value)
-                      }
-                      placeholder={label}
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                  ))}
-                </div>
-                <div className="flex justify-end gap-2">
-                  <input
-                    type="number"
-                    min="0"
-                    value={specification.sortOrder}
-                    onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
-                    className="h-10 w-24 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeSpecification(index)}
-                    className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                    aria-label="Remove specification"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-            ))}
+            <Link
+              href={createHref}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-bold text-navy shadow-soft hover:from-gold-400 hover:to-gold-200"
+            >
+              <Plus size={17} />
+              Add ecommerce product
+            </Link>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Edit products</p>
+              <p className="mt-2 text-sm text-neutral-600">
+                Click the edit icon beside any product to open its editor here.
+              </p>
+            </div>
           </div>
-          </details>
-
-          <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-            <summary className="cursor-pointer text-sm font-bold text-navy">5. Storefront publishing</summary>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-navy">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(event) => updateForm("isActive", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Active
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.isFeatured}
-                onChange={(event) => updateForm("isFeatured", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Featured
-            </label>
-          </div>
-          </details>
-          <div className="grid grid-cols-2 gap-3">
-            <Button type="submit" disabled={saving || categories.length === 0}>
-              {saving ? "Saving..." : saveLabel}
-            </Button>
-            <Button type="button" variant="secondary" onClick={startCreate}>
-              <RotateCcw size={16} />
-              Reset
-            </Button>
-          </div>
-        </form>
+        )}
       </aside>
     </div>
   );

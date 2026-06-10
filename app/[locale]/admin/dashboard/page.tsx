@@ -104,7 +104,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
   const maxRevenue = Math.max(...revenueSeries, 1);
   const quickActions = [
     { label: "View storefront", href: `/${locale}`, icon: Home, tone: "primary" },
-    { label: "Add product", href: `/${locale}/admin/products#product-editor`, icon: Plus, tone: "secondary" },
+    { label: "Add product", href: `/${locale}/admin/products/new`, icon: Plus, tone: "secondary" },
     { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary" },
     { label: "Shipping settings", href: `/${locale}/admin/settings`, icon: Settings, tone: "secondary" }
   ];
