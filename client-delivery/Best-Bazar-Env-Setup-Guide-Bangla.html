@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <title>Best Bazar Environment Key Setup Guide</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #f4f1ea;
+        color: #172033;
+        font-family: "Nirmala UI", "Vrinda", "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.58;
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        background: #fffdf8;
+        padding: 34px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        color: #172033;
+        line-height: 1.25;
+      }
+
+      h1 {
+        font-size: 31px;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin-top: 30px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #dfc177;
+        font-size: 21px;
+      }
+
+      h3 {
+        margin-top: 18px;
+        font-size: 16px;
+      }
+
+      p {
+        margin: 8px 0;
+      }
+
+      a {
+        color: #7a5514;
+        text-decoration: none;
+        word-break: break-word;
+      }
+
+      code {
+        border-radius: 4px;
+        background: #f4f1ea;
+        color: #1f2937;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        padding: 1px 4px;
+      }
+
+      pre {
+        margin: 10px 0;
+        padding: 12px;
+        border: 1px solid #e6dcc8;
+        border-radius: 8px;
+        background: #172033;
+        color: #fff8e7;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 11.5px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      ul,
+      ol {
+        margin: 8px 0 8px 20px;
+        padding: 0;
+      }
+
+      li {
+        margin: 5px 0;
+      }
+
+      .cover {
+        min-height: 340px;
+        display: grid;
+        align-content: center;
+        gap: 16px;
+        border: 2px solid #dfc177;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fff8e7 0%, #ffffff 55%, #edf7f6 100%);
+        padding: 34px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        width: fit-content;
+        border-radius: 999px;
+        background: #172033;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        padding: 5px 10px;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        max-width: 720px;
+        color: #526070;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .meta div,
+      .note,
+      .warning,
+      .success {
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+
+      .meta div {
+        border: 1px solid #e6dcc8;
+        background: #ffffff;
+      }
+
+      .meta strong {
+        display: block;
+        color: #172033;
+      }
+
+      .note {
+        border: 1px solid #d6e4ef;
+        background: #eef7ff;
+      }
+
+      .warning {
+        border: 1px solid #f0c7a7;
+        background: #fff3e8;
+      }
+
+      .success {
+        border: 1px solid #bfe2d2;
+        background: #eefaf4;
+      }
+
+      .toc {
+        columns: 2;
+        column-gap: 28px;
+      }
+
+      .key-card {
+        break-inside: avoid;
+        margin: 12px 0;
+        border: 1px solid #e6dcc8;
+        border-radius: 10px;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      .key-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        background: #fbf7ed;
+        border-bottom: 1px solid #eee3cf;
+      }
+
+      .key-head code {
+        background: #172033;
+        color: #fff8e7;
+        font-weight: 800;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 3px 8px;
+        white-space: nowrap;
+      }
+
+      .secret {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .public {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .config {
+        background: #e0f2fe;
+        color: #075985;
+      }
+
+      .optional {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+
+      .key-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .full {
+        grid-column: 1 / -1;
+      }
+
+      .label {
+        margin-bottom: 2px;
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .checklist {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .box {
+        break-inside: avoid;
+        border: 1px solid #e6dcc8;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 12px;
+      }
+
+      table {
+        width: 100%;
+        margin: 10px 0;
+        border-collapse: collapse;
+        background: #ffffff;
+      }
+
+      th,
+      td {
+        border: 1px solid #e6dcc8;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #fbf7ed;
+        color: #172033;
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .page-break {
+        break-before: page;
+      }
+
+      .footer {
+        margin-top: 34px;
+        padding-top: 14px;
+        border-top: 1px solid #e6dcc8;
+        color: #6b7280;
+        font-size: 11px;
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        main {
+          max-width: none;
+          padding: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="cover">
+        <span class="eyebrow">Best Bazar · Environment Setup</span>
+        <h1>বাংলা গাইড: `.env.example` key কোথায় পাবেন, কীভাবে set করবেন, এবং কোন secret কী কাজ করে</h1>
+        <p class="subtitle">
+          এই ডকুমেন্টটি client/developer handover-এর জন্য। এখানে real secret value রাখা হয়নি। প্রতিটি key কোথা থেকে নিতে হবে,
+          project-এ কীভাবে বসাতে হবে, এবং কোনটা public/secret তা ব্যাখ্যা করা হয়েছে।
+        </p>
+        <div class="meta">
+          <div><strong>Project</strong>Best Bazar Ecommerce</div>
+          <div><strong>Stack</strong>Next.js 14 + React + Prisma + Neon</div>
+          <div><strong>Updated</strong>12 June 2026</div>
+        </div>
+      </section>
+
+      <h2>১. সবচেয়ে জরুরি নিয়ম</h2>
+      <div class="warning">
+        <strong>Secret কখনো GitHub, frontend code, screenshot, chat, বা public document-এ দিবেন না।</strong>
+        <p>
+          <code>NEXT_PUBLIC_</code> দিয়ে শুরু হওয়া key browser-এ দেখা যেতে পারে। বাকি secret key backend-only ধরে রাখতে হবে।
+          কোনো secret ভুলে share হয়ে গেলে provider dashboard থেকে key rotate/delete করে নতুন key বসাতে হবে।
+        </p>
+      </div>
+      <ul>
+        <li>Local development: project root-এ <code>.env.local</code> file-এ value বসাবেন।</li>
+        <li>Production/Vercel: Vercel Dashboard → Project → Settings → Environment Variables-এ value বসাবেন, তারপর redeploy করবেন।</li>
+        <li>এই project-এর dev server সাধারণত <code>http://localhost:3002</code> এ চলে, তাই local URL key-তে 3002 ব্যবহার করা ভালো।</li>
+        <li><code>.env</code> / <code>.env.local</code> GitHub-এ push করা যাবে না। এই project-এর <code>.gitignore</code> already env file ignore করে।</li>
+      </ul>
+
+      <h2>২. Local setup কীভাবে করবেন</h2>
+      <ol>
+        <li>Project root খুলুন: <code>E:\programming hero\Best Bazar</code></li>
+        <li><code>.env.example</code> copy করে <code>.env.local</code> বানান।</li>
+        <li>প্রতিটি <code>KEY=VALUE</code> line-এ আপনার provider dashboard থেকে পাওয়া value বসান।</li>
+        <li>Server restart করুন: <code>npm run dev</code></li>
+      </ol>
+      <pre>Copy-Item .env.example .env.local
+notepad .env.local
+npm run dev</pre>
+      <div class="note">
+        <strong>Local URL note:</strong>
+        <p>
+          `.env.example`-এ যদি <code>http://localhost:3000</code> থাকে, এই project চালানোর সময় প্রয়োজন হলে
+          <code>http://localhost:3002</code> করুন, কারণ custom dev script port 3002 ব্যবহার করে।
+        </p>
+      </div>
+
+      <h2>৩. Production/Vercel setup</h2>
+      <ol>
+        <li>Vercel Dashboard-এ login করুন।</li>
+        <li>Best Bazar project খুলুন।</li>
+        <li>Settings → Environment Variables-এ যান।</li>
+        <li>প্রতিটি key আলাদা করে add করুন। Environment হিসেবে Production, Preview, Development প্রয়োজন অনুযায়ী select করুন।</li>
+        <li>সব key save করার পর নতুন deployment দিন বা Redeploy করুন।</li>
+      </ol>
+      <div class="success">
+        Vercel environment variables source code-এর বাইরে থাকে এবং deployment runtime-এ app এগুলো পড়ে। তাই production secret রাখার
+        জন্য Vercel env/admin secrets সবচেয়ে clean জায়গা।
+      </div>
+
+      <h2>৪. Key summary</h2>
+      <div class="toc">
+        <p><code>DATABASE_URL</code> - Neon PostgreSQL connection</p>
+        <p><code>DATABASE_CONNECTION_LIMIT</code> - Prisma/DB connection limit</p>
+        <p><code>DATABASE_POOL_TIMEOUT</code> - Pool wait timeout</p>
+        <p><code>DATABASE_CONNECT_TIMEOUT</code> - DB connect timeout</p>
+        <p><code>NEXTAUTH_SECRET</code> - session/JWT encryption secret</p>
+        <p><code>NEXTAUTH_URL</code> - auth canonical site URL</p>
+        <p><code>GOOGLE_CLIENT_ID</code> - Google login app ID</p>
+        <p><code>GOOGLE_CLIENT_SECRET</code> - Google login secret</p>
+        <p><code>CLOUDINARY_CLOUD_NAME</code> - Cloudinary cloud/account name</p>
+        <p><code>CLOUDINARY_API_KEY</code> - Cloudinary API identifier</p>
+        <p><code>CLOUDINARY_API_SECRET</code> - Cloudinary upload secret</p>
+        <p><code>STRIPE_SECRET_KEY</code> - Stripe backend payment key</p>
+        <p><code>STRIPE_WEBHOOK_SECRET</code> - Stripe webhook signature secret</p>
+        <p><code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> - Stripe browser key</p>
+        <p><code>STRIPE_MODE</code> - Stripe checkout mode</p>
+        <p><code>NEXT_PUBLIC_SITE_URL</code> - public site URL</p>
+        <p><code>COD_ENABLED</code> - Cash on Delivery switch</p>
+        <p><code>EMAIL_SERVER</code> - SMTP connection URL</p>
+        <p><code>EMAIL_FROM</code> - outgoing email sender</p>
+        <p><code>SEED_ADMIN_PASSWORD</code> - seed admin password</p>
+        <p><code>SEED_USER_PASSWORD</code> - seed customer password</p>
+        <p><code>ADMIN_EMAIL</code> - admin user email</p>
+        <p><code>ADMIN_PASSWORD</code> - admin user password</p>
+        <p><code>ADMIN_NAME</code> - admin display name</p>
+      </div>
+
+      <h2 class="page-break">৫. Database / Neon keys</h2>
+      <div class="key-card">
+        <div class="key-head"><code>DATABASE_URL</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div>
+            <div class="label">কোথায় পাবেন</div>
+            Neon Console → Project Dashboard → Connect → Connection pooling toggle ON → pooled connection string copy করুন।
+          </div>
+          <div>
+            <div class="label">কাজ</div>
+            App-এর Prisma ORM এই URL দিয়ে PostgreSQL database connect করে। Product, order, user, settings সব data এখানে থাকে।
+          </div>
+          <div class="full">
+            <div class="label">Format</div>
+            <pre>DATABASE_URL=postgresql://USER:PASSWORD@HOST-pooler.REGION.aws.neon.tech/DB?sslmode=require&amp;channel_binding=require&amp;connection_limit=5&amp;pool_timeout=20&amp;connect_timeout=10</pre>
+            <p>
+              Production/serverless app-এর জন্য pooled hostname-এ <code>-pooler</code> থাকা ভালো। Migration বা manual DB admin task করলে
+              direct non-pooled URL লাগতে পারে।
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>DATABASE_CONNECTION_LIMIT</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>এটা provider থেকে copy করা key না; project tuning value। Default: <code>5</code></div>
+          <div><div class="label">কাজ</div>Prisma/Neon pooled connection একসাথে কত connection ব্যবহার করবে সেটা control করে।</div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>DATABASE_POOL_TIMEOUT</code> / <code>DATABASE_CONNECT_TIMEOUT</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Manual value; সাধারণত example-এর <code>20</code> এবং <code>10</code> ঠিক আছে।</div>
+          <div><div class="label">কাজ</div>DB connection wait এবং initial connect timeout control করে। Neon slow/temporary sleep হলে এগুলো help করে।</div>
+        </div>
+      </div>
+
+      <h2>৬. Authentication keys</h2>
+      <div class="key-card">
+        <div class="key-head"><code>NEXTAUTH_SECRET</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div>
+            <div class="label">কোথায় পাবেন</div>
+            নিজে generate করবেন। PowerShell/Node দিয়ে random 32-byte secret generate করুন।
+          </div>
+          <div>
+            <div class="label">কাজ</div>
+            NextAuth session/JWT secure করতে লাগে। এটা change করলে পুরোনো login session invalid হতে পারে।
+          </div>
+          <div class="full">
+            <pre>node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>NEXTAUTH_URL</code><span class="badge config">URL</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Local হলে <code>http://localhost:3002</code>; production হলে live domain।</div>
+          <div><div class="label">কাজ</div>Login callback, session, redirect URL ঠিক করতে NextAuth এই base URL ব্যবহার করে।</div>
+          <div class="full"><pre>NEXTAUTH_URL=http://localhost:3002
+NEXTAUTH_URL=https://yourdomain.com</pre></div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>GOOGLE_CLIENT_ID</code> / <code>GOOGLE_CLIENT_SECRET</code><span class="badge optional">OPTIONAL</span></div>
+        <div class="key-body">
+          <div>
+            <div class="label">কোথায় পাবেন</div>
+            Google Cloud Console → APIs &amp; Services / Google Auth Platform → Credentials/Clients → OAuth client ID → Web application।
+          </div>
+          <div>
+            <div class="label">কাজ</div>
+            Google login enable করে। ID browser-side identify করতে পারে, কিন্তু <code>GOOGLE_CLIENT_SECRET</code> backend secret।
+          </div>
+          <div class="full">
+            <div class="label">Callback URL</div>
+            <pre>Local:      http://localhost:3002/api/auth/callback/google
+Production: https://yourdomain.com/api/auth/callback/google</pre>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="page-break">৭. Image upload / Cloudinary keys</h2>
+      <div class="key-card">
+        <div class="key-head"><code>CLOUDINARY_CLOUD_NAME</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Cloudinary Console/Dashboard-এর account details থেকে।</div>
+          <div><div class="label">কাজ</div>Cloudinary কোন cloud/account-এ image upload করবে সেটা identify করে।</div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>CLOUDINARY_API_KEY</code> / <code>CLOUDINARY_API_SECRET</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div>
+            <div class="label">কোথায় পাবেন</div>
+            Cloudinary Console → Settings → API Keys। API key এবং API secret copy করুন।
+          </div>
+          <div>
+            <div class="label">কাজ</div>
+            Admin image upload authenticate করে। <code>CLOUDINARY_API_SECRET</code> কখনো frontend/public repo-তে রাখবেন না।
+          </div>
+        </div>
+      </div>
+
+      <h2>৮. Payment keys: Cash on Delivery + Stripe</h2>
+      <div class="note">
+        এই project-এ payment method মূলত দুইটা রাখা হয়েছে: <strong>Cash on Delivery</strong> এবং <strong>Stripe</strong>।
+        Admin Dashboard → Settings → Payment controls থেকে method show/hide, display name, instruction, Stripe info edit করা যায়।
+        Env values fallback হিসেবে থাকে; admin field filled থাকলে অনেক জায়গায় admin setting override করবে।
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code><span class="badge public">PUBLIC</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Stripe Dashboard → Developers → API keys → Publishable key।</div>
+          <div><div class="label">কাজ</div>Browser checkout/card form initialize করে। <code>pk_test_</code> বা <code>pk_live_</code> দিয়ে শুরু হয়।</div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>STRIPE_SECRET_KEY</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Stripe Dashboard → Developers → API keys → Secret/Restricted key।</div>
+          <div><div class="label">কাজ</div>Backend থেকে PaymentIntent/Checkout Session create করে। <code>sk_test_</code>, <code>sk_live_</code>, বা restricted key use করতে পারেন।</div>
+          <div class="full">
+            <p>Test key দিয়ে real payment নেওয়া যায় না। Production launch-এর আগে live mode key বসাতে হবে।</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>STRIPE_WEBHOOK_SECRET</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div>
+            <div class="label">কোথায় পাবেন</div>
+            Stripe Dashboard → Developers → Webhooks → endpoint select → Signing secret reveal/copy।
+          </div>
+          <div>
+            <div class="label">কাজ</div>
+            Stripe সত্যি event পাঠিয়েছে কিনা verify করে। Order paid/confirmed update-এর জন্য দরকার।
+          </div>
+          <div class="full">
+            <pre>Webhook endpoint: https://yourdomain.com/api/payment/webhook
+Required events: checkout.session.completed, payment_intent.succeeded, checkout.session.expired</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>STRIPE_MODE</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">Value</div><code>payment_element</code> অথবা <code>hosted_checkout</code></div>
+          <div><div class="label">কাজ</div><code>payment_element</code> হলে site-এর checkout page-এ card form; <code>hosted_checkout</code> হলে Stripe hosted page redirect।</div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>COD_ENABLED</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">Value</div><code>true</code> অথবা <code>false</code></div>
+          <div><div class="label">কাজ</div>Cash on Delivery checkout-এ globally available থাকবে কিনা control করে। Admin settings থেকেও show/hide করা যায়।</div>
+        </div>
+      </div>
+
+      <h2 class="page-break">৯. Public site URL</h2>
+      <div class="key-card">
+        <div class="key-head"><code>NEXT_PUBLIC_SITE_URL</code><span class="badge public">PUBLIC</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Local হলে localhost URL, production হলে final domain।</div>
+          <div><div class="label">কাজ</div>Order confirmation link, tracking link, sitemap, robots, SEO/schema, Stripe return URL generate করতে লাগে।</div>
+          <div class="full"><pre>NEXT_PUBLIC_SITE_URL=http://localhost:3002
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com</pre></div>
+        </div>
+      </div>
+
+      <h2>১০. Email / SMTP keys</h2>
+      <div class="key-card">
+        <div class="key-head"><code>EMAIL_SERVER</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div>
+            <div class="label">কোথায় পাবেন</div>
+            আপনার email provider থেকে SMTP host, port, username, password/app-password নিতে হবে।
+          </div>
+          <div>
+            <div class="label">কাজ</div>
+            Order confirmation/status email পাঠাতে Nodemailer এই SMTP URL ব্যবহার করে।
+          </div>
+          <div class="full">
+            <pre>EMAIL_SERVER=smtps://orders%40yourdomain.com:APP_PASSWORD@smtp.yourprovider.com:465
+EMAIL_SERVER=smtp://orders%40yourdomain.com:APP_PASSWORD@smtp.yourprovider.com:587</pre>
+            <p>Username/password-এ <code>@</code>, <code>#</code>, <code>:</code> থাকলে URL encode করতে হবে।</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>EMAIL_FROM</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>আপনার sender email/name।</div>
+          <div><div class="label">কাজ</div>Customer inbox-এ sender হিসেবে দেখাবে।</div>
+          <div class="full"><pre>EMAIL_FROM="Best Bazar &lt;orders@yourdomain.com&gt;"</pre></div>
+        </div>
+      </div>
+
+      <h2>১১. Seed/admin keys</h2>
+      <div class="key-card">
+        <div class="key-head"><code>SEED_ADMIN_PASSWORD</code> / <code>SEED_USER_PASSWORD</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>নিজে strong password বানাবেন।</div>
+          <div><div class="label">কাজ</div><code>npm run db:seed</code> চালালে demo admin/customer user create/update করতে ব্যবহৃত হয়।</div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> / <code>ADMIN_NAME</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Business owner/admin নিজে ঠিক করবে। Password minimum 8 character।</div>
+          <div><div class="label">কাজ</div><code>npm run admin:ensure</code> চালালে এই email/password দিয়ে admin user ready করে।</div>
+          <div class="full">
+            <pre>ADMIN_EMAIL=admin@yourdomain.com
+ADMIN_PASSWORD=USE_A_STRONG_PASSWORD
+ADMIN_NAME=Best Bazar Admin
+npm run admin:ensure</pre>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="page-break">১২. Optional SMS/WhatsApp notification keys</h2>
+      <div class="note">
+        এই keys `.env.example`-এ না থাকলেও code-এ support আছে। SMS/WhatsApp order notification চালু করতে Twilio setup করলে এগুলো add করবেন।
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>TWILIO_ACCOUNT_SID</code> / <code>TWILIO_AUTH_TOKEN</code><span class="badge secret">SECRET</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Twilio Console dashboard থেকে Account SID এবং Auth Token।</div>
+          <div><div class="label">কাজ</div>Twilio API authenticate করে, customer/admin SMS বা WhatsApp পাঠাতে লাগে। Auth Token secret।</div>
+        </div>
+      </div>
+
+      <div class="key-card">
+        <div class="key-head"><code>TWILIO_SMS_FROM</code> / <code>TWILIO_WHATSAPP_FROM</code><span class="badge config">CONFIG</span></div>
+        <div class="key-body">
+          <div><div class="label">কোথায় পাবেন</div>Twilio verified phone/sender অথবা WhatsApp sender থেকে।</div>
+          <div><div class="label">কাজ</div>Message কোন number/sender থেকে যাবে সেটা control করে।</div>
+          <div class="full">
+            <pre>TWILIO_SMS_FROM=+971XXXXXXXXX
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+ADMIN_ORDER_NOTIFICATION_PHONE=+9715XXXXXXXX</pre>
+          </div>
+        </div>
+      </div>
+
+      <h2>১৩. Ready-to-fill `.env.local` template</h2>
+      <pre>DATABASE_URL="postgresql://USER:PASSWORD@HOST-pooler.REGION.aws.neon.tech/DB?sslmode=require&amp;channel_binding=require&amp;connection_limit=5&amp;pool_timeout=20&amp;connect_timeout=10"
+DATABASE_CONNECTION_LIMIT=5
+DATABASE_POOL_TIMEOUT=20
+DATABASE_CONNECT_TIMEOUT=10
+
+NEXTAUTH_SECRET="GENERATE_RANDOM_SECRET"
+NEXTAUTH_URL=http://localhost:3002
+NEXT_PUBLIC_SITE_URL=http://localhost:3002
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_MODE=payment_element
+COD_ENABLED=true
+
+EMAIL_SERVER=
+EMAIL_FROM="Best Bazar &lt;orders@yourdomain.com&gt;"
+
+SEED_ADMIN_PASSWORD=
+SEED_USER_PASSWORD=
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+ADMIN_NAME=
+
+# Optional SMS/WhatsApp
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_SMS_FROM=
+TWILIO_WHATSAPP_FROM=
+ADMIN_ORDER_NOTIFICATION_PHONE=</pre>
+
+      <h2>১৪. Secret leak হলে কী করবেন</h2>
+      <div class="checklist">
+        <div class="box">
+          <h3>Stripe</h3>
+          <p>Dashboard → Developers → API keys → exposed key rotate/delete করুন। Webhook secret leak হলে endpoint secret rotate করুন।</p>
+        </div>
+        <div class="box">
+          <h3>Neon</h3>
+          <p>Role/password rotate করুন অথবা নতুন database role বানিয়ে নতুন pooled connection string বসান।</p>
+        </div>
+        <div class="box">
+          <h3>Cloudinary</h3>
+          <p>Settings → API Keys → Generate New Access Key, app update, তারপর old key disable করুন।</p>
+        </div>
+        <div class="box">
+          <h3>Google / Twilio / Email</h3>
+          <p>Client secret/Auth token/App password rotate করুন এবং Vercel/local env update করে redeploy/restart দিন।</p>
+        </div>
+      </div>
+
+      <h2>১৫. Quick test checklist</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Test</th>
+            <th>Expected result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Database</td>
+            <td><code>npm run dev</code> তারপর home/shop page open</td>
+            <td>Product/category data load হবে, Prisma connection error থাকবে না।</td>
+          </tr>
+          <tr>
+            <td>Auth</td>
+            <td>Login/register/admin login</td>
+            <td>Session থাকবে, redirect ঠিক হবে।</td>
+          </tr>
+          <tr>
+            <td>Cloudinary</td>
+            <td>Admin → Add product → image upload</td>
+            <td>Image upload হয়ে URL save হবে।</td>
+          </tr>
+          <tr>
+            <td>Stripe</td>
+            <td>Checkout → Stripe payment test card</td>
+            <td>Order paid/confirmed হবে, webhook success log থাকবে।</td>
+          </tr>
+          <tr>
+            <td>Email</td>
+            <td>Order place/status update</td>
+            <td>Customer email receive করবে।</td>
+          </tr>
+          <tr>
+            <td>WhatsApp/SMS</td>
+            <td>Order place/status update</td>
+            <td>Configured phone number-এ notification যাবে।</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Official reference links</h2>
+      <ul>
+        <li>Neon connection pooling: <a href="https://neon.com/docs/connect/connection-pooling">https://neon.com/docs/connect/connection-pooling</a></li>
+        <li>NextAuth options: <a href="https://next-auth.js.org/configuration/options">https://next-auth.js.org/configuration/options</a></li>
+        <li>Google OAuth credentials: <a href="https://developers.google.com/identity/protocols/oauth2">https://developers.google.com/identity/protocols/oauth2</a></li>
+        <li>Cloudinary credentials: <a href="https://cloudinary.com/documentation/finding_your_credentials_tutorial">https://cloudinary.com/documentation/finding_your_credentials_tutorial</a></li>
+        <li>Stripe API keys: <a href="https://docs.stripe.com/keys">https://docs.stripe.com/keys</a></li>
+        <li>Stripe webhooks: <a href="https://docs.stripe.com/webhooks">https://docs.stripe.com/webhooks</a></li>
+        <li>Twilio WhatsApp quickstart: <a href="https://www.twilio.com/docs/whatsapp/quickstart">https://www.twilio.com/docs/whatsapp/quickstart</a></li>
+        <li>Vercel environment variables: <a href="https://vercel.com/docs/environment-variables">https://vercel.com/docs/environment-variables</a></li>
+        <li>Nodemailer SMTP: <a href="https://nodemailer.com/smtp">https://nodemailer.com/smtp</a></li>
+      </ul>
+
+      <div class="footer">
+        Prepared for Best Bazar. This PDF intentionally avoids real secret values. Keep the actual `.env.local` and production environment values private.
+      </div>
+    </main>
+  </body>
+</html>
