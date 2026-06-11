@@ -10,7 +10,7 @@ For the full AI/developer handoff reference, see [AI_PROJECT_DOCUMENTATION.md](.
 - Localized storefront routes for English and Arabic with RTL support.
 - Database-backed home, shop, product, cart, checkout, account, and order-confirmation pages.
 - Product search, category/brand/rating/price filters, related products, customer reviews, and review submission.
-- Persistent cart, coupon validation, dynamic shipping rules, AED/BDT/USD currency conversion, COD, bank transfer, Stripe wallets/cards, Tabby, Tamara, and PayPal checkout when configured.
+- Persistent cart, coupon validation, dynamic shipping rules, AED/BDT/USD currency conversion, cash on delivery, and Stripe wallets/cards when configured.
 - Customer registration, login, editable profile/address details, order history, password reset, protected account pages, and private order-confirmation links.
 - Admin dashboard for products, categories, banners, coupons, orders, users, settings, uploads, order status changes, role/ban controls, and invoice printing.
 - Store settings for branding, announcements, contact details, social links, SEO, shipping rates, and exchange rates.
@@ -66,11 +66,8 @@ Copy `.env.example` to `.env.local`, then fill in the values you need:
 - `NEXT_PUBLIC_SITE_URL`
 - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for Google login
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` for uploads
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` for card, Apple Pay, and Google Pay through Stripe Checkout
-- `TABBY_SECRET_KEY`, `TABBY_MERCHANT_CODE`, and optional `TABBY_API_BASE_URL` for Tabby hosted checkout
-- `TAMARA_API_TOKEN` and optional `TAMARA_API_BASE_URL` for Tamara hosted checkout
-- `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, and optional `PAYPAL_API_BASE_URL` for PayPal checkout
-- `COD_ENABLED`, `BANK_TRANSFER_ENABLED`, and `BANK_TRANSFER_INSTRUCTIONS` for manual Dubai payment methods
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` for Stripe card, Apple Pay, and Google Pay
+- `COD_ENABLED` for cash on delivery
 - `EMAIL_SERVER` and `EMAIL_FROM` for order and password-reset emails
 - `SEED_ADMIN_PASSWORD` and `SEED_USER_PASSWORD` for local seed accounts
 - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optional `ADMIN_NAME` for the admin bootstrap command
@@ -101,7 +98,7 @@ npm run admin:ensure
 - Cloudinary uploads are served back with `f_auto,q_auto` delivery transforms, and stored Cloudinary URLs are normalized before rendering.
 - Stripe payment UI is loaded as a separate checkout chunk so the heavy Stripe SDK does not block the initial checkout page.
 - Payment methods and storefront theme can be managed from Admin Settings. Provider keys stored there are used server-side, with env values as fallback.
-- Configure Stripe, Tabby, Tamara, and PayPal provider keys before enabling live online payments.
+- Configure Stripe provider keys before enabling live online payments. Cash on delivery can be toggled from Admin Settings.
 - Configure SMTP if password-reset and order-confirmation emails should be sent in production.
 - Set `NEXT_PUBLIC_SITE_URL` and `NEXTAUTH_URL` to the deployed domain.
 - Keep `.env`, `.env.local`, and all provider secrets out of git.

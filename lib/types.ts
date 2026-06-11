@@ -144,7 +144,7 @@ export type Order = {
     country: string;
   };
   deliverySlot?: string;
-  paymentMethod: "stripe" | "cod" | "tabby" | "tamara" | "paypal" | "bank_transfer";
+  paymentMethod: "stripe" | "cod";
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   subtotal: number;

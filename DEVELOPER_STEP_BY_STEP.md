@@ -22,7 +22,7 @@ The storefront lets customers:
 - Add products to cart.
 - Checkout as guest or logged-in user.
 - Choose Dubai/UAE shipping area and delivery slot.
-- Pay with COD, bank transfer, Stripe, Tabby, Tamara, or PayPal when configured.
+- Pay with cash on delivery or Stripe when configured.
 - Track orders.
 - Manage account/profile/orders if logged in.
 
@@ -146,8 +146,8 @@ What to observe:
 - Add to cart stores data in browser localStorage.
 - Checkout can work without login.
 - Checkout requires address, tower, apartment, emirate, delivery slot, payment method.
-- COD and bank transfer place order directly.
-- Online payment methods redirect to provider checkout if configured.
+- COD places order directly.
+- Stripe uses `/api/payment/checkout` and either inline Payment Element or hosted checkout.
 
 ## Step 6: Follow the Admin Journey
 
@@ -268,7 +268,7 @@ Checkout form builds a payload with:
 
 Manual payment path:
 
-1. User selects COD or bank transfer.
+1. User selects COD.
 2. Checkout posts to `/api/orders`.
 3. Server validates payload.
 4. Server creates order through `createStoreOrder`.
@@ -276,15 +276,15 @@ Manual payment path:
 6. Cart clears.
 7. User goes to order confirmation.
 
-Hosted payment path:
+Stripe payment path:
 
-1. User selects Stripe, Tabby, Tamara, or PayPal.
+1. User selects Stripe.
 2. Checkout posts to `/api/payment/checkout`.
 3. Server validates payload.
 4. Server creates order and reserves stock.
-5. Server creates provider checkout URL.
-6. Browser redirects to provider checkout.
-7. Provider callback/webhook updates payment/order status.
+5. Server creates a Stripe PaymentIntent or Stripe hosted checkout URL.
+6. Browser shows inline card form or redirects to Stripe checkout.
+7. Stripe webhook updates payment/order status.
 
 ## Step 10: Understand Stock Rules
 
@@ -354,18 +354,13 @@ Files:
 - `lib/stripe.ts`
 - `app/api/payment/checkout/route.ts`
 - `app/api/payment/webhook/route.ts`
-- `app/api/payment/paypal/capture/route.ts`
 
-Payment availability is env-driven:
+Payment availability uses admin settings with env fallback:
 
 - Stripe needs Stripe env vars.
-- Tabby needs Tabby env vars.
-- Tamara needs Tamara env vars.
-- PayPal needs PayPal env vars.
 - COD is enabled unless `COD_ENABLED` is `"false"`.
-- Bank transfer is enabled by instructions or explicit env flag.
 
-The UI should show unavailable methods as setup needed, not crash.
+The UI should show only configured COD/Stripe methods and avoid rendering unsupported payment methods.
 
 ## Step 13: Understand Settings
 
@@ -497,8 +492,7 @@ For checkout changes, test:
 - Coupon valid.
 - Coupon invalid.
 - COD order.
-- Bank transfer order if enabled.
-- Hosted payment error when provider env is missing.
+- Stripe payment error when provider env/admin keys are missing.
 
 For admin changes, test:
 
@@ -555,7 +549,7 @@ If a developer has only five minutes, remember this:
 4. Storefront products are mapped through `lib/storefront.ts`.
 5. Cart and preferences are Zustand localStorage stores.
 6. Checkout order creation is centralized in `lib/orders.ts`.
-7. Payment providers are centralized in `lib/payment-gateways.ts`.
+7. Payment availability is centralized in `lib/payment-settings.ts`; Stripe provider logic is in `lib/payment-gateways.ts`.
 8. Product color/size/image behavior is mostly `ProductVariant` plus `ProductDetail`.
 9. Store settings control shipping, VAT, currency, SEO, announcement, and contact data.
 10. Storefront cache is 60 seconds.

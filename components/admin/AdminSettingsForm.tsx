@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, CreditCard, HandCoins, Landmark, Save, Wallet, WalletCards } from "lucide-react";
+import { CreditCard, HandCoins, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
@@ -60,7 +60,7 @@ type AdminSettingsFormProps = {
   saveLabel: string;
 };
 
-type PaymentMethodKey = keyof PaymentSettings;
+type PaymentMethodKey = "cod" | "stripe";
 
 function nullable(value: string) {
   const trimmed = value.trim();
@@ -144,39 +144,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       detail: "Manual payment at delivery",
       icon: HandCoins,
       configured: true
-    },
-    {
-      key: "bankTransfer" as const,
-      label: "Bank transfer",
-      detail: "Bank details or instructions required",
-      icon: Landmark,
-      configured: Boolean(
-        form.paymentSettings.bankTransfer.instructions.trim() ||
-          form.paymentSettings.bankTransfer.bankName.trim() ||
-          form.paymentSettings.bankTransfer.iban.trim() ||
-          form.paymentSettings.bankTransfer.accountNumber.trim()
-      )
-    },
-    {
-      key: "tabby" as const,
-      label: "Tabby",
-      detail: "Secret key + merchant code required",
-      icon: WalletCards,
-      configured: Boolean(form.paymentSettings.tabby.secretKey.trim() && form.paymentSettings.tabby.merchantCode.trim())
-    },
-    {
-      key: "tamara" as const,
-      label: "Tamara",
-      detail: "API token required",
-      icon: CalendarClock,
-      configured: Boolean(form.paymentSettings.tamara.apiToken.trim())
-    },
-    {
-      key: "paypal" as const,
-      label: "PayPal",
-      detail: "Client ID + client secret required",
-      icon: Wallet,
-      configured: Boolean(form.paymentSettings.paypal.clientId.trim() && form.paymentSettings.paypal.clientSecret.trim())
     }
   ];
 
@@ -462,7 +429,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         <p className="mt-1 text-sm font-semibold text-neutral-500">
           Enable methods, edit checkout labels, and add provider/account details from admin.
         </p>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
           {paymentStatusCards.map((item) => {
             const Icon = item.icon;
             const enabled = form.paymentSettings[item.key].enabled;
@@ -539,49 +506,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <label className="flex items-center gap-2 text-sm font-bold text-navy">
               <input
                 type="checkbox"
-                checked={form.paymentSettings.bankTransfer.enabled}
-                onChange={(event) => updatePayment("bankTransfer", "enabled", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Show Bank transfer at checkout
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                ["displayName", "Display name"],
-                ["bankName", "Bank name"],
-                ["accountName", "Account name"],
-                ["accountNumber", "Account number"],
-                ["iban", "IBAN"],
-                ["swift", "SWIFT"],
-                ["branch", "Branch"]
-              ].map(([key, label]) => (
-                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-                  {label}
-                  <input
-                    value={form.paymentSettings.bankTransfer[key as keyof PaymentSettings["bankTransfer"]] as string}
-                    onChange={(event) =>
-                      updatePayment("bankTransfer", key as keyof PaymentSettings["bankTransfer"], event.target.value as never)
-                    }
-                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                  />
-                </label>
-              ))}
-            </div>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              Bank transfer instructions
-              <textarea
-                rows={3}
-                value={form.paymentSettings.bankTransfer.instructions}
-                onChange={(event) => updatePayment("bankTransfer", "instructions", event.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
                 checked={form.paymentSettings.stripe.enabled}
                 onChange={(event) => updatePayment("stripe", "enabled", event.target.checked)}
                 className="accent-gold-500"
@@ -640,127 +564,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             </label>
           </div>
 
-          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
-                checked={form.paymentSettings.tabby.enabled}
-                onChange={(event) => updatePayment("tabby", "enabled", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Show Tabby at checkout
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                ["displayName", "Display name", "text"],
-                ["secretKey", "Secret key", "password"],
-                ["merchantCode", "Merchant code", "text"],
-                ["apiBaseUrl", "API base URL", "text"]
-              ].map(([key, label, type]) => (
-                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-                  {label}
-                  <input
-                    type={type}
-                    value={form.paymentSettings.tabby[key as keyof PaymentSettings["tabby"]] as string}
-                    onChange={(event) =>
-                      updatePayment("tabby", key as keyof PaymentSettings["tabby"], event.target.value as never)
-                    }
-                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                  />
-                </label>
-              ))}
-            </div>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              Tabby checkout text
-              <textarea
-                rows={2}
-                value={form.paymentSettings.tabby.instructions}
-                onChange={(event) => updatePayment("tabby", "instructions", event.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
-                checked={form.paymentSettings.tamara.enabled}
-                onChange={(event) => updatePayment("tamara", "enabled", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Show Tamara at checkout
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                ["displayName", "Display name", "text"],
-                ["apiToken", "API token", "password"],
-                ["apiBaseUrl", "API base URL", "text"]
-              ].map(([key, label, type]) => (
-                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-                  {label}
-                  <input
-                    type={type}
-                    value={form.paymentSettings.tamara[key as keyof PaymentSettings["tamara"]] as string}
-                    onChange={(event) =>
-                      updatePayment("tamara", key as keyof PaymentSettings["tamara"], event.target.value as never)
-                    }
-                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                  />
-                </label>
-              ))}
-            </div>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              Tamara checkout text
-              <textarea
-                rows={2}
-                value={form.paymentSettings.tamara.instructions}
-                onChange={(event) => updatePayment("tamara", "instructions", event.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
-                checked={form.paymentSettings.paypal.enabled}
-                onChange={(event) => updatePayment("paypal", "enabled", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Show PayPal at checkout
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                ["displayName", "Display name", "text"],
-                ["clientId", "Client ID", "text"],
-                ["clientSecret", "Client secret", "password"],
-                ["apiBaseUrl", "API base URL", "text"]
-              ].map(([key, label, type]) => (
-                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-                  {label}
-                  <input
-                    type={type}
-                    value={form.paymentSettings.paypal[key as keyof PaymentSettings["paypal"]] as string}
-                    onChange={(event) =>
-                      updatePayment("paypal", key as keyof PaymentSettings["paypal"], event.target.value as never)
-                    }
-                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                  />
-                </label>
-              ))}
-            </div>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              PayPal checkout text
-              <textarea
-                rows={2}
-                value={form.paymentSettings.paypal.instructions}
-                onChange={(event) => updatePayment("paypal", "instructions", event.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
-              />
-            </label>
-          </div>
         </div>
       </section>
 

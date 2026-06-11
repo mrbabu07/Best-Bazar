@@ -32,17 +32,6 @@ const paymentSettingsSchema = z.object({
     displayName: z.string().trim().default("Cash on delivery"),
     instructions: z.string().trim().default("")
   }),
-  bankTransfer: z.object({
-    enabled: z.boolean().default(false),
-    displayName: z.string().trim().default("Bank transfer"),
-    bankName: z.string().trim().default(""),
-    accountName: z.string().trim().default(""),
-    accountNumber: z.string().trim().default(""),
-    iban: z.string().trim().default(""),
-    swift: z.string().trim().default(""),
-    branch: z.string().trim().default(""),
-    instructions: z.string().trim().default("")
-  }),
   stripe: z.object({
     enabled: z.boolean().default(false),
     displayName: z.string().trim().default("Card payment"),
@@ -50,29 +39,6 @@ const paymentSettingsSchema = z.object({
     secretKey: z.string().trim().default(""),
     webhookSecret: z.string().trim().default(""),
     mode: z.enum(["payment_element", "hosted_checkout"]).default("payment_element"),
-    instructions: z.string().trim().default("")
-  }),
-  tabby: z.object({
-    enabled: z.boolean().default(false),
-    displayName: z.string().trim().default("Tabby"),
-    secretKey: z.string().trim().default(""),
-    merchantCode: z.string().trim().default(""),
-    apiBaseUrl: z.string().trim().default("https://api.tabby.ai"),
-    instructions: z.string().trim().default("")
-  }),
-  tamara: z.object({
-    enabled: z.boolean().default(false),
-    displayName: z.string().trim().default("Tamara"),
-    apiToken: z.string().trim().default(""),
-    apiBaseUrl: z.string().trim().default("https://api-sandbox.tamara.co"),
-    instructions: z.string().trim().default("")
-  }),
-  paypal: z.object({
-    enabled: z.boolean().default(false),
-    displayName: z.string().trim().default("PayPal"),
-    clientId: z.string().trim().default(""),
-    clientSecret: z.string().trim().default(""),
-    apiBaseUrl: z.string().trim().default("https://api-m.sandbox.paypal.com"),
     instructions: z.string().trim().default("")
   })
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, CreditCard, HandCoins, Landmark, ShieldCheck, Wallet, WalletCards } from "lucide-react";
+import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -109,7 +109,7 @@ const checkoutCopy = {
   }
 >;
 
-type PaymentOptionKey = "stripe" | "cod" | "tabby" | "tamara" | "paypal" | "bank_transfer";
+type PaymentOptionKey = "stripe" | "cod";
 
 type StripePaymentState = {
   clientSecret: string;
@@ -126,15 +126,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       ? "stripe"
       : paymentAvailability.cod
         ? "cod"
-        : paymentAvailability.tabby
-          ? "tabby"
-          : paymentAvailability.tamara
-            ? "tamara"
-            : paymentAvailability.paypal
-              ? "paypal"
-              : paymentAvailability.bankTransfer
-                ? "bank_transfer"
-                : "cod";
+        : "cod";
   const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
   const [emirate, setEmirate] = useState("Dubai");
   const [coupon, setCoupon] = useState("");
@@ -180,22 +172,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       return "COD";
     }
 
-    if (payment === "tabby") {
-      return "TABBY";
-    }
-
-    if (payment === "tamara") {
-      return "TAMARA";
-    }
-
-    if (payment === "paypal") {
-      return "PAYPAL";
-    }
-
-    if (payment === "bank_transfer") {
-      return "BANK_TRANSFER";
-    }
-
     return "STRIPE";
   };
 
@@ -208,19 +184,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       return paymentAvailability.codLabel;
     }
 
-    if (payment === "tabby") {
-      return `Pay with ${paymentAvailability.tabbyLabel}`;
-    }
-
-    if (payment === "tamara") {
-      return `Pay with ${paymentAvailability.tamaraLabel}`;
-    }
-
-    if (payment === "paypal") {
-      return `Pay with ${paymentAvailability.paypalLabel}`;
-    }
-
-    return `Place ${paymentAvailability.bankTransferLabel} order`;
+    return paymentAvailability.stripeLabel;
   };
 
   const paymentOptions = useMemo(
@@ -241,37 +205,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         icon: HandCoins,
         enabled: paymentAvailability.cod && shippingQuote.codAvailable
       },
-      {
-        key: "tabby" as const,
-        label: paymentAvailability.tabbyLabel,
-        detail: paymentAvailability.tabbyDetail,
-        icon: WalletCards,
-        enabled: paymentAvailability.tabby
-      },
-      {
-        key: "tamara" as const,
-        label: paymentAvailability.tamaraLabel,
-        detail: paymentAvailability.tamaraDetail,
-        icon: CalendarClock,
-        enabled: paymentAvailability.tamara
-      },
-      {
-        key: "paypal" as const,
-        label: paymentAvailability.paypalLabel,
-        detail: paymentAvailability.paypalDetail,
-        icon: Wallet,
-        enabled: paymentAvailability.paypal
-      },
-      {
-        key: "bank_transfer" as const,
-        label: paymentAvailability.bankTransferLabel,
-        detail:
-          paymentAvailability.bankTransferDetail ||
-          paymentAvailability.bankTransferInstructions ||
-          "Manual transfer after order confirmation.",
-        icon: Landmark,
-        enabled: paymentAvailability.bankTransfer
-      }
     ],
     [dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable, shippingQuote.rate.emirate]
   );
@@ -294,25 +227,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     if (payment === "cod" && !shippingQuote.codAvailable) {
       const nextPayment: PaymentOptionKey = paymentAvailability.stripe
         ? "stripe"
-        : paymentAvailability.tabby
-          ? "tabby"
-          : paymentAvailability.tamara
-            ? "tamara"
-            : paymentAvailability.paypal
-              ? "paypal"
-              : paymentAvailability.bankTransfer
-                ? "bank_transfer"
-                : "cod";
+        : "cod";
 
       setPayment(nextPayment);
     }
   }, [
     payment,
-    paymentAvailability.bankTransfer,
-    paymentAvailability.paypal,
     paymentAvailability.stripe,
-    paymentAvailability.tabby,
-    paymentAvailability.tamara,
     shippingQuote.codAvailable
   ]);
 
@@ -402,8 +323,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     };
 
     try {
-      const usesHostedCheckout = ["tabby", "tamara", "paypal"].includes(payment);
-      const usesPaymentEndpoint = payment === "stripe" || usesHostedCheckout;
+      const usesPaymentEndpoint = payment === "stripe";
       const endpoint = usesPaymentEndpoint ? "/api/payment/checkout" : "/api/orders";
       const response = await fetch(endpoint, {
         method: "POST",
@@ -433,15 +353,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         }
 
         throw new Error(labels.stripeUrlMissing);
-      }
-
-      if (usesHostedCheckout) {
-        if (!result.checkoutUrl) {
-          throw new Error(labels.stripeUrlMissing);
-        }
-
-        window.location.href = result.checkoutUrl;
-        return;
       }
 
       clearCart();
@@ -535,7 +446,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                 </div>
                 {!shippingQuote.codAvailable ? (
                   <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-sale">
-                    COD is unavailable for {shippingQuote.rate.emirate}. Please choose card, PayPal, Tabby, Tamara, or bank transfer.
+                    COD is unavailable for {shippingQuote.rate.emirate}. Please choose card payment.
                   </p>
                 ) : null}
               </div>
@@ -627,13 +538,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
               ) : null}
             </div>
             <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
-              Dubai-ready methods are controlled by admin settings. Online methods redirect to the configured provider when available.
+              Payment visibility is controlled by admin settings. Only cash on delivery and Stripe card payment are supported.
             </p>
-            {payment === "bank_transfer" && paymentAvailability.bankTransferInstructions ? (
-              <div className="mt-4 whitespace-pre-line rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm font-semibold leading-6 text-navy">
-                {paymentAvailability.bankTransferInstructions}
-              </div>
-            ) : null}
             {payment === "cod" && paymentAvailability.codDetail ? (
               <div className="mt-4 rounded-lg border border-neutral-200 bg-paper p-4 text-sm font-semibold leading-6 text-navy">
                 {paymentAvailability.codDetail}

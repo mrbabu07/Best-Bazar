@@ -25,6 +25,7 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
     where: { id: "store-settings" }
   });
   const shippingSettings = normalizeShippingSettings(settings);
+  const paymentSettings = normalizePaymentSettings(settings.paymentSettings);
   const settingsData = {
     storeNameEn: settings.storeNameEn,
     storeNameAr: settings.storeNameAr,
@@ -45,7 +46,7 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
     aedToBdt: String(settings.aedToBdt),
     aedToUsd: String(settings.aedToUsd),
     freeShippingThreshold: String(settings.freeShippingThreshold),
-    paymentSettings: normalizePaymentSettings(settings.paymentSettings),
+    paymentSettings,
     themeSettings: normalizeThemeSettings(settings.themeSettings),
     shippingRates: shippingSettings.shippingRates.map((rate) => ({
       key: rate.key,

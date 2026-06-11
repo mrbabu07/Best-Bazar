@@ -8,7 +8,7 @@ For an ordered first-day walkthrough, read `DEVELOPER_STEP_BY_STEP.md` first, th
 
 ## 1. Project Summary
 
-Best Bazar is a Dubai-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, Dubai delivery controls, multiple payment methods, order tracking, invoices, notifications, and SEO.
+Best Bazar is a Dubai-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, Dubai delivery controls, cash on delivery, Stripe card payments, order tracking, invoices, notifications, and SEO.
 
 The main product goal is to behave like a real Dubai ecommerce store:
 
@@ -16,7 +16,7 @@ The main product goal is to behave like a real Dubai ecommerce store:
 - Shop filters by category, brand, color, rating, price, search, sort, and tag.
 - Product cards and product detail pages with variant-aware images, color choices, size choices, SKU, and stock.
 - Cart stored in browser localStorage.
-- Checkout with guest checkout, apartment/tower fields, shipping area dropdown, delivery slot selection, coupons, VAT support, COD, bank transfer, Stripe, Tabby, Tamara, and PayPal.
+- Checkout with guest checkout, apartment/tower fields, shipping area dropdown, delivery slot selection, coupons, VAT support, cash on delivery, and Stripe card payment.
 - Account area for logged-in users.
 - Order confirmation and public/private order tracking.
 - Admin console for products, categories, banners, orders, reviews, coupons, users, settings, sales export, invoice print, and notifications.
@@ -30,7 +30,7 @@ The main product goal is to behave like a real Dubai ecommerce store:
 - Auth: NextAuth credentials login, optional Google OAuth
 - State: Zustand with localStorage persistence
 - Uploads: Cloudinary
-- Payments: Stripe Checkout, Tabby hosted checkout, Tamara hosted checkout, PayPal hosted approval/capture, COD, bank transfer
+- Payments: Stripe Checkout/Payment Element and cash on delivery
 - Email: Nodemailer SMTP
 - SMS/WhatsApp: Twilio-compatible API calls
 - Deployment assumptions: env-driven, no secrets committed
@@ -107,28 +107,9 @@ Stripe:
 - `STRIPE_WEBHOOK_SECRET`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 
-Tabby:
-
-- `TABBY_SECRET_KEY`
-- `TABBY_MERCHANT_CODE`
-- `TABBY_API_BASE_URL`: optional, defaults to Tabby production base.
-
-Tamara:
-
-- `TAMARA_API_TOKEN`
-- `TAMARA_API_BASE_URL`: optional, defaults to Tamara sandbox base.
-
-PayPal:
-
-- `PAYPAL_CLIENT_ID`
-- `PAYPAL_CLIENT_SECRET`
-- `PAYPAL_API_BASE_URL`: optional, defaults to PayPal sandbox.
-
 Manual payments:
 
 - `COD_ENABLED`: set to `"false"` to disable COD. COD is enabled by default.
-- `BANK_TRANSFER_ENABLED`: set to `"true"` to enable bank transfer.
-- `BANK_TRANSFER_INSTRUCTIONS`: enables bank transfer and shows instructions.
 
 Email:
 
@@ -285,10 +266,9 @@ Storefront/catalog:
 Orders and payments:
 
 - `GET /api/orders`: current user orders.
-- `POST /api/orders`: create manual payment order only, COD or bank transfer.
-- `POST /api/payment/checkout`: create hosted checkout order for Stripe, Tabby, Tamara, or PayPal.
+- `POST /api/orders`: create cash-on-delivery orders only.
+- `POST /api/payment/checkout`: create Stripe checkout/payment-intent orders only.
 - `POST /api/payment/webhook`: Stripe webhook for completed/expired checkout.
-- `GET /api/payment/paypal/capture`: capture approved PayPal order.
 - `POST /api/orders/track`: order tracking lookup.
 - `POST /api/account/orders/:id/cancel`: customer order cancellation for allowed statuses.
 - `PUT /api/account/profile`: profile update.
@@ -333,7 +313,7 @@ Prisma schema is `prisma/schema.prisma`.
 Enums:
 
 - `UserRole`: `USER`, `ADMIN`
-- `PaymentMethod`: `STRIPE`, `COD`, `TABBY`, `TAMARA`, `PAYPAL`, `BANK_TRANSFER`
+- `PaymentMethod`: Prisma enum still contains legacy values, but checkout validation currently accepts only `STRIPE` and `COD`.
 - `PaymentStatus`: `PENDING`, `PAID`, `FAILED`
 - `OrderStatus`: `PENDING`, `CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`
 - `DiscountType`: `PERCENT`, `FIXED`
@@ -450,24 +430,21 @@ Source files:
 - `lib/payment-gateways.ts`
 - `app/api/payment/checkout/route.ts`
 - `app/api/payment/webhook/route.ts`
-- `app/api/payment/paypal/capture/route.ts`
 - `lib/stripe.ts`
 
 Payment method behavior:
 
-- COD and bank transfer create order through `/api/orders`.
-- Stripe, Tabby, Tamara, and PayPal create order through `/api/payment/checkout`.
-- Hosted payments reserve stock before redirecting to provider.
+- COD creates order through `/api/orders`.
+- Stripe creates order through `/api/payment/checkout`.
+- Stripe orders reserve stock before redirect/payment confirmation.
 - Stripe webhook marks completed sessions as `CONFIRMED` and `PAID`.
 - Stripe expired sessions mark order as `CANCELLED` and `FAILED`.
-- PayPal capture endpoint captures after approval and updates order.
-- Tabby and Tamara return hosted checkout URLs but full provider webhook handling may need extension depending on production requirements.
 
 Payment availability:
 
-- `getPaymentAvailability()` in `lib/payment-gateways.ts` checks env vars.
-- Checkout UI marks unavailable methods as setup needed.
-- Online payment endpoint returns `503` when the selected provider is not configured.
+- `getPaymentAvailability()` in `lib/payment-settings.ts` checks admin settings/env fallback for Stripe and COD.
+- Checkout UI only renders enabled/configured COD and Stripe methods.
+- Online payment endpoint returns `503` when Stripe is not configured.
 
 ## 14. Notifications
 
@@ -703,10 +680,10 @@ Change checkout fields:
 
 Change payment providers:
 
-- Availability: `lib/payment-gateways.ts`
+- Availability: `lib/payment-settings.ts`
 - Checkout UI: `components/cart/CheckoutPageContent.tsx`
 - Checkout API: `app/api/payment/checkout/route.ts`
-- Webhooks/capture: `app/api/payment/webhook/route.ts`, `app/api/payment/paypal/capture/route.ts`
+- Webhooks: `app/api/payment/webhook/route.ts`
 
 Change admin navigation:
 
@@ -760,8 +737,7 @@ For checkout/order changes, manually test:
 - Cart quantity update.
 - Guest checkout.
 - COD order.
-- Bank transfer order when enabled.
-- Hosted payment route returns checkout URL when env is configured.
+- Stripe payment route returns a client secret or checkout URL when configured.
 - Coupon valid and invalid paths.
 - Stock decrement after order.
 - Stock restore after cancellation.

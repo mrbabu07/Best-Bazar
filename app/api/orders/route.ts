@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const session = await getOptionalServerSession(request);
     const data = orderCreateSchema.parse(await request.json());
 
-    if (!["COD", "BANK_TRANSFER"].includes(data.paymentMethod)) {
+    if (data.paymentMethod !== "COD") {
       return NextResponse.json({ error: "Use the payment checkout endpoint for online payment methods." }, { status: 400 });
     }
 
