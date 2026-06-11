@@ -275,7 +275,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     ],
     [dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable, shippingQuote.rate.emirate]
   );
-  const selectedPaymentOption = paymentOptions.find((option) => option.key === payment);
+  const visiblePaymentOptions = useMemo(
+    () => paymentOptions.filter((option) => option.enabled),
+    [paymentOptions]
+  );
+  const selectedPaymentOption = visiblePaymentOptions.find((option) => option.key === payment);
 
   useEffect(() => {
     setAppliedCoupon("");
@@ -317,12 +321,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       return;
     }
 
-    const nextPayment = paymentOptions.find((option) => option.enabled)?.key;
+    const nextPayment = visiblePaymentOptions[0]?.key;
 
     if (nextPayment) {
       setPayment(nextPayment);
     }
-  }, [paymentOptions, selectedPaymentOption]);
+  }, [selectedPaymentOption, visiblePaymentOptions]);
 
   const updateCoupon = (value: string) => {
     setCoupon(value);
@@ -563,7 +567,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
             <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {paymentOptions.map((option) => {
+              {visiblePaymentOptions.map((option) => {
                 const Icon = option.icon;
                 const selected = payment === option.key;
 
@@ -575,7 +579,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                       "group relative flex min-h-[78px] cursor-pointer items-center gap-3 overflow-hidden rounded-lg border bg-white p-3.5 transition",
                       "hover:-translate-y-0.5 hover:border-gold-300 hover:shadow-soft",
                       selected && "border-gold-500 bg-gold-50 shadow-soft ring-1 ring-gold-200",
-                      !option.enabled && "cursor-not-allowed bg-neutral-50 opacity-65 hover:translate-y-0 hover:border-neutral-200 hover:shadow-none"
                     )}
                   >
                     <input
@@ -584,7 +587,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                       value={option.key}
                       checked={payment === option.key}
                       onChange={() => setPayment(option.key)}
-                      disabled={!option.enabled}
                       className="sr-only"
                     />
                     <span
@@ -593,7 +595,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                         selected
                           ? "border-navy bg-navy text-white"
                           : "border-gold-100 bg-paper text-gold-700 group-hover:bg-gold-50",
-                        !option.enabled && "border-neutral-200 bg-white text-neutral-400"
                       )}
                     >
                       <Icon size={20} />
@@ -604,12 +605,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                         {option.detail}
                       </span>
                       <span
-                        className={cn(
-                          "mt-2 inline-flex h-6 max-w-full items-center rounded-md px-2 text-[11px] font-bold",
-                          option.enabled ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-500"
-                        )}
+                        className="mt-2 inline-flex h-6 max-w-full items-center rounded-md bg-emerald-50 px-2 text-[11px] font-bold text-emerald-700"
                       >
-                        <span className="truncate">{option.enabled ? "Available" : "Setup needed"}</span>
+                        <span className="truncate">Available</span>
                       </span>
                     </span>
                     <span
@@ -622,6 +620,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   </label>
                 );
               })}
+              {!visiblePaymentOptions.length ? (
+                <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm font-bold text-sale sm:col-span-2">
+                  No payment method is currently available. Please contact support or enable a payment method from admin settings.
+                </div>
+              ) : null}
             </div>
             <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
               Dubai-ready methods are controlled by admin settings. Online methods redirect to the configured provider when available.

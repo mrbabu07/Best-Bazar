@@ -1,6 +1,6 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { CalendarClock, CreditCard, HandCoins, Landmark, Save, Wallet, WalletCards } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
@@ -60,6 +60,8 @@ type AdminSettingsFormProps = {
   saveLabel: string;
 };
 
+type PaymentMethodKey = keyof PaymentSettings;
+
 function nullable(value: string) {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
@@ -107,6 +109,76 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       }
     }));
   };
+
+  const togglePaymentVisibility = (method: PaymentMethodKey) => {
+    setForm((current) => ({
+      ...current,
+      paymentSettings: {
+        ...current.paymentSettings,
+        [method]: {
+          ...current.paymentSettings[method],
+          enabled: !current.paymentSettings[method].enabled
+        }
+      }
+    }));
+  };
+
+  const stripeReady =
+    Boolean(form.paymentSettings.stripe.secretKey.trim()) &&
+    (form.paymentSettings.stripe.mode === "hosted_checkout" ||
+      Boolean(form.paymentSettings.stripe.publishableKey.trim()));
+  const paymentStatusCards = [
+    {
+      key: "stripe" as const,
+      label: "Stripe / card",
+      detail:
+        form.paymentSettings.stripe.mode === "payment_element"
+          ? "Inline card form needs publishable + secret key"
+          : "Hosted checkout needs secret key",
+      icon: CreditCard,
+      configured: stripeReady
+    },
+    {
+      key: "cod" as const,
+      label: "Cash on delivery",
+      detail: "Manual payment at delivery",
+      icon: HandCoins,
+      configured: true
+    },
+    {
+      key: "bankTransfer" as const,
+      label: "Bank transfer",
+      detail: "Bank details or instructions required",
+      icon: Landmark,
+      configured: Boolean(
+        form.paymentSettings.bankTransfer.instructions.trim() ||
+          form.paymentSettings.bankTransfer.bankName.trim() ||
+          form.paymentSettings.bankTransfer.iban.trim() ||
+          form.paymentSettings.bankTransfer.accountNumber.trim()
+      )
+    },
+    {
+      key: "tabby" as const,
+      label: "Tabby",
+      detail: "Secret key + merchant code required",
+      icon: WalletCards,
+      configured: Boolean(form.paymentSettings.tabby.secretKey.trim() && form.paymentSettings.tabby.merchantCode.trim())
+    },
+    {
+      key: "tamara" as const,
+      label: "Tamara",
+      detail: "API token required",
+      icon: CalendarClock,
+      configured: Boolean(form.paymentSettings.tamara.apiToken.trim())
+    },
+    {
+      key: "paypal" as const,
+      label: "PayPal",
+      detail: "Client ID + client secret required",
+      icon: Wallet,
+      configured: Boolean(form.paymentSettings.paypal.clientId.trim() && form.paymentSettings.paypal.clientSecret.trim())
+    }
+  ];
 
   const updateTheme = <Key extends keyof ThemeSettings>(key: Key, value: ThemeSettings[Key]) => {
     setForm((current) => ({
@@ -390,7 +462,50 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         <p className="mt-1 text-sm font-semibold text-neutral-500">
           Enable methods, edit checkout labels, and add provider/account details from admin.
         </p>
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {paymentStatusCards.map((item) => {
+            const Icon = item.icon;
+            const enabled = form.paymentSettings[item.key].enabled;
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => togglePaymentVisibility(item.key)}
+                className="flex min-h-[116px] items-start gap-3 rounded-lg border border-neutral-200 bg-paper p-4 text-left transition hover:border-gold-300 hover:bg-gold-50"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-white text-gold-700 shadow-sm">
+                  <Icon size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-black text-navy">{item.label}</span>
+                    <span
+                      className={`rounded-full px-2 py-1 text-[10px] font-black ${
+                        enabled ? "bg-emerald-50 text-emerald-700" : "bg-neutral-200 text-neutral-600"
+                      }`}
+                    >
+                      {enabled ? "Visible" : "Hidden"}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-1 text-[10px] font-black ${
+                        item.configured ? "bg-gold-100 text-gold-800" : "bg-red-50 text-sale"
+                      }`}
+                    >
+                      {item.configured ? "Configured" : "Setup needed"}
+                    </span>
+                  </span>
+                  <span className="mt-2 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
+                  <span className="mt-3 block text-xs font-bold text-gold-800">
+                    Click to {enabled ? "hide from checkout" : "show at checkout"}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
           <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
             <label className="flex items-center gap-2 text-sm font-bold text-navy">
               <input
@@ -399,7 +514,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 onChange={(event) => updatePayment("cod", "enabled", event.target.checked)}
                 className="accent-gold-500"
               />
-              Cash on delivery enabled
+              Show Cash on delivery at checkout
             </label>
             <label className="grid gap-2 text-sm font-semibold text-navy">
               COD display name
@@ -428,7 +543,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 onChange={(event) => updatePayment("bankTransfer", "enabled", event.target.checked)}
                 className="accent-gold-500"
               />
-              Bank transfer enabled
+              Show Bank transfer at checkout
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
@@ -471,7 +586,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 onChange={(event) => updatePayment("stripe", "enabled", event.target.checked)}
                 className="accent-gold-500"
               />
-              Stripe / card enabled
+              Show Stripe / card at checkout
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-semibold text-navy">
@@ -503,6 +618,9 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                   <input
                     type={key === "publishableKey" ? "text" : "password"}
                     value={form.paymentSettings.stripe[key as keyof PaymentSettings["stripe"]] as string}
+                    placeholder={
+                      key === "publishableKey" ? "pk_live_..." : key === "secretKey" ? "sk_live_..." : "whsec_..."
+                    }
                     onChange={(event) =>
                       updatePayment("stripe", key as keyof PaymentSettings["stripe"], event.target.value as never)
                     }
@@ -530,7 +648,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 onChange={(event) => updatePayment("tabby", "enabled", event.target.checked)}
                 className="accent-gold-500"
               />
-              Tabby enabled
+              Show Tabby at checkout
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
@@ -571,7 +689,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 onChange={(event) => updatePayment("tamara", "enabled", event.target.checked)}
                 className="accent-gold-500"
               />
-              Tamara enabled
+              Show Tamara at checkout
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
@@ -611,7 +729,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 onChange={(event) => updatePayment("paypal", "enabled", event.target.checked)}
                 className="accent-gold-500"
               />
-              PayPal enabled
+              Show PayPal at checkout
             </label>
             <div className="grid gap-3 sm:grid-cols-2">
               {[
