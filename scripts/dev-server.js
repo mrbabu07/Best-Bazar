@@ -65,19 +65,44 @@ Get-CimInstance Win32_Process | Where-Object {
   }
 }
 
-function clearWebpackCache() {
-  const cachePath = path.resolve(root, ".next", "cache");
+function assertPathInsideRoot(targetPath) {
+  const relativePath = path.relative(root, targetPath);
 
-  if (!cachePath.startsWith(root)) {
-    throw new Error(`Refusing to remove unexpected cache path: ${cachePath}`);
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+    throw new Error(`Refusing to remove unexpected generated path: ${targetPath}`);
+  }
+}
+
+function removeGeneratedPath(targetPath) {
+  assertPathInsideRoot(targetPath);
+  fs.rmSync(targetPath, { recursive: true, force: true });
+}
+
+function clearProductionBuildOutput() {
+  const nextPath = path.resolve(root, ".next");
+  const buildIdPath = path.resolve(nextPath, "BUILD_ID");
+
+  if (!fs.existsSync(buildIdPath)) {
+    return false;
   }
 
-  fs.rmSync(cachePath, { recursive: true, force: true });
+  removeGeneratedPath(nextPath);
+  return true;
+}
+
+function clearWebpackCache() {
+  const cachePath = path.resolve(root, ".next", "cache");
+  removeGeneratedPath(cachePath);
 }
 
 stopPreviousDevServer();
 stopStaleNextProcesses();
-clearWebpackCache();
+const clearedProductionOutput = clearProductionBuildOutput();
+
+if (!clearedProductionOutput) {
+  clearWebpackCache();
+}
+
 fs.writeFileSync(pidFile, String(process.pid));
 
 console.log(`Starting Next dev server on http://localhost:${port}`);
