@@ -62,6 +62,10 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     totalProducts,
     lowStockCount,
     pendingReviews,
+    totalCategories,
+    totalUsers,
+    activeCoupons,
+    activeBanners,
     lowStockProducts,
     recentOrders
   ] = await Promise.all([
@@ -75,6 +79,10 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     prisma.product.count({ where: { isActive: true } }),
     prisma.product.count({ where: { isActive: true, stock: { lte: 10 } } }),
     prisma.review.count({ where: { isApproved: false } }),
+    prisma.category.count(),
+    prisma.user.count(),
+    prisma.coupon.count({ where: { isActive: true } }),
+    prisma.banner.count({ where: { isActive: true } }),
     prisma.product.findMany({
       where: { isActive: true, stock: { lte: 10 } },
       orderBy: { stock: "asc" },
@@ -110,51 +118,128 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
   });
   const maxRevenue = Math.max(...revenueSeries, 1);
   const notificationCount = pendingOrders + lowStockCount + pendingReviews;
+
   const quickActions = [
     { label: "View storefront", href: `/${locale}`, icon: Home, tone: "primary" },
     { label: "Add product", href: `/${locale}/admin/products/new`, icon: Plus, tone: "secondary" },
     { label: "Export sales", href: "/api/admin/reports/sales", icon: Download, tone: "secondary" },
     { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary", count: pendingOrders },
     { label: "Shipping settings", href: `/${locale}/admin/settings`, icon: Settings, tone: "secondary" }
-  ];
-  const controlGroups = [
+  ] as const;
+
+  const routeGroups = [
     {
-      title: locale === "ar" ? "إدارة الكتالوج" : "Catalog control",
-      description: locale === "ar" ? "المنتجات والتصنيفات والمخزون." : "Products, categories, and inventory.",
-      icon: Boxes,
-      links: [
-        { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: PackageCheck, count: lowStockCount },
-        { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags }
-      ]
-    },
-    {
-      title: locale === "ar" ? "إدارة الطلبات" : "Order control",
-      description: locale === "ar" ? "الطلبات والتحديثات والتقييمات." : "Orders, fulfillment, and reviews.",
+      title: "Daily operations",
+      description: "Routes for work that needs the fastest admin response.",
       icon: ShoppingCart,
-      links: [
-        { label: dictionary.admin.orders, href: `/${locale}/admin/orders?status=PENDING`, icon: Truck, count: pendingOrders },
-        { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews?status=pending`, icon: Star, count: pendingReviews }
+      routes: [
+        {
+          title: "Orders",
+          path: `/${locale}/admin/orders`,
+          href: `/${locale}/admin/orders`,
+          purpose: "Confirm orders, update delivery status, print invoices, and export sales.",
+          actions: ["Pending orders", "Delivery status", "Invoice print", "Sales export"],
+          icon: Truck,
+          count: pendingOrders,
+          countLabel: "pending",
+          alert: true
+        },
+        {
+          title: "Reviews",
+          path: `/${locale}/admin/reviews`,
+          href: `/${locale}/admin/reviews?status=pending`,
+          purpose: "Approve, hide, delete, and search customer product reviews.",
+          actions: ["Approve", "Hide/delete", "Search", "Product rating"],
+          icon: Star,
+          count: pendingReviews,
+          countLabel: "waiting",
+          alert: true
+        }
       ]
     },
     {
-      title: locale === "ar" ? "العملاء والعروض" : "Customers and promos",
-      description: locale === "ar" ? "المستخدمون والقسائم والعروض." : "Users, coupons, and campaigns.",
+      title: "Catalog setup",
+      description: "Routes for products, variants, category sizes, stock, and product SEO.",
+      icon: Boxes,
+      routes: [
+        {
+          title: "Products",
+          path: `/${locale}/admin/products`,
+          href: `/${locale}/admin/products`,
+          purpose: "Edit product info, color/size variants, images, stock, price, and SEO metadata.",
+          actions: ["Variants", "Stock", "Images", "SEO/meta"],
+          icon: PackageCheck,
+          count: lowStockCount,
+          countLabel: "low stock",
+          alert: true,
+          secondary: { label: "Add product", href: `/${locale}/admin/products/new` }
+        },
+        {
+          title: "Categories",
+          path: `/${locale}/admin/categories`,
+          href: `/${locale}/admin/categories`,
+          purpose: "Manage category structure, product type rules, size options, and storefront grouping.",
+          actions: ["Category tree", "Size rules", "Product fields", "Shop grouping"],
+          icon: Tags,
+          count: totalCategories,
+          countLabel: "categories"
+        }
+      ]
+    },
+    {
+      title: "Customers and promotions",
+      description: "Routes for customer accounts, roles, offers, and discount campaigns.",
       icon: Users,
-      links: [
-        { label: dictionary.admin.users, href: `/${locale}/admin/users`, icon: Users },
-        { label: dictionary.admin.coupons, href: `/${locale}/admin/coupons`, icon: TicketPercent }
+      routes: [
+        {
+          title: "Users",
+          path: `/${locale}/admin/users`,
+          href: `/${locale}/admin/users`,
+          purpose: "View customers, admin roles, account status, and customer order history.",
+          actions: ["Customers", "Admin roles", "Ban/unban", "Order history"],
+          icon: Users,
+          count: totalUsers,
+          countLabel: "users"
+        },
+        {
+          title: "Coupons",
+          path: `/${locale}/admin/coupons`,
+          href: `/${locale}/admin/coupons`,
+          purpose: "Create Dubai-ready discounts with usage limits, dates, and checkout eligibility.",
+          actions: ["Discounts", "Expiry", "Usage limit", "Checkout rules"],
+          icon: TicketPercent,
+          count: activeCoupons,
+          countLabel: "active"
+        }
       ]
     },
     {
-      title: locale === "ar" ? "واجهة المتجر" : "Storefront control",
-      description: locale === "ar" ? "البانرات والإعدادات العامة." : "Hero banners and store settings.",
+      title: "Storefront and settings",
+      description: "Routes for what shoppers see and the business settings behind checkout.",
       icon: ImagePlus,
-      links: [
-        { label: locale === "ar" ? "البانرات" : "Banners", href: `/${locale}/admin/banners`, icon: ImagePlus },
-        { label: dictionary.admin.settings, href: `/${locale}/admin/settings`, icon: Settings }
+      routes: [
+        {
+          title: "Banners",
+          path: `/${locale}/admin/banners`,
+          href: `/${locale}/admin/banners`,
+          purpose: "Control homepage hero slides, campaign images, buttons, and display order.",
+          actions: ["Hero slides", "Campaign image", "CTA links", "Sort order"],
+          icon: ImagePlus,
+          count: activeBanners,
+          countLabel: "active"
+        },
+        {
+          title: "Settings",
+          path: `/${locale}/admin/settings`,
+          href: `/${locale}/admin/settings`,
+          purpose: "Manage payments, shipping areas, delivery slots, VAT/TRN, theme, SEO, and support links.",
+          actions: ["Payments", "Shipping", "VAT/TRN", "Theme UI"],
+          icon: Settings
+        }
       ]
     }
-  ];
+  ] as const;
+
   const notificationItems = [
     {
       label: "Pending orders",
@@ -186,8 +271,8 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     <div>
       <AdminPageHeader
         eyebrow={dictionary.admin.dashboard}
-        title={dictionary.admin.dashboard}
-        subtitle="Revenue, order, inventory, and fulfillment overview for the last 30 days."
+        title="Admin route guide"
+        subtitle="Open the dashboard and know exactly which admin route handles each ecommerce task."
         action={
           <div className="flex flex-wrap gap-2">
             {quickActions.slice(0, 2).map((item) => {
@@ -215,15 +300,15 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
       <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">
-              {locale === "ar" ? "مركز التحكم" : "Control center"}
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">Route map</p>
+            <h2 className="mt-2 text-xl font-bold text-navy">Choose the right admin area faster</h2>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-neutral-500">
+              Each card shows the route, the job it controls, and the exact actions available inside that page.
             </p>
-            <h2 className="mt-2 text-xl font-bold text-navy">
-              {locale === "ar" ? "كل جزء منفصل مثل لوحة تجارة إلكترونية" : "Separate ecommerce management areas"}
-            </h2>
           </div>
-          <Badge tone="gold">{locale === "ar" ? "إدارة سريعة" : "Quick manage"}</Badge>
+          <Badge tone={notificationCount > 0 ? "red" : "green"}>{notificationCount} needs attention</Badge>
         </div>
+
         <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
             {quickActions.map((item) => {
@@ -243,15 +328,14 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                     <span className="truncate">{item.label}</span>
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    {count > 0 ? (
-                      <Badge tone="red">{count > 99 ? "99+" : count}</Badge>
-                    ) : null}
+                    {count > 0 ? <Badge tone="red">{count > 99 ? "99+" : count}</Badge> : null}
                     <span className="text-gold-700">-&gt;</span>
                   </span>
                 </Link>
               );
             })}
           </div>
+
           <div id="notifications" className="scroll-mt-24 rounded-md border border-gold-100 bg-gold-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -284,43 +368,81 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
             </div>
           </div>
         </div>
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {controlGroups.map((group) => {
+
+        <div className="mt-6 grid gap-5 xl:grid-cols-2">
+          {routeGroups.map((group) => {
             const GroupIcon = group.icon;
 
             return (
               <div key={group.title} className="rounded-lg border border-neutral-200 bg-paper p-4">
                 <div className="flex items-start gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-md bg-gold-100 text-gold-800">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-gold-100 text-gold-800">
                     <GroupIcon size={19} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-bold text-navy">{group.title}</h3>
                     <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{group.description}</p>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-2">
-                  {group.links.map((item) => {
-                    const ItemIcon = item.icon;
-                    const count = "count" in item ? item.count ?? 0 : 0;
+
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  {group.routes.map((route) => {
+                    const RouteIcon = route.icon;
+                    const routeCount = "count" in route ? route.count : undefined;
+                    const countLabel = "countLabel" in route ? route.countLabel : "";
+                    const isAlert = "alert" in route && route.alert && typeof routeCount === "number" && routeCount > 0;
+                    const hasSecondary = "secondary" in route;
 
                     return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex h-10 items-center justify-between gap-3 rounded-md bg-white px-3 text-sm font-bold text-navy transition hover:bg-gold-50"
-                      >
-                        <span className="inline-flex min-w-0 items-center gap-2">
-                          <ItemIcon size={16} className="text-gold-700" />
-                          <span className="truncate">{item.label}</span>
-                        </span>
-                        <span className="inline-flex shrink-0 items-center gap-2">
-                          {count > 0 ? (
-                            <Badge tone="red">{count > 99 ? "99+" : count}</Badge>
+                      <article key={route.href} className="flex min-h-64 flex-col rounded-md border border-neutral-200 bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-neutral-100 text-gold-700">
+                              <RouteIcon size={18} />
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-navy">{route.title}</h4>
+                              <p className="mt-1 truncate rounded bg-paper px-2 py-1 font-mono text-[11px] font-semibold text-neutral-500">
+                                {route.path}
+                              </p>
+                            </div>
+                          </div>
+                          {typeof routeCount === "number" ? (
+                            <Badge tone={isAlert ? "red" : "blue"}>
+                              {routeCount > 99 ? "99+" : routeCount} {countLabel}
+                            </Badge>
                           ) : null}
-                          <span className="text-gold-700">-&gt;</span>
-                        </span>
-                      </Link>
+                        </div>
+
+                        <p className="mt-4 text-sm font-semibold leading-6 text-neutral-600">{route.purpose}</p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {route.actions.map((action) => (
+                            <span
+                              key={action}
+                              className="rounded-full bg-gold-50 px-2.5 py-1 text-[11px] font-bold text-gold-800"
+                            >
+                              {action}
+                            </span>
+                          ))}
+                        </div>
+
+                        <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                          <Link
+                            href={route.href}
+                            className="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-navy px-3 text-sm font-bold text-white transition hover:bg-neutral-800"
+                          >
+                            Open route
+                          </Link>
+                          {hasSecondary ? (
+                            <Link
+                              href={route.secondary.href}
+                              className="inline-flex h-10 items-center justify-center rounded-md border border-gold-200 px-3 text-sm font-bold text-navy transition hover:bg-gold-50"
+                            >
+                              {route.secondary.label}
+                            </Link>
+                          ) : null}
+                        </div>
+                      </article>
                     );
                   })}
                 </div>
@@ -384,9 +506,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
           <h2 className="text-lg font-bold text-navy">{dictionary.admin.lowStock}</h2>
           <div className="mt-4 grid gap-3">
             {lowStockProducts.length === 0 ? (
-              <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">
-                No low stock products.
-              </p>
+              <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">No low stock products.</p>
             ) : null}
             {lowStockProducts.map((product) => (
               <div key={product.id} className="flex items-center justify-between gap-4 rounded-md bg-paper p-3">
@@ -422,14 +542,10 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                   <td className="px-5 py-4 font-bold text-navy">{order.orderNumber}</td>
                   <td className="px-5 py-4 text-neutral-600">{order.customerName}</td>
                   <td className="px-5 py-4">
-                    <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>
-                      {order.paymentStatus}
-                    </Badge>
+                    <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>{order.paymentStatus}</Badge>
                   </td>
                   <td className="px-5 py-4">
-                    <Badge tone={order.orderStatus === "DELIVERED" ? "green" : "blue"}>
-                      {order.orderStatus}
-                    </Badge>
+                    <Badge tone={order.orderStatus === "DELIVERED" ? "green" : "blue"}>{order.orderStatus}</Badge>
                   </td>
                   <td className="px-5 py-4 font-bold text-navy">
                     {formatCurrency(Number(order.total), "AED", locale)}
