@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { normalizeCategoryCustomFields, normalizeCustomFieldValues, normalizeFashionFields } from "@/lib/category-fields";
+import { getPresetColorHex, normalizeColorKey, shopColorPalette } from "@/lib/color-palette";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
@@ -186,19 +187,42 @@ async function readStoreVariantColors() {
   });
   const colors = new Map<string, ProductColor>();
 
+  for (const preset of shopColorPalette) {
+    colors.set(preset.key, {
+      key: preset.key,
+      name: { en: preset.nameEn, ar: preset.nameAr },
+      colorHex: preset.colorHex,
+      count: 0
+    });
+  }
+
   for (const variant of variants) {
-    const key = variant.colorNameEn.trim().toLowerCase();
+    const key = normalizeColorKey(variant.colorNameEn);
+
+    if (!key) {
+      continue;
+    }
+
     const current = colors.get(key);
+    const fallbackHex = getPresetColorHex(variant.colorNameEn);
 
     colors.set(key, {
       key,
       name: current?.name ?? { en: variant.colorNameEn, ar: variant.colorNameAr },
-      colorHex: current?.colorHex ?? variant.colorHex ?? undefined,
+      colorHex: variant.colorHex ?? current?.colorHex ?? fallbackHex,
       count: (current?.count ?? 0) + 1
     });
   }
 
-  return Array.from(colors.values());
+  return Array.from(colors.values()).sort((first, second) => {
+    const stockPriority = Number(second.count > 0) - Number(first.count > 0);
+
+    if (stockPriority) {
+      return stockPriority;
+    }
+
+    return first.name.en.localeCompare(second.name.en);
+  });
 }
 
 export const getStoreVariantColors = unstable_cache(readStoreVariantColors, ["store-variant-colors"], {

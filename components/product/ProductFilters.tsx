@@ -226,7 +226,7 @@ export function ProductFilters({
               </button>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex max-h-72 flex-wrap gap-3 overflow-y-auto pr-1">
             <button
               type="button"
               onClick={() => setSelectedColors([])}
@@ -242,23 +242,36 @@ export function ProductFilters({
             {colors.map((item) => {
               const value = item.name.en;
               const selected = hasFilterValue(selectedColors, value);
+              const unavailable = item.count <= 0 && !selected;
 
               return (
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => setSelectedColors((currentValues) => toggleFilterValue(currentValues, value))}
+                  onClick={() => {
+                    if (!unavailable) {
+                      setSelectedColors((currentValues) => toggleFilterValue(currentValues, value));
+                    }
+                  }}
                   aria-pressed={selected}
+                  aria-disabled={unavailable}
+                  disabled={unavailable}
                   title={`${getLocalized(item.name, locale)} (${item.count})`}
-                  className="group grid max-w-20 justify-items-center gap-1 text-center text-[11px] font-bold text-neutral-600"
+                  className={`group grid max-w-20 justify-items-center gap-1 text-center text-[11px] font-bold transition ${
+                    unavailable ? "cursor-not-allowed opacity-45" : "text-neutral-600"
+                  }`}
                 >
                   <span
                     className={`h-6 w-6 rounded-full border-2 shadow-sm transition group-hover:scale-110 ${
-                      selected ? "scale-110 border-navy ring-2 ring-gold-200" : "border-white ring-1 ring-neutral-200"
+                      selected
+                        ? "scale-110 border-navy ring-2 ring-gold-200"
+                        : unavailable
+                          ? "border-white ring-1 ring-neutral-100"
+                          : "border-white ring-1 ring-neutral-200"
                     }`}
                     style={{ backgroundColor: item.colorHex ?? "#ffffff" }}
                   />
-                  <span className={selected ? "text-navy" : "text-neutral-500"}>
+                  <span className={selected ? "text-navy" : unavailable ? "text-neutral-300" : "text-neutral-500"}>
                     {getLocalized(item.name, locale)} ({item.count})
                   </span>
                 </button>
