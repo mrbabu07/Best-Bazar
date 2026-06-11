@@ -7,6 +7,7 @@ import {
   BarChart3,
   Bell,
   Boxes,
+  ChevronRight,
   Globe2,
   Home,
   ImagePlus,
@@ -14,6 +15,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Plus,
   Receipt,
   Settings,
   Star,
@@ -49,36 +51,127 @@ export function AdminShell({
   const [open, setOpen] = useState(false);
   const nextLocale = locale === "en" ? "ar" : "en";
   const switchLocalePath = pathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
-  const bannersLabel = locale === "ar" ? "البانرات" : "Banners";
-
   const totalNotifications =
     notifications.pendingOrders + notifications.pendingReviews + notifications.lowStockProducts;
   const formatCount = (count: number) => (count > 99 ? "99+" : String(count));
 
-  const navItems = [
-    { label: dictionary.admin.dashboard, href: `/${locale}/admin/dashboard`, icon: LayoutDashboard },
-    { label: "Notifications", href: `/${locale}/admin/dashboard#notifications`, icon: Bell, count: totalNotifications },
-    { label: dictionary.admin.categories, href: `/${locale}/admin/categories`, icon: Tags },
-    { label: dictionary.admin.products, href: `/${locale}/admin/products`, icon: Package, count: notifications.lowStockProducts },
-    { label: dictionary.admin.orders, href: `/${locale}/admin/orders`, icon: Receipt, count: notifications.pendingOrders },
-    { label: dictionary.admin.users, href: `/${locale}/admin/users`, icon: Users },
-    { label: dictionary.admin.reviews, href: `/${locale}/admin/reviews`, icon: Star, count: notifications.pendingReviews },
-    { label: dictionary.admin.coupons, href: `/${locale}/admin/coupons`, icon: TicketPercent },
-    { label: bannersLabel, href: `/${locale}/admin/banners`, icon: ImagePlus },
-    { label: dictionary.admin.settings, href: `/${locale}/admin/settings`, icon: Settings }
+  const navGroups = [
+    {
+      title: "Overview",
+      description: "Daily snapshot",
+      items: [
+        {
+          label: dictionary.admin.dashboard,
+          href: `/${locale}/admin/dashboard`,
+          icon: LayoutDashboard,
+          description: "Revenue, orders, stock, and recent activity"
+        },
+        {
+          label: "Notifications",
+          href: `/${locale}/admin/dashboard#notifications`,
+          icon: Bell,
+          description: "Pending orders, low stock, and reviews",
+          count: totalNotifications
+        }
+      ]
+    },
+    {
+      title: "Orders and fulfillment",
+      description: "Confirm, deliver, print",
+      items: [
+        {
+          label: dictionary.admin.orders,
+          href: `/${locale}/admin/orders`,
+          icon: Receipt,
+          description: "Payment status, delivery status, invoices",
+          count: notifications.pendingOrders
+        }
+      ]
+    },
+    {
+      title: "Catalog setup",
+      description: "Products, sizes, stock",
+      items: [
+        {
+          label: dictionary.admin.products,
+          href: `/${locale}/admin/products`,
+          icon: Package,
+          description: "Variants, images, prices, stock, SEO",
+          count: notifications.lowStockProducts
+        },
+        {
+          label: "Add product",
+          href: `/${locale}/admin/products/new`,
+          icon: Plus,
+          description: "Color, size, stock, category rules"
+        },
+        {
+          label: dictionary.admin.categories,
+          href: `/${locale}/admin/categories`,
+          icon: Tags,
+          description: "Category tree, product types, size options"
+        }
+      ]
+    },
+    {
+      title: "Customers and growth",
+      description: "People, reviews, offers",
+      items: [
+        {
+          label: dictionary.admin.users,
+          href: `/${locale}/admin/users`,
+          icon: Users,
+          description: "Customers, admin roles, account status"
+        },
+        {
+          label: dictionary.admin.reviews,
+          href: `/${locale}/admin/reviews`,
+          icon: Star,
+          description: "Approve, hide, delete, search",
+          count: notifications.pendingReviews
+        },
+        {
+          label: dictionary.admin.coupons,
+          href: `/${locale}/admin/coupons`,
+          icon: TicketPercent,
+          description: "Discounts, expiry, usage limits"
+        }
+      ]
+    },
+    {
+      title: "Storefront and business",
+      description: "Homepage, payments, UI",
+      items: [
+        {
+          label: "Banners",
+          href: `/${locale}/admin/banners`,
+          icon: ImagePlus,
+          description: "Hero slides, campaign images, CTA links"
+        },
+        {
+          label: dictionary.admin.settings,
+          href: `/${locale}/admin/settings`,
+          icon: Settings,
+          description: "Payments, shipping, VAT/TRN, theme"
+        }
+      ]
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[280px_1fr]">
+    <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[320px_1fr]">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 border-r border-gold-100 bg-navy text-white transition lg:static lg:block lg:w-auto rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
+          "fixed inset-y-0 left-0 z-50 w-80 border-r border-gold-100 bg-navy text-white transition lg:static lg:block lg:w-auto rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
           open ? "translate-x-0 rtl:translate-x-0" : "-translate-x-full lg:translate-x-0 rtl:translate-x-full lg:rtl:translate-x-0"
         )}
       >
         <div className="flex h-20 items-center justify-between border-b border-white/10 px-5">
-          <Link href={`/${locale}/admin/dashboard`} className="text-xl font-bold">
-            {dictionary.brand}
+          <Link href={`/${locale}/admin/dashboard`} className="min-w-0">
+            <span className="block truncate text-xl font-bold">{dictionary.brand}</span>
+            <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gold-200">
+              Admin Console
+            </span>
           </Link>
           <button
             type="button"
@@ -90,46 +183,79 @@ export function AdminShell({
           </button>
         </div>
 
-        <nav className="grid gap-1 px-3 py-4">
+        <nav className="h-[calc(100vh-5rem)] overflow-y-auto px-3 py-4">
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="mb-2 flex items-center gap-3 rounded-md border border-white/15 bg-white/8 px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            className="mb-4 flex items-center gap-3 rounded-md border border-white/15 bg-white/8 px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
           >
             <Home size={18} />
-            Storefront
+            <span className="min-w-0 flex-1 truncate">Storefront</span>
+            <ChevronRight size={15} className="text-white/50" />
           </Link>
-          {navItems.map((item) => {
-            const itemPath = item.href.split(/[?#]/)[0];
-            const active = pathname === itemPath || pathname.startsWith(`${itemPath}/`);
-            const Icon = item.icon;
-            const count = "count" in item ? item.count ?? 0 : 0;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold text-white/72 transition hover:bg-white/10 hover:text-white",
-                  active && "bg-gold-500 text-navy hover:bg-gold-400 hover:text-navy"
-                )}
-              >
-                <Icon size={18} />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {count > 0 ? (
-                  <span
-                    className={cn(
-                      "grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1 text-[10px] font-bold",
-                      active ? "bg-navy text-white" : "bg-sale text-white"
-                    )}
-                  >
-                    {formatCount(count)}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
+          <div className="grid gap-4">
+            {navGroups.map((group) => (
+              <section key={group.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
+                <div className="px-2 pb-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold-200">{group.title}</p>
+                  <p className="mt-0.5 truncate text-[11px] font-semibold text-white/42">{group.description}</p>
+                </div>
+
+                <div className="grid gap-1">
+                  {group.items.map((item) => {
+                    const itemPath = item.href.split(/[?#]/)[0];
+                    const active = pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+                    const Icon = item.icon;
+                    const count = "count" in item ? item.count ?? 0 : 0;
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          "group flex items-start gap-3 rounded-md px-3 py-2.5 text-white/72 transition hover:bg-white/10 hover:text-white",
+                          active && "bg-gold-500 text-navy shadow-soft hover:bg-gold-400 hover:text-navy"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/8 text-gold-200",
+                            active && "bg-navy/10 text-navy"
+                          )}
+                        >
+                          <Icon size={17} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            <span className="truncate text-sm font-bold">{item.label}</span>
+                            {count > 0 ? (
+                              <span
+                                className={cn(
+                                  "grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1 text-[10px] font-bold",
+                                  active ? "bg-navy text-white" : "bg-sale text-white"
+                                )}
+                              >
+                                {formatCount(count)}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className={cn("mt-0.5 block truncate text-[11px] font-semibold text-white/42", active && "text-navy/65")}>
+                            {item.description}
+                          </span>
+                        </span>
+                        <ChevronRight
+                          size={15}
+                          className={cn("mt-2 shrink-0 text-white/35 transition group-hover:translate-x-0.5", active && "text-navy/55")}
+                        />
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
         </nav>
       </aside>
 

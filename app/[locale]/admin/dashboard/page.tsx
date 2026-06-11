@@ -3,20 +3,15 @@ import Link from "next/link";
 import {
   AlertTriangle,
   Bell,
-  Boxes,
   Download,
   DollarSign,
   Home,
-  ImagePlus,
   PackageCheck,
   Plus,
   Settings,
   ShoppingCart,
   Star,
-  Tags,
-  TicketPercent,
-  Truck,
-  Users
+  Truck
 } from "lucide-react";
 import { OrderStatus, Prisma } from "@prisma/client";
 import { AdminMetricCard } from "@/components/admin/AdminMetricCard";
@@ -56,10 +51,6 @@ type DashboardStatsRow = {
   totalProducts: NumericLike;
   lowStockCount: NumericLike;
   pendingReviews: NumericLike;
-  totalCategories: NumericLike;
-  totalUsers: NumericLike;
-  activeCoupons: NumericLike;
-  activeBanners: NumericLike;
 };
 
 type DashboardLowStockProduct = {
@@ -87,10 +78,6 @@ type DashboardData = {
   totalProducts: number;
   lowStockCount: number;
   pendingReviews: number;
-  totalCategories: number;
-  totalUsers: number;
-  activeCoupons: number;
-  activeBanners: number;
   revenueSeries: number[];
   lowStockProducts: DashboardLowStockProduct[];
   recentOrders: DashboardRecentOrder[];
@@ -109,10 +96,6 @@ function emptyDashboardData(): DashboardData {
     totalProducts: 0,
     lowStockCount: 0,
     pendingReviews: 0,
-    totalCategories: 0,
-    totalUsers: 0,
-    activeCoupons: 0,
-    activeBanners: 0,
     revenueSeries: Array.from({ length: 12 }, () => 0),
     lowStockProducts: [],
     recentOrders: []
@@ -133,11 +116,7 @@ async function readDashboardStats(): Promise<Omit<DashboardData, "revenueSeries"
           WHERE "orderStatus" = ${OrderStatus.DELIVERED}::"OrderStatus") AS "deliveredOrders",
         (SELECT COUNT(*) FROM "Product" WHERE "isActive" = true) AS "totalProducts",
         (SELECT COUNT(*) FROM "Product" WHERE "isActive" = true AND stock <= 10) AS "lowStockCount",
-        (SELECT COUNT(*) FROM "Review" WHERE "isApproved" = false) AS "pendingReviews",
-        (SELECT COUNT(*) FROM "Category") AS "totalCategories",
-        (SELECT COUNT(*) FROM "User") AS "totalUsers",
-        (SELECT COUNT(*) FROM "Coupon" WHERE "isActive" = true) AS "activeCoupons",
-        (SELECT COUNT(*) FROM "Banner" WHERE "isActive" = true) AS "activeBanners"
+        (SELECT COUNT(*) FROM "Review" WHERE "isApproved" = false) AS "pendingReviews"
     `
   );
 
@@ -148,11 +127,7 @@ async function readDashboardStats(): Promise<Omit<DashboardData, "revenueSeries"
     deliveredOrders: toNumber(row?.deliveredOrders),
     totalProducts: toNumber(row?.totalProducts),
     lowStockCount: toNumber(row?.lowStockCount),
-    pendingReviews: toNumber(row?.pendingReviews),
-    totalCategories: toNumber(row?.totalCategories),
-    totalUsers: toNumber(row?.totalUsers),
-    activeCoupons: toNumber(row?.activeCoupons),
-    activeBanners: toNumber(row?.activeBanners)
+    pendingReviews: toNumber(row?.pendingReviews)
   };
 }
 
@@ -243,10 +218,6 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     totalProducts,
     lowStockCount,
     pendingReviews,
-    totalCategories,
-    totalUsers,
-    activeCoupons,
-    activeBanners,
     lowStockProducts,
     recentOrders,
     revenueSeries
@@ -260,119 +231,6 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     { label: "Export sales", href: "/api/admin/reports/sales", icon: Download, tone: "secondary" },
     { label: "Manage orders", href: `/${locale}/admin/orders`, icon: Truck, tone: "secondary", count: pendingOrders },
     { label: "Shipping settings", href: `/${locale}/admin/settings`, icon: Settings, tone: "secondary" }
-  ] as const;
-
-  const routeGroups = [
-    {
-      title: "Daily operations",
-      description: "Routes for work that needs the fastest admin response.",
-      icon: ShoppingCart,
-      routes: [
-        {
-          title: "Orders",
-          path: `/${locale}/admin/orders`,
-          href: `/${locale}/admin/orders`,
-          purpose: "Confirm orders, update delivery status, print invoices, and export sales.",
-          actions: ["Pending orders", "Delivery status", "Invoice print", "Sales export"],
-          icon: Truck,
-          count: pendingOrders,
-          countLabel: "pending",
-          alert: true
-        },
-        {
-          title: "Reviews",
-          path: `/${locale}/admin/reviews`,
-          href: `/${locale}/admin/reviews?status=pending`,
-          purpose: "Approve, hide, delete, and search customer product reviews.",
-          actions: ["Approve", "Hide/delete", "Search", "Product rating"],
-          icon: Star,
-          count: pendingReviews,
-          countLabel: "waiting",
-          alert: true
-        }
-      ]
-    },
-    {
-      title: "Catalog setup",
-      description: "Routes for products, variants, category sizes, stock, and product SEO.",
-      icon: Boxes,
-      routes: [
-        {
-          title: "Products",
-          path: `/${locale}/admin/products`,
-          href: `/${locale}/admin/products`,
-          purpose: "Edit product info, color/size variants, images, stock, price, and SEO metadata.",
-          actions: ["Variants", "Stock", "Images", "SEO/meta"],
-          icon: PackageCheck,
-          count: lowStockCount,
-          countLabel: "low stock",
-          alert: true,
-          secondary: { label: "Add product", href: `/${locale}/admin/products/new` }
-        },
-        {
-          title: "Categories",
-          path: `/${locale}/admin/categories`,
-          href: `/${locale}/admin/categories`,
-          purpose: "Manage category structure, product type rules, size options, and storefront grouping.",
-          actions: ["Category tree", "Size rules", "Product fields", "Shop grouping"],
-          icon: Tags,
-          count: totalCategories,
-          countLabel: "categories"
-        }
-      ]
-    },
-    {
-      title: "Customers and promotions",
-      description: "Routes for customer accounts, roles, offers, and discount campaigns.",
-      icon: Users,
-      routes: [
-        {
-          title: "Users",
-          path: `/${locale}/admin/users`,
-          href: `/${locale}/admin/users`,
-          purpose: "View customers, admin roles, account status, and customer order history.",
-          actions: ["Customers", "Admin roles", "Ban/unban", "Order history"],
-          icon: Users,
-          count: totalUsers,
-          countLabel: "users"
-        },
-        {
-          title: "Coupons",
-          path: `/${locale}/admin/coupons`,
-          href: `/${locale}/admin/coupons`,
-          purpose: "Create Dubai-ready discounts with usage limits, dates, and checkout eligibility.",
-          actions: ["Discounts", "Expiry", "Usage limit", "Checkout rules"],
-          icon: TicketPercent,
-          count: activeCoupons,
-          countLabel: "active"
-        }
-      ]
-    },
-    {
-      title: "Storefront and settings",
-      description: "Routes for what shoppers see and the business settings behind checkout.",
-      icon: ImagePlus,
-      routes: [
-        {
-          title: "Banners",
-          path: `/${locale}/admin/banners`,
-          href: `/${locale}/admin/banners`,
-          purpose: "Control homepage hero slides, campaign images, buttons, and display order.",
-          actions: ["Hero slides", "Campaign image", "CTA links", "Sort order"],
-          icon: ImagePlus,
-          count: activeBanners,
-          countLabel: "active"
-        },
-        {
-          title: "Settings",
-          path: `/${locale}/admin/settings`,
-          href: `/${locale}/admin/settings`,
-          purpose: "Manage payments, shipping areas, delivery slots, VAT/TRN, theme, SEO, and support links.",
-          actions: ["Payments", "Shipping", "VAT/TRN", "Theme UI"],
-          icon: Settings
-        }
-      ]
-    }
   ] as const;
 
   const notificationItems = [
@@ -406,8 +264,8 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     <div>
       <AdminPageHeader
         eyebrow={dictionary.admin.dashboard}
-        title="Admin route guide"
-        subtitle="Open the dashboard and know exactly which admin route handles each ecommerce task."
+        title="Admin overview"
+        subtitle="Track sales, orders, stock alerts, and recent activity while the sidebar handles every admin route."
         action={
           <div className="flex flex-wrap gap-2">
             {quickActions.slice(0, 2).map((item) => {
@@ -435,10 +293,10 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
       <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">Route map</p>
-            <h2 className="mt-2 text-xl font-bold text-navy">Choose the right admin area faster</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">Control summary</p>
+            <h2 className="mt-2 text-xl font-bold text-navy">Quick actions and priority alerts</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-neutral-500">
-              Each card shows the route, the job it controls, and the exact actions available inside that page.
+              Use the grouped sidebar for full routing. This panel keeps the most common shortcuts and alerts close.
             </p>
           </div>
           <Badge tone={notificationCount > 0 ? "red" : "green"}>{notificationCount} needs attention</Badge>
@@ -504,87 +362,6 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
           </div>
         </div>
 
-        <div className="mt-6 grid gap-5 xl:grid-cols-2">
-          {routeGroups.map((group) => {
-            const GroupIcon = group.icon;
-
-            return (
-              <div key={group.title} className="rounded-lg border border-neutral-200 bg-paper p-4">
-                <div className="flex items-start gap-3">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-gold-100 text-gold-800">
-                    <GroupIcon size={19} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-navy">{group.title}</h3>
-                    <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{group.description}</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                  {group.routes.map((route) => {
-                    const RouteIcon = route.icon;
-                    const routeCount = "count" in route ? route.count : undefined;
-                    const countLabel = "countLabel" in route ? route.countLabel : "";
-                    const isAlert = "alert" in route && route.alert && typeof routeCount === "number" && routeCount > 0;
-                    const hasSecondary = "secondary" in route;
-
-                    return (
-                      <article key={route.href} className="flex min-h-64 flex-col rounded-md border border-neutral-200 bg-white p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-3">
-                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-neutral-100 text-gold-700">
-                              <RouteIcon size={18} />
-                            </span>
-                            <div className="min-w-0">
-                              <h4 className="font-bold text-navy">{route.title}</h4>
-                              <p className="mt-1 truncate rounded bg-paper px-2 py-1 font-mono text-[11px] font-semibold text-neutral-500">
-                                {route.path}
-                              </p>
-                            </div>
-                          </div>
-                          {typeof routeCount === "number" ? (
-                            <Badge tone={isAlert ? "red" : "blue"}>
-                              {routeCount > 99 ? "99+" : routeCount} {countLabel}
-                            </Badge>
-                          ) : null}
-                        </div>
-
-                        <p className="mt-4 text-sm font-semibold leading-6 text-neutral-600">{route.purpose}</p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {route.actions.map((action) => (
-                            <span
-                              key={action}
-                              className="rounded-full bg-gold-50 px-2.5 py-1 text-[11px] font-bold text-gold-800"
-                            >
-                              {action}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="mt-auto flex flex-wrap gap-2 pt-5">
-                          <Link
-                            href={route.href}
-                            className="inline-flex h-10 flex-1 items-center justify-center rounded-md bg-navy px-3 text-sm font-bold text-white transition hover:bg-neutral-800"
-                          >
-                            Open route
-                          </Link>
-                          {hasSecondary ? (
-                            <Link
-                              href={route.secondary.href}
-                              className="inline-flex h-10 items-center justify-center rounded-md border border-gold-200 px-3 text-sm font-bold text-navy transition hover:bg-gold-50"
-                            >
-                              {route.secondary.label}
-                            </Link>
-                          ) : null}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
