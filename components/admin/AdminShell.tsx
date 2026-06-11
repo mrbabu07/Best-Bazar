@@ -191,44 +191,95 @@ export function AdminShell({
     <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[320px_1fr]">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-80 border-r border-gold-100 bg-navy text-white transition lg:static lg:block lg:w-auto rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
+          "fixed inset-y-0 left-0 z-50 flex w-80 flex-col border-r border-gold-100 bg-navy text-white shadow-lift transition lg:static lg:w-auto lg:shadow-none rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
           open ? "translate-x-0 rtl:translate-x-0" : "-translate-x-full lg:translate-x-0 rtl:translate-x-full lg:rtl:translate-x-0"
         )}
       >
-        <div className="flex h-20 items-center justify-between border-b border-white/10 px-5">
-          <Link href={`/${locale}/admin/dashboard`} className="min-w-0">
-            <span className="block truncate text-xl font-bold">{dictionary.brand}</span>
-            <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.16em] text-gold-200">
-              Admin Console
-            </span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="grid h-9 w-9 place-items-center rounded-md border border-white/15 lg:hidden"
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
+        <div className="border-b border-white/10 px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <Link href={`/${locale}/admin/dashboard`} className="flex min-w-0 items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-gold-400 text-base font-black text-navy">
+                BB
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-lg font-bold leading-5">{dictionary.brand}</span>
+                <span className="mt-1 block truncate text-xs font-semibold text-gold-100">Admin control panel</span>
+              </span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-white/15 lg:hidden"
+              aria-label="Close menu"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="mt-4 flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.06] px-3 py-2.5">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-xs font-black text-navy">
+              {adminName
+                .split(" ")
+                .map((part) => part[0])
+                .join("")
+                .slice(0, 2)}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{adminName}</p>
+              <p className="text-xs font-semibold text-white/50">Signed in as admin</p>
+            </div>
+          </div>
         </div>
 
-        <nav className="h-[calc(100vh-5rem)] overflow-y-auto px-3 py-4">
+        <div className="grid gap-2 px-3 py-3">
+          <Link
+            href={`/${locale}/admin/dashboard#notifications`}
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-between gap-3 rounded-md border border-gold-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:bg-gold-50"
+          >
+            <span className="inline-flex min-w-0 items-center gap-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gold-100 text-gold-800">
+                <Bell size={17} />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate">Action center</span>
+                <span className="mt-0.5 block truncate text-[11px] font-semibold text-neutral-500">
+                  Orders, stock, and reviews
+                </span>
+              </span>
+            </span>
+            {totalNotifications > 0 ? (
+              <span className="grid h-6 min-w-6 shrink-0 place-items-center rounded-full bg-sale px-1 text-xs font-black text-white">
+                {formatCount(totalNotifications)}
+              </span>
+            ) : (
+              <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">Clear</span>
+            )}
+          </Link>
+
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="mb-4 flex items-center gap-3 rounded-md border border-white/15 bg-white/8 px-3 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             <Home size={18} />
             <span className="min-w-0 flex-1 truncate">Storefront</span>
             <ChevronRight size={15} className="text-white/50" />
           </Link>
+        </div>
 
-          <div className="grid gap-4">
+        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+          <div className="grid gap-3">
             {navGroups.map((group) => (
-              <section key={group.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
-                <div className="px-2 pb-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold-200">{group.title}</p>
-                  <p className="mt-0.5 truncate text-[11px] font-semibold text-white/42">{group.description}</p>
+              <section key={group.title} className="rounded-md border border-white/10 bg-white/[0.04] p-2">
+                <div className="flex items-center justify-between gap-3 px-2 pb-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.14em] text-gold-200">{group.title}</p>
+                    <p className="mt-0.5 truncate text-[11px] font-semibold text-white/45">{group.description}</p>
+                  </div>
+                  <span className="rounded-full bg-white/8 px-2 py-1 text-[10px] font-bold text-white/55">
+                    {group.items.length}
+                  </span>
                 </div>
 
                 <div className="grid gap-1">
@@ -244,14 +295,15 @@ export function AdminShell({
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "group flex items-start gap-3 rounded-md px-3 py-2.5 text-white/72 transition hover:bg-white/10 hover:text-white",
-                          active && "bg-gold-500 text-navy shadow-soft hover:bg-gold-400 hover:text-navy"
+                          "group relative flex items-start gap-3 rounded-md px-3 py-2.5 text-white/72 transition hover:bg-white/10 hover:text-white",
+                          active && "bg-white text-navy shadow-soft hover:bg-white hover:text-navy"
                         )}
                       >
+                        {active ? <span className="absolute left-0 top-2 h-9 w-1 rounded-r-full bg-gold-500 rtl:left-auto rtl:right-0 rtl:rounded-l-full rtl:rounded-r-none" /> : null}
                         <span
                           className={cn(
-                            "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/8 text-gold-200",
-                            active && "bg-navy/10 text-navy"
+                            "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/8 text-gold-200 transition",
+                            active && "bg-gold-100 text-gold-800"
                           )}
                         >
                           <Icon size={17} />
@@ -263,20 +315,20 @@ export function AdminShell({
                               <span
                                 className={cn(
                                   "grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1 text-[10px] font-bold",
-                                  active ? "bg-navy text-white" : "bg-sale text-white"
+                                  active ? "bg-sale text-white" : "bg-sale text-white"
                                 )}
                               >
                                 {formatCount(count)}
                               </span>
                             ) : null}
                           </span>
-                          <span className={cn("mt-0.5 block truncate text-[11px] font-semibold text-white/42", active && "text-navy/65")}>
+                          <span className={cn("mt-0.5 block truncate text-[11px] font-semibold text-white/45", active && "text-neutral-500")}>
                             {item.description}
                           </span>
                         </span>
                         <ChevronRight
                           size={15}
-                          className={cn("mt-2 shrink-0 text-white/35 transition group-hover:translate-x-0.5", active && "text-navy/55")}
+                          className={cn("mt-2 shrink-0 text-white/35 transition group-hover:translate-x-0.5", active && "text-gold-700")}
                         />
                       </Link>
                     );
