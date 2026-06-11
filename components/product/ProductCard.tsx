@@ -21,6 +21,8 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
 
     return items.some((item) => item.colorName.en.trim().toLowerCase() === key) ? items : [...items, variant];
   }, []);
+  const visibleColorSwatches = colorSwatches.slice(0, 3);
+  const hiddenColorCount = Math.max(colorSwatches.length - visibleColorSwatches.length, 0);
   const cartProduct = {
     id: product.id,
     slug: product.slug,
@@ -32,10 +34,10 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
   };
 
   return (
-    <article className="group flex h-[386px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
+    <article className="group flex h-[386px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
       <Link
         href={`/${locale}/product/${product.slug}`}
-        className="relative block h-[174px] shrink-0 bg-neutral-100 sm:h-[260px] lg:h-[280px]"
+        className="relative block h-[174px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[260px] lg:h-[280px]"
       >
         <Image
           src={product.images[0].url}
@@ -58,13 +60,13 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
             </p>
             <Link
               href={`/${locale}/product/${product.slug}`}
-              className="mt-1 line-clamp-2 block min-h-10 text-sm font-bold leading-5 text-navy hover:text-gold-700 sm:min-h-12 sm:text-base sm:leading-6"
+              className="mt-1 line-clamp-2 block text-sm font-bold leading-5 text-navy hover:text-gold-700 sm:text-base sm:leading-6"
             >
               {getLocalized(product.name, locale)}
             </Link>
           </div>
-          <div className="flex shrink-0 items-center gap-1 text-xs font-semibold text-navy sm:text-sm">
-            <Star size={14} className="fill-gold-400 text-gold-400" />
+          <div className="flex shrink-0 items-center gap-1 rounded-full bg-paper px-2 py-1 text-xs font-bold text-navy">
+            <Star size={13} className="fill-gold-400 text-gold-400" />
             {product.rating.toFixed(1)}
           </div>
         </div>
@@ -76,10 +78,10 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
         />
 
         {product.variants.length ? (
-          <div className="mt-3 flex min-h-8 items-center justify-between gap-2 sm:gap-3">
+          <div className="mt-2 flex min-h-7 items-center justify-between gap-2 sm:gap-3">
             <p className="text-xs font-bold text-neutral-500">{colorLabel}</p>
             <div className="flex flex-wrap justify-end gap-1.5">
-              {colorSwatches.slice(0, 5).map((variant) => (
+              {visibleColorSwatches.map((variant) => (
                 <Link
                   key={variant.id}
                   href={`/${locale}/shop?color=${encodeURIComponent(variant.colorName.en.toLowerCase())}`}
@@ -93,15 +95,15 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
                   />
                 </Link>
               ))}
-              {colorSwatches.length > 5 ? (
+              {hiddenColorCount > 0 ? (
                 <span className="grid h-5 min-w-5 place-items-center rounded-full bg-paper px-1 text-[9px] font-bold text-neutral-500 sm:h-6 sm:min-w-6 sm:px-1.5 sm:text-[10px]">
-                  +{colorSwatches.length - 5}
+                  +{hiddenColorCount}
                 </span>
               ) : null}
             </div>
           </div>
         ) : (
-          <div className="mt-3 min-h-8" aria-hidden="true" />
+          <div className="mt-2 min-h-7" aria-hidden="true" />
         )}
 
         <ProductCardAddButton

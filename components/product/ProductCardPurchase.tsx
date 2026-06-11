@@ -41,7 +41,7 @@ export function ProductCardPrice({ price, comparePrice, locale }: ProductCardPri
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
 
   return (
-    <div className="mt-3 flex min-h-8 flex-wrap items-end gap-x-2 gap-y-1">
+    <div className="mt-1.5 flex min-h-7 flex-wrap items-end gap-x-2 gap-y-1">
       <p className="text-base font-bold text-navy sm:text-lg">
         {formatCurrency(price, currency, locale, currencyRates)}
       </p>
