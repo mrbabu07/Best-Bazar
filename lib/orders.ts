@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
+import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import type { orderCreateSchema } from "@/lib/validations/store";
 import { getShippingFee } from "@/utils/shipping";
@@ -128,7 +129,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
   const vatRate = Math.max(Number(settings.vatRate ?? 0), 0);
   const vatAmount = vatRate > 0 ? (total * vatRate) / (100 + vatRate) : 0;
 
-  return prisma.$transaction(async (tx) => {
+  const order = await prisma.$transaction(async (tx) => {
     const order = await tx.order.create({
       data: {
         orderNumber: createOrderNumber(),
@@ -196,7 +197,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
           });
 
       if (stockReservation.count === 0) {
-          const label = variant ? `${product.nameEn} (${variantNameEn(variant)})` : product.nameEn;
+        const label = variant ? `${product.nameEn} (${variantNameEn(variant)})` : product.nameEn;
         throw new Error(`${label} does not have enough stock.`);
       }
 
@@ -231,4 +232,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
 
     return order;
   });
+
+  revalidateCacheTags(["storefront", "products", "admin-notifications"]);
+
+  return order;
 }

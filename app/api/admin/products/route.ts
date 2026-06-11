@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       }
     });
 
-    revalidateCacheTags(["storefront", "products"]);
+    revalidateCacheTags(["storefront", "products", "admin-notifications"]);
 
     return created(product);
   } catch (error) {

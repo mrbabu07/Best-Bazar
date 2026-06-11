@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
-import { cachedJson } from "@/lib/cache";
+import { cachedJson, revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
   getProductReviewSummary,
@@ -102,6 +102,8 @@ export async function POST(request: Request, { params }: RouteContext) {
 
       return { review, summary };
     });
+
+    revalidateCacheTags(["storefront", "reviews", "products", "admin-notifications"]);
 
     return NextResponse.json({
       ...result.summary,

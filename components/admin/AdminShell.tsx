@@ -24,7 +24,7 @@ import {
   Users,
   X
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/utils/cn";
 
@@ -55,6 +55,14 @@ export function AdminShell({
   const totalNotifications =
     notifications.pendingOrders + notifications.pendingReviews + notifications.lowStockProducts;
   const formatCount = (count: number) => (count > 99 ? "99+" : String(count));
+  const shouldLinkPrefetch = process.env.NODE_ENV === "production";
+  const prefetchRoute = (href: string) => {
+    const route = href.split("#")[0];
+
+    if (route && route !== pathname) {
+      router.prefetch(route);
+    }
+  };
 
   const navGroups = [
     {
@@ -159,34 +167,6 @@ export function AdminShell({
     }
   ];
 
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "development") {
-      return;
-    }
-
-    const routes = [
-      `/${locale}/admin/orders`,
-      `/${locale}/admin/settings`,
-      `/${locale}/admin/products`,
-      `/${locale}/admin/products/new`,
-      `/${locale}/admin/categories`,
-      `/${locale}/admin/reviews`,
-      `/${locale}/admin/users`,
-      `/${locale}/admin/coupons`,
-      `/${locale}/admin/banners`,
-      `/${locale}/admin/dashboard`
-    ].filter((href) => href !== pathname);
-    const timers = routes.map((href, index) =>
-      window.setTimeout(() => {
-        router.prefetch(href);
-      }, 600 + index * 300)
-    );
-
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, [locale, pathname, router]);
-
   return (
     <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[320px_1fr]">
       <aside
@@ -234,6 +214,9 @@ export function AdminShell({
         <div className="grid gap-2 px-3 py-3">
           <Link
             href={`/${locale}/admin/dashboard#notifications`}
+            prefetch={shouldLinkPrefetch}
+            onMouseEnter={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
+            onFocus={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
             onClick={() => setOpen(false)}
             className="flex items-center justify-between gap-3 rounded-md border border-gold-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:bg-gold-50"
           >
@@ -259,6 +242,7 @@ export function AdminShell({
 
           <Link
             href={`/${locale}`}
+            prefetch={shouldLinkPrefetch}
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.06] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
           >
@@ -293,6 +277,9 @@ export function AdminShell({
                       <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={shouldLinkPrefetch}
+                        onMouseEnter={() => prefetchRoute(item.href)}
+                        onFocus={() => prefetchRoute(item.href)}
                         onClick={() => setOpen(false)}
                         className={cn(
                           "group relative flex items-start gap-3 rounded-md px-3 py-2.5 text-white/72 transition hover:bg-white/10 hover:text-white",
@@ -369,6 +356,9 @@ export function AdminShell({
           <div className="flex min-w-0 items-center gap-2">
             <Link
               href={`/${locale}/admin/dashboard#notifications`}
+              prefetch={shouldLinkPrefetch}
+              onMouseEnter={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
+              onFocus={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
               className="relative inline-flex h-10 items-center justify-center gap-2 rounded-md border border-gold-200 px-3 text-navy hover:bg-gold-50"
               aria-label={`Notifications: ${totalNotifications} total alerts`}
             >
@@ -382,6 +372,7 @@ export function AdminShell({
             </Link>
             <Link
               href={switchLocalePath}
+              prefetch={shouldLinkPrefetch}
               className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy hover:bg-gold-50"
             >
               <Globe2 size={16} />
@@ -402,6 +393,7 @@ export function AdminShell({
             </div>
             <Link
               href={`/${locale}`}
+              prefetch={shouldLinkPrefetch}
               className="inline-flex h-10 items-center gap-2 rounded-md bg-navy px-3 text-xs font-bold text-white hover:bg-neutral-800"
             >
               <Boxes size={16} />

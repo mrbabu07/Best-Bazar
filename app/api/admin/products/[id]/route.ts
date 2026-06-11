@@ -30,8 +30,6 @@ export async function GET(_request: Request, { params }: RouteContext) {
       }
     });
 
-    revalidateCacheTags(["storefront", "products"]);
-
     return ok(product);
   } catch (error) {
     return handleApiError(error);
@@ -65,6 +63,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
       });
     });
 
+    revalidateCacheTags(["storefront", "products", "admin-notifications"]);
+
     return ok(product);
   } catch (error) {
     return handleApiError(error);
@@ -76,7 +76,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     await requireAdmin();
     await prisma.product.delete({ where: { id: params.id } });
 
-    revalidateCacheTags(["storefront", "products"]);
+    revalidateCacheTags(["storefront", "products", "admin-notifications"]);
 
     return noContent();
   } catch (error) {

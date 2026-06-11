@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import type { ReactNode } from "react";
 import { OrderStatus, Prisma } from "@prisma/client";
@@ -59,6 +60,15 @@ async function readAdminNotificationsWithRetry() {
   }
 }
 
+const getCachedAdminNotifications = unstable_cache(
+  readAdminNotificationsWithRetry,
+  ["admin-notifications"],
+  {
+    revalidate: 15,
+    tags: ["admin-notifications"]
+  }
+);
+
 export default async function AdminLayout({
   children,
   params
@@ -78,7 +88,7 @@ export default async function AdminLayout({
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/dashboard`);
   }
 
-  const notifications = await readAdminNotificationsWithRetry();
+  const notifications = await getCachedAdminNotifications();
 
   return (
     <AdminShell

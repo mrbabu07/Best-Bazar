@@ -6,6 +6,7 @@ const path = require("path");
 
 const root = process.cwd();
 const port = process.env.PORT || "3002";
+const maxRestarts = Number(process.env.DEV_SERVER_MAX_RESTARTS ?? "3");
 const rootHash = crypto.createHash("sha1").update(root.toLowerCase()).digest("hex").slice(0, 12);
 const pidFile = path.resolve(os.tmpdir(), `best-bazar-dev-${rootHash}.pid`);
 
@@ -106,17 +107,25 @@ if (!clearedProductionOutput && shouldClearWebpackCache) {
 
 fs.writeFileSync(pidFile, String(process.pid));
 
+if (clearedProductionOutput) {
+  console.log("Removed production .next output before starting dev.");
+} else if (shouldClearWebpackCache) {
+  console.log("Cleared Next webpack cache because CLEAR_NEXT_CACHE=1 was set.");
+} else {
+  console.log("Keeping warm Next dev cache. Set CLEAR_NEXT_CACHE=1 only when you need a clean rebuild.");
+}
+
 console.log(`Starting Next dev server on http://localhost:${port}`);
 
 const nextCli = require.resolve("next/dist/bin/next");
-const child = spawn(process.execPath, [nextCli, "dev", "-p", port], {
-  cwd: root,
-  env: process.env,
-  stdio: "inherit"
-});
+let child;
+let restartCount = 0;
+let stopping = false;
 
 function stopChild() {
-  if (!child.killed) {
+  stopping = true;
+
+  if (child && !child.killed) {
     child.kill("SIGTERM");
   }
 }
@@ -139,11 +148,38 @@ process.on("SIGTERM", () => {
   process.exit(143);
 });
 
-child.on("exit", (code, signal) => {
-  clearPidFile();
-  if (signal) {
-    process.exit(0);
-  }
+function startNextDevServer() {
+  child = spawn(process.execPath, [nextCli, "dev", "-p", port], {
+    cwd: root,
+    env: process.env,
+    stdio: "inherit"
+  });
 
-  process.exit(code ?? 0);
-});
+  child.on("exit", (code, signal) => {
+    if (stopping || signal) {
+      clearPidFile();
+      process.exit(0);
+    }
+
+    if ((code ?? 0) === 0) {
+      clearPidFile();
+      process.exit(0);
+    }
+
+    if (restartCount < maxRestarts) {
+      restartCount += 1;
+      const delay = Math.min(1000 * restartCount, 5000);
+
+      console.warn(
+        `Next dev server exited with code ${code ?? "unknown"}. Restarting (${restartCount}/${maxRestarts}) in ${delay}ms...`
+      );
+      setTimeout(startNextDevServer, delay);
+      return;
+    }
+
+    clearPidFile();
+    process.exit(code ?? 1);
+  });
+}
+
+startNextDevServer();

@@ -89,7 +89,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
       }
     });
 
-    revalidateCacheTags(["storefront", "products"]);
+    revalidateCacheTags(["storefront", "products", "admin-notifications"]);
 
     return created(product);
   } catch (error) {

@@ -32,7 +32,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
       return { review, summary };
     });
 
-    revalidateCacheTags(["storefront", "reviews", "products"]);
+    revalidateCacheTags(["storefront", "reviews", "products", "admin-notifications"]);
 
     return ok(result);
   } catch (error) {
@@ -51,7 +51,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       await recalculateApprovedReviewSummary(tx, review.productId);
     });
 
-    revalidateCacheTags(["storefront", "reviews", "products"]);
+    revalidateCacheTags(["storefront", "reviews", "products", "admin-notifications"]);
 
     return noContent();
   } catch (error) {

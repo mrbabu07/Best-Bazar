@@ -4,7 +4,14 @@ import { NextResponse } from "next/server";
 export const STOREFRONT_REVALIDATE_SECONDS = 300;
 export const SETTINGS_REVALIDATE_SECONDS = 300;
 
-export type CacheTag = "storefront" | "products" | "categories" | "banners" | "reviews" | "settings";
+export type CacheTag =
+  | "storefront"
+  | "products"
+  | "categories"
+  | "banners"
+  | "reviews"
+  | "settings"
+  | "admin-notifications";
 
 export function revalidateCacheTags(tags: CacheTag[]) {
   for (const tag of tags) {

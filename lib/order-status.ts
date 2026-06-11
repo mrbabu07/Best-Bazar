@@ -1,5 +1,6 @@
 import { OrderStatus, type OrderItem, type PaymentStatus, type Prisma } from "@prisma/client";
 import { ApiError } from "@/lib/api/admin";
+import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export const CUSTOMER_CANCELLABLE_ORDER_STATUSES = [OrderStatus.PENDING, OrderStatus.CONFIRMED] as const;
@@ -89,7 +90,7 @@ export async function updateOrderStatus({
   userId,
   allowedCurrentStatuses
 }: UpdateOrderStatusInput) {
-  return prisma.$transaction(async (tx) => {
+  const updatedOrder = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findFirst({
       where: {
         id: orderId,
@@ -146,4 +147,8 @@ export async function updateOrderStatus({
 
     return updatedOrder;
   });
+
+  revalidateCacheTags(["storefront", "products", "admin-notifications"]);
+
+  return updatedOrder;
 }
