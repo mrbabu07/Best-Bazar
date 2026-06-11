@@ -6,11 +6,12 @@ import { notFound } from "next/navigation";
 import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
 
-export const revalidate = 60;
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }];
@@ -71,8 +72,8 @@ export default async function HomePage({ params }: { params: { locale: string } 
         ? banner.buttonTextAr || dictionary.actions.shopNow
         : banner.buttonTextEn || dictionary.actions.shopNow,
     href: getLocalizedPath(locale, banner.buttonLink),
-    desktopImage: safeRemoteImage(banner.desktopImage, fallbackHeroImage),
-    mobileImage: safeRemoteImage(banner.mobileImage, "")
+    desktopImage: safeRemoteImage(banner.desktopImage, fallbackHeroImage, { width: 1800 }),
+    mobileImage: safeRemoteImage(banner.mobileImage, "", { width: 900 })
   }));
   const fallbackSlide: HeroSlide = {
     id: "fallback",
@@ -80,7 +81,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
     subtitle: dictionary.home.subtitle,
     buttonText: dictionary.actions.shopNow,
     href: `/${locale}/shop`,
-    desktopImage: fallbackHeroImage
+    desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 })
   };
 
   return (

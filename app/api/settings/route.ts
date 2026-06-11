@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { cachedJson } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -8,5 +8,5 @@ export async function GET() {
     where: { id: "store-settings" }
   });
 
-  return NextResponse.json(JSON.parse(JSON.stringify(settings)));
+  return cachedJson(settings, 60);
 }

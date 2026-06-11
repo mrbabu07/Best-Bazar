@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import { revalidateCacheTags } from "@/lib/cache";
 import { bannerSchema } from "@/lib/validations/admin";
 import { created, handleApiError, ok, requireAdmin } from "@/lib/api/admin";
 
@@ -22,6 +23,8 @@ export async function POST(request: Request) {
     await requireAdmin();
     const data = bannerSchema.parse(await request.json());
     const banner = await prisma.banner.create({ data });
+
+    revalidateCacheTags(["storefront", "banners"]);
 
     return created(banner);
   } catch (error) {

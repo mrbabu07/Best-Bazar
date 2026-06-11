@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import { revalidateCacheTags } from "@/lib/cache";
 import { bannerReorderSchema } from "@/lib/validations/admin";
 import { handleApiError, ok, requireAdmin } from "@/lib/api/admin";
 
@@ -17,6 +18,8 @@ export async function PUT(request: Request) {
         })
       )
     );
+
+    revalidateCacheTags(["storefront", "banners"]);
 
     return ok({ success: true });
   } catch (error) {

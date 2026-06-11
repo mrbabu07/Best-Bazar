@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { z } from "zod";
+import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { handleApiError, noContent, ok, requireAdmin } from "@/lib/api/admin";
 import { recalculateApprovedReviewSummary } from "@/lib/reviews";
@@ -31,6 +32,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
       return { review, summary };
     });
 
+    revalidateCacheTags(["storefront", "reviews", "products"]);
+
     return ok(result);
   } catch (error) {
     return handleApiError(error);
@@ -47,6 +50,8 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       });
       await recalculateApprovedReviewSummary(tx, review.productId);
     });
+
+    revalidateCacheTags(["storefront", "reviews", "products"]);
 
     return noContent();
   } catch (error) {

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import { revalidateCacheTags } from "@/lib/cache";
 import { categorySchema } from "@/lib/validations/admin";
 import { created, getSearchParam, handleApiError, ok, requireAdmin } from "@/lib/api/admin";
 
@@ -37,6 +38,8 @@ export async function POST(request: Request) {
     await requireAdmin();
     const data = categorySchema.parse(await request.json());
     const category = await prisma.category.create({ data });
+
+    revalidateCacheTags(["storefront", "categories", "products"]);
 
     return created(category);
   } catch (error) {

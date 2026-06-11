@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cachedJson } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -30,5 +31,5 @@ export async function GET(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });
   }
 
-  return NextResponse.json(JSON.parse(JSON.stringify(product)));
+  return cachedJson(product);
 }

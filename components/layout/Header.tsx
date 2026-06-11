@@ -105,8 +105,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     let active = true;
 
     const refreshNotifications = async () => {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+
       try {
-        const response = await fetch("/api/settings", { cache: "no-store" });
+        const response = await fetch("/api/settings");
 
         if (!response.ok) {
           return;
@@ -144,7 +148,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     };
 
     void refreshNotifications();
-    const interval = window.setInterval(refreshNotifications, 15000);
+    const interval = window.setInterval(refreshNotifications, 30000);
 
     return () => {
       active = false;

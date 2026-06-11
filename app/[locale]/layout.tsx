@@ -3,12 +3,15 @@ import { unstable_cache } from "next/cache";
 import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
+import { SETTINGS_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
 import { Providers } from "./providers";
 import "../globals.css";
+
+export const preferredRegion = "iad1";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -57,7 +60,7 @@ async function getFrameSettings() {
 }
 
 const getCachedFrameSettings = unstable_cache(getFrameSettings, ["frame-settings"], {
-  revalidate: 60,
+  revalidate: SETTINGS_REVALIDATE_SECONDS,
   tags: ["settings"]
 });
 

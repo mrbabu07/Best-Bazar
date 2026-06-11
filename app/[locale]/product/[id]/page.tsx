@@ -5,10 +5,11 @@ import { ProductDetail } from "@/components/product/ProductDetail";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { BackButton } from "@/components/ui/BackButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getProductBySlugOrId, getProductReviews, getRelatedProducts } from "@/lib/storefront";
 
-export const revalidate = 60;
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 type ProductPageProps = {
   params: {

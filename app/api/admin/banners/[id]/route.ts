@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import { revalidateCacheTags } from "@/lib/cache";
 import { bannerSchema } from "@/lib/validations/admin";
 import { handleApiError, noContent, ok, requireAdmin } from "@/lib/api/admin";
 
@@ -17,6 +18,8 @@ export async function PUT(request: Request, { params }: RouteContext) {
       data
     });
 
+    revalidateCacheTags(["storefront", "banners"]);
+
     return ok(banner);
   } catch (error) {
     return handleApiError(error);
@@ -27,6 +30,8 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   try {
     await requireAdmin();
     await prisma.banner.delete({ where: { id: params.id } });
+
+    revalidateCacheTags(["storefront", "banners"]);
 
     return noContent();
   } catch (error) {

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { NextResponse } from "next/server";
+import { cachedJson } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -103,5 +103,5 @@ export async function GET(request: Request) {
     orderBy
   });
 
-  return NextResponse.json(JSON.parse(JSON.stringify(products)));
+  return cachedJson(products);
 }

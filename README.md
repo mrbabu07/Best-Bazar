@@ -96,6 +96,10 @@ npm run admin:ensure
 
 ## Production Notes
 
+- Neon: use the pooled Neon hostname in `DATABASE_URL`, keep the app close to Neon `us-east-1` (`preferredRegion = "iad1"` is configured), and keep `connection_limit`, `pool_timeout`, and `connect_timeout` in the URL/env.
+- Storefront pages use ISR and tagged cache invalidation. Admin product/category/banner/review/settings changes revalidate the relevant cache tags.
+- Cloudinary uploads are served back with `f_auto,q_auto` delivery transforms, and stored Cloudinary URLs are normalized before rendering.
+- Stripe payment UI is loaded as a separate checkout chunk so the heavy Stripe SDK does not block the initial checkout page.
 - Configure Stripe, Tabby, Tamara, and PayPal provider keys before enabling live online payments.
 - Configure SMTP if password-reset and order-confirmation emails should be sent in production.
 - Set `NEXT_PUBLIC_SITE_URL` and `NEXTAUTH_URL` to the deployed domain.

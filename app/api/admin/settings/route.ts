@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
+import { revalidateCacheTags } from "@/lib/cache";
 import { settingsSchema } from "@/lib/validations/admin";
 import { handleApiError, ok, requireAdmin } from "@/lib/api/admin";
 
@@ -26,6 +27,8 @@ export async function PUT(request: Request) {
       update: data,
       create: { id: "store-settings", ...data }
     });
+
+    revalidateCacheTags(["settings"]);
 
     return ok(settings);
   } catch (error) {

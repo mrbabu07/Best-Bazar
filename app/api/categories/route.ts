@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { cachedJson } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -12,5 +12,5 @@ export async function GET() {
     orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }]
   });
 
-  return NextResponse.json(JSON.parse(JSON.stringify(categories)));
+  return cachedJson(categories);
 }

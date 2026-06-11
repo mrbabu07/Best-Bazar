@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductFilters } from "@/components/product/ProductFilters";
 import { BackButton } from "@/components/ui/BackButton";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import {
   getStoreBrands,
@@ -12,7 +13,7 @@ import {
   getStoreVariantSizes
 } from "@/lib/storefront";
 
-export const revalidate = 60;
+export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
 export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }];

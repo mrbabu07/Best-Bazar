@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertCloudinaryConfigured, cloudinary } from "@/lib/cloudinary";
+import { optimizeCloudinaryImage } from "@/lib/images";
 import { ApiError, handleApiError, requireAdmin } from "@/lib/api/admin";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       publicId: upload.public_id,
-      secureUrl: upload.secure_url,
+      secureUrl: optimizeCloudinaryImage(upload.secure_url, { width: 1800 }),
       width: upload.width,
       height: upload.height,
       format: upload.format,

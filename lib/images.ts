@@ -8,6 +8,13 @@ export const fallbackProductImage =
   "https://images.unsplash.com/photo-1607083206968-13611e3d76db?auto=format&fit=crop&w=1000&q=80";
 
 const allowedRemoteImageHosts = new Set(["images.unsplash.com", "res.cloudinary.com"]);
+const cloudinaryUploadPath = "/image/upload/";
+
+type CloudinaryImageOptions = {
+  width?: number;
+  height?: number;
+  crop?: "limit" | "fill" | "fit";
+};
 
 export const imageUrlValidationMessage = "Use an uploaded image or an allowed image URL.";
 
@@ -24,6 +31,38 @@ export function isAllowedRemoteImage(value?: string | null): value is string {
   }
 }
 
-export function safeRemoteImage(value: string | null | undefined, fallback: string) {
-  return isAllowedRemoteImage(value) ? value : fallback;
+export function optimizeCloudinaryImage(value: string, options: CloudinaryImageOptions = {}) {
+  try {
+    const url = new URL(value);
+
+    if (url.hostname !== "res.cloudinary.com" || !url.pathname.includes(cloudinaryUploadPath)) {
+      return value;
+    }
+
+    const transforms = [
+      "f_auto",
+      "q_auto",
+      options.width || options.height ? `c_${options.crop ?? "limit"}` : undefined,
+      options.width ? `w_${Math.round(options.width)}` : undefined,
+      options.height ? `h_${Math.round(options.height)}` : undefined
+    ].filter(Boolean);
+
+    const [beforeUpload, afterUpload] = url.pathname.split(cloudinaryUploadPath);
+    const firstSegment = afterUpload.split("/")[0] ?? "";
+
+    if (firstSegment.includes("f_auto") || firstSegment.includes("q_auto")) {
+      return value;
+    }
+
+    url.pathname = `${beforeUpload}${cloudinaryUploadPath}${transforms.join(",")}/${afterUpload}`;
+
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
+export function safeRemoteImage(value: string | null | undefined, fallback: string, options?: CloudinaryImageOptions) {
+  const source = isAllowedRemoteImage(value) ? value : fallback;
+  return optimizeCloudinaryImage(source, options);
 }

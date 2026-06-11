@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { Prisma } from "@prisma/client";
+import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations/admin";
 import { created, getPagination, getSearchParam, handleApiError, ok, requireAdmin } from "@/lib/api/admin";
@@ -81,6 +82,8 @@ export async function POST(request: Request) {
         specifications: true
       }
     });
+
+    revalidateCacheTags(["storefront", "products"]);
 
     return created(product);
   } catch (error) {

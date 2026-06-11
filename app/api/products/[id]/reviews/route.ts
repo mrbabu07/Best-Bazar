@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
+import { cachedJson } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
   getProductReviewSummary,
@@ -45,11 +46,14 @@ export async function GET(_request: Request, { params }: RouteContext) {
     take: 20
   });
 
-  return NextResponse.json({
-    rating: Number(product.rating),
-    reviewCount: product.reviewCount,
-    reviews: reviews.map(serializeStoreReview)
-  });
+  return cachedJson(
+    {
+      rating: Number(product.rating),
+      reviewCount: product.reviewCount,
+      reviews: reviews.map(serializeStoreReview)
+    },
+    60
+  );
 }
 
 export async function POST(request: Request, { params }: RouteContext) {

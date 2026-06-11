@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations/admin";
 import { handleApiError, noContent, ok, requireAdmin } from "@/lib/api/admin";
@@ -28,6 +29,8 @@ export async function GET(_request: Request, { params }: RouteContext) {
         specifications: { orderBy: { sortOrder: "asc" } }
       }
     });
+
+    revalidateCacheTags(["storefront", "products"]);
 
     return ok(product);
   } catch (error) {
@@ -72,6 +75,8 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   try {
     await requireAdmin();
     await prisma.product.delete({ where: { id: params.id } });
+
+    revalidateCacheTags(["storefront", "products"]);
 
     return noContent();
   } catch (error) {

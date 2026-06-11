@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
+import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
@@ -30,7 +31,7 @@ type ProductRecord = Prisma.ProductGetPayload<{ include: typeof productInclude }
 type ProductListRecord = Prisma.ProductGetPayload<{ include: typeof productListInclude }>;
 
 const storefrontCache = {
-  revalidate: 60,
+  revalidate: STOREFRONT_REVALIDATE_SECONDS,
   tags: ["storefront"]
 };
 
@@ -43,7 +44,7 @@ export function mapStoreCategory(category: CategoryRecord): Category {
     id: category.id,
     slug: category.slug,
     name: { en: category.nameEn, ar: category.nameAr },
-    image: safeRemoteImage(category.image, fallbackCategoryImage),
+    image: safeRemoteImage(category.image, fallbackCategoryImage, { width: 900 }),
     productCount: category.products.length,
     parentCategory: category.parentCategoryId ?? undefined,
     isActive: category.isActive,
@@ -54,12 +55,12 @@ export function mapStoreCategory(category: CategoryRecord): Category {
 export function mapStoreProduct(product: ProductRecord | ProductListRecord): Product {
   const images = product.images.length
     ? product.images.map((image) => ({
-        url: safeRemoteImage(image.url, fallbackProductImage),
+        url: safeRemoteImage(image.url, fallbackProductImage, { width: 1400 }),
         alt: image.alt ?? product.nameEn
       }))
-    : [{ url: fallbackProductImage, alt: product.nameEn }];
+    : [{ url: safeRemoteImage(fallbackProductImage, fallbackProductImage, { width: 1400 }), alt: product.nameEn }];
   const variants = product.variants.map((variant) => {
-    const imageUrl = safeRemoteImage(variant.imageUrl, "");
+    const imageUrl = safeRemoteImage(variant.imageUrl, "", { width: 1200 });
     const sizeNameEn = variant.sizeNameEn?.trim();
     const sizeNameAr = variant.sizeNameAr?.trim();
     const nameEn = [variant.colorNameEn, sizeNameEn].filter(Boolean).join(" / ");
@@ -98,7 +99,7 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
               ar: product.metaDescriptionAr ?? product.metaDescriptionEn ?? product.descriptionAr
             }
           : undefined,
-      ogImage: safeRemoteImage(product.ogImage, "") || undefined
+      ogImage: safeRemoteImage(product.ogImage, "", { width: 1200 }) || undefined
     },
     category: product.category.slug,
     subcategory: product.subcategoryId ?? undefined,
