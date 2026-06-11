@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     await requireAdmin();
     const { page, limit, skip } = getPagination(request);
     const where = buildUserWhere(request);
-    const [items, total] = await Promise.all([
+    const [items, total] = await prisma.$transaction([
       prisma.user.findMany({
         where,
         select: {

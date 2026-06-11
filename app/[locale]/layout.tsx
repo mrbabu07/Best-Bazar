@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
-import { SETTINGS_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
-import { prisma } from "@/lib/prisma";
+import { getCachedPublicSettings } from "@/lib/settings";
 import { normalizeThemeSettings } from "@/lib/theme-config";
 import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
@@ -35,10 +33,7 @@ export const metadata: Metadata = {
 };
 
 async function getFrameSettings() {
-  const settings = await prisma.setting.findUnique({
-    where: { id: "store-settings" }
-  });
-
+  const settings = await getCachedPublicSettings();
   return {
     storeNameEn: settings?.storeNameEn ?? "Best Bazar",
     storeNameAr: settings?.storeNameAr ?? "Best Bazar",
@@ -61,11 +56,6 @@ async function getFrameSettings() {
   };
 }
 
-const getCachedFrameSettings = unstable_cache(getFrameSettings, ["frame-settings"], {
-  revalidate: SETTINGS_REVALIDATE_SECONDS,
-  tags: ["settings"]
-});
-
 export default async function LocaleLayout({
   children,
   params
@@ -79,7 +69,7 @@ export default async function LocaleLayout({
 
   const dictionary = getDictionary(params.locale);
   const isArabic = isRTL(params.locale);
-  const settings = await getCachedFrameSettings();
+  const settings = await getFrameSettings();
 
   return (
     <html

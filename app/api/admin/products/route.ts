@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     await requireAdmin();
     const { page, limit, skip } = getPagination(request);
     const where = buildProductWhere(request);
-    const [items, total] = await Promise.all([
+    const [items, total] = await prisma.$transaction([
       prisma.product.findMany({
         where,
         include: {

@@ -19,7 +19,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
   }
 
   const dictionary = getDictionary(locale);
-  const [categories, products] = await Promise.all([
+  const [categories, products] = await prisma.$transaction([
     prisma.category.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }]

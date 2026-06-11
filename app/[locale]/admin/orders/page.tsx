@@ -117,7 +117,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
   const to = readParam(searchParams, "to") ?? "";
   const selectedId = readParam(searchParams, "selected");
   const where = buildOrderWhere(searchParams);
-  const [orders, settings] = await Promise.all([
+  const [orders, settings] = await prisma.$transaction([
     prisma.order.findMany({
       where,
       include: { items: true },

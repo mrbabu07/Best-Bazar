@@ -13,9 +13,9 @@ export function revalidateCacheTags(tags: CacheTag[]) {
 }
 
 export function cachedJson(data: unknown, seconds = STOREFRONT_REVALIDATE_SECONDS) {
-  return NextResponse.json(JSON.parse(JSON.stringify(data)), {
+  return NextResponse.json(data, {
     headers: {
-      "Cache-Control": `public, s-maxage=${seconds}, stale-while-revalidate=${seconds * 2}`
+      "Cache-Control": `public, max-age=${seconds}, s-maxage=${seconds}, stale-while-revalidate=${seconds * 2}`
     }
   });
 }

@@ -23,7 +23,7 @@ export async function requireAdmin() {
 }
 
 export function ok(data: unknown, status = 200) {
-  return NextResponse.json(JSON.parse(JSON.stringify(data)), { status });
+  return NextResponse.json(data, { status });
 }
 
 export function created(data: unknown) {

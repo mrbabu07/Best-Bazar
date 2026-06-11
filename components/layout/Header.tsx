@@ -110,7 +110,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       }
 
       try {
-        const response = await fetch("/api/settings");
+        const response = await fetch("/api/settings", { cache: "force-cache" });
 
         if (!response.ok) {
           return;
