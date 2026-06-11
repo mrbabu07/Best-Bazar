@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   BarChart3,
@@ -24,7 +24,7 @@ import {
   Users,
   X
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn } from "@/utils/cn";
 
@@ -48,6 +48,7 @@ export function AdminShell({
   notifications = { pendingOrders: 0, pendingReviews: 0, lowStockProducts: 0 }
 }: AdminShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const nextLocale = locale === "en" ? "ar" : "en";
   const switchLocalePath = pathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
@@ -157,6 +158,34 @@ export function AdminShell({
       ]
     }
   ];
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") {
+      return;
+    }
+
+    const routes = [
+      `/${locale}/admin/orders`,
+      `/${locale}/admin/settings`,
+      `/${locale}/admin/products`,
+      `/${locale}/admin/products/new`,
+      `/${locale}/admin/categories`,
+      `/${locale}/admin/reviews`,
+      `/${locale}/admin/users`,
+      `/${locale}/admin/coupons`,
+      `/${locale}/admin/banners`,
+      `/${locale}/admin/dashboard`
+    ].filter((href) => href !== pathname);
+    const timers = routes.map((href, index) =>
+      window.setTimeout(() => {
+        router.prefetch(href);
+      }, 600 + index * 300)
+    );
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [locale, pathname, router]);
 
   return (
     <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[320px_1fr]">

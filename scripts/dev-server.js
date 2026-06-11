@@ -98,8 +98,9 @@ function clearWebpackCache() {
 stopPreviousDevServer();
 stopStaleNextProcesses();
 const clearedProductionOutput = clearProductionBuildOutput();
+const shouldClearWebpackCache = process.env.CLEAR_NEXT_CACHE === "1";
 
-if (!clearedProductionOutput) {
+if (!clearedProductionOutput && shouldClearWebpackCache) {
   clearWebpackCache();
 }
 

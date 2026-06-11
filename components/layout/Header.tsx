@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, Globe2, LayoutDashboard, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
+import type { StorefrontFrameSettings } from "@/components/layout/types";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
