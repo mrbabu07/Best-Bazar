@@ -14,6 +14,7 @@ import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { fashionCoreFields } from "@/lib/category-fields";
 
 type ProductDetailProps = {
   product: Product;
@@ -105,6 +106,23 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
       : availableStock > 0
         ? dictionary.common.lowStock
         : dictionary.common.outOfStock;
+  const fashionRows: Product["specifications"] = fashionCoreFields.flatMap((field): Product["specifications"] => {
+    const value = product.fashionFields?.[field.key];
+
+    if (field.type === "boolean") {
+      return value ? [{ key: { en: field.labelEn, ar: field.labelAr }, value: { en: "Yes", ar: "\u0646\u0639\u0645" } }] : [];
+    }
+
+    const text = typeof value === "string" ? value.trim() : "";
+    return text ? [{ key: { en: field.labelEn, ar: field.labelAr }, value: { en: text, ar: text } }] : [];
+  });
+  const customRows: Product["specifications"] = (product.customFields ?? []).flatMap((field): Product["specifications"] => {
+    const value = product.customFieldValues?.[field.id];
+    const text = typeof value === "boolean" ? (value ? "Yes" : "No") : String(value ?? "").trim();
+
+    return text ? [{ key: field.label, value: { en: text, ar: text } }] : [];
+  });
+  const detailRows: Product["specifications"] = [...product.specifications, ...fashionRows, ...customRows];
 
   const handleAdd = () => {
     addItem(product, quantity, selectedVariant);
@@ -326,12 +344,15 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <h2 className="text-lg font-bold text-navy">{dictionary.product.specifications}</h2>
           <div className="mt-4 grid gap-3">
-            {product.specifications.map((spec) => (
-              <div key={getLocalized(spec.key, locale)} className="flex justify-between gap-4 text-sm">
+            {detailRows.map((spec, index) => (
+              <div key={`${getLocalized(spec.key, locale)}-${index}`} className="flex justify-between gap-4 text-sm">
                 <span className="text-neutral-500">{getLocalized(spec.key, locale)}</span>
                 <span className="font-semibold text-navy">{getLocalized(spec.value, locale)}</span>
               </div>
             ))}
+            {!detailRows.length ? (
+              <p className="text-sm font-semibold text-neutral-500">Product details will be added soon.</p>
+            ) : null}
           </div>
         </div>
 

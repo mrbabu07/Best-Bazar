@@ -28,6 +28,13 @@ export type ProductSpecification = {
   value: LocalizedText;
 };
 
+export type ProductCustomField = {
+  id: string;
+  label: LocalizedText;
+  type: "TEXT" | "NUMBER" | "TEXTAREA";
+  required: boolean;
+};
+
 export type ProductVariant = {
   id: string;
   name: LocalizedText;
@@ -35,6 +42,8 @@ export type ProductVariant = {
   colorHex?: string;
   sizeKey?: string;
   sizeName?: LocalizedText;
+  styleName?: LocalizedText;
+  fitName?: LocalizedText;
   imageUrl?: string;
   sku?: string;
   stock: number;
@@ -75,6 +84,9 @@ export type Product = {
   brand: string;
   variants: ProductVariant[];
   specifications: ProductSpecification[];
+  fashionFields?: Record<string, string | boolean>;
+  customFields?: ProductCustomField[];
+  customFieldValues?: Record<string, string | boolean>;
   tags: string[];
   isActive: boolean;
   isFeatured: boolean;

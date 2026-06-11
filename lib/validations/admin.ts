@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRODUCT_TYPE_GENERAL, PRODUCT_TYPE_WOMENS_FASHION } from "@/lib/category-fields";
 import { imageUrlValidationMessage, isAllowedRemoteImage } from "@/lib/images";
 
 const nullableString = z.string().trim().optional().nullable();
@@ -10,6 +11,21 @@ const nullableImageUrl = z
   .nullable()
   .refine((value) => !value || isAllowedRemoteImage(value), imageUrlValidationMessage);
 const money = z.coerce.number().min(0);
+const jsonPrimitive = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+const categoryCustomFieldSchema = z.object({
+  id: z.string().trim().min(1),
+  labelEn: z.string().trim().min(1),
+  labelAr: z.string().trim().min(1),
+  type: z.enum(["TEXT", "NUMBER", "TEXTAREA"]).default("TEXT"),
+  required: z.boolean().default(false)
+});
+const fashionFieldsSchema = z.object({
+  fabric: nullableString.default(""),
+  occasion: nullableString.default(""),
+  season: nullableString.default(""),
+  care: nullableString.default(""),
+  halalBadge: z.boolean().default(false)
+});
 const shippingRateSchema = z.object({
   emirate: z.string().trim().min(1).optional(),
   cost: money.optional(),
@@ -27,6 +43,8 @@ export const categorySchema = z.object({
   slug: z.string().trim().min(1).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   parentCategoryId: nullableString,
   image: nullableImageUrl,
+  productType: z.enum([PRODUCT_TYPE_GENERAL, PRODUCT_TYPE_WOMENS_FASHION]).default(PRODUCT_TYPE_GENERAL),
+  customFields: z.array(categoryCustomFieldSchema).default([]),
   sortOrder: z.coerce.number().int().min(0).default(0),
   isActive: z.boolean().default(true)
 });
@@ -55,6 +73,10 @@ export const productVariantSchema = z.object({
   sizeKey: nullableString,
   sizeNameEn: nullableString,
   sizeNameAr: nullableString,
+  styleNameEn: nullableString,
+  styleNameAr: nullableString,
+  fitNameEn: nullableString,
+  fitNameAr: nullableString,
   imageUrl: nullableImageUrl,
   sku: nullableString,
   stock: z.coerce.number().int().min(0).default(0),
@@ -89,6 +111,8 @@ export const productSchema = z.object({
   sku: z.string().trim().min(1),
   brand: z.string().trim().min(1),
   tags: z.array(z.string().trim().min(1)).default([]),
+  fashionFields: fashionFieldsSchema.default({}),
+  customFieldValues: z.record(jsonPrimitive).default({}),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   images: z.array(productImageSchema).default([]),

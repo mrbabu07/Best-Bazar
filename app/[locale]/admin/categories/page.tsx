@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminCategoryManager } from "@/components/admin/AdminCategoryManager";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { normalizeCategoryCustomFields, normalizeProductType } from "@/lib/category-fields";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
@@ -31,6 +32,8 @@ export default async function AdminCategoriesPage({ params }: { params: { locale
     nameAr: category.nameAr,
     slug: category.slug,
     image: category.image ?? "",
+    productType: normalizeProductType(category.productType),
+    customFields: normalizeCategoryCustomFields(category.customFields),
     parentCategoryId: category.parentCategoryId ?? "",
     parentCategoryNameEn: category.parentCategory?.nameEn ?? "",
     productCount: category._count.products,

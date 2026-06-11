@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminProductManager } from "@/components/admin/AdminProductManager";
+import { normalizeCategoryCustomFields, normalizeCustomFieldValues, normalizeFashionFields, normalizeProductType } from "@/lib/category-fields";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
@@ -38,7 +39,9 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
     id: category.id,
     slug: category.slug,
     nameEn: category.nameEn,
-    nameAr: category.nameAr
+    nameAr: category.nameAr,
+    productType: normalizeProductType(category.productType),
+    customFields: normalizeCategoryCustomFields(category.customFields)
   }));
   const productRows = products.map((product) => ({
     id: product.id,
@@ -62,6 +65,8 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
     sku: product.sku,
     brand: product.brand,
     tags: product.tags,
+    fashionFields: normalizeFashionFields(product.fashionFields),
+    customFieldValues: normalizeCustomFieldValues(product.customFieldValues),
     isActive: product.isActive,
     isFeatured: product.isFeatured,
     images: product.images.map((image) => ({
@@ -76,6 +81,10 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
       sizeKey: variant.sizeKey ?? "",
       sizeNameEn: variant.sizeNameEn ?? "",
       sizeNameAr: variant.sizeNameAr ?? "",
+      styleNameEn: variant.styleNameEn ?? "",
+      styleNameAr: variant.styleNameAr ?? "",
+      fitNameEn: variant.fitNameEn ?? "",
+      fitNameAr: variant.fitNameAr ?? "",
       imageUrl: variant.imageUrl ?? "",
       sku: variant.sku ?? "",
       stock: String(variant.stock),

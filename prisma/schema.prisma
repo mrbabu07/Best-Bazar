@@ -103,6 +103,8 @@ model Category {
   nameAr           String
   slug             String     @unique
   image            String?
+  productType      String     @default("GENERAL")
+  customFields     Json       @default("[]")
   isActive         Boolean    @default(true)
   sortOrder        Int        @default(0)
   parentCategoryId String?
@@ -133,6 +135,8 @@ model Product {
   sku            String                 @unique
   brand          String
   tags           String[]               @default([])
+  fashionFields  Json                   @default("{}")
+  customFieldValues Json                 @default("{}")
   isActive       Boolean                @default(true)
   isFeatured     Boolean                @default(false)
   rating         Decimal                @default(0) @db.Decimal(3, 2)
@@ -165,6 +169,10 @@ model ProductVariant {
   sizeKey     String?
   sizeNameEn  String?
   sizeNameAr  String?
+  styleNameEn String?
+  styleNameAr String?
+  fitNameEn   String?
+  fitNameAr   String?
   imageUrl    String?
   sku         String?     @unique
   stock       Int         @default(0)

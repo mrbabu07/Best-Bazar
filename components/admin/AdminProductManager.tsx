@@ -25,6 +25,14 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  emptyFashionFields,
+  fashionCoreFields,
+  isFashionProductType,
+  type CategoryCustomField,
+  type FashionFields,
+  type ProductType
+} from "@/lib/category-fields";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
@@ -35,6 +43,8 @@ export type AdminProductCategory = {
   slug: string;
   nameEn: string;
   nameAr: string;
+  productType: ProductType;
+  customFields: CategoryCustomField[];
 };
 
 type ProductImageForm = {
@@ -50,6 +60,10 @@ type ProductVariantForm = {
   sizeKey: string;
   sizeNameEn: string;
   sizeNameAr: string;
+  styleNameEn: string;
+  styleNameAr: string;
+  fitNameEn: string;
+  fitNameAr: string;
   imageUrl: string;
   sku: string;
   stock: string;
@@ -87,6 +101,8 @@ export type AdminProductRow = {
   sku: string;
   brand: string;
   tags: string[];
+  fashionFields: FashionFields;
+  customFieldValues: Record<string, string | boolean>;
   isActive: boolean;
   isFeatured: boolean;
   images: ProductImageForm[];
@@ -113,6 +129,8 @@ type ProductForm = {
   sku: string;
   brand: string;
   tags: string;
+  fashionFields: FashionFields;
+  customFieldValues: Record<string, string>;
   isActive: boolean;
   isFeatured: boolean;
   images: ProductImageForm[];
@@ -149,6 +167,8 @@ function createEmptyForm(categoryId = ""): ProductForm {
     sku: "",
     brand: "",
     tags: "",
+    fashionFields: { ...emptyFashionFields },
+    customFieldValues: {},
     isActive: true,
     isFeatured: false,
     images: [{ url: "", alt: "", sortOrder: "0" }],
@@ -177,6 +197,10 @@ function fromProduct(product: AdminProductRow): ProductForm {
     sku: product.sku,
     brand: product.brand,
     tags: product.tags.join(", "),
+    fashionFields: product.fashionFields,
+    customFieldValues: Object.fromEntries(
+      Object.entries(product.customFieldValues).map(([key, value]) => [key, typeof value === "boolean" ? String(value) : value])
+    ),
     isActive: product.isActive,
     isFeatured: product.isFeatured,
     images: product.images.length ? product.images : [{ url: "", alt: "", sortOrder: "0" }],
@@ -258,12 +282,13 @@ export function AdminProductManager({
       ? currentCategory.nameAr
       : currentCategory.nameEn
     : "No category";
+  const isFashionCategory = isFashionProductType(currentCategory?.productType);
+  const categoryCustomFields = currentCategory?.customFields ?? [];
   const sizeOptions = getCategorySizeOptions(currentCategory);
   const sizeRequired = !isSingleDefaultSize(sizeOptions);
   const mainImage = form.images.find((image) => image.url.trim());
   const activeVariants = form.variants.filter((variant) => variant.isActive && variant.colorNameEn.trim());
   const activeVariantCount = activeVariants.length;
-  const isColorSetupReady = form.variants.length === 0 || activeVariantCount > 0;
   const variantStock = activeVariants.reduce((total, variant) => total + Number(variant.stock || 0), 0);
   const baseStock = Number(form.stock || 0);
   const effectiveStock = form.variants.length ? variantStock : baseStock;
@@ -272,7 +297,14 @@ export function AdminProductManager({
   );
   const isPricingReady = Number(form.price || 0) > 0 && effectiveStock > 0;
   const isMediaReady = Boolean(mainImage);
-  const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && form.isActive;
+  const isVariantSetupReady = form.variants.every(
+    (variant) =>
+      (!variant.colorNameEn.trim() && !variant.colorNameAr.trim()) ||
+      (variant.colorNameEn.trim() &&
+        variant.colorNameAr.trim() &&
+        (!sizeRequired || variant.sizeNameEn.trim() || variant.sizeNameAr.trim()))
+  );
+  const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && isVariantSetupReady && form.isActive;
   const editorTitle = selectedProduct ? "Edit ecommerce product" : "Product workspace";
   const editorSubtitle = selectedProduct
     ? `Updating ${selectedProduct.nameEn}`
@@ -299,13 +331,33 @@ export function AdminProductManager({
     {
       label: "Variants",
       value: activeVariantCount ? `${activeVariantCount} stock row${activeVariantCount > 1 ? "s" : ""}` : "Optional color/size stock",
-      ready: isColorSetupReady,
+      ready: isVariantSetupReady,
       icon: Palette
     }
   ];
 
   const updateForm = <Key extends keyof ProductForm>(key: Key, value: ProductForm[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const updateFashionField = <Key extends keyof FashionFields>(key: Key, value: FashionFields[Key]) => {
+    setForm((current) => ({
+      ...current,
+      fashionFields: {
+        ...current.fashionFields,
+        [key]: value
+      }
+    }));
+  };
+
+  const updateCustomFieldValue = (fieldId: string, value: string) => {
+    setForm((current) => ({
+      ...current,
+      customFieldValues: {
+        ...current.customFieldValues,
+        [fieldId]: value
+      }
+    }));
   };
 
   const startEdit = (product: AdminProductRow) => {
@@ -370,6 +422,10 @@ export function AdminProductManager({
           colorNameAr: "",
           colorHex: "#000000",
           ...sizeFields(sizeOptions[0]),
+          styleNameEn: "",
+          styleNameAr: "",
+          fitNameEn: "",
+          fitNameAr: "",
           imageUrl: "",
           sku: "",
           stock: "0",
@@ -415,6 +471,17 @@ export function AdminProductManager({
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!isMediaReady) {
+      toast.error("Add at least one product image.");
+      return;
+    }
+
+    if (!isVariantSetupReady) {
+      toast.error("Complete color and size fields, or remove the empty stock row.");
+      return;
+    }
+
     setSaving(true);
 
     const payload = {
@@ -439,6 +506,10 @@ export function AdminProductManager({
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
+      fashionFields: isFashionCategory ? form.fashionFields : { ...emptyFashionFields },
+      customFieldValues: Object.fromEntries(
+        categoryCustomFields.map((field) => [field.id, form.customFieldValues[field.id] ?? ""])
+      ),
       isActive: form.isActive,
       isFeatured: form.isFeatured,
       images: form.images
@@ -457,6 +528,10 @@ export function AdminProductManager({
           sizeKey: variant.sizeKey || null,
           sizeNameEn: variant.sizeNameEn || null,
           sizeNameAr: variant.sizeNameAr || null,
+          styleNameEn: isFashionCategory ? variant.styleNameEn || null : null,
+          styleNameAr: isFashionCategory ? variant.styleNameAr || null : null,
+          fitNameEn: isFashionCategory ? variant.fitNameEn || null : null,
+          fitNameAr: isFashionCategory ? variant.fitNameAr || null : null,
           imageUrl: variant.imageUrl || null,
           sku: variant.sku || null,
           stock: Number(variant.stock || 0),
@@ -988,6 +1063,34 @@ export function AdminProductManager({
                           />
                         </div>
                       </div>
+                      {isFashionCategory ? (
+                        <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:grid-cols-2">
+                          <input
+                            value={variant.styleNameEn}
+                            onChange={(event) => updateVariant(index, "styleNameEn", event.target.value)}
+                            placeholder="Style EN, e.g. Open front"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={variant.styleNameAr}
+                            onChange={(event) => updateVariant(index, "styleNameAr", event.target.value)}
+                            placeholder="Style AR"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={variant.fitNameEn}
+                            onChange={(event) => updateVariant(index, "fitNameEn", event.target.value)}
+                            placeholder="Fit EN, e.g. Relaxed"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={variant.fitNameAr}
+                            onChange={(event) => updateVariant(index, "fitNameAr", event.target.value)}
+                            placeholder="Fit AR"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                        </div>
+                      ) : null}
                       <div className="grid gap-3 sm:grid-cols-[1fr_96px_96px_auto_auto]">
                         <input
                           value={variant.sku}
@@ -1040,7 +1143,97 @@ export function AdminProductManager({
               </details>
 
               <details className="rounded-lg border border-neutral-200 bg-white p-3">
-                <summary className="cursor-pointer text-sm font-bold text-navy">4. Product specifications</summary>
+                <summary className="cursor-pointer text-sm font-bold text-navy">4. Fashion and custom fields</summary>
+                <div className="mt-4 grid gap-3">
+                  {isFashionCategory ? (
+                    <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-navy">Fashion core fields</h3>
+                        <p className="mt-1 text-xs font-semibold text-neutral-500">
+                          Fabric, occasion, season, care, and halal badge appear for Women&apos;s Fashion categories.
+                        </p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {fashionCoreFields.map((field) =>
+                          field.type === "boolean" ? (
+                            <label
+                              key={field.key}
+                              className="flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold text-navy"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={Boolean(form.fashionFields[field.key])}
+                                onChange={(event) => updateFashionField(field.key, event.target.checked)}
+                                className="accent-gold-500"
+                              />
+                              {locale === "ar" ? field.labelAr : field.labelEn}
+                            </label>
+                          ) : (
+                            <label key={field.key} className="grid gap-2 text-sm font-semibold text-navy">
+                              {locale === "ar" ? field.labelAr : field.labelEn}
+                              <input
+                                value={String(form.fashionFields[field.key] ?? "")}
+                                onChange={(event) => updateFashionField(field.key, event.target.value)}
+                                placeholder={field.labelEn}
+                                className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                              />
+                            </label>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
+                      Select a Women&apos;s Fashion category to show fashion core fields.
+                    </p>
+                  )}
+
+                  <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-navy">Custom fields</h3>
+                      <p className="mt-1 text-xs font-semibold text-neutral-500">
+                        These inputs are controlled from the selected category.
+                      </p>
+                    </div>
+                    {categoryCustomFields.length ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {categoryCustomFields.map((field) =>
+                          field.type === "TEXTAREA" ? (
+                            <label key={field.id} className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                              {locale === "ar" ? field.labelAr : field.labelEn}
+                              <textarea
+                                rows={3}
+                                value={form.customFieldValues[field.id] ?? ""}
+                                onChange={(event) => updateCustomFieldValue(field.id, event.target.value)}
+                                required={field.required}
+                                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+                              />
+                            </label>
+                          ) : (
+                            <label key={field.id} className="grid gap-2 text-sm font-semibold text-navy">
+                              {locale === "ar" ? field.labelAr : field.labelEn}
+                              <input
+                                type={field.type === "NUMBER" ? "number" : "text"}
+                                value={form.customFieldValues[field.id] ?? ""}
+                                onChange={(event) => updateCustomFieldValue(field.id, event.target.value)}
+                                required={field.required}
+                                className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                              />
+                            </label>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <p className="rounded-md border border-dashed border-neutral-200 bg-white p-3 text-sm font-semibold text-neutral-500">
+                        No custom fields for this category yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </details>
+
+              <details className="rounded-lg border border-neutral-200 bg-white p-3">
+                <summary className="cursor-pointer text-sm font-bold text-navy">5. Product specifications</summary>
               <div className="mt-4 grid gap-3">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-sm font-bold text-navy">Specifications</h3>
@@ -1092,7 +1285,7 @@ export function AdminProductManager({
               </details>
 
               <details className="rounded-lg border border-neutral-200 bg-white p-3">
-                <summary className="cursor-pointer text-sm font-bold text-navy">5. SEO and product schema</summary>
+                <summary className="cursor-pointer text-sm font-bold text-navy">6. SEO and product schema</summary>
                 <div className="mt-4 grid gap-3">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <label className="grid gap-2 text-sm font-semibold text-navy">
@@ -1145,7 +1338,7 @@ export function AdminProductManager({
               </details>
 
               <details open className="rounded-lg border border-neutral-200 bg-white p-3">
-                <summary className="cursor-pointer text-sm font-bold text-navy">6. Storefront publishing</summary>
+                <summary className="cursor-pointer text-sm font-bold text-navy">7. Storefront publishing</summary>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-navy">
                 <label className="flex items-center gap-2">
                   <input

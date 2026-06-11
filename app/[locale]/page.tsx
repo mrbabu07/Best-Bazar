@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { CreditCard, HandCoins, RotateCcw, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
-import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
+import type { HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
@@ -12,6 +13,13 @@ import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
 import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
+
+const HeroSlider = dynamic(
+  () => import("@/components/home/HeroSlider").then((module) => module.HeroSlider),
+  {
+    loading: () => <section className="min-h-[calc(100svh-9rem)] bg-navy" />
+  }
+);
 
 export function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }];

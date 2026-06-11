@@ -4,6 +4,7 @@ import { Package } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminProductCreateForm } from "@/components/admin/AdminProductCreateForm";
+import { normalizeCategoryCustomFields, normalizeProductType } from "@/lib/category-fields";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
@@ -27,7 +28,9 @@ export default async function AdminNewProductPage({ params }: { params: { locale
     id: category.id,
     slug: category.slug,
     nameEn: category.nameEn,
-    nameAr: category.nameAr
+    nameAr: category.nameAr,
+    productType: normalizeProductType(category.productType),
+    customFields: normalizeCategoryCustomFields(category.customFields)
   }));
   const productsHref = `/${locale}/admin/products`;
 

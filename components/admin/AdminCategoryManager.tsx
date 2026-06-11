@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Edit, GripVertical, Plus, RotateCcw } from "lucide-react";
+import { Edit, GripVertical, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -9,6 +9,14 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  customFieldTypeOptions,
+  makeCustomFieldId,
+  productTypeOptions,
+  type CategoryCustomField,
+  type CategoryCustomFieldType,
+  type ProductType
+} from "@/lib/category-fields";
 import { fallbackCategoryImage, safeRemoteImage } from "@/lib/images";
 import type { Locale } from "@/lib/i18n";
 
@@ -18,6 +26,8 @@ export type AdminCategoryRow = {
   nameAr: string;
   slug: string;
   image: string;
+  productType: ProductType;
+  customFields: CategoryCustomField[];
   parentCategoryId: string;
   parentCategoryNameEn: string;
   productCount: number;
@@ -31,6 +41,8 @@ type CategoryForm = {
   nameAr: string;
   slug: string;
   image: string;
+  productType: ProductType;
+  customFields: CategoryCustomField[];
   parentCategoryId: string;
   sortOrder: string;
   isActive: boolean;
@@ -47,6 +59,8 @@ const emptyForm: CategoryForm = {
   nameAr: "",
   slug: "",
   image: "",
+  productType: "GENERAL",
+  customFields: [],
   parentCategoryId: "",
   sortOrder: "0",
   isActive: true
@@ -58,6 +72,8 @@ function fromCategory(category: AdminCategoryRow): CategoryForm {
     nameAr: category.nameAr,
     slug: category.slug,
     image: category.image,
+    productType: category.productType,
+    customFields: category.customFields,
     parentCategoryId: category.parentCategoryId,
     sortOrder: String(category.sortOrder),
     isActive: category.isActive
@@ -82,6 +98,52 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
     setForm((current) => ({ ...current, [key]: value }));
   };
 
+  const addCustomField = () => {
+    setForm((current) => ({
+      ...current,
+      customFields: [
+        ...current.customFields,
+        {
+          id: `field-${Date.now()}`,
+          labelEn: "",
+          labelAr: "",
+          type: "TEXT",
+          required: false
+        }
+      ]
+    }));
+  };
+
+  const updateCustomField = <Key extends keyof CategoryCustomField>(
+    index: number,
+    key: Key,
+    value: CategoryCustomField[Key]
+  ) => {
+    setForm((current) => ({
+      ...current,
+      customFields: current.customFields.map((field, fieldIndex) => {
+        if (fieldIndex !== index) {
+          return field;
+        }
+
+        const next = { ...field, [key]: value };
+
+        if (key === "labelEn" && (!field.id || field.id.startsWith("field-"))) {
+          next.id = makeCustomFieldId(String(value));
+        }
+
+        return next;
+      })
+    }));
+  };
+
+  const removeCustomField = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      customFields: current.customFields.filter((_, fieldIndex) => fieldIndex !== index)
+    }));
+  };
+
   const startCreate = () => {
     setSelectedId("");
     setForm(emptyForm);
@@ -101,6 +163,13 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
       nameAr: form.nameAr,
       slug: form.slug,
       image: form.image || null,
+      productType: form.productType,
+      customFields: form.customFields
+        .filter((field) => field.labelEn.trim() && field.labelAr.trim())
+        .map((field) => ({
+          ...field,
+          id: field.id || makeCustomFieldId(field.labelEn)
+        })),
       parentCategoryId: form.parentCategoryId || null,
       sortOrder: Number(form.sortOrder),
       isActive: form.isActive
@@ -163,6 +232,10 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
               <Badge tone={category.isActive ? "green" : "red"}>
                 {category.isActive ? "Active" : "Inactive"}
               </Badge>
+              <Badge tone="blue">
+                {productTypeOptions.find((option) => option.value === category.productType)?.label ?? "General product"}
+              </Badge>
+              {category.customFields.length ? <Badge tone="gold">{category.customFields.length} custom</Badge> : null}
               <Badge tone="gold">#{category.sortOrder}</Badge>
               <button
                 type="button"
@@ -253,6 +326,90 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
                 ))}
             </select>
           </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Product type
+            <select
+              value={form.productType}
+              onChange={(event) => updateForm("productType", event.target.value as ProductType)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            >
+              {productTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-navy">Custom product fields</p>
+                <p className="mt-1 text-xs font-semibold text-neutral-500">
+                  These fields appear automatically when adding products in this category.
+                </p>
+              </div>
+              <Button type="button" variant="secondary" size="sm" onClick={addCustomField}>
+                <Plus size={15} />
+                Field
+              </Button>
+            </div>
+            {form.customFields.length ? (
+              form.customFields.map((field, index) => (
+                <div key={`${field.id}-${index}`} className="grid gap-2 rounded-md border border-neutral-200 bg-white p-3">
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <input
+                      value={field.labelEn}
+                      onChange={(event) => updateCustomField(index, "labelEn", event.target.value)}
+                      placeholder="Label EN"
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                    <input
+                      value={field.labelAr}
+                      onChange={(event) => updateCustomField(index, "labelAr", event.target.value)}
+                      placeholder="Label AR"
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    />
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                    <select
+                      value={field.type}
+                      onChange={(event) =>
+                        updateCustomField(index, "type", event.target.value as CategoryCustomFieldType)
+                      }
+                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                    >
+                      {customFieldTypeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold text-navy">
+                      <input
+                        type="checkbox"
+                        checked={field.required}
+                        onChange={(event) => updateCustomField(index, "required", event.target.checked)}
+                        className="accent-gold-500"
+                      />
+                      Required
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomField(index)}
+                      className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                      aria-label="Remove custom field"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-md border border-dashed border-neutral-200 bg-white p-3 text-xs font-semibold text-neutral-500">
+                No custom fields yet.
+              </p>
+            )}
+          </div>
           <AdminImageUploadField
             label="Category image"
             value={form.image}

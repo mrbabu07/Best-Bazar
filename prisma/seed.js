@@ -19,25 +19,42 @@ const categories = [
     sortOrder: 2
   },
   {
+    nameEn: "Abaya Collection",
+    nameAr: "\u0645\u062c\u0645\u0648\u0639\u0629 \u0627\u0644\u0639\u0628\u0627\u064a\u0627\u062a",
+    slug: "abaya-collection",
+    image: "https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?auto=format&fit=crop&w=900&q=80",
+    productType: "WOMENS_FASHION",
+    customFields: [
+      {
+        id: "embroidery-style",
+        labelEn: "Embroidery style",
+        labelAr: "\u0646\u0645\u0637 \u0627\u0644\u062a\u0637\u0631\u064a\u0632",
+        type: "TEXT",
+        required: false
+      }
+    ],
+    sortOrder: 3
+  },
+  {
     nameEn: "Electronics",
     nameAr: "الإلكترونيات",
     slug: "electronics",
     image: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=900&q=80",
-    sortOrder: 3
+    sortOrder: 4
   },
   {
     nameEn: "Home Living",
     nameAr: "المنزل",
     slug: "home",
     image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=900&q=80",
-    sortOrder: 4
+    sortOrder: 5
   },
   {
     nameEn: "Beauty",
     nameAr: "الجمال",
     slug: "beauty",
     image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80",
-    sortOrder: 5
+    sortOrder: 6
   }
 ];
 

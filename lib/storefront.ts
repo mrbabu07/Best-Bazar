@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
+import { normalizeCategoryCustomFields, normalizeCustomFieldValues, normalizeFashionFields } from "@/lib/category-fields";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
@@ -63,8 +64,12 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
     const imageUrl = safeRemoteImage(variant.imageUrl, "", { width: 1200 });
     const sizeNameEn = variant.sizeNameEn?.trim();
     const sizeNameAr = variant.sizeNameAr?.trim();
-    const nameEn = [variant.colorNameEn, sizeNameEn].filter(Boolean).join(" / ");
-    const nameAr = [variant.colorNameAr, sizeNameAr].filter(Boolean).join(" / ");
+    const styleNameEn = variant.styleNameEn?.trim();
+    const styleNameAr = variant.styleNameAr?.trim();
+    const fitNameEn = variant.fitNameEn?.trim();
+    const fitNameAr = variant.fitNameAr?.trim();
+    const nameEn = [variant.colorNameEn, sizeNameEn, styleNameEn, fitNameEn].filter(Boolean).join(" / ");
+    const nameAr = [variant.colorNameAr, sizeNameAr, styleNameAr, fitNameAr].filter(Boolean).join(" / ");
 
     return {
       id: variant.id,
@@ -73,6 +78,8 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
       colorHex: variant.colorHex ?? undefined,
       sizeKey: variant.sizeKey ?? undefined,
       sizeName: sizeNameEn || sizeNameAr ? { en: sizeNameEn ?? sizeNameAr ?? "", ar: sizeNameAr ?? sizeNameEn ?? "" } : undefined,
+      styleName: styleNameEn || styleNameAr ? { en: styleNameEn ?? styleNameAr ?? "", ar: styleNameAr ?? styleNameEn ?? "" } : undefined,
+      fitName: fitNameEn || fitNameAr ? { en: fitNameEn ?? fitNameAr ?? "", ar: fitNameAr ?? fitNameEn ?? "" } : undefined,
       imageUrl: imageUrl || undefined,
       sku: variant.sku ?? undefined,
       stock: variant.stock,
@@ -114,6 +121,14 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
       key: { en: specification.keyEn, ar: specification.keyAr },
       value: { en: specification.valueEn, ar: specification.valueAr }
     })),
+    fashionFields: normalizeFashionFields(product.fashionFields),
+    customFields: normalizeCategoryCustomFields(product.category.customFields).map((field) => ({
+      id: field.id,
+      label: { en: field.labelEn, ar: field.labelAr },
+      type: field.type,
+      required: field.required
+    })),
+    customFieldValues: normalizeCustomFieldValues(product.customFieldValues),
     tags: product.tags,
     isActive: product.isActive,
     isFeatured: product.isFeatured,

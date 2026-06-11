@@ -15,6 +15,14 @@ function getPooledDatabaseUrl() {
     const url = new URL(value);
 
     if (url.hostname.endsWith(".neon.tech")) {
+      if (!url.hostname.includes("-pooler.")) {
+        const [endpoint, ...rest] = url.hostname.split(".");
+
+        if (endpoint && rest.length) {
+          url.hostname = `${endpoint}-pooler.${rest.join(".")}`;
+        }
+      }
+
       url.searchParams.set("sslmode", url.searchParams.get("sslmode") ?? "require");
       url.searchParams.set(
         "connection_limit",

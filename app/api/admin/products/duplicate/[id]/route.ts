@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { Prisma } from "@prisma/client";
 import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { created, handleApiError, requireAdmin } from "@/lib/api/admin";
@@ -7,6 +8,10 @@ import { created, handleApiError, requireAdmin } from "@/lib/api/admin";
 type RouteContext = {
   params: { id: string };
 };
+
+function cloneJson(value: Prisma.JsonValue): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+  return value === null ? Prisma.JsonNull : (value as Prisma.InputJsonValue);
+}
 
 export async function POST(_request: Request, { params }: RouteContext) {
   try {
@@ -41,19 +46,25 @@ export async function POST(_request: Request, { params }: RouteContext) {
         sku: `${original.sku}-COPY-${suffix}`,
         brand: original.brand,
         tags: original.tags,
+        fashionFields: cloneJson(original.fashionFields),
+        customFieldValues: cloneJson(original.customFieldValues),
         isActive: false,
         isFeatured: false,
         images: {
           create: original.images.map(({ url, alt, sortOrder }) => ({ url, alt, sortOrder }))
         },
         variants: {
-          create: original.variants.map(({ colorNameEn, colorNameAr, colorHex, sizeKey, sizeNameEn, sizeNameAr, imageUrl, sku, stock, sortOrder, isActive }) => ({
+          create: original.variants.map(({ colorNameEn, colorNameAr, colorHex, sizeKey, sizeNameEn, sizeNameAr, styleNameEn, styleNameAr, fitNameEn, fitNameAr, imageUrl, sku, stock, sortOrder, isActive }) => ({
             colorNameEn,
             colorNameAr,
             colorHex,
             sizeKey,
             sizeNameEn,
             sizeNameAr,
+            styleNameEn,
+            styleNameAr,
+            fitNameEn,
+            fitNameAr,
             imageUrl,
             sku: sku ? `${sku}-COPY-${suffix}` : null,
             stock,
