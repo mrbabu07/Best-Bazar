@@ -46,6 +46,187 @@ function addDays(date: Date, days: number) {
   return next;
 }
 
+type NumericLike = Prisma.Decimal | number | bigint | string | null | undefined;
+
+type DashboardStatsRow = {
+  monthRevenue: NumericLike;
+  totalOrders: NumericLike;
+  pendingOrders: NumericLike;
+  deliveredOrders: NumericLike;
+  totalProducts: NumericLike;
+  lowStockCount: NumericLike;
+  pendingReviews: NumericLike;
+  totalCategories: NumericLike;
+  totalUsers: NumericLike;
+  activeCoupons: NumericLike;
+  activeBanners: NumericLike;
+};
+
+type DashboardLowStockProduct = {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  sku: string;
+  stock: number;
+};
+
+type DashboardRecentOrder = {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  paymentStatus: string;
+  orderStatus: OrderStatus;
+  total: Prisma.Decimal;
+};
+
+type DashboardData = {
+  monthRevenue: number;
+  totalOrders: number;
+  pendingOrders: number;
+  deliveredOrders: number;
+  totalProducts: number;
+  lowStockCount: number;
+  pendingReviews: number;
+  totalCategories: number;
+  totalUsers: number;
+  activeCoupons: number;
+  activeBanners: number;
+  revenueSeries: number[];
+  lowStockProducts: DashboardLowStockProduct[];
+  recentOrders: DashboardRecentOrder[];
+};
+
+function toNumber(value: NumericLike) {
+  return Number(value ?? 0);
+}
+
+function emptyDashboardData(): DashboardData {
+  return {
+    monthRevenue: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+    deliveredOrders: 0,
+    totalProducts: 0,
+    lowStockCount: 0,
+    pendingReviews: 0,
+    totalCategories: 0,
+    totalUsers: 0,
+    activeCoupons: 0,
+    activeBanners: 0,
+    revenueSeries: Array.from({ length: 12 }, () => 0),
+    lowStockProducts: [],
+    recentOrders: []
+  };
+}
+
+async function readDashboardStats(): Promise<Omit<DashboardData, "revenueSeries" | "lowStockProducts" | "recentOrders">> {
+  const [row] = await prisma.$queryRaw<DashboardStatsRow[]>(
+    Prisma.sql`
+      SELECT
+        (SELECT COALESCE(SUM(total), 0) FROM "Order"
+          WHERE "createdAt" >= ${startOfMonth()}
+            AND "orderStatus" <> ${OrderStatus.CANCELLED}::"OrderStatus") AS "monthRevenue",
+        (SELECT COUNT(*) FROM "Order") AS "totalOrders",
+        (SELECT COUNT(*) FROM "Order"
+          WHERE "orderStatus" = ${OrderStatus.PENDING}::"OrderStatus") AS "pendingOrders",
+        (SELECT COUNT(*) FROM "Order"
+          WHERE "orderStatus" = ${OrderStatus.DELIVERED}::"OrderStatus") AS "deliveredOrders",
+        (SELECT COUNT(*) FROM "Product" WHERE "isActive" = true) AS "totalProducts",
+        (SELECT COUNT(*) FROM "Product" WHERE "isActive" = true AND stock <= 10) AS "lowStockCount",
+        (SELECT COUNT(*) FROM "Review" WHERE "isApproved" = false) AS "pendingReviews",
+        (SELECT COUNT(*) FROM "Category") AS "totalCategories",
+        (SELECT COUNT(*) FROM "User") AS "totalUsers",
+        (SELECT COUNT(*) FROM "Coupon" WHERE "isActive" = true) AS "activeCoupons",
+        (SELECT COUNT(*) FROM "Banner" WHERE "isActive" = true) AS "activeBanners"
+    `
+  );
+
+  return {
+    monthRevenue: toNumber(row?.monthRevenue),
+    totalOrders: toNumber(row?.totalOrders),
+    pendingOrders: toNumber(row?.pendingOrders),
+    deliveredOrders: toNumber(row?.deliveredOrders),
+    totalProducts: toNumber(row?.totalProducts),
+    lowStockCount: toNumber(row?.lowStockCount),
+    pendingReviews: toNumber(row?.pendingReviews),
+    totalCategories: toNumber(row?.totalCategories),
+    totalUsers: toNumber(row?.totalUsers),
+    activeCoupons: toNumber(row?.activeCoupons),
+    activeBanners: toNumber(row?.activeBanners)
+  };
+}
+
+async function readRevenueSeries() {
+  const today = startOfDay(new Date());
+  const chartStart = addDays(today, -11);
+  const chartEnd = addDays(today, 1);
+  const revenueRows = await prisma.$queryRaw<Array<{ day: Date; total: NumericLike }>>(
+    Prisma.sql`
+      SELECT date_trunc('day', "createdAt") AS day, COALESCE(SUM(total), 0) AS total
+      FROM "Order"
+      WHERE "createdAt" >= ${chartStart}
+        AND "createdAt" < ${chartEnd}
+        AND "orderStatus" <> ${OrderStatus.CANCELLED}::"OrderStatus"
+      GROUP BY day
+      ORDER BY day ASC
+    `
+  );
+  const revenueByDay = new Map(
+    revenueRows.map((row) => [startOfDay(new Date(row.day)).toISOString(), toNumber(row.total)])
+  );
+
+  return Array.from({ length: 12 }).map((_, index) => {
+    const day = addDays(today, index - 11);
+    return revenueByDay.get(day.toISOString()) ?? 0;
+  });
+}
+
+async function loadDashboardData(): Promise<DashboardData> {
+  const stats = await readDashboardStats();
+  const revenueSeries = await readRevenueSeries();
+  const lowStockProducts = await prisma.product.findMany({
+    where: { isActive: true, stock: { lte: 10 } },
+    select: { id: true, nameEn: true, nameAr: true, sku: true, stock: true },
+    orderBy: { stock: "asc" },
+    take: 5
+  });
+  const recentOrders = await prisma.order.findMany({
+    select: {
+      id: true,
+      orderNumber: true,
+      customerName: true,
+      paymentStatus: true,
+      orderStatus: true,
+      total: true
+    },
+    orderBy: { createdAt: "desc" },
+    take: 5
+  });
+
+  return {
+    ...stats,
+    revenueSeries,
+    lowStockProducts,
+    recentOrders
+  };
+}
+
+async function loadDashboardDataWithRetry() {
+  try {
+    return await loadDashboardData();
+  } catch (error) {
+    console.error("Admin dashboard data load failed. Retrying once.", error);
+
+    try {
+      await prisma.$disconnect();
+      return await loadDashboardData();
+    } catch (retryError) {
+      console.error("Admin dashboard data load failed after retry.", retryError);
+      return emptyDashboardData();
+    }
+  }
+}
+
 export default async function AdminDashboardPage({ params }: { params: { locale: string } }) {
   const locale = params.locale;
 
@@ -54,7 +235,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
   }
 
   const dictionary = getDictionary(locale);
-  const [
+  const {
     monthRevenue,
     totalOrders,
     pendingOrders,
@@ -67,55 +248,9 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
     activeCoupons,
     activeBanners,
     lowStockProducts,
-    recentOrders
-  ] = await Promise.all([
-    prisma.order.aggregate({
-      where: { createdAt: { gte: startOfMonth() }, orderStatus: { not: OrderStatus.CANCELLED } },
-      _sum: { total: true }
-    }),
-    prisma.order.count(),
-    prisma.order.count({ where: { orderStatus: OrderStatus.PENDING } }),
-    prisma.order.count({ where: { orderStatus: OrderStatus.DELIVERED } }),
-    prisma.product.count({ where: { isActive: true } }),
-    prisma.product.count({ where: { isActive: true, stock: { lte: 10 } } }),
-    prisma.review.count({ where: { isApproved: false } }),
-    prisma.category.count(),
-    prisma.user.count(),
-    prisma.coupon.count({ where: { isActive: true } }),
-    prisma.banner.count({ where: { isActive: true } }),
-    prisma.product.findMany({
-      where: { isActive: true, stock: { lte: 10 } },
-      orderBy: { stock: "asc" },
-      take: 5
-    }),
-    prisma.order.findMany({
-      include: { items: true },
-      orderBy: { createdAt: "desc" },
-      take: 5
-    })
-  ]);
-
-  const today = startOfDay(new Date());
-  const chartStart = addDays(today, -11);
-  const chartEnd = addDays(today, 1);
-  const revenueRows = await prisma.$queryRaw<Array<{ day: Date; total: Prisma.Decimal | null }>>(
-    Prisma.sql`
-      SELECT date_trunc('day', "createdAt") AS day, COALESCE(SUM(total), 0) AS total
-      FROM "Order"
-      WHERE "createdAt" >= ${chartStart}
-        AND "createdAt" < ${chartEnd}
-        AND "orderStatus" <> ${OrderStatus.CANCELLED}::"OrderStatus"
-      GROUP BY day
-      ORDER BY day ASC
-    `
-  );
-  const revenueByDay = new Map(
-    revenueRows.map((row) => [startOfDay(new Date(row.day)).toISOString(), Number(row.total ?? 0)])
-  );
-  const revenueSeries = Array.from({ length: 12 }).map((_, index) => {
-    const day = addDays(today, index - 11);
-    return revenueByDay.get(day.toISOString()) ?? 0;
-  });
+    recentOrders,
+    revenueSeries
+  } = await loadDashboardDataWithRetry();
   const maxRevenue = Math.max(...revenueSeries, 1);
   const notificationCount = pendingOrders + lowStockCount + pendingReviews;
 
@@ -455,7 +590,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetricCard
           label={dictionary.admin.revenue}
-          value={formatCurrency(Number(monthRevenue._sum.total ?? 0), "AED", locale)}
+          value={formatCurrency(monthRevenue, "AED", locale)}
           detail="This month"
           icon={DollarSign}
           tone="gold"
