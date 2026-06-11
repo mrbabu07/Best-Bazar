@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type ForgotPasswordFormProps = {
   locale: Locale;
@@ -48,14 +49,14 @@ export function ForgotPasswordForm({ locale }: ForgotPasswordFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, locale })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string; resetUrl?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? labels.failed);
+        throw new Error(result?.error ?? labels.failed);
       }
 
       setSent(true);
-      setResetUrl(result.resetUrl ?? "");
+      setResetUrl(result?.resetUrl ?? "");
       toast.success(labels.sent);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : labels.failed);

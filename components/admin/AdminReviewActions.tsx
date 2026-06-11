@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type AdminReviewActionsProps = {
   reviewId: string;
@@ -24,10 +25,10 @@ export function AdminReviewActions({ reviewId, isApproved }: AdminReviewActionsP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isApproved: nextApproved })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to update review.");
+        throw new Error(result?.error ?? "Unable to update review.");
       }
 
       toast.success(nextApproved ? "Review approved" : "Review hidden");

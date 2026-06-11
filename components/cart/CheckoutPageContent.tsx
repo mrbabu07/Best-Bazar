@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
 import type { PublicPaymentAvailability } from "@/lib/payment-config";
+import { safeResponseJson } from "@/lib/safe-json";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -274,14 +275,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, subtotal })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ valid?: boolean; code?: string; discount?: number }>(response, {});
 
-      if (!response.ok || !result.valid) {
+      if (!response.ok || !result?.valid) {
         throw new Error(labels.couponInvalid);
       }
 
-      setAppliedCoupon(result.code ?? code.toUpperCase());
-      setDiscount(Number(result.discount ?? 0));
+      setAppliedCoupon(result?.code ?? code.toUpperCase());
+      setDiscount(Number(result?.discount ?? 0));
       toast.success(labels.couponApplied);
     } catch (error) {
       setAppliedCoupon("");
@@ -330,17 +331,26 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{
+        error?: string;
+        id?: string;
+        accessToken?: string;
+        checkoutUrl?: string;
+        clientSecret?: string;
+        orderConfirmUrl?: string;
+        orderId?: string;
+        orderNumber?: string;
+      }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? labels.checkoutFailed);
+        throw new Error(result?.error ?? labels.checkoutFailed);
       }
 
       if (payment === "stripe") {
         if (result.clientSecret && result.orderConfirmUrl) {
           setStripePayment({
             clientSecret: result.clientSecret,
-            orderNumber: result.orderNumber ?? result.orderId,
+            orderNumber: result.orderNumber ?? result.orderId ?? "order",
             orderConfirmUrl: result.orderConfirmUrl
           });
           toast.success("Enter your card details below.");
@@ -355,6 +365,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         throw new Error(labels.stripeUrlMissing);
       }
 
+      if (!result?.id) {
+        throw new Error("Order was placed but the confirmation link was not returned.");
+      }
       clearCart();
       toast.success(labels.orderPlaced);
       const tokenQuery = result.accessToken ? `?token=${encodeURIComponent(result.accessToken)}` : "";

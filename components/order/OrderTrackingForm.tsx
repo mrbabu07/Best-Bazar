@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { PackageSearch, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency, type CurrencyCode } from "@/utils/currency";
@@ -74,13 +75,17 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
           contact: String(formData.get("contact") ?? "")
         })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<(Partial<TrackOrderResult> & { error?: string }) | null>(response, null);
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Order not found.");
+        throw new Error(result?.error ?? "Order not found.");
       }
 
-      setOrder(result);
+      if (!result?.id || !result?.items) {
+        throw new Error("Order details could not be loaded.");
+      }
+
+      setOrder(result as TrackOrderResult);
     } catch (error) {
       setOrder(null);
       toast.error(error instanceof Error ? error.message : "Order not found.");

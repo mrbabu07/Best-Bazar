@@ -36,6 +36,7 @@ import {
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
+import { safeResponseJson } from "@/lib/safe-json";
 import { formatCurrency } from "@/utils/currency";
 
 export type AdminProductCategory = {
@@ -556,10 +557,10 @@ export function AdminProductManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to save product.");
+        throw new Error(result?.error ?? "Unable to save product.");
       }
 
       toast.success(selectedId ? "Product updated" : "Product created");
@@ -581,10 +582,10 @@ export function AdminProductManager({
       const response = await fetch(`/api/admin/products/duplicate/${productId}`, {
         method: "POST"
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to duplicate product.");
+        throw new Error(result?.error ?? "Unable to duplicate product.");
       }
 
       toast.success("Product duplicated");

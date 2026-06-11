@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 import type { ProductReview } from "@/lib/types";
 import { cn } from "@/utils/cn";
 
@@ -95,7 +96,13 @@ export function ProductReviews({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: selectedRating, comment })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{
+        error?: string;
+        rating?: number;
+        reviewCount?: number;
+        pending?: boolean;
+        review?: ProductReview;
+      }>(response, {});
 
       if (response.status === 401) {
         toast.error(labels.signIn);
@@ -104,21 +111,21 @@ export function ProductReviews({
       }
 
       if (!response.ok) {
-        throw new Error(result.error ?? labels.failed);
+        throw new Error(result?.error ?? labels.failed);
       }
 
-      setRating(Number(result.rating ?? rating));
-      setReviewCount(Number(result.reviewCount ?? reviewCount));
-      if (result.pending) {
+      setRating(Number(result?.rating ?? rating));
+      setReviewCount(Number(result?.reviewCount ?? reviewCount));
+      if (result?.pending) {
         setPendingNotice(labels.pending);
-      } else {
+      } else if (result?.review) {
         setReviews((current) => [
-          result.review,
-          ...current.filter((review) => review.id !== result.review.id)
+          result.review as ProductReview,
+          ...current.filter((review) => review.id !== result.review?.id)
         ]);
       }
       setComment("");
-      toast.success(result.pending ? labels.pending : labels.saved);
+      toast.success(result?.pending ? labels.pending : labels.saved);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : labels.failed);

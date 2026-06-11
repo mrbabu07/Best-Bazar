@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type CancelOrderCopy = {
   cancelOrder: string;
@@ -34,10 +35,10 @@ export function CancelOrderButton({ orderId, copy }: CancelOrderButtonProps) {
       const response = await fetch(`/api/account/orders/${orderId}/cancel`, {
         method: "POST"
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? copy.cancelOrderError);
+        throw new Error(result?.error ?? copy.cancelOrderError);
       }
 
       toast.success(copy.cancelOrderSuccess);

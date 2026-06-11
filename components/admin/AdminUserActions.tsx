@@ -4,6 +4,7 @@ import { ShieldCheck, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type UserRole = "USER" | "ADMIN";
 
@@ -31,10 +32,10 @@ export function AdminUserActions({ userId, initialRole, initialIsBanned }: Admin
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: nextRole })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to update user role.");
+        throw new Error(result?.error ?? "Unable to update user role.");
       }
 
       toast.success("User role updated");
@@ -59,10 +60,10 @@ export function AdminUserActions({ userId, initialRole, initialIsBanned }: Admin
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isBanned: nextStatus })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to update user status.");
+        throw new Error(result?.error ?? "Unable to update user status.");
       }
 
       toast.success(nextStatus ? "User banned" : "User unbanned");

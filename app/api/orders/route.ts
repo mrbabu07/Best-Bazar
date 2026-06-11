@@ -8,6 +8,7 @@ import { sendOrderMessagingNotifications } from "@/lib/notifications";
 import { assertPaymentMethodAvailable } from "@/lib/payment-settings";
 import { prisma } from "@/lib/prisma";
 import { createStoreOrder } from "@/lib/orders";
+import { toJsonSafeValue } from "@/lib/safe-json";
 import { orderCreateSchema } from "@/lib/validations/store";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" }
   });
 
-  return NextResponse.json(JSON.parse(JSON.stringify(orders)));
+  return NextResponse.json(toJsonSafeValue(orders));
 }
 
 export async function POST(request: Request) {
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
       sendOrderMessagingNotifications(order, "created")
     ]);
 
-    return NextResponse.json(JSON.parse(JSON.stringify(order)), { status: 201 });
+    return NextResponse.json(toJsonSafeValue(order), { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json({ error: error.errors[0]?.message ?? "Invalid order payload." }, { status: 400 });

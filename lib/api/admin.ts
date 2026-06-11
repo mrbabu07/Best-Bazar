@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
+import { toJsonSafeValue } from "@/lib/safe-json";
 
 export class ApiError extends Error {
   status: number;
@@ -23,7 +24,7 @@ export async function requireAdmin() {
 }
 
 export function ok(data: unknown, status = 200) {
-  return NextResponse.json(data, { status });
+  return NextResponse.json(toJsonSafeValue(data), { status });
 }
 
 export function created(data: unknown) {

@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { fallbackProductImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -110,14 +111,14 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code, subtotal })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ valid?: boolean; code?: string; discount?: number }>(response, {});
 
-      if (!response.ok || !result.valid) {
+      if (!response.ok || !result?.valid) {
         throw new Error(labels.couponInvalid);
       }
 
-      setAppliedCoupon(result.code ?? code.toUpperCase());
-      setDiscount(Number(result.discount ?? 0));
+      setAppliedCoupon(result?.code ?? code.toUpperCase());
+      setDiscount(Number(result?.discount ?? 0));
       toast.success(labels.couponApplied);
     } catch (error) {
       setAppliedCoupon("");

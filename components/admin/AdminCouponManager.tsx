@@ -8,6 +8,7 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 import { formatCurrency } from "@/utils/currency";
 
 export type AdminCouponRow = {
@@ -105,10 +106,10 @@ export function AdminCouponManager({ locale, coupons, saveLabel }: AdminCouponMa
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to save coupon.");
+        throw new Error(result?.error ?? "Unable to save coupon.");
       }
 
       toast.success(selectedId ? "Coupon updated" : "Coupon created");

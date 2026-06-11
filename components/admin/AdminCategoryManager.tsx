@@ -19,6 +19,7 @@ import {
 } from "@/lib/category-fields";
 import { fallbackCategoryImage, safeRemoteImage } from "@/lib/images";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 
 export type AdminCategoryRow = {
   id: string;
@@ -182,10 +183,10 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to save category.");
+        throw new Error(result?.error ?? "Unable to save category.");
       }
 
       toast.success(selectedId ? "Category updated" : "Category created");

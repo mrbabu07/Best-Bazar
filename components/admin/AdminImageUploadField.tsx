@@ -5,6 +5,7 @@ import { ImagePlus } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { imageUrlValidationMessage, isAllowedRemoteImage } from "@/lib/images";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type AdminImageUploadFieldProps = {
   label: string;
@@ -34,10 +35,14 @@ export function AdminImageUploadField({
         method: "POST",
         body: formData
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string; secureUrl?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to upload image.");
+        throw new Error(result?.error ?? "Unable to upload image.");
+      }
+
+      if (!result?.secureUrl) {
+        throw new Error("Uploaded image URL was not returned.");
       }
 
       onChange(result.secureUrl);

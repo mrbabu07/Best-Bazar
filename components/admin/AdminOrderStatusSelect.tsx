@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { safeResponseJson } from "@/lib/safe-json";
 
 const statuses = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
 
@@ -29,10 +30,10 @@ export function AdminOrderStatusSelect({ orderId, initialStatus }: AdminOrderSta
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderStatus: nextStatus })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to update order status.");
+        throw new Error(result?.error ?? "Unable to update order status.");
       }
 
       toast.success("Order status updated");

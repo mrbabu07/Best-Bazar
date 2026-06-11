@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type ResetPasswordFormProps = {
   locale: Locale;
@@ -63,10 +64,10 @@ export function ResetPasswordForm({ locale, initialEmail, initialToken }: ResetP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, token, password })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? labels.failed);
+        throw new Error(result?.error ?? labels.failed);
       }
 
       toast.success(labels.saved);

@@ -8,6 +8,7 @@ import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField"
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
 import type { PaymentSettings } from "@/lib/payment-config";
+import { safeResponseJson } from "@/lib/safe-json";
 import type { ThemeSettings } from "@/lib/theme-config";
 import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
 import { shippingRatesToRecord } from "@/utils/shipping";
@@ -210,10 +211,10 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to save settings.");
+        throw new Error(result?.error ?? "Unable to save settings.");
       }
 
       toast.success("Settings saved");

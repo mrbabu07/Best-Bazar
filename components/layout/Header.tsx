@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { currencyOptions, type CurrencyCode } from "@/utils/currency";
 import { cn } from "@/utils/cn";
+import { safeJsonParse, safeResponseJson } from "@/lib/safe-json";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
 type HeaderProps = {
@@ -93,12 +94,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   }, [settings]);
 
   useEffect(() => {
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(dismissedStorageKey) ?? "[]");
-      setDismissedNotifications(Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : []);
-    } catch {
-      setDismissedNotifications([]);
-    }
+    const parsed = safeJsonParse<unknown[]>(window.localStorage.getItem(dismissedStorageKey), []);
+    setDismissedNotifications(Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : []);
   }, [dismissedStorageKey]);
 
   useEffect(() => {
@@ -116,24 +113,24 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           return;
         }
 
-        const data = await response.json();
+        const data = await safeResponseJson<Record<string, unknown>>(response, {});
 
         if (!active || !data) {
           return;
         }
 
         const shippingSettings = normalizeShippingSettings({
-          freeShippingThreshold: data.freeShippingThreshold ?? settings.shippingSettings.freeShippingThreshold,
-          shippingRates: data.shippingRates ?? settings.shippingSettings.shippingRates
+          freeShippingThreshold: data?.freeShippingThreshold ?? settings.shippingSettings.freeShippingThreshold,
+          shippingRates: data?.shippingRates ?? settings.shippingSettings.shippingRates
         });
         const nextSettings = {
           ...settings,
-          storeNameEn: data.storeNameEn ?? settings.storeNameEn,
-          storeNameAr: data.storeNameAr ?? settings.storeNameAr,
-          whatsapp: typeof data.whatsapp === "string" ? data.whatsapp : settings.whatsapp,
-          announcementEn: data.announcementEn ?? "",
-          announcementAr: data.announcementAr ?? "",
-          announcementActive: Boolean(data.announcementActive),
+          storeNameEn: typeof data?.storeNameEn === "string" ? data.storeNameEn : settings.storeNameEn,
+          storeNameAr: typeof data?.storeNameAr === "string" ? data.storeNameAr : settings.storeNameAr,
+          whatsapp: typeof data?.whatsapp === "string" ? data.whatsapp : settings.whatsapp,
+          announcementEn: typeof data?.announcementEn === "string" ? data.announcementEn : "",
+          announcementAr: typeof data?.announcementAr === "string" ? data.announcementAr : "",
+          announcementActive: Boolean(data?.announcementActive),
           shippingSettings
         };
 

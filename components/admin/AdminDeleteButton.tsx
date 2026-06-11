@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { safeResponseJson } from "@/lib/safe-json";
 
 type AdminDeleteButtonProps = {
   endpoint: string;
@@ -24,8 +25,7 @@ export function AdminDeleteButton({ endpoint, label, successMessage }: AdminDele
 
     try {
       const response = await fetch(endpoint, { method: "DELETE" });
-      const text = await response.text();
-      const result = text ? JSON.parse(text) : null;
+      const result = await safeResponseJson<{ error?: string } | null>(response, null);
 
       if (!response.ok) {
         throw new Error(result?.error ?? "Unable to delete item.");

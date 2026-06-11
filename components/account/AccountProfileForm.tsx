@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 
 export type AccountProfileData = {
   name: string;
@@ -73,19 +74,19 @@ export function AccountProfileForm({ locale, profile, saveLabel }: AccountProfil
           country: form.country
         })
       });
-      const result = await response.json();
+      const result = await safeResponseJson<Partial<AccountProfileData> & { error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? copy.failed);
+        throw new Error(result?.error ?? copy.failed);
       }
 
       setForm({
-        name: result.name ?? "",
-        email: result.email ?? profile.email,
-        phone: result.phone ?? "",
-        street: result.street ?? "",
-        city: result.city ?? "",
-        country: result.country ?? ""
+        name: result?.name ?? "",
+        email: result?.email ?? profile.email,
+        phone: result?.phone ?? "",
+        street: result?.street ?? "",
+        city: result?.city ?? "",
+        country: result?.country ?? ""
       });
       toast.success(copy.saved);
       router.refresh();

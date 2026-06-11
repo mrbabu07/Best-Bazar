@@ -5,6 +5,7 @@ import { normalizeCategoryCustomFields, normalizeCustomFieldValues, normalizeFas
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
+import { safeJsonParse, safeJsonStringify } from "@/lib/safe-json";
 import type { Category, Product, ProductColor, ProductSize } from "@/lib/types";
 
 const categoryInclude = {
@@ -358,7 +359,7 @@ function getProductOrder(sort = "featured") {
 }
 
 function stableProductFilters(filters: StoreProductFilters = {}) {
-  return JSON.stringify({
+  return safeJsonStringify({
     brand: filters.brand ?? "",
     category: filters.category ?? "",
     color: filters.color?.trim().toLowerCase() ?? "",
@@ -369,12 +370,12 @@ function stableProductFilters(filters: StoreProductFilters = {}) {
     search: filters.search ?? "",
     sort: filters.sort ?? "",
     tag: filters.tag ?? ""
-  });
+  }) ?? "{}";
 }
 
 const getCachedStoreProducts = unstable_cache(
   async (filtersJson: string) => {
-    const filters = JSON.parse(filtersJson) as StoreProductFilters;
+    const filters = safeJsonParse<StoreProductFilters>(filtersJson, {});
     const products = await prisma.product.findMany({
       where: getProductWhere(filters),
       include: productListInclude,

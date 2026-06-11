@@ -29,6 +29,7 @@ import {
 } from "@/lib/category-fields";
 import type { Locale } from "@/lib/i18n";
 import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
+import { safeResponseJson } from "@/lib/safe-json";
 import { formatCurrency } from "@/utils/currency";
 
 type ProductImageForm = {
@@ -443,10 +444,10 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to create product.");
+        throw new Error(result?.error ?? "Unable to create product.");
       }
 
       toast.success("Product created");

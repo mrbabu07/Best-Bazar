@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
 import type { Locale } from "@/lib/i18n";
+import { safeResponseJson } from "@/lib/safe-json";
 
 export type AdminBannerRow = {
   id: string;
@@ -119,10 +120,10 @@ export function AdminBannerManager({ locale, banners }: AdminBannerManagerProps)
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
+      const result = await safeResponseJson<{ error?: string }>(response, {});
 
       if (!response.ok) {
-        throw new Error(result.error ?? "Unable to save banner.");
+        throw new Error(result?.error ?? "Unable to save banner.");
       }
 
       toast.success(selectedId ? "Banner updated" : "Banner created");
