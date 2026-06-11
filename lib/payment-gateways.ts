@@ -1,4 +1,6 @@
 import { PaymentMethod, type Order, type OrderItem } from "@prisma/client";
+import type { StripeMode } from "@/lib/payment-config";
+import { getPaymentAvailability, getPaymentRuntimeConfig } from "@/lib/payment-settings";
 import { getSiteUrl, getStripe } from "@/lib/stripe";
 
 export type OrderWithItems = Order & {
@@ -22,8 +24,6 @@ type PaymentIntentResult = {
   providerReference: string;
 };
 
-export type StripeMode = "payment_element" | "hosted_checkout";
-
 const redirectPaymentMethods: readonly PaymentMethod[] = [
   PaymentMethod.STRIPE,
   PaymentMethod.TABBY,
@@ -35,24 +35,14 @@ export function isRedirectPaymentMethod(method: PaymentMethod): method is Redire
   return redirectPaymentMethods.includes(method);
 }
 
-export function getPaymentAvailability() {
-  return {
-    stripe: Boolean(process.env.STRIPE_SECRET_KEY),
-    tabby: Boolean(process.env.TABBY_SECRET_KEY && process.env.TABBY_MERCHANT_CODE),
-    tamara: Boolean(process.env.TAMARA_API_TOKEN),
-    paypal: Boolean(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET),
-    cod: process.env.COD_ENABLED !== "false",
-    bankTransfer: process.env.BANK_TRANSFER_ENABLED === "true" || Boolean(process.env.BANK_TRANSFER_INSTRUCTIONS),
-    bankTransferInstructions: process.env.BANK_TRANSFER_INSTRUCTIONS ?? ""
-  };
+export async function getStripeMode(): Promise<StripeMode> {
+  const runtime = await getPaymentRuntimeConfig();
+
+  return runtime.settings.stripe.mode || (process.env.STRIPE_MODE === "hosted_checkout" ? "hosted_checkout" : "payment_element");
 }
 
-export function getStripeMode(): StripeMode {
-  return process.env.STRIPE_MODE === "hosted_checkout" ? "hosted_checkout" : "payment_element";
-}
-
-export function assertRedirectPaymentConfigured(method: RedirectPaymentMethod) {
-  const availability = getPaymentAvailability();
+export async function assertRedirectPaymentConfigured(method: RedirectPaymentMethod) {
+  const availability = await getPaymentAvailability();
   const enabled =
     method === PaymentMethod.STRIPE
       ? availability.stripe
@@ -128,7 +118,8 @@ function firstCheckoutUrlFromTabby(result: Record<string, unknown>) {
 }
 
 async function createStripeCheckout(order: OrderWithItems): Promise<CheckoutResult> {
-  const stripe = getStripe();
+  const runtime = await getPaymentRuntimeConfig();
+  const stripe = getStripe(runtime.stripe.secretKey);
 
   if (!stripe) {
     throw new Error("Stripe is not configured.");
@@ -170,7 +161,8 @@ async function createStripeCheckout(order: OrderWithItems): Promise<CheckoutResu
 }
 
 export async function createStripePaymentIntent(order: OrderWithItems): Promise<PaymentIntentResult> {
-  const stripe = getStripe();
+  const runtime = await getPaymentRuntimeConfig();
+  const stripe = getStripe(runtime.stripe.secretKey);
 
   if (!stripe) {
     throw new Error("Stripe is not configured.");
@@ -197,9 +189,10 @@ export async function createStripePaymentIntent(order: OrderWithItems): Promise<
 }
 
 async function createTabbyCheckout(order: OrderWithItems): Promise<CheckoutResult> {
-  const secretKey = process.env.TABBY_SECRET_KEY;
-  const merchantCode = process.env.TABBY_MERCHANT_CODE;
-  const baseUrl = (process.env.TABBY_API_BASE_URL || "https://api.tabby.ai").replace(/\/$/, "");
+  const runtime = await getPaymentRuntimeConfig();
+  const secretKey = runtime.tabby.secretKey;
+  const merchantCode = runtime.tabby.merchantCode;
+  const baseUrl = runtime.tabby.apiBaseUrl.replace(/\/$/, "");
 
   if (!secretKey || !merchantCode) {
     throw new Error("Tabby is not configured.");
@@ -281,8 +274,9 @@ async function createTabbyCheckout(order: OrderWithItems): Promise<CheckoutResul
 }
 
 async function createTamaraCheckout(order: OrderWithItems): Promise<CheckoutResult> {
-  const apiToken = process.env.TAMARA_API_TOKEN;
-  const baseUrl = (process.env.TAMARA_API_BASE_URL || "https://api-sandbox.tamara.co").replace(/\/$/, "");
+  const runtime = await getPaymentRuntimeConfig();
+  const apiToken = runtime.tamara.apiToken;
+  const baseUrl = runtime.tamara.apiBaseUrl.replace(/\/$/, "");
   const { firstName, lastName } = customerNameParts(order.customerName);
 
   if (!apiToken) {
@@ -358,9 +352,10 @@ async function createTamaraCheckout(order: OrderWithItems): Promise<CheckoutResu
 }
 
 async function getPayPalAccessToken() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const baseUrl = (process.env.PAYPAL_API_BASE_URL || "https://api-m.sandbox.paypal.com").replace(/\/$/, "");
+  const runtime = await getPaymentRuntimeConfig();
+  const clientId = runtime.paypal.clientId;
+  const clientSecret = runtime.paypal.clientSecret;
+  const baseUrl = runtime.paypal.apiBaseUrl.replace(/\/$/, "");
 
   if (!clientId || !clientSecret) {
     throw new Error("PayPal is not configured.");

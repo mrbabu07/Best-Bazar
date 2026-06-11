@@ -26,6 +26,65 @@ const fashionFieldsSchema = z.object({
   care: nullableString.default(""),
   halalBadge: z.boolean().default(false)
 });
+const paymentSettingsSchema = z.object({
+  cod: z.object({
+    enabled: z.boolean().default(true),
+    displayName: z.string().trim().default("Cash on delivery"),
+    instructions: z.string().trim().default("")
+  }),
+  bankTransfer: z.object({
+    enabled: z.boolean().default(false),
+    displayName: z.string().trim().default("Bank transfer"),
+    bankName: z.string().trim().default(""),
+    accountName: z.string().trim().default(""),
+    accountNumber: z.string().trim().default(""),
+    iban: z.string().trim().default(""),
+    swift: z.string().trim().default(""),
+    branch: z.string().trim().default(""),
+    instructions: z.string().trim().default("")
+  }),
+  stripe: z.object({
+    enabled: z.boolean().default(false),
+    displayName: z.string().trim().default("Card payment"),
+    publishableKey: z.string().trim().default(""),
+    secretKey: z.string().trim().default(""),
+    webhookSecret: z.string().trim().default(""),
+    mode: z.enum(["payment_element", "hosted_checkout"]).default("payment_element"),
+    instructions: z.string().trim().default("")
+  }),
+  tabby: z.object({
+    enabled: z.boolean().default(false),
+    displayName: z.string().trim().default("Tabby"),
+    secretKey: z.string().trim().default(""),
+    merchantCode: z.string().trim().default(""),
+    apiBaseUrl: z.string().trim().default("https://api.tabby.ai"),
+    instructions: z.string().trim().default("")
+  }),
+  tamara: z.object({
+    enabled: z.boolean().default(false),
+    displayName: z.string().trim().default("Tamara"),
+    apiToken: z.string().trim().default(""),
+    apiBaseUrl: z.string().trim().default("https://api-sandbox.tamara.co"),
+    instructions: z.string().trim().default("")
+  }),
+  paypal: z.object({
+    enabled: z.boolean().default(false),
+    displayName: z.string().trim().default("PayPal"),
+    clientId: z.string().trim().default(""),
+    clientSecret: z.string().trim().default(""),
+    apiBaseUrl: z.string().trim().default("https://api-m.sandbox.paypal.com"),
+    instructions: z.string().trim().default("")
+  })
+});
+const themeSettingsSchema = z.object({
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  paperColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  inkColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  radius: z.enum(["compact", "soft", "rounded"]),
+  buttonStyle: z.enum(["gradient", "solid"]),
+  productCardStyle: z.enum(["standard", "compact", "elevated"])
+});
 const shippingRateSchema = z.object({
   emirate: z.string().trim().min(1).optional(),
   cost: money.optional(),
@@ -182,6 +241,8 @@ export const settingsSchema = z.object({
   aedToUsd: money,
   freeShippingThreshold: money,
   shippingRates: z.union([z.array(shippingRateSchema), z.record(shippingRateSchema)]),
+  paymentSettings: paymentSettingsSchema,
+  themeSettings: themeSettingsSchema,
   metaTitleEn: nullableString,
   metaTitleAr: nullableString,
   metaDescriptionEn: nullableString,

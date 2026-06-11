@@ -100,6 +100,7 @@ npm run admin:ensure
 - Storefront pages use SSG/ISR and tagged cache invalidation. Admin product/category/banner/review/settings changes revalidate the relevant cache tags.
 - Cloudinary uploads are served back with `f_auto,q_auto` delivery transforms, and stored Cloudinary URLs are normalized before rendering.
 - Stripe payment UI is loaded as a separate checkout chunk so the heavy Stripe SDK does not block the initial checkout page.
+- Payment methods and storefront theme can be managed from Admin Settings. Provider keys stored there are used server-side, with env values as fallback.
 - Configure Stripe, Tabby, Tamara, and PayPal provider keys before enabling live online payments.
 - Configure SMTP if password-reset and order-confirmation emails should be sent in production.
 - Set `NEXT_PUBLIC_SITE_URL` and `NEXTAUTH_URL` to the deployed domain.

@@ -3,14 +3,16 @@ import { NextResponse } from "next/server";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { sendOrderMessagingNotifications } from "@/lib/notifications";
 import { updateOrderStatus } from "@/lib/order-status";
+import { getPaymentRuntimeConfig } from "@/lib/payment-settings";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const stripe = getStripe();
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const runtime = await getPaymentRuntimeConfig();
+  const stripe = getStripe(runtime.stripe.secretKey);
+  const webhookSecret = runtime.stripe.webhookSecret;
 
   if (!stripe || !webhookSecret) {
     return NextResponse.json({ error: "Stripe webhook is not configured." }, { status: 503 });

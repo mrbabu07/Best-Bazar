@@ -2,11 +2,12 @@
 
 import { CalendarClock, CreditCard, HandCoins, Landmark, ShieldCheck, Wallet, WalletCards } from "lucide-react";
 import dynamic from "next/dynamic";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import type { PublicPaymentAvailability } from "@/lib/payment-config";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -31,15 +32,7 @@ const StripePaymentSection = dynamic(
 type CheckoutPageContentProps = {
   locale: Locale;
   dictionary: Dictionary;
-  paymentAvailability: {
-    stripe: boolean;
-    tabby: boolean;
-    tamara: boolean;
-    paypal: boolean;
-    cod: boolean;
-    bankTransfer: boolean;
-    bankTransferInstructions: string;
-  };
+  paymentAvailability: PublicPaymentAvailability;
 };
 
 type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "tower" | "city" | "country";
@@ -129,7 +122,19 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const router = useRouter();
   const hydrated = useHydrated();
   const initialPayment: PaymentOptionKey =
-    paymentAvailability.stripe ? "stripe" : paymentAvailability.cod ? "cod" : "bank_transfer";
+    paymentAvailability.stripe
+      ? "stripe"
+      : paymentAvailability.cod
+        ? "cod"
+        : paymentAvailability.tabby
+          ? "tabby"
+          : paymentAvailability.tamara
+            ? "tamara"
+            : paymentAvailability.paypal
+              ? "paypal"
+              : paymentAvailability.bankTransfer
+                ? "bank_transfer"
+                : "cod";
   const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
   const [emirate, setEmirate] = useState("Dubai");
   const [coupon, setCoupon] = useState("");
@@ -196,74 +201,81 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
   const paymentButtonLabel = () => {
     if (payment === "stripe") {
-      return dictionary.checkout.stripe;
+      return paymentAvailability.stripeLabel;
     }
 
     if (payment === "cod") {
-      return dictionary.checkout.cod;
+      return paymentAvailability.codLabel;
     }
 
     if (payment === "tabby") {
-      return "Pay with Tabby";
+      return `Pay with ${paymentAvailability.tabbyLabel}`;
     }
 
     if (payment === "tamara") {
-      return "Pay with Tamara";
+      return `Pay with ${paymentAvailability.tamaraLabel}`;
     }
 
     if (payment === "paypal") {
-      return "Pay with PayPal";
+      return `Pay with ${paymentAvailability.paypalLabel}`;
     }
 
-    return "Place bank transfer order";
+    return `Place ${paymentAvailability.bankTransferLabel} order`;
   };
 
-  const paymentOptions = [
-    {
-      key: "stripe" as const,
-      label: "Card payment",
-      detail: "Visa, Mastercard, Apple Pay, and Google Pay through Stripe.",
-      icon: CreditCard,
-      enabled: paymentAvailability.stripe
-    },
-    {
-      key: "cod" as const,
-      label: dictionary.checkout.cod,
-      detail: shippingQuote.codAvailable
-        ? "Pay cash when your Dubai delivery arrives."
-        : `COD is unavailable for ${shippingQuote.rate.emirate}.`,
-      icon: HandCoins,
-      enabled: paymentAvailability.cod && shippingQuote.codAvailable
-    },
-    {
-      key: "tabby" as const,
-      label: "Tabby",
-      detail: "Pay in installments through Tabby hosted checkout.",
-      icon: WalletCards,
-      enabled: paymentAvailability.tabby
-    },
-    {
-      key: "tamara" as const,
-      label: "Tamara",
-      detail: "Pay later through Tamara hosted checkout.",
-      icon: CalendarClock,
-      enabled: paymentAvailability.tamara
-    },
-    {
-      key: "paypal" as const,
-      label: "PayPal",
-      detail: "PayPal wallet hosted approval and capture.",
-      icon: Wallet,
-      enabled: paymentAvailability.paypal
-    },
-    {
-      key: "bank_transfer" as const,
-      label: "Bank transfer",
-      detail: paymentAvailability.bankTransferInstructions || "Manual transfer after order confirmation.",
-      icon: Landmark,
-      enabled: paymentAvailability.bankTransfer
-    }
-  ];
+  const paymentOptions = useMemo(
+    () => [
+      {
+        key: "stripe" as const,
+        label: paymentAvailability.stripeLabel,
+        detail: paymentAvailability.stripeDetail,
+        icon: CreditCard,
+        enabled: paymentAvailability.stripe
+      },
+      {
+        key: "cod" as const,
+        label: paymentAvailability.codLabel || dictionary.checkout.cod,
+        detail: shippingQuote.codAvailable
+          ? paymentAvailability.codDetail
+          : `COD is unavailable for ${shippingQuote.rate.emirate}.`,
+        icon: HandCoins,
+        enabled: paymentAvailability.cod && shippingQuote.codAvailable
+      },
+      {
+        key: "tabby" as const,
+        label: paymentAvailability.tabbyLabel,
+        detail: paymentAvailability.tabbyDetail,
+        icon: WalletCards,
+        enabled: paymentAvailability.tabby
+      },
+      {
+        key: "tamara" as const,
+        label: paymentAvailability.tamaraLabel,
+        detail: paymentAvailability.tamaraDetail,
+        icon: CalendarClock,
+        enabled: paymentAvailability.tamara
+      },
+      {
+        key: "paypal" as const,
+        label: paymentAvailability.paypalLabel,
+        detail: paymentAvailability.paypalDetail,
+        icon: Wallet,
+        enabled: paymentAvailability.paypal
+      },
+      {
+        key: "bank_transfer" as const,
+        label: paymentAvailability.bankTransferLabel,
+        detail:
+          paymentAvailability.bankTransferDetail ||
+          paymentAvailability.bankTransferInstructions ||
+          "Manual transfer after order confirmation.",
+        icon: Landmark,
+        enabled: paymentAvailability.bankTransfer
+      }
+    ],
+    [dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable, shippingQuote.rate.emirate]
+  );
+  const selectedPaymentOption = paymentOptions.find((option) => option.key === payment);
 
   useEffect(() => {
     setAppliedCoupon("");
@@ -299,6 +311,18 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     paymentAvailability.tamara,
     shippingQuote.codAvailable
   ]);
+
+  useEffect(() => {
+    if (selectedPaymentOption?.enabled) {
+      return;
+    }
+
+    const nextPayment = paymentOptions.find((option) => option.enabled)?.key;
+
+    if (nextPayment) {
+      setPayment(nextPayment);
+    }
+  }, [paymentOptions, selectedPaymentOption]);
 
   const updateCoupon = (value: string) => {
     setCoupon(value);
@@ -576,9 +600,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold text-navy">{option.label}</span>
+                      <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">
+                        {option.detail}
+                      </span>
                       <span
                         className={cn(
-                          "mt-1 inline-flex h-6 max-w-full items-center rounded-md px-2 text-[11px] font-bold",
+                          "mt-2 inline-flex h-6 max-w-full items-center rounded-md px-2 text-[11px] font-bold",
                           option.enabled ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-500"
                         )}
                       >
@@ -597,13 +624,24 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
               })}
             </div>
             <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
-              Dubai-ready methods are controlled by environment variables. Online methods redirect to hosted checkout when configured.
+              Dubai-ready methods are controlled by admin settings. Online methods redirect to the configured provider when available.
             </p>
+            {payment === "bank_transfer" && paymentAvailability.bankTransferInstructions ? (
+              <div className="mt-4 whitespace-pre-line rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm font-semibold leading-6 text-navy">
+                {paymentAvailability.bankTransferInstructions}
+              </div>
+            ) : null}
+            {payment === "cod" && paymentAvailability.codDetail ? (
+              <div className="mt-4 rounded-lg border border-neutral-200 bg-paper p-4 text-sm font-semibold leading-6 text-navy">
+                {paymentAvailability.codDetail}
+              </div>
+            ) : null}
             {stripePayment ? (
               <StripePaymentSection
                 clientSecret={stripePayment.clientSecret}
                 orderNumber={stripePayment.orderNumber}
                 returnUrl={stripePayment.orderConfirmUrl}
+                publishableKey={paymentAvailability.stripePublishableKey}
               />
             ) : null}
           </div>
@@ -671,7 +709,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
           <Button
             type="submit"
             className="mt-6 w-full"
-            disabled={items.length === 0 || loading || Boolean(stripePayment && payment === "stripe")}
+            disabled={items.length === 0 || loading || !selectedPaymentOption?.enabled || Boolean(stripePayment && payment === "stripe")}
           >
             <ShieldCheck size={18} />
             {stripePayment && payment === "stripe"

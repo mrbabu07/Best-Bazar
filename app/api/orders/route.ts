@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { getOptionalServerSession } from "@/lib/auth-session";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { sendOrderMessagingNotifications } from "@/lib/notifications";
+import { assertPaymentMethodAvailable } from "@/lib/payment-settings";
 import { prisma } from "@/lib/prisma";
 import { createStoreOrder } from "@/lib/orders";
 import { orderCreateSchema } from "@/lib/validations/store";
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
     if (!["COD", "BANK_TRANSFER"].includes(data.paymentMethod)) {
       return NextResponse.json({ error: "Use the payment checkout endpoint for online payment methods." }, { status: 400 });
     }
+
+    await assertPaymentMethodAvailable(data.paymentMethod);
 
     const order = await createStoreOrder(data, session?.user.id);
 

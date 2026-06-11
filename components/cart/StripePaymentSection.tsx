@@ -3,18 +3,15 @@
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
-
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-  : null;
 
 type StripePaymentSectionProps = {
   clientSecret: string;
   orderNumber: string;
   returnUrl: string;
+  publishableKey: string;
 };
 
 function StripePaymentForm({ orderNumber, returnUrl }: { orderNumber: string; returnUrl: string }) {
@@ -64,11 +61,13 @@ function StripePaymentForm({ orderNumber, returnUrl }: { orderNumber: string; re
   );
 }
 
-export function StripePaymentSection({ clientSecret, orderNumber, returnUrl }: StripePaymentSectionProps) {
+export function StripePaymentSection({ clientSecret, orderNumber, returnUrl, publishableKey }: StripePaymentSectionProps) {
+  const stripePromise = useMemo(() => (publishableKey ? loadStripe(publishableKey) : null), [publishableKey]);
+
   if (!stripePromise) {
     return (
       <p className="mt-4 rounded-md border border-red-100 bg-red-50 p-3 text-sm font-bold text-sale">
-        Stripe publishable key is missing. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to enable inline card payment.
+        Stripe publishable key is missing. Add it from Admin Settings or env to enable inline card payment.
       </p>
     );
   }

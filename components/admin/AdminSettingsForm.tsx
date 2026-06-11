@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Button } from "@/components/ui/Button";
 import type { Locale } from "@/lib/i18n";
+import type { PaymentSettings } from "@/lib/payment-config";
+import type { ThemeSettings } from "@/lib/theme-config";
 import { formatCurrency, normalizeCurrencyRates } from "@/utils/currency";
 import { shippingRatesToRecord } from "@/utils/shipping";
 
@@ -40,6 +42,8 @@ export type AdminSettingsData = {
   aedToBdt: string;
   aedToUsd: string;
   freeShippingThreshold: string;
+  paymentSettings: PaymentSettings;
+  themeSettings: ThemeSettings;
   shippingRates: ShippingRate[];
   metaTitleEn: string;
   metaTitleAr: string;
@@ -84,6 +88,36 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
+  const updatePayment = <
+    Method extends keyof PaymentSettings,
+    Key extends keyof PaymentSettings[Method]
+  >(
+    method: Method,
+    key: Key,
+    value: PaymentSettings[Method][Key]
+  ) => {
+    setForm((current) => ({
+      ...current,
+      paymentSettings: {
+        ...current.paymentSettings,
+        [method]: {
+          ...current.paymentSettings[method],
+          [key]: value
+        }
+      }
+    }));
+  };
+
+  const updateTheme = <Key extends keyof ThemeSettings>(key: Key, value: ThemeSettings[Key]) => {
+    setForm((current) => ({
+      ...current,
+      themeSettings: {
+        ...current.themeSettings,
+        [key]: value
+      }
+    }));
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -108,6 +142,8 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       aedToBdt: Number(form.aedToBdt),
       aedToUsd: Number(form.aedToUsd),
       freeShippingThreshold: Number(form.freeShippingThreshold),
+      paymentSettings: form.paymentSettings,
+      themeSettings: form.themeSettings,
       shippingRates: shippingRatesToRecord(
         form.shippingRates.map((rate) => ({
           key: rate.key,
@@ -346,6 +382,341 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <Save size={16} />
             {saving ? "Saving..." : "Save Shipping Rates"}
           </Button>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
+        <h2 className="text-lg font-bold text-navy">Payment controls</h2>
+        <p className="mt-1 text-sm font-semibold text-neutral-500">
+          Enable methods, edit checkout labels, and add provider/account details from admin.
+        </p>
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-navy">
+              <input
+                type="checkbox"
+                checked={form.paymentSettings.cod.enabled}
+                onChange={(event) => updatePayment("cod", "enabled", event.target.checked)}
+                className="accent-gold-500"
+              />
+              Cash on delivery enabled
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              COD display name
+              <input
+                value={form.paymentSettings.cod.displayName}
+                onChange={(event) => updatePayment("cod", "displayName", event.target.value)}
+                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+              />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              COD instructions
+              <textarea
+                rows={3}
+                value={form.paymentSettings.cod.instructions}
+                onChange={(event) => updatePayment("cod", "instructions", event.target.value)}
+                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-navy">
+              <input
+                type="checkbox"
+                checked={form.paymentSettings.bankTransfer.enabled}
+                onChange={(event) => updatePayment("bankTransfer", "enabled", event.target.checked)}
+                className="accent-gold-500"
+              />
+              Bank transfer enabled
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["displayName", "Display name"],
+                ["bankName", "Bank name"],
+                ["accountName", "Account name"],
+                ["accountNumber", "Account number"],
+                ["iban", "IBAN"],
+                ["swift", "SWIFT"],
+                ["branch", "Branch"]
+              ].map(([key, label]) => (
+                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                  {label}
+                  <input
+                    value={form.paymentSettings.bankTransfer[key as keyof PaymentSettings["bankTransfer"]] as string}
+                    onChange={(event) =>
+                      updatePayment("bankTransfer", key as keyof PaymentSettings["bankTransfer"], event.target.value as never)
+                    }
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              Bank transfer instructions
+              <textarea
+                rows={3}
+                value={form.paymentSettings.bankTransfer.instructions}
+                onChange={(event) => updatePayment("bankTransfer", "instructions", event.target.value)}
+                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-navy">
+              <input
+                type="checkbox"
+                checked={form.paymentSettings.stripe.enabled}
+                onChange={(event) => updatePayment("stripe", "enabled", event.target.checked)}
+                className="accent-gold-500"
+              />
+              Stripe / card enabled
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Display name
+                <input
+                  value={form.paymentSettings.stripe.displayName}
+                  onChange={(event) => updatePayment("stripe", "displayName", event.target.value)}
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Stripe mode
+                <select
+                  value={form.paymentSettings.stripe.mode}
+                  onChange={(event) => updatePayment("stripe", "mode", event.target.value as PaymentSettings["stripe"]["mode"])}
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                >
+                  <option value="payment_element">Inline card form</option>
+                  <option value="hosted_checkout">Hosted checkout</option>
+                </select>
+              </label>
+              {[
+                ["publishableKey", "Publishable key"],
+                ["secretKey", "Secret key"],
+                ["webhookSecret", "Webhook secret"]
+              ].map(([key, label]) => (
+                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                  {label}
+                  <input
+                    type={key === "publishableKey" ? "text" : "password"}
+                    value={form.paymentSettings.stripe[key as keyof PaymentSettings["stripe"]] as string}
+                    onChange={(event) =>
+                      updatePayment("stripe", key as keyof PaymentSettings["stripe"], event.target.value as never)
+                    }
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              Stripe checkout text
+              <textarea
+                rows={3}
+                value={form.paymentSettings.stripe.instructions}
+                onChange={(event) => updatePayment("stripe", "instructions", event.target.value)}
+                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-navy">
+              <input
+                type="checkbox"
+                checked={form.paymentSettings.tabby.enabled}
+                onChange={(event) => updatePayment("tabby", "enabled", event.target.checked)}
+                className="accent-gold-500"
+              />
+              Tabby enabled
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["displayName", "Display name", "text"],
+                ["secretKey", "Secret key", "password"],
+                ["merchantCode", "Merchant code", "text"],
+                ["apiBaseUrl", "API base URL", "text"]
+              ].map(([key, label, type]) => (
+                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                  {label}
+                  <input
+                    type={type}
+                    value={form.paymentSettings.tabby[key as keyof PaymentSettings["tabby"]] as string}
+                    onChange={(event) =>
+                      updatePayment("tabby", key as keyof PaymentSettings["tabby"], event.target.value as never)
+                    }
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              Tabby checkout text
+              <textarea
+                rows={2}
+                value={form.paymentSettings.tabby.instructions}
+                onChange={(event) => updatePayment("tabby", "instructions", event.target.value)}
+                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-navy">
+              <input
+                type="checkbox"
+                checked={form.paymentSettings.tamara.enabled}
+                onChange={(event) => updatePayment("tamara", "enabled", event.target.checked)}
+                className="accent-gold-500"
+              />
+              Tamara enabled
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["displayName", "Display name", "text"],
+                ["apiToken", "API token", "password"],
+                ["apiBaseUrl", "API base URL", "text"]
+              ].map(([key, label, type]) => (
+                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                  {label}
+                  <input
+                    type={type}
+                    value={form.paymentSettings.tamara[key as keyof PaymentSettings["tamara"]] as string}
+                    onChange={(event) =>
+                      updatePayment("tamara", key as keyof PaymentSettings["tamara"], event.target.value as never)
+                    }
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              Tamara checkout text
+              <textarea
+                rows={2}
+                value={form.paymentSettings.tamara.instructions}
+                onChange={(event) => updatePayment("tamara", "instructions", event.target.value)}
+                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-navy">
+              <input
+                type="checkbox"
+                checked={form.paymentSettings.paypal.enabled}
+                onChange={(event) => updatePayment("paypal", "enabled", event.target.checked)}
+                className="accent-gold-500"
+              />
+              PayPal enabled
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["displayName", "Display name", "text"],
+                ["clientId", "Client ID", "text"],
+                ["clientSecret", "Client secret", "password"],
+                ["apiBaseUrl", "API base URL", "text"]
+              ].map(([key, label, type]) => (
+                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+                  {label}
+                  <input
+                    type={type}
+                    value={form.paymentSettings.paypal[key as keyof PaymentSettings["paypal"]] as string}
+                    onChange={(event) =>
+                      updatePayment("paypal", key as keyof PaymentSettings["paypal"], event.target.value as never)
+                    }
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+              ))}
+            </div>
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              PayPal checkout text
+              <textarea
+                rows={2}
+                value={form.paymentSettings.paypal.instructions}
+                onChange={(event) => updatePayment("paypal", "instructions", event.target.value)}
+                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
+        <h2 className="text-lg font-bold text-navy">Storefront UI controls</h2>
+        <p className="mt-1 text-sm font-semibold text-neutral-500">
+          Change the storefront colors and styling from admin without editing code.
+        </p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            ["primaryColor", "Primary color"],
+            ["accentColor", "Accent color"],
+            ["paperColor", "Background color"],
+            ["inkColor", "Text color"]
+          ].map(([key, label]) => (
+            <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
+              {label}
+              <span className="flex h-11 overflow-hidden rounded-md border border-neutral-200 bg-white">
+                <input
+                  type="color"
+                  value={form.themeSettings[key as keyof ThemeSettings] as string}
+                  onChange={(event) => updateTheme(key as keyof ThemeSettings, event.target.value as never)}
+                  className="h-full w-14 cursor-pointer border-0 bg-transparent"
+                />
+                <input
+                  value={form.themeSettings[key as keyof ThemeSettings] as string}
+                  onChange={(event) => updateTheme(key as keyof ThemeSettings, event.target.value as never)}
+                  className="min-w-0 flex-1 px-3 text-sm"
+                />
+              </span>
+            </label>
+          ))}
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Radius
+            <select
+              value={form.themeSettings.radius}
+              onChange={(event) => updateTheme("radius", event.target.value as ThemeSettings["radius"])}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            >
+              <option value="compact">Compact</option>
+              <option value="soft">Soft</option>
+              <option value="rounded">Rounded</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Button style
+            <select
+              value={form.themeSettings.buttonStyle}
+              onChange={(event) => updateTheme("buttonStyle", event.target.value as ThemeSettings["buttonStyle"])}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            >
+              <option value="gradient">Gradient</option>
+              <option value="solid">Solid</option>
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Product cards
+            <select
+              value={form.themeSettings.productCardStyle}
+              onChange={(event) => updateTheme("productCardStyle", event.target.value as ThemeSettings["productCardStyle"])}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            >
+              <option value="standard">Standard</option>
+              <option value="compact">Compact</option>
+              <option value="elevated">Elevated</option>
+            </select>
+          </label>
+          <div className="rounded-md border border-neutral-200 bg-paper p-4 lg:col-span-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <span className="h-11 rounded-md" style={{ backgroundColor: form.themeSettings.primaryColor }} />
+              <span className="h-11 rounded-md" style={{ backgroundColor: form.themeSettings.accentColor }} />
+              <span className="h-11 rounded-md border border-neutral-200" style={{ backgroundColor: form.themeSettings.paperColor }} />
+            </div>
+          </div>
         </div>
       </section>
 

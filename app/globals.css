@@ -23,6 +23,69 @@ body {
   color: #2d2d2d;
 }
 
+.storefront-theme {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--bb-primary) 16%, transparent), transparent 32rem),
+    linear-gradient(180deg, #ffffff 0%, var(--bb-paper) 52%, #ffffff 100%);
+  color: var(--bb-ink);
+}
+
+.storefront-theme .bg-paper {
+  background-color: var(--bb-paper);
+}
+
+.storefront-theme .text-ink {
+  color: var(--bb-ink);
+}
+
+.storefront-theme .text-gold-700,
+.storefront-theme .text-gold-800 {
+  color: var(--bb-primary);
+}
+
+.storefront-theme .bg-gold-50 {
+  background-color: color-mix(in srgb, var(--bb-primary) 14%, white);
+}
+
+.storefront-theme .bg-gold-100 {
+  background-color: color-mix(in srgb, var(--bb-primary) 22%, white);
+}
+
+.storefront-theme .border-gold-100,
+.storefront-theme .border-gold-200,
+.storefront-theme .hover\:border-gold-300:hover {
+  border-color: color-mix(in srgb, var(--bb-primary) 45%, white);
+}
+
+.storefront-theme .from-gold-500 {
+  --tw-gradient-from: var(--bb-primary) var(--tw-gradient-from-position);
+  --tw-gradient-to: color-mix(in srgb, var(--bb-primary) 0%, transparent) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.storefront-theme .to-gold-300 {
+  --tw-gradient-to: var(--bb-accent) var(--tw-gradient-to-position);
+}
+
+.storefront-theme.theme-buttons-solid .from-gold-500,
+.storefront-theme.theme-buttons-solid .to-gold-300 {
+  --tw-gradient-from: var(--bb-primary) var(--tw-gradient-from-position);
+  --tw-gradient-to: var(--bb-primary) var(--tw-gradient-to-position);
+}
+
+.storefront-theme .rounded-md,
+.storefront-theme .rounded-lg {
+  border-radius: var(--bb-radius);
+}
+
+.storefront-theme.theme-cards-compact article.rounded-lg {
+  box-shadow: none;
+}
+
+.storefront-theme.theme-cards-elevated article.rounded-lg {
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--bb-primary) 22%, transparent);
+}
+
 button,
 a,
 input,

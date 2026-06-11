@@ -26,11 +26,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Use the order endpoint for manual payment methods." }, { status: 400 });
     }
 
-    assertRedirectPaymentConfigured(method);
+    await assertRedirectPaymentConfigured(method);
 
     const order = await createStoreOrder({ ...data, paymentMethod: method }, session?.user.id);
 
-    if (method === PaymentMethod.STRIPE && getStripeMode() === "payment_element") {
+    if (method === PaymentMethod.STRIPE && (await getStripeMode()) === "payment_element") {
       const paymentIntent = await createStripePaymentIntent(order);
 
       await prisma.order.update({

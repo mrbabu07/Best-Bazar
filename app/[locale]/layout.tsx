@@ -6,6 +6,7 @@ import { AppFrame } from "@/components/layout/AppFrame";
 import { SETTINGS_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
+import { normalizeThemeSettings } from "@/lib/theme-config";
 import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
 import { Providers } from "./providers";
@@ -55,7 +56,8 @@ async function getFrameSettings() {
       BDT: settings?.aedToBdt,
       USD: settings?.aedToUsd
     }),
-    shippingSettings: normalizeShippingSettings(settings)
+    shippingSettings: normalizeShippingSettings(settings),
+    themeSettings: normalizeThemeSettings(settings?.themeSettings)
   };
 }
 

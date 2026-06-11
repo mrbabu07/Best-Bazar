@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckoutPageContent } from "@/components/cart/CheckoutPageContent";
 import { getDictionary, isLocale } from "@/lib/i18n";
-import { getPaymentAvailability } from "@/lib/payment-gateways";
+import { getPaymentAvailability } from "@/lib/payment-settings";
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return {
@@ -11,16 +11,18 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
   };
 }
 
-export default function CheckoutPage({ params }: { params: { locale: string } }) {
+export default async function CheckoutPage({ params }: { params: { locale: string } }) {
   if (!isLocale(params.locale)) {
     notFound();
   }
+
+  const paymentAvailability = await getPaymentAvailability();
 
   return (
     <CheckoutPageContent
       locale={params.locale}
       dictionary={getDictionary(params.locale)}
-      paymentAvailability={getPaymentAvailability()}
+      paymentAvailability={paymentAvailability}
     />
   );
 }

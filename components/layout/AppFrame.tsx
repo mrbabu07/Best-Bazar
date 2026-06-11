@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
+import { storefrontThemeStyle, type ThemeSettings } from "@/lib/theme-config";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { WhatsAppQuickButton } from "@/components/layout/WhatsAppQuickButton";
@@ -24,6 +25,7 @@ export type StorefrontFrameSettings = {
   facebook: string;
   currencyRates: CurrencyRates;
   shippingSettings: ShippingSettings;
+  themeSettings: ThemeSettings;
 };
 
 type AppFrameProps = {
@@ -46,7 +48,10 @@ export function AppFrame({ children, locale, dictionary, settings }: AppFramePro
   }, [setStorefrontSettings, settings.currencyRates, settings.shippingSettings]);
 
   return (
-    <div className="min-h-screen">
+    <div
+      className={isAdmin ? "min-h-screen" : `storefront-theme min-h-screen theme-buttons-${settings.themeSettings.buttonStyle} theme-cards-${settings.themeSettings.productCardStyle}`}
+      style={isAdmin ? undefined : storefrontThemeStyle(settings.themeSettings)}
+    >
       {isAdmin ? null : <Header locale={locale} dictionary={dictionary} settings={settings} />}
       {children}
       {isAdmin ? null : <Footer locale={locale} dictionary={dictionary} settings={settings} />}
