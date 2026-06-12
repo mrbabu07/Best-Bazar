@@ -23,7 +23,7 @@ import { formatCurrency } from "@/utils/currency";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard | Best Bazar"
+  title: "Admin Dashboard | Best Mart"
 };
 
 function startOfMonth() {

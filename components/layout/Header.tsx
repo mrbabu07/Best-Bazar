@@ -48,7 +48,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     liveSettings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
     liveSettings.shippingSettings.shippingRates[0];
   const freeShippingThreshold = liveSettings.shippingSettings.freeShippingThreshold;
-  const dismissedStorageKey = `best-bazar-dismissed-notifications:${locale}`;
+  const dismissedStorageKey = `best-mart-dismissed-notifications:${locale}`;
   const storefrontNotifications = [
     ...(liveSettings.announcementActive && announcement
       ? [

@@ -1,7 +1,7 @@
 {
-  "name": "best-bazar",
+  "name": "best-mart",
   "version": "0.1.0",
-  "description": "React and Next.js ecommerce application for Best Bazar.",
+  "description": "React and Next.js ecommerce application for Best Mart.",
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",

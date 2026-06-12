@@ -81,7 +81,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#111827;">
       <h1 style="margin:0 0 8px;font-size:24px;">Thank you for your order</h1>
-      <p style="margin:0 0 18px;color:#4b5563;">Hi ${escapeHtml(order.customerName)}, we received your Best Bazar order.</p>
+      <p style="margin:0 0 18px;color:#4b5563;">Hi ${escapeHtml(order.customerName)}, we received your Best Mart order.</p>
       <div style="border:1px solid #eee;border-radius:8px;padding:16px;margin-bottom:18px;">
         <p style="margin:0;font-weight:700;">${escapeHtml(order.orderNumber)}</p>
         <p style="margin:6px 0 0;color:#4b5563;">Status: ${escapeHtml(order.orderStatus)} | Payment: ${escapeHtml(order.paymentMethod)} / ${escapeHtml(order.paymentStatus)}</p>
@@ -99,7 +99,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   await transporter.sendMail({
     from: config.from,
     to: order.customerEmail,
-    subject: `Best Bazar order ${order.orderNumber}`,
+    subject: `Best Mart order ${order.orderNumber}`,
     text: [
       `Thank you for your order, ${order.customerName}.`,
       "",
@@ -131,7 +131,7 @@ export async function sendOrderStatusEmail(order: OrderWithItems) {
 
   const transporter = nodemailer.createTransport(config.server);
   const confirmationUrl = getOrderConfirmationUrl(order);
-  const subject = `Best Bazar order ${order.orderNumber} is ${order.orderStatus}`;
+  const subject = `Best Mart order ${order.orderNumber} is ${order.orderStatus}`;
   const text = [
     `Hello ${order.customerName},`,
     "",
@@ -185,11 +185,11 @@ export async function sendPasswordResetEmail({
   await transporter.sendMail({
     from: config.from,
     to,
-    subject: "Reset your Best Bazar password",
+    subject: "Reset your Best Mart password",
     text: [
       `Hello${name ? ` ${name}` : ""},`,
       "",
-      "Use the secure link below to reset your Best Bazar password.",
+      "Use the secure link below to reset your Best Mart password.",
       "",
       resetUrl,
       "",

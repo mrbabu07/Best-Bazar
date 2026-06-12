@@ -81,7 +81,7 @@ async function createStripeCheckout(order: OrderWithItems): Promise<CheckoutResu
           currency: "aed",
           unit_amount: Math.round(Number(order.total) * 100),
           product_data: {
-            name: `Best Bazar order ${order.orderNumber}`,
+            name: `Best Mart order ${order.orderNumber}`,
             description: `${order.items.length} item${order.items.length === 1 ? "" : "s"} including shipping and discounts`
           }
         }

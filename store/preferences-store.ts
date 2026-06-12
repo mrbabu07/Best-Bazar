@@ -39,7 +39,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         })
     }),
     {
-      name: "best-bazar-preferences",
+      name: "best-mart-preferences",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ currency: state.currency })
     }

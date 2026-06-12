@@ -26,7 +26,7 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
-  const title = params.locale === "ar" ? "بيست بازار" : "Best Bazar";
+  const title = params.locale === "ar" ? "بيست مارت" : "Best Mart";
 
   return {
     title,

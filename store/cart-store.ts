@@ -104,7 +104,7 @@ export const useCartStore = create<CartState>()(
       subtotal: () => get().items.reduce((total, item) => total + item.price * item.quantity, 0)
     }),
     {
-      name: "best-bazar-cart",
+      name: "best-mart-cart",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ items: state.items })
     }

@@ -9,7 +9,7 @@ import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Add Product | Best Bazar"
+  title: "Add Product | Best Mart"
 };
 
 export default async function AdminNewProductPage({ params }: { params: { locale: string } }) {

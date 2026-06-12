@@ -544,10 +544,10 @@ export const adminStats = {
 };
 
 export const settings = {
-  storeName: { en: "Best Bazar", ar: "بيست بازار" },
+  storeName: { en: "Best Mart", ar: "بيست مارت" },
   contactInfo: {
     phone: "+971 4 555 0198",
-    email: "support@bestbazar.ae",
+    email: "support@bestmart.ae",
     address: "Business Bay, Dubai"
   },
   shippingRates: [

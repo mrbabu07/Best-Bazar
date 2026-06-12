@@ -2,7 +2,7 @@
 <html lang="bn">
   <head>
     <meta charset="utf-8" />
-    <title>Best Bazar Environment Key Setup Guide</title>
+    <title>Best Mart Environment Key Setup Guide</title>
     <style>
       @page {
         size: A4;
@@ -311,14 +311,14 @@
   <body>
     <main>
       <section class="cover">
-        <span class="eyebrow">Best Bazar · Environment Setup</span>
+        <span class="eyebrow">Best Mart · Environment Setup</span>
         <h1>বাংলা গাইড: `.env.example` key কোথায় পাবেন, কীভাবে set করবেন, এবং কোন secret কী কাজ করে</h1>
         <p class="subtitle">
           এই ডকুমেন্টটি client/developer handover-এর জন্য। এখানে real secret value রাখা হয়নি। প্রতিটি key কোথা থেকে নিতে হবে,
           project-এ কীভাবে বসাতে হবে, এবং কোনটা public/secret তা ব্যাখ্যা করা হয়েছে।
         </p>
         <div class="meta">
-          <div><strong>Project</strong>Best Bazar Ecommerce</div>
+          <div><strong>Project</strong>Best Mart Ecommerce</div>
           <div><strong>Stack</strong>Next.js 14 + React + Prisma + Neon</div>
           <div><strong>Updated</strong>12 June 2026</div>
         </div>
@@ -341,7 +341,7 @@
 
       <h2>২. Local setup কীভাবে করবেন</h2>
       <ol>
-        <li>Project root খুলুন: <code>E:\programming hero\Best Bazar</code></li>
+        <li>Project root খুলুন: <code>E:\programming hero\[project-folder]</code>।</li>
         <li><code>.env.example</code> copy করে <code>.env.local</code> বানান।</li>
         <li>প্রতিটি <code>KEY=VALUE</code> line-এ আপনার provider dashboard থেকে পাওয়া value বসান।</li>
         <li>Server restart করুন: <code>npm run dev</code></li>
@@ -360,7 +360,7 @@ npm run dev</pre>
       <h2>৩. Production/Vercel setup</h2>
       <ol>
         <li>Vercel Dashboard-এ login করুন।</li>
-        <li>Best Bazar project খুলুন।</li>
+        <li>Best Mart project খুলুন।</li>
         <li>Settings → Environment Variables-এ যান।</li>
         <li>প্রতিটি key আলাদা করে add করুন। Environment হিসেবে Production, Preview, Development প্রয়োজন অনুযায়ী select করুন।</li>
         <li>সব key save করার পর নতুন deployment দিন বা Redeploy করুন।</li>
@@ -603,7 +603,7 @@ EMAIL_SERVER=smtp://orders%40yourdomain.com:APP_PASSWORD@smtp.yourprovider.com:5
         <div class="key-body">
           <div><div class="label">কোথায় পাবেন</div>আপনার sender email/name।</div>
           <div><div class="label">কাজ</div>Customer inbox-এ sender হিসেবে দেখাবে।</div>
-          <div class="full"><pre>EMAIL_FROM="Best Bazar &lt;orders@yourdomain.com&gt;"</pre></div>
+          <div class="full"><pre>EMAIL_FROM="Best Mart &lt;orders@yourdomain.com&gt;"</pre></div>
         </div>
       </div>
 
@@ -624,7 +624,7 @@ EMAIL_SERVER=smtp://orders%40yourdomain.com:APP_PASSWORD@smtp.yourprovider.com:5
           <div class="full">
             <pre>ADMIN_EMAIL=admin@yourdomain.com
 ADMIN_PASSWORD=USE_A_STRONG_PASSWORD
-ADMIN_NAME=Best Bazar Admin
+ADMIN_NAME=Best Mart Admin
 npm run admin:ensure</pre>
           </div>
         </div>
@@ -680,7 +680,7 @@ STRIPE_MODE=payment_element
 COD_ENABLED=true
 
 EMAIL_SERVER=
-EMAIL_FROM="Best Bazar &lt;orders@yourdomain.com&gt;"
+EMAIL_FROM="Best Mart &lt;orders@yourdomain.com&gt;"
 
 SEED_ADMIN_PASSWORD=
 SEED_USER_PASSWORD=
@@ -772,7 +772,7 @@ ADMIN_ORDER_NOTIFICATION_PHONE=</pre>
       </ul>
 
       <div class="footer">
-        Prepared for Best Bazar. This PDF intentionally avoids real secret values. Keep the actual `.env.local` and production environment values private.
+        Prepared for Best Mart. This PDF intentionally avoids real secret values. Keep the actual `.env.local` and production environment values private.
       </div>
     </main>
   </body>

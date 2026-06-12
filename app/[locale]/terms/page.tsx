@@ -4,8 +4,8 @@ import { BackButton } from "@/components/ui/BackButton";
 import { isLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions | Best Bazar",
-  description: "Best Bazar ecommerce terms for Dubai customers."
+  title: "Terms and Conditions | Best Mart",
+  description: "Best Mart ecommerce terms for Dubai customers."
 };
 
 export default function TermsPage({ params }: { params: { locale: string } }) {
@@ -17,7 +17,7 @@ export default function TermsPage({ params }: { params: { locale: string } }) {
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <BackButton label="Back" fallbackHref={`/${params.locale}`} className="mb-5" />
       <article className="rounded-lg border border-neutral-200 bg-white p-6 shadow-soft sm:p-8">
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">Best Bazar</p>
+        <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">Best Mart</p>
         <h1 className="mt-2 text-3xl font-bold text-navy">Terms and conditions</h1>
         <p className="mt-3 text-sm text-neutral-500">Last updated: June 10, 2026</p>
 
@@ -25,7 +25,7 @@ export default function TermsPage({ params }: { params: { locale: string } }) {
           <section>
             <h2 className="text-lg font-bold text-navy">Orders</h2>
             <p className="mt-2">
-              Orders are accepted after stock, address, and payment details are validated. Best Bazar may contact
+              Orders are accepted after stock, address, and payment details are validated. Best Mart may contact
               customers to confirm delivery information before dispatch.
             </p>
           </section>
@@ -46,7 +46,7 @@ export default function TermsPage({ params }: { params: { locale: string } }) {
           <section>
             <h2 className="text-lg font-bold text-navy">Returns and support</h2>
             <p className="mt-2">
-              Return or exchange requests are reviewed through Best Bazar support. Items should be unused, complete,
+              Return or exchange requests are reviewed through Best Mart support. Items should be unused, complete,
               and reported within the published return window for the product.
             </p>
           </section>

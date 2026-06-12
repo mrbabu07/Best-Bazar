@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file");
-    const folder = String(formData.get("folder") ?? "best-bazar/uploads");
+    const folder = String(formData.get("folder") ?? "best-mart/uploads");
 
     if (!(file instanceof File)) {
       throw new ApiError("A file field is required.", 422);

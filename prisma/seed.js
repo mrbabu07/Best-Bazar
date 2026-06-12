@@ -317,11 +317,11 @@ async function main() {
   const userPassword = await bcrypt.hash(seedUserPassword, 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@bestbazar.ae" },
+    where: { email: "admin@bestmart.ae" },
     update: { password: adminPassword, role: UserRole.ADMIN, isBanned: false },
     create: {
       name: "Omar Khan",
-      email: "admin@bestbazar.ae",
+      email: "admin@bestmart.ae",
       password: adminPassword,
       role: UserRole.ADMIN,
       phone: "+971 50 222 3344",
@@ -477,9 +477,9 @@ async function main() {
     where: { id: "store-settings" },
     update: {},
     create: {
-      storeNameEn: "Best Bazar",
-      storeNameAr: "بيست بازار",
-      storeEmail: "support@bestbazar.ae",
+      storeNameEn: "Best Mart",
+      storeNameAr: "بيست مارت",
+      storeEmail: "support@bestmart.ae",
       phone: "+971 4 555 0198",
       whatsapp: "+971 55 555 0198",
       address: "Business Bay, Dubai",
@@ -497,8 +497,8 @@ async function main() {
         { emirate: "Fujairah", cost: 40, deliveryDays: "3-4" },
         { emirate: "Umm Al Quwain", cost: 35, deliveryDays: "3-4" }
       ],
-      metaTitleEn: "Best Bazar Dubai",
-      metaTitleAr: "بيست بازار دبي",
+      metaTitleEn: "Best Mart Dubai",
+      metaTitleAr: "بيست مارت دبي",
       metaDescriptionEn: "Luxury Dubai ecommerce for gifts, fashion, electronics, beauty, and home.",
       metaDescriptionAr: "تجارة إلكترونية فاخرة في دبي للهدايا والأزياء والإلكترونيات والجمال والمنزل."
     }

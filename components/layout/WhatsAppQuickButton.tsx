@@ -13,8 +13,8 @@ function getWhatsAppHref(phone: string, locale: Locale) {
   const digits = phone.replace(/[^\d]/g, "");
   const message =
     locale === "ar"
-      ? "Hello Best Bazar, I need support with an order."
-      : "Hello Best Bazar, I need support or want to place an order.";
+      ? "Hello Best Mart, I need support with an order."
+      : "Hello Best Mart, I need support or want to place an order.";
 
   return digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : "";
 }

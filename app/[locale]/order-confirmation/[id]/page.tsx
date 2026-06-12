@@ -49,7 +49,7 @@ const confirmationCopy = {
 export function generateMetadata({ params }: OrderConfirmationPageProps): Metadata {
   return {
     title: params.locale === "ar" ? "تم تأكيد الطلب" : "Order confirmation",
-    description: "Best Bazar order confirmation."
+    description: "Best Mart order confirmation."
   };
 }
 

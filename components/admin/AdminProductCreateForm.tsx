@@ -523,7 +523,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <input
                 value={form.brand}
                 onChange={(event) => updateForm("brand", event.target.value)}
-                placeholder="Best Bazar"
+                placeholder="Best Mart"
                 required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />

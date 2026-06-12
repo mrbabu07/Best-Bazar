@@ -1,4 +1,4 @@
-# Best Bazar AI Project Documentation
+# Best Mart AI Project Documentation
 
 Last updated: 2026-06-10
 
@@ -8,7 +8,7 @@ For an ordered first-day walkthrough, read `DEVELOPER_STEP_BY_STEP.md` first, th
 
 ## 1. Project Summary
 
-Best Bazar is a Dubai-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, Dubai delivery controls, cash on delivery, Stripe card payments, order tracking, invoices, notifications, and SEO.
+Best Mart is a Dubai-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, Dubai delivery controls, cash on delivery, Stripe card payments, order tracking, invoices, notifications, and SEO.
 
 The main product goal is to behave like a real Dubai ecommerce store:
 
@@ -387,7 +387,7 @@ Source files:
 
 Cart:
 
-- Zustand store name: `best-bazar-cart`.
+- Zustand store name: `best-mart-cart`.
 - Persisted in browser localStorage.
 - Stores product snapshot, variant snapshot, image, price, stock, quantity.
 - Hydration is guarded with `useHydrated` to avoid server/client mismatch.
@@ -453,7 +453,7 @@ Storefront notification bell:
 - Source: `components/layout/Header.tsx`.
 - Shows store announcement, Dubai delivery, free shipping, and cart reminder.
 - Settings refresh from `/api/settings` every 15 seconds.
-- Dismissed notifications are persisted in localStorage with key `best-bazar-dismissed-notifications:${locale}`.
+- Dismissed notifications are persisted in localStorage with key `best-mart-dismissed-notifications:${locale}`.
 - Notification IDs include content values, so a changed announcement/threshold/delivery setting can appear again as a new notification.
 - Notification card click navigates to the related page.
 - X button dismisses only that notification.
@@ -546,7 +546,7 @@ Cloudinary upload:
 
 - Admin-only.
 - POSTs a `file` field to `/api/upload`.
-- Optional `folder` field defaults to `best-bazar/uploads`.
+- Optional `folder` field defaults to `best-mart/uploads`.
 - Returns Cloudinary public id, secure URL, dimensions, format, and bytes.
 
 If adding another external image host, update both `next.config.mjs` and any validation/safety rules in `lib/images.ts`.

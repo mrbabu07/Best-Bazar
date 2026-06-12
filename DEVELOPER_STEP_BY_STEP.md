@@ -1,12 +1,12 @@
-# Best Bazar Step-by-Step Developer Walkthrough
+# Best Mart Step-by-Step Developer Walkthrough
 
-This is the practical onboarding path for a new developer or AI agent. Read it in order when you need to understand where everything happens in the Best Bazar project.
+This is the practical onboarding path for a new developer or AI agent. Read it in order when you need to understand where everything happens in the Best Mart project.
 
 For the full architecture reference, see `AI_PROJECT_DOCUMENTATION.md`.
 
 ## Step 1: Understand the Product
 
-Best Bazar is a Dubai-focused ecommerce app.
+Best Mart is a Dubai-focused ecommerce app.
 
 The app has two big sides:
 
@@ -324,7 +324,7 @@ Storefront notifications include:
 Dismiss behavior:
 
 - Dismissed notification ids are saved in browser localStorage.
-- Key: `best-bazar-dismissed-notifications:${locale}`.
+- Key: `best-mart-dismissed-notifications:${locale}`.
 - Same notification will not come back after dismiss.
 - If notification content changes, it gets a new id and can appear again.
 

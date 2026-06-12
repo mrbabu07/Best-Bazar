@@ -821,7 +821,7 @@ export function AdminProductManager({
                 ["nameAr", "Product name AR", "Arabic product name"],
                 ["slug", "Product URL slug", "premium-travel-trolley"],
                 ["sku", "Main SKU", "BB-DXB-1001"],
-                ["brand", "Brand", "Best Bazar"]
+                ["brand", "Brand", "Best Mart"]
               ].map(([key, label, placeholder]) => (
                 <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
                   {label}

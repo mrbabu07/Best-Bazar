@@ -5,8 +5,8 @@ import { BackButton } from "@/components/ui/BackButton";
 import { isLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Track Order | Best Bazar",
-  description: "Track a Best Bazar order using the order number and checkout contact detail."
+  title: "Track Order | Best Mart",
+  description: "Track a Best Mart order using the order number and checkout contact detail."
 };
 
 export default function TrackOrderPage({ params }: { params: { locale: string } }) {

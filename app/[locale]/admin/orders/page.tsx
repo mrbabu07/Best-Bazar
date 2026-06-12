@@ -13,7 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
 export const metadata: Metadata = {
-  title: "Order Management | Best Bazar"
+  title: "Order Management | Best Mart"
 };
 
 type AdminOrdersPageProps = {
@@ -264,7 +264,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
             <>
               <div className="mb-5 hidden border-b border-neutral-200 pb-4 admin-print-block">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Invoice</p>
-                <h1 className="mt-1 text-2xl font-bold text-navy">Best Bazar</h1>
+                <h1 className="mt-1 text-2xl font-bold text-navy">Best Mart</h1>
                 {settings?.trn ? <p className="mt-1 text-sm font-semibold text-neutral-600">TRN: {settings.trn}</p> : null}
               </div>
               <div className="flex items-start justify-between gap-4">

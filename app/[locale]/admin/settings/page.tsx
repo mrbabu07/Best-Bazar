@@ -10,7 +10,7 @@ import { normalizeThemeSettings } from "@/lib/theme-config";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
 export const metadata: Metadata = {
-  title: "Store Settings | Best Bazar"
+  title: "Store Settings | Best Mart"
 };
 
 export default async function AdminSettingsPage({ params }: { params: { locale: string } }) {

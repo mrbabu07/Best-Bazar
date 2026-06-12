@@ -1,5 +1,5 @@
 {
-  "brand": "Best Bazar",
+  "brand": "Best Mart",
   "announcement": "Free Dubai delivery on orders above AED 250",
   "nav": {
     "home": "Home",
@@ -38,7 +38,7 @@
   },
   "home": {
     "eyebrow": "Dubai luxury marketplace",
-    "title": "Best Bazar",
+    "title": "Best Mart",
     "subtitle": "Curated essentials, gifting, fashion, electronics, and premium home goods delivered across Dubai with a polished bilingual shopping experience.",
     "heroMetricOne": "1,200+ products",
     "heroMetricTwo": "Same-day Dubai delivery",

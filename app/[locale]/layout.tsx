@@ -26,8 +26,8 @@ const cairo = Cairo({
 
 export const metadata: Metadata = {
   title: {
-    default: "Best Bazar",
-    template: "%s | Best Bazar"
+    default: "Best Mart",
+    template: "%s | Best Mart"
   },
   description: "Luxury Dubai-based online shopping experience."
 };
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 async function getFrameSettings() {
   const settings = await getCachedPublicSettings();
   return {
-    storeNameEn: settings?.storeNameEn ?? "Best Bazar",
-    storeNameAr: settings?.storeNameAr ?? "Best Bazar",
+    storeNameEn: settings?.storeNameEn ?? "Best Mart",
+    storeNameAr: settings?.storeNameAr ?? "Best Mart",
     announcementEn: settings?.announcementEn ?? "",
     announcementAr: settings?.announcementAr ?? "",
     announcementActive: settings?.announcementActive ?? false,

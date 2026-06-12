@@ -8,7 +8,7 @@ const root = process.cwd();
 const port = process.env.PORT || "3002";
 const maxRestarts = Number(process.env.DEV_SERVER_MAX_RESTARTS ?? "3");
 const rootHash = crypto.createHash("sha1").update(root.toLowerCase()).digest("hex").slice(0, 12);
-const pidFile = path.resolve(os.tmpdir(), `best-bazar-dev-${rootHash}.pid`);
+const pidFile = path.resolve(os.tmpdir(), `best-mart-dev-${rootHash}.pid`);
 
 function escapePowerShellSingleQuote(value) {
   return value.replace(/'/g, "''");

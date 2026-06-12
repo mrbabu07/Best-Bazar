@@ -91,8 +91,8 @@ function customerMessage(order: OrderWithItems, purpose: NotificationPurpose) {
   const url = getOrderConfirmationUrl(order);
   const lead =
     purpose === "created"
-      ? `Best Bazar received your order ${order.orderNumber}.`
-      : `Best Bazar order ${order.orderNumber} is now ${order.orderStatus}.`;
+      ? `Best Mart received your order ${order.orderNumber}.`
+      : `Best Mart order ${order.orderNumber} is now ${order.orderStatus}.`;
 
   return [
     lead,
@@ -107,8 +107,8 @@ function customerMessage(order: OrderWithItems, purpose: NotificationPurpose) {
 function adminMessage(order: OrderWithItems, purpose: NotificationPurpose) {
   const lead =
     purpose === "created"
-      ? `New Best Bazar order ${order.orderNumber}`
-      : `Best Bazar order ${order.orderNumber} updated to ${order.orderStatus}`;
+      ? `New Best Mart order ${order.orderNumber}`
+      : `Best Mart order ${order.orderNumber} updated to ${order.orderStatus}`;
 
   return [
     lead,

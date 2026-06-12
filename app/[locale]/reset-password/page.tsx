@@ -17,7 +17,7 @@ type ResetPasswordPageProps = {
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return {
     title: params.locale === "ar" ? "تعيين كلمة مرور جديدة" : "Reset password",
-    description: "Set a new Best Bazar account password."
+    description: "Set a new Best Mart account password."
   };
 }
 
