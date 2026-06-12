@@ -91,26 +91,39 @@ function clearProductionBuildOutput() {
   return true;
 }
 
-function clearWebpackCache() {
-  const cachePath = path.resolve(root, ".next", "cache");
-  removeGeneratedPath(cachePath);
+function clearNextOutput() {
+  const nextPath = path.resolve(root, ".next");
+
+  if (!fs.existsSync(nextPath)) {
+    return false;
+  }
+
+  removeGeneratedPath(nextPath);
+  return true;
+}
+
+function hasServerRuntimeOutput() {
+  return fs.existsSync(path.resolve(root, ".next", "server", "webpack-runtime.js"));
 }
 
 stopPreviousDevServer();
 stopStaleNextProcesses();
 const clearedProductionOutput = clearProductionBuildOutput();
 const shouldClearWebpackCache = process.env.CLEAR_NEXT_CACHE === "1";
-
-if (!clearedProductionOutput && shouldClearWebpackCache) {
-  clearWebpackCache();
-}
+const clearedForcedOutput = !clearedProductionOutput && shouldClearWebpackCache ? clearNextOutput() : false;
+const clearedStaleServerOutput =
+  !clearedProductionOutput && !clearedForcedOutput && hasServerRuntimeOutput() ? clearNextOutput() : false;
 
 fs.writeFileSync(pidFile, String(process.pid));
 
 if (clearedProductionOutput) {
   console.log("Removed production .next output before starting dev.");
+} else if (clearedForcedOutput) {
+  console.log("Cleared full .next output because CLEAR_NEXT_CACHE=1 was set.");
+} else if (clearedStaleServerOutput) {
+  console.log("Cleared stale Next server output before starting dev.");
 } else if (shouldClearWebpackCache) {
-  console.log("Cleared Next webpack cache because CLEAR_NEXT_CACHE=1 was set.");
+  console.log("No .next output existed to clear.");
 } else {
   console.log("Keeping warm Next dev cache. Set CLEAR_NEXT_CACHE=1 only when you need a clean rebuild.");
 }
