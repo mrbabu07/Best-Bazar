@@ -6,6 +6,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { AccountProfileForm } from "@/components/account/AccountProfileForm";
 import { CancelOrderButton } from "@/components/account/CancelOrderButton";
+import { UserLogoutButton } from "@/components/account/UserLogoutButton";
 import { BackButton } from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
@@ -74,7 +75,9 @@ const accountCopy = {
     order: "Order",
     items: "Items",
     status: "Status",
-    total: "Total"
+    total: "Total",
+    viewOrder: "View",
+    trackOrder: "Track"
   },
   ar: {
     defaultName: "عميل بيست مارت",
@@ -83,7 +86,9 @@ const accountCopy = {
     order: "الطلب",
     items: "المنتجات",
     status: "الحالة",
-    total: "الإجمالي"
+    total: "الإجمالي",
+    viewOrder: "عرض",
+    trackOrder: "تتبع"
   }
 } satisfies Record<
   Locale,
@@ -95,6 +100,8 @@ const accountCopy = {
     items: string;
     status: string;
     total: string;
+    viewOrder: string;
+    trackOrder: string;
   }
 >;
 
@@ -212,6 +219,7 @@ export default async function AccountPage({ params }: { params: { locale: string
                 {item.label}
               </a>
             ))}
+            <UserLogoutButton locale={locale} />
           </div>
         </aside>
 
@@ -282,11 +290,23 @@ export default async function AccountPage({ params }: { params: { locale: string
                           {formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates)}
                         </td>
                         <td className="px-5 py-4">
-                          {canCancelOrder(order.orderStatus) ? (
-                            <CancelOrderButton orderId={order.id} copy={cancelOrderCopy} />
-                          ) : (
-                            <span className="text-neutral-400">-</span>
-                          )}
+                          <div className="flex flex-wrap gap-2">
+                            <Link
+                              href={`/${locale}/order-confirmation/${order.id}`}
+                              className="inline-flex h-9 items-center rounded-md border border-gold-200 bg-white px-3 text-xs font-bold text-navy transition hover:border-gold-400 hover:bg-gold-50"
+                            >
+                              {labels.viewOrder}
+                            </Link>
+                            <Link
+                              href={`/${locale}/order-confirmation/${order.id}`}
+                              className="inline-flex h-9 items-center rounded-md border border-sky-100 bg-sky-50 px-3 text-xs font-bold text-sky-700 transition hover:bg-sky-100"
+                            >
+                              {labels.trackOrder}
+                            </Link>
+                            {canCancelOrder(order.orderStatus) ? (
+                              <CancelOrderButton orderId={order.id} copy={cancelOrderCopy} />
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))}

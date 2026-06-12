@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Globe2, LayoutDashboard, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
+import { Bell, Globe2, LayoutDashboard, Menu, PackagePlus, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/types";
@@ -20,6 +20,19 @@ type HeaderProps = {
   settings: StorefrontFrameSettings;
 };
 
+type ProductNotification = {
+  id: string;
+  name?: {
+    en?: string;
+    ar?: string;
+  };
+  href?: {
+    en?: string;
+    ar?: string;
+  };
+  createdAt?: string;
+};
+
 export function Header({ locale, dictionary, settings }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -28,6 +41,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [liveSettings, setLiveSettings] = useState(settings);
+  const [productNotifications, setProductNotifications] = useState<ProductNotification[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
@@ -60,6 +74,17 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           }
         ]
       : []),
+    ...productNotifications.map((product) => {
+      const productName = locale === "ar" ? product.name?.ar || product.name?.en : product.name?.en || product.name?.ar;
+
+      return {
+        title: locale === "ar" ? "منتج جديد" : "New product",
+        id: product.id,
+        detail: productName ?? (locale === "ar" ? "منتج جديد متاح الآن" : "A new product is available now"),
+        href: (locale === "ar" ? product.href?.ar : product.href?.en) ?? `/${locale}/shop`,
+        icon: "product" as const
+      };
+    }),
     {
       title: locale === "ar" ? "توصيل دبي" : "Dubai delivery",
       id: `delivery:${dubaiRate?.emirate ?? "uae"}:${dubaiRate?.deliveryDays ?? "available"}`,
@@ -68,13 +93,15 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         : locale === "ar"
           ? "توصيل داخل الإمارات"
           : "UAE delivery available",
-      href: `/${locale}/checkout`
+      href: `/${locale}/checkout`,
+      icon: "delivery" as const
     },
     {
       title: locale === "ar" ? "توصيل مجاني" : "Free shipping",
       id: `free-shipping:${freeShippingThreshold}`,
       detail: `${locale === "ar" ? "فوق" : "Above"} AED ${freeShippingThreshold}`,
-      href: `/${locale}/checkout`
+      href: `/${locale}/checkout`,
+      icon: "delivery" as const
     },
     ...(cartCount > 0
       ? [
@@ -82,7 +109,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             title: locale === "ar" ? "السلة" : "Cart reminder",
             id: `cart:${cartCount}`,
             detail: `${cartCount} ${locale === "ar" ? "منتج في السلة" : "item ready in cart"}`,
-            href: `/${locale}/cart`
+            href: `/${locale}/cart`,
+            icon: "delivery" as const
           }
         ]
       : [])
@@ -139,6 +167,16 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           currencyRates: settings.currencyRates,
           shippingSettings: nextSettings.shippingSettings
         });
+
+        const notificationsResponse = await fetch("/api/notifications", { cache: "no-store" });
+
+        if (notificationsResponse.ok) {
+          const notificationsData = await safeResponseJson<{ products?: ProductNotification[] }>(
+            notificationsResponse,
+            {}
+          );
+          setProductNotifications(Array.isArray(notificationsData?.products) ? notificationsData.products : []);
+        }
       } catch {
         // Keep the last known notification data when the live refresh fails.
       }
@@ -325,7 +363,11 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                           onClick={() => setNotificationsOpen(false)}
                           className="flex min-w-0 flex-1 items-start gap-2"
                         >
-                          <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                          {item.icon === "product" ? (
+                            <PackagePlus size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                          ) : (
+                            <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                          )}
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-navy">{item.title}</p>
                             <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
