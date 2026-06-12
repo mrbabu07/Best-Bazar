@@ -6,7 +6,7 @@ const path = require("path");
 
 const root = process.cwd();
 const port = process.env.PORT || "3002";
-const maxRestarts = Number(process.env.DEV_SERVER_MAX_RESTARTS ?? "3");
+const maxRestarts = Number(process.env.DEV_SERVER_MAX_RESTARTS ?? "20");
 const rootHash = crypto.createHash("sha1").update(root.toLowerCase()).digest("hex").slice(0, 12);
 const pidFile = path.resolve(os.tmpdir(), `best-mart-dev-${rootHash}.pid`);
 
@@ -102,17 +102,11 @@ function clearNextOutput() {
   return true;
 }
 
-function hasServerRuntimeOutput() {
-  return fs.existsSync(path.resolve(root, ".next", "server", "webpack-runtime.js"));
-}
-
 stopPreviousDevServer();
 stopStaleNextProcesses();
 const clearedProductionOutput = clearProductionBuildOutput();
 const shouldClearWebpackCache = process.env.CLEAR_NEXT_CACHE === "1";
 const clearedForcedOutput = !clearedProductionOutput && shouldClearWebpackCache ? clearNextOutput() : false;
-const clearedStaleServerOutput =
-  !clearedProductionOutput && !clearedForcedOutput && hasServerRuntimeOutput() ? clearNextOutput() : false;
 
 fs.writeFileSync(pidFile, String(process.pid));
 
@@ -120,8 +114,6 @@ if (clearedProductionOutput) {
   console.log("Removed production .next output before starting dev.");
 } else if (clearedForcedOutput) {
   console.log("Cleared full .next output because CLEAR_NEXT_CACHE=1 was set.");
-} else if (clearedStaleServerOutput) {
-  console.log("Cleared stale Next server output before starting dev.");
 } else if (shouldClearWebpackCache) {
   console.log("No .next output existed to clear.");
 } else {
@@ -184,7 +176,7 @@ function startNextDevServer() {
       const delay = Math.min(1000 * restartCount, 5000);
 
       console.warn(
-        `Next dev server exited with code ${code ?? "unknown"}. Restarting (${restartCount}/${maxRestarts}) in ${delay}ms...`
+        `Next dev server exited with code ${code ?? "unknown"}. Restarting with warm cache (${restartCount}/${maxRestarts}) in ${delay}ms...`
       );
       setTimeout(startNextDevServer, delay);
       return;
