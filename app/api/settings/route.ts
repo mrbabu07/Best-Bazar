@@ -1,10 +1,14 @@
-import { SETTINGS_REVALIDATE_SECONDS, cachedJson } from "@/lib/cache";
-import { getCachedPublicSettings } from "@/lib/settings";
+import { getPublicSettings } from "@/lib/settings";
 
-export const revalidate = SETTINGS_REVALIDATE_SECONDS;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
-  const settings = await getCachedPublicSettings();
+  const settings = await getPublicSettings();
 
-  return cachedJson(settings, SETTINGS_REVALIDATE_SECONDS);
+  return Response.json(settings, {
+    headers: {
+      "Cache-Control": "no-store, max-age=0"
+    }
+  });
 }

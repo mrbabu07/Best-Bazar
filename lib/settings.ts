@@ -36,14 +36,14 @@ const publicSettingsSelect = {
 
 export type PublicSettings = Prisma.SettingGetPayload<{ select: typeof publicSettingsSelect }>;
 
-async function readPublicSettings() {
+export async function getPublicSettings() {
   return prisma.setting.findUnique({
     where: { id: "store-settings" },
     select: publicSettingsSelect
   });
 }
 
-export const getCachedPublicSettings = unstable_cache(readPublicSettings, ["public-store-settings"], {
+export const getCachedPublicSettings = unstable_cache(getPublicSettings, ["public-store-settings"], {
   revalidate: SETTINGS_REVALIDATE_SECONDS,
   tags: ["settings"]
 });

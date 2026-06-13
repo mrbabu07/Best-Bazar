@@ -53,7 +53,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const navItems = [
     { label: dictionary.nav.home, href: `/${locale}` },
     { label: dictionary.nav.shop, href: `/${locale}/shop` },
-    { label: "Track order", href: `/${locale}/track-order` },
     { label: dictionary.nav.account, href: `/${locale}/account` }
   ];
   const brandName = locale === "ar" ? liveSettings.storeNameAr : liveSettings.storeNameEn;
@@ -135,7 +134,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       }
 
       try {
-        const response = await fetch("/api/settings", { cache: "force-cache" });
+        const response = await fetch("/api/settings", { cache: "no-store" });
 
         if (!response.ok) {
           return;
@@ -254,7 +253,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <Link
               key={item.href}
               href={item.href}
-              prefetch={item.href.endsWith("/account") ? false : undefined}
               className={cn(
                 "rounded-md px-3 py-2 text-sm font-semibold text-neutral-600 transition hover:bg-gold-50 hover:text-navy",
                 (pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
@@ -316,7 +314,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
           <Link
             href={`/${locale}/account`}
-            prefetch={false}
             className="hidden h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50 sm:grid"
             aria-label={dictionary.nav.account}
           >
@@ -413,7 +410,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                prefetch={item.href.endsWith("/account") ? false : undefined}
                 onClick={() => setOpen(false)}
                 className="rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
               >
