@@ -150,25 +150,25 @@ export default async function HomePage({ params }: { params: { locale: string } 
             title={dictionary.home.categoryTitle}
             subtitle={dictionary.home.categorySubtitle}
           />
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-5">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/${locale}/shop?category=${category.slug}`}
-                className="group overflow-hidden rounded-lg border border-neutral-200 bg-paper shadow-soft"
+                className="group flex flex-col items-center"
               >
-                <div className="relative aspect-[5/4] overflow-hidden">
+                <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-neutral-100 bg-paper shadow-md transition duration-300 group-hover:border-gold-200 group-hover:shadow-lg sm:h-36 sm:w-36">
                   <Image
                     src={category.image}
                     alt={getLocalized(category.name, locale)}
                     fill
-                    sizes="(min-width: 1024px) 20vw, 50vw"
-                    className="object-cover transition duration-500 group-hover:scale-105"
+                    sizes="(min-width: 640px) 144px, 112px"
+                    className="object-cover transition duration-500 group-hover:scale-110"
                   />
                 </div>
-                <div className="p-3 sm:p-4">
+                <div className="mt-3 text-center">
                   <h3 className="text-sm font-bold text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
-                  <p className="mt-1 text-xs text-neutral-500 sm:text-sm">{category.productCount} {dictionary.shop.results}</p>
+                  <p className="mt-1 text-xs text-neutral-500">{category.productCount} {dictionary.shop.results}</p>
                 </div>
               </Link>
             ))}
