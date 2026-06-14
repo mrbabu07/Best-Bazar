@@ -6,15 +6,22 @@
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "node scripts/dev-server.js",
+    "dev:socket": "node scripts/kill-port.js && node server.js",
+    "dev:turbo": "next dev --turbo -p 3002",
+    "warm": "node scripts/warm-cache.js",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/kill-port.js && node server.js",
+    "start:next": "next start",
+    "kill-port": "node scripts/kill-port.js",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "admin:ensure": "node scripts/ensure-admin.js"
+    "admin:ensure": "node scripts/ensure-admin.js",
+    "pwa:icons": "node scripts/generate-pwa-icons.js",
+    "pwa:placeholders": "node scripts/create-placeholder-icons.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -35,11 +42,14 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "stripe": "^17.4.0",
     "zod": "^3.24.1",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^8.0.0",

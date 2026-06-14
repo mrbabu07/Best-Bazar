@@ -116,9 +116,14 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
       return;
     }
 
+    // Show success message
     toast.success(mode === "register" ? labels.accountCreated : labels.signedIn);
-    router.push(result?.url ?? callbackUrl);
-    router.refresh();
+    
+    // Redirect to callback URL or home page
+    const redirectUrl = result?.url || callbackUrl || `/${locale}`;
+    
+    // Use window.location for full page reload to ensure session is loaded
+    window.location.href = redirectUrl;
   };
 
   return (

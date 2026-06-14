@@ -14,6 +14,7 @@ export type HeroSlide = {
   href: string;
   desktopImage: string;
   mobileImage?: string;
+  isVideo?: boolean;
 };
 
 type HeroSliderProps = {
@@ -62,26 +63,54 @@ export function HeroSlider({
 
   return (
     <section className="relative min-h-[calc(100svh-9rem)] overflow-hidden">
-      {activeSlide.mobileImage ? (
-        <Image
-          key={`${activeSlide.id}-mobile`}
-          src={activeSlide.mobileImage}
-          alt={activeSlide.title}
-          fill
-          priority
-          sizes="(max-width: 639px) 100vw, 1px"
-          className="object-cover sm:hidden"
-        />
-      ) : null}
-      <Image
-        key={`${activeSlide.id}-desktop`}
-        src={activeSlide.desktopImage}
-        alt={activeSlide.title}
-        fill
-        priority
-        sizes={activeSlide.mobileImage ? "(min-width: 640px) 100vw, 1px" : "100vw"}
-        className={activeSlide.mobileImage ? "hidden object-cover sm:block" : "object-cover"}
-      />
+      {/* Background Media */}
+      {activeSlide.isVideo ? (
+        <>
+          {activeSlide.mobileImage ? (
+            <video
+              key={`${activeSlide.id}-mobile`}
+              src={activeSlide.mobileImage}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 h-full w-full object-cover sm:hidden"
+            />
+          ) : null}
+          <video
+            key={`${activeSlide.id}-desktop`}
+            src={activeSlide.desktopImage}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover sm:block" : "absolute inset-0 h-full w-full object-cover"}
+          />
+        </>
+      ) : (
+        <>
+          {activeSlide.mobileImage ? (
+            <Image
+              key={`${activeSlide.id}-mobile`}
+              src={activeSlide.mobileImage}
+              alt={activeSlide.title}
+              fill
+              priority
+              sizes="(max-width: 639px) 100vw, 1px"
+              className="object-cover sm:hidden"
+            />
+          ) : null}
+          <Image
+            key={`${activeSlide.id}-desktop`}
+            src={activeSlide.desktopImage}
+            alt={activeSlide.title}
+            fill
+            priority
+            sizes={activeSlide.mobileImage ? "(min-width: 640px) 100vw, 1px" : "100vw"}
+            className={activeSlide.mobileImage ? "hidden object-cover sm:block" : "object-cover"}
+          />
+        </>
+      )}
       <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/68 to-navy/15 rtl:bg-gradient-to-l" />
       <div className="relative mx-auto flex min-h-[calc(100svh-9rem)] max-w-7xl items-center px-4 py-20 sm:px-6 lg:px-8">
         <div className="max-w-3xl text-white">

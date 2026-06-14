@@ -42,6 +42,19 @@ const paymentSettingsSchema = z.object({
     instructions: z.string().trim().default("")
   })
 });
+const courierSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  provider: z.enum(["manual", "aramex", "fetchr", "dhl", "shiprocket", "other"]).default("manual"),
+  displayName: z.string().trim().default("Dubai delivery partner"),
+  accountNumber: z.string().trim().default(""),
+  apiKey: z.string().trim().default(""),
+  apiSecret: z.string().trim().default(""),
+  webhookSecret: z.string().trim().default(""),
+  trackingUrlTemplate: z.string().trim().default(""),
+  pickupCity: z.string().trim().default("Dubai"),
+  serviceLevel: z.string().trim().default("standard"),
+  notes: z.string().trim().default("")
+});
 const themeSettingsSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
@@ -207,6 +220,7 @@ export const settingsSchema = z.object({
   aedToUsd: money,
   freeShippingThreshold: money,
   shippingRates: z.union([z.array(shippingRateSchema), z.record(shippingRateSchema)]),
+  courierSettings: courierSettingsSchema,
   paymentSettings: paymentSettingsSchema,
   themeSettings: themeSettingsSchema,
   metaTitleEn: nullableString,

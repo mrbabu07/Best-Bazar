@@ -7,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { AccountProfileForm } from "@/components/account/AccountProfileForm";
 import { CancelOrderButton } from "@/components/account/CancelOrderButton";
 import { UserLogoutButton } from "@/components/account/UserLogoutButton";
+import { OrderTrackingForm } from "@/components/order/OrderTrackingForm";
 import { BackButton } from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/Badge";
 import { authOptions } from "@/lib/auth";
@@ -177,6 +178,7 @@ export default async function AccountPage({ params }: { params: { locale: string
   const sections = [
     { id: "profile", label: dictionary.account.profile },
     { id: "addresses", label: dictionary.account.addresses },
+    { id: "track", label: locale === "ar" ? "Track order" : "Track order" },
     { id: "orders", label: dictionary.account.orders }
   ];
   const cancelOrderCopy = {
@@ -245,6 +247,16 @@ export default async function AccountPage({ params }: { params: { locale: string
                 </p>
               )}
             </div>
+          </div>
+
+          <div id="track" className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-navy">{locale === "ar" ? "Track order" : "Track order"}</h2>
+              <p className="mt-2 text-sm leading-6 text-neutral-600">
+                Check guest or account orders with the order number and checkout email or phone.
+              </p>
+            </div>
+            <OrderTrackingForm locale={locale} />
           </div>
 
           <div id="orders" className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft">

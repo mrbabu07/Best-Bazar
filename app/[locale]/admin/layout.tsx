@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import type { ReactNode } from "react";
 import { OrderStatus, Prisma } from "@prisma/client";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminRealtimeNotifications } from "@/components/admin/AdminRealtimeNotifications";
 import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
@@ -47,7 +48,9 @@ async function readAdminNotificationsWithRetry() {
     console.error("Admin notifications failed. Retrying once.", error);
 
     try {
-      await prisma.$disconnect();
+      // DO NOT call $disconnect() - it breaks the singleton pattern
+      // Just retry the operation - connection pool will handle recovery
+      await new Promise(resolve => setTimeout(resolve, 100));
       return await readAdminNotifications();
     } catch (retryError) {
       console.error("Admin notifications failed after retry.", retryError);
@@ -98,6 +101,7 @@ export default async function AdminLayout({
       notifications={notifications}
     >
       {children}
+      <AdminRealtimeNotifications />
     </AdminShell>
   );
 }

@@ -1,15 +1,12 @@
-import { Skeleton } from "@/components/ui/Skeleton";
+import { Loader2 } from "lucide-react";
 
-export default function LocaleLoading() {
+export default function Loading() {
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <Skeleton className="h-8 w-56" />
-      <Skeleton className="mt-4 h-5 w-96 max-w-full" />
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <Skeleton key={index} className="aspect-[4/5]" />
-        ))}
+    <div className="flex min-h-screen items-center justify-center bg-paper">
+      <div className="text-center">
+        <Loader2 className="mx-auto h-12 w-12 animate-spin text-gold-600" />
+        <p className="mt-4 text-sm font-semibold text-neutral-600">Loading...</p>
       </div>
-    </main>
+    </div>
   );
 }

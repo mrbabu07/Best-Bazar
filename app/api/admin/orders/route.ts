@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { getPagination, getSearchParam, handleApiError, ok, requireAdmin } from "@/lib/api/admin";
 
 function buildOrderWhere(request: Request): Prisma.OrderWhereInput {
@@ -37,19 +37,23 @@ export async function GET(request: Request) {
     await requireAdmin();
     const { page, limit, skip } = getPagination(request);
     const where = buildOrderWhere(request);
-    const [items, total] = await prisma.$transaction([
-      prisma.order.findMany({
-        where,
-        include: {
-          items: true,
-          user: { select: { id: true, name: true, email: true } }
-        },
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit
-      }),
-      prisma.order.count({ where })
-    ]);
+    
+    // Use withRetry wrapper and optimize with single transaction
+    const [items, total] = await withRetry(() => 
+      prisma.$transaction([
+        prisma.order.findMany({
+          where,
+          include: {
+            items: true,
+            user: { select: { id: true, name: true, email: true } }
+          },
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit
+        }),
+        prisma.order.count({ where })
+      ])
+    );
 
     return ok({ items, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
   } catch (error) {

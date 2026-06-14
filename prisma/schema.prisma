@@ -319,6 +319,7 @@ model Setting {
   aedToUsd              Decimal  @default(0.272) @db.Decimal(10, 4)
   freeShippingThreshold Decimal  @default(250) @db.Decimal(10, 2)
   shippingRates         Json
+  courierSettings       Json     @default("{}")
   paymentSettings       Json     @default("{}")
   themeSettings         Json     @default("{}")
   metaTitleEn           String?

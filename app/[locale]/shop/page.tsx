@@ -94,8 +94,14 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
         />
         <section className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
           {listing.length > 0 ? (
-            listing.map((product) => (
-              <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
+            listing.map((product, index) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                locale={locale} 
+                dictionary={dictionary}
+                priority={index < 4} 
+              />
             ))
           ) : (
             <div className="col-span-2 rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft xl:col-span-3">

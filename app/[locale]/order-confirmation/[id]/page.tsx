@@ -4,6 +4,7 @@ import { CheckCircle2, PackageCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/Badge";
+import { OrderTracker } from "@/components/order/OrderTracker";
 import { getOptionalServerSession } from "@/lib/auth-session";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { formatOrderStatus, formatPaymentStatus } from "@/lib/order-labels";
@@ -149,6 +150,11 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-neutral-500">{labels.total}</p>
             <p className="mt-2 font-bold text-navy">{formatCurrency(Number(order.total), currency, locale, currencyRates)}</p>
           </div>
+        </div>
+
+        {/* Real-time Order Tracking */}
+        <div className="mt-6">
+          <OrderTracker orderId={order.id} currentStatus={order.orderStatus} />
         </div>
 
         <section className="mt-8 rounded-md border border-neutral-200 p-4">

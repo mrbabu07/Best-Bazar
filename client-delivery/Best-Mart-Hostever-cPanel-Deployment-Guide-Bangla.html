@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="utf-8" />
+    <title>Best Mart Hostever cPanel Deployment Guide Bangla</title>
+    <style>
+      @page { size: A4; margin: 13mm; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: #f4f1ea;
+        color: #172033;
+        font-family: "Nirmala UI", "Vrinda", "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.58;
+      }
+      main { max-width: 980px; margin: 0 auto; background: #fffdf8; padding: 32px; }
+      h1, h2, h3 { margin: 0; color: #172033; line-height: 1.25; letter-spacing: 0; }
+      h1 { font-size: 32px; max-width: 780px; }
+      h2 { margin-top: 30px; border-bottom: 2px solid #dfc177; padding-bottom: 8px; font-size: 22px; }
+      h3 { font-size: 17px; }
+      p { margin: 8px 0; }
+      code, pre { border-radius: 5px; background: #f4f1ea; font-family: Consolas, monospace; font-size: 12px; }
+      code { padding: 1px 4px; }
+      pre { margin: 9px 0; padding: 11px; white-space: pre-wrap; word-break: break-word; }
+      ul, ol { margin: 8px 0 8px 20px; padding: 0; }
+      li { margin: 5px 0; }
+      .cover {
+        min-height: 420px;
+        display: grid;
+        align-content: center;
+        gap: 16px;
+        border: 2px solid #dfc177;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fff8e7 0%, #ffffff 58%, #e9f7f5 100%);
+        padding: 36px;
+      }
+      .eyebrow {
+        width: fit-content;
+        border-radius: 999px;
+        background: #172033;
+        color: #fff;
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+      .subtitle { max-width: 780px; color: #526070; font-size: 15px; font-weight: 600; }
+      .meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+      .meta div, .note, .box { border: 1px solid #e6dcc8; border-radius: 10px; background: #fff; padding: 11px 12px; }
+      .meta strong { display: block; color: #172033; }
+      .note { background: #eef7ff; border-color: #d6e4ef; }
+      .warn { background: #fff7ed; border-color: #fed7aa; }
+      .danger { background: #fff1f2; border-color: #fecdd3; }
+      .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .box, .step, .screen-block { break-inside: avoid; }
+      .box h3 { margin-bottom: 6px; }
+      .route-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+      .route-table th, .route-table td { border: 1px solid #e6dcc8; padding: 8px; text-align: left; vertical-align: top; }
+      .route-table th { background: #fbf7ed; font-size: 11px; text-transform: uppercase; }
+      .steps { counter-reset: step; display: grid; gap: 10px; }
+      .step { border: 1px solid #e6dcc8; border-radius: 10px; background: #fff; padding: 12px; }
+      .step:before { counter-increment: step; content: counter(step); display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 7px; border-radius: 50%; background: #172033; color: #fff; font-size: 11px; font-weight: 900; }
+      .screen-block { margin-top: 18px; border: 1px solid #e6dcc8; border-radius: 12px; background: #fff; overflow: hidden; }
+      .screen-copy { padding: 14px 16px; border-bottom: 1px solid #eee3cf; background: #fbf7ed; }
+      .shot { padding: 14px; background: #ffffff; }
+      .browser { border: 1px solid #d7dce3; border-radius: 10px; overflow: hidden; background: #f8fafc; box-shadow: 0 8px 20px rgba(23, 32, 51, .08); }
+      .bar { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; background: #eef2f7; border-bottom: 1px solid #d7dce3; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: #d6a94f; }
+      .url { margin-left: 8px; height: 14px; flex: 1; border-radius: 999px; background: #fff; border: 1px solid #d7dce3; }
+      .mock { display: grid; min-height: 260px; background: #fffdf8; padding: 18px; }
+      .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .panel { border: 1px solid #e6dcc8; border-radius: 8px; background: #fff; padding: 12px; min-height: 92px; }
+      .line { height: 9px; border-radius: 999px; background: #e8edf3; margin: 8px 0; }
+      .line.gold { background: #dfc177; }
+      .pill { display: inline-block; border-radius: 999px; background: #f4e6b7; padding: 5px 9px; font-size: 10px; font-weight: 800; color: #6b4d0d; }
+      .page-break { break-before: page; }
+      .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e6dcc8; color: #6b7280; font-size: 11px; }
+      @media print {
+        body { background: #fff; }
+        main { max-width: none; padding: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="cover">
+        <span class="eyebrow">Best Mart - Hostever cPanel Deployment</span>
+        <h1>Hostever cPanel-এ Client, Server এবং Database live করার বাংলা Step-by-Step Guide</h1>
+        <p class="subtitle">
+          এই guide client/developer handover-এর জন্য। Best Mart Next.js ecommerce app কীভাবে Hostever cPanel বা Node-supported hosting plan-এ upload, configure, database connect, build, start এবং test করবেন তা ধাপে ধাপে দেওয়া আছে।
+        </p>
+        <div class="meta">
+          <div><strong>Project</strong>Best Mart Ecommerce</div>
+          <div><strong>Stack</strong>Next.js 14 + Node.js + Prisma + PostgreSQL</div>
+          <div><strong>Updated</strong>13 June 2026</div>
+        </div>
+      </section>
+
+      <h2>১. আগে যেগুলো confirm করতে হবে</h2>
+      <div class="note warn">
+        <strong>Hostever plan check:</strong> cPanel dashboard-এ <code>Setup Node.js App</code>, <code>Node.js Selector</code>, অথবা <code>Application Manager</code> option থাকতে হবে। যদি না থাকে, shared cPanel plan-এ Next.js server run হবে না; তখন Hostever VPS/Node-supported plan নিতে হবে।
+      </div>
+      <div class="grid">
+        <div class="box"><h3>Server requirement</h3><p>Node.js 18+ বা 20+, npm, terminal access, environment variables, custom startup file support.</p></div>
+        <div class="box"><h3>Database requirement</h3><p>এই project PostgreSQL ব্যবহার করে। সবচেয়ে safe option হলো Neon PostgreSQL external database। cPanel MySQL দিয়ে এই project চলবে না।</p></div>
+        <div class="box"><h3>Domain requirement</h3><p>Domain DNS Hostever nameserver অথবা cPanel Zone Editor দিয়ে hosting server-এ point থাকতে হবে। SSL AutoSSL/Let's Encrypt enable করতে হবে।</p></div>
+        <div class="box"><h3>Secret requirement</h3><p><code>.env.local</code> values কখনো GitHub বা public file-এ upload করবেন না। cPanel Environment Variables panel-এ বসাবেন।</p></div>
+      </div>
+
+      <h2>২. Deployment architecture</h2>
+      <section class="screen-block">
+        <div class="screen-copy">
+          <h3>Best Mart live setup flow</h3>
+          <p>Customer browser request করবে domain-এ, Hostever Node.js app Next.js server run করবে, আর data Neon PostgreSQL থেকে আসবে।</p>
+        </div>
+        <div class="shot">
+          <div class="browser">
+            <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url"></span></div>
+            <div class="mock">
+              <div class="panel-row">
+                <div class="panel"><b>Client / Browser</b><div class="line gold"></div><p>https://yourdomain.com</p></div>
+                <div class="panel"><b>Hostever cPanel</b><div class="line gold"></div><p>Node.js app → <code>server.js</code> → Next.js</p></div>
+              </div>
+              <div class="panel-row" style="margin-top:12px">
+                <div class="panel"><b>Static assets</b><div class="line"></div><p><code>public</code>, <code>.next/static</code>, PWA files</p></div>
+                <div class="panel"><b>Database</b><div class="line"></div><p>Neon PostgreSQL + Prisma migrations</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="page-break">৩. Local project ready করবেন</h2>
+      <div class="steps">
+        <div class="step"><strong>Latest code pull:</strong> Local PC-তে project folder open করে latest GitHub code pull করুন।</div>
+        <div class="step"><strong>Dependency install:</strong> Terminal-এ run করুন: <pre>npm install</pre></div>
+        <div class="step"><strong>Environment test:</strong> Local <code>.env.local</code> ঠিক আছে কিনা check করুন। বিশেষ করে <code>DATABASE_URL</code>, <code>NEXTAUTH_SECRET</code>, <code>NEXTAUTH_URL</code>, <code>NEXT_PUBLIC_SITE_URL</code>।</div>
+        <div class="step"><strong>Build test:</strong> Local build pass করান: <pre>npm run type-check
+npm run build</pre></div>
+        <div class="step"><strong>Admin user ensure:</strong> Production database connect করা থাকলে run করুন: <pre>npm run admin:ensure</pre></div>
+      </div>
+
+      <h2>৪. Database setup - Neon PostgreSQL</h2>
+      <div class="note">
+        <strong>Recommended:</strong> Hostever cPanel-এর local MySQL/PostgreSQL-এর বদলে Neon PostgreSQL ব্যবহার করুন। Project already Prisma PostgreSQL schema দিয়ে তৈরি।
+      </div>
+      <div class="steps">
+        <div class="step">Neon dashboard-এ login করুন এবং project/database create করুন। Region হিসেবে যতটা সম্ভব app users-এর কাছে বা hosting-এর কাছে region select করুন।</div>
+        <div class="step">Connection string copy করুন। Pooler URL ব্যবহার করুন। Example format: <pre>postgresql://USER:PASSWORD@HOST-pooler.REGION.aws.neon.tech/DB?sslmode=require&amp;channel_binding=require</pre></div>
+        <div class="step">Connection URL-এর শেষে performance parameters যোগ করুন: <pre>&amp;connection_limit=5&amp;pool_timeout=20&amp;connect_timeout=10</pre></div>
+        <div class="step">Local বা cPanel terminal থেকে schema push করুন: <pre>npm run db:generate
+npm run db:push</pre></div>
+        <div class="step">Initial data/admin দরকার হলে seed/admin command run করুন: <pre>npm run db:seed
+npm run admin:ensure</pre></div>
+      </div>
+
+      <h2>৫. cPanel file upload method</h2>
+      <div class="grid">
+        <div class="box"><h3>Best method: Git</h3><p>cPanel-এ <code>Git Version Control</code> থাকলে GitHub repository clone করুন। Deploy/update সবচেয়ে clean হবে।</p></div>
+        <div class="box"><h3>Alternative: ZIP upload</h3><p>Local project zip করে File Manager দিয়ে upload করুন। <code>node_modules</code>, <code>.git</code>, <code>.env.local</code> upload না করাই ভালো।</p></div>
+      </div>
+      <p>Upload করার সময় এই files/folders দরকার:</p>
+      <table class="route-table">
+        <thead><tr><th>Item</th><th>Upload?</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td><code>app</code>, <code>components</code>, <code>lib</code>, <code>store</code>, <code>utils</code></td><td>Yes</td><td>Next.js source code</td></tr>
+          <tr><td><code>public</code></td><td>Yes</td><td>Images, icons, manifest, PWA files</td></tr>
+          <tr><td><code>prisma</code></td><td>Yes</td><td>Database schema and seed</td></tr>
+          <tr><td><code>package.json</code>, <code>package-lock.json</code></td><td>Yes</td><td>Dependency install scripts</td></tr>
+          <tr><td><code>server.js</code></td><td>Yes</td><td>Production startup file for Node app</td></tr>
+          <tr><td><code>next.config.mjs</code>, <code>tsconfig.json</code>, <code>tailwind.config.*</code></td><td>Yes</td><td>Build/config files</td></tr>
+          <tr><td><code>.env.local</code></td><td>No</td><td>Secrets must be set from cPanel environment variables</td></tr>
+          <tr><td><code>node_modules</code>, <code>.next</code></td><td>No preferred</td><td>Server should install/build fresh. Upload only if cPanel has no build terminal.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="page-break">৬. cPanel Node.js App create করবেন</h2>
+      <div class="steps">
+        <div class="step">cPanel login করুন → <code>Setup Node.js App</code> open করুন।</div>
+        <div class="step">Create Application চাপুন।</div>
+        <div class="step">Node version select করুন: <strong>Node.js 20</strong> preferred, না থাকলে Node.js 18।</div>
+        <div class="step">Application mode: <strong>Production</strong>।</div>
+        <div class="step">Application root: যেখানে project upload করেছেন, যেমন <code>best-mart</code> অথবা <code>bestmart-app</code>।</div>
+        <div class="step">Application URL: main domain বা subdomain select করুন, যেমন <code>https://bestmart.ae</code>।</div>
+        <div class="step">Application startup file: <strong><code>server.js</code></strong>। এই project-এর <code>npm start</code> command <code>node server.js</code> চালায়।</div>
+        <div class="step">Save/Create দিন। তারপর <code>Run NPM Install</code> অথবা terminal থেকে install/build run করুন।</div>
+      </div>
+
+      <h2>৭. Environment variables বসাবেন</h2>
+      <div class="note danger">
+        <strong>Secret safety:</strong> নিচের values cPanel Environment Variables panel-এ দিন। কোনো secret frontend code, public PDF, GitHub বা screenshot-এ দেবেন না।
+      </div>
+      <table class="route-table">
+        <thead><tr><th>Key</th><th>Example/Value</th><th>কাজ</th></tr></thead>
+        <tbody>
+          <tr><td><code>NODE_ENV</code></td><td><code>production</code></td><td>Production mode চালায়</td></tr>
+          <tr><td><code>PORT</code></td><td>cPanel auto set করতে পারে</td><td>Node app কোন port-এ run করবে</td></tr>
+          <tr><td><code>DATABASE_URL</code></td><td>Neon pooled URL</td><td>PostgreSQL database connection</td></tr>
+          <tr><td><code>NEXTAUTH_SECRET</code></td><td>strong random string</td><td>Login/session encryption</td></tr>
+          <tr><td><code>NEXTAUTH_URL</code></td><td><code>https://yourdomain.com</code></td><td>Auth callback base URL</td></tr>
+          <tr><td><code>NEXT_PUBLIC_SITE_URL</code></td><td><code>https://yourdomain.com</code></td><td>Frontend canonical/site URL</td></tr>
+          <tr><td><code>CLOUDINARY_CLOUD_NAME</code>, <code>CLOUDINARY_API_KEY</code>, <code>CLOUDINARY_API_SECRET</code></td><td>Cloudinary dashboard থেকে</td><td>Admin image upload</td></tr>
+          <tr><td><code>STRIPE_SECRET_KEY</code>, <code>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code></td><td>Stripe dashboard থেকে</td><td>Card payment</td></tr>
+          <tr><td><code>EMAIL_SERVER</code>, <code>EMAIL_FROM</code></td><td>SMTP provider থেকে</td><td>Order/status email</td></tr>
+          <tr><td><code>ADMIN_EMAIL</code>, <code>ADMIN_PASSWORD</code>, <code>ADMIN_NAME</code></td><td>Client admin info</td><td><code>admin:ensure</code> দিয়ে admin create/update</td></tr>
+        </tbody>
+      </table>
+
+      <h2>৮. cPanel terminal commands</h2>
+      <p>cPanel Terminal বা SSH access থাকলে application root folder-এ গিয়ে নিচের command run করুন:</p>
+      <pre>npm install
+npm run db:generate
+npm run db:push
+npm run build
+npm run admin:ensure</pre>
+      <p>তারপর cPanel Node.js app panel থেকে <strong>Restart</strong> দিন।</p>
+      <div class="note warn">
+        যদি terminal না থাকে, Hostever support-কে বলতে হবে Node.js app root-এ <code>npm install</code>, <code>npm run build</code>, <code>npm run db:push</code>, <code>npm run admin:ensure</code> run করে দিতে।
+      </div>
+
+      <h2 class="page-break">৯. Domain and SSL setup</h2>
+      <div class="steps">
+        <div class="step">Domain Hostever nameserver-এ point করুন অথবা DNS A record cPanel server IP-তে দিন।</div>
+        <div class="step">cPanel → Domains/Subdomains থেকে domain/subdomain add করুন।</div>
+        <div class="step">Node.js Application URL হিসেবে same domain select করুন।</div>
+        <div class="step">cPanel → SSL/TLS Status অথবা AutoSSL থেকে SSL issue করুন।</div>
+        <div class="step"><code>NEXTAUTH_URL</code> এবং <code>NEXT_PUBLIC_SITE_URL</code> অবশ্যই HTTPS domain দিয়ে update করুন।</div>
+        <div class="step">Node app restart করুন। Browser cache clear করে site test করুন।</div>
+      </div>
+
+      <h2>১০. Production testing checklist</h2>
+      <table class="route-table">
+        <thead><tr><th>Test</th><th>URL/Place</th><th>Expected result</th></tr></thead>
+        <tbody>
+          <tr><td>Homepage</td><td><code>https://yourdomain.com/en</code></td><td>Home loads, category/featured products show</td></tr>
+          <tr><td>Shop</td><td><code>/en/shop</code></td><td>Product grid, filter, color filter works</td></tr>
+          <tr><td>Product</td><td><code>/en/product/[id]</code></td><td>Color image switch, size/stock, add to cart</td></tr>
+          <tr><td>Cart</td><td><code>/en/cart</code></td><td>Cart item and pricing show</td></tr>
+          <tr><td>Checkout</td><td><code>/en/checkout</code></td><td>Shipping area dropdown uses admin latest rates/days</td></tr>
+          <tr><td>Guest order</td><td>Checkout COD</td><td>Order creates and confirmation page opens</td></tr>
+          <tr><td>Admin login</td><td><code>/en/login</code></td><td>Admin can login and access dashboard</td></tr>
+          <tr><td>Admin settings</td><td><code>/en/admin/settings</code></td><td>Shipping/payment/UI settings save and reflect on frontend</td></tr>
+          <tr><td>Email</td><td>Order place/status update</td><td>SMTP configured হলে email যায়</td></tr>
+          <tr><td>404</td><td>Wrong route</td><td>Custom 404 with back/home option</td></tr>
+        </tbody>
+      </table>
+
+      <h2>১১. Update/deploy new version</h2>
+      <div class="steps">
+        <div class="step">GitHub-এ latest code push করুন।</div>
+        <div class="step">cPanel Git Version Control থাকলে Pull/Deploy করুন। ZIP method হলে old files backup নিয়ে new ZIP upload/extract করুন।</div>
+        <div class="step">Dependency change থাকলে <code>npm install</code> run করুন।</div>
+        <div class="step">Database schema change থাকলে <code>npm run db:push</code> run করুন।</div>
+        <div class="step">Always run <code>npm run build</code> and restart Node app।</div>
+        <div class="step">Home, checkout, admin dashboard smoke test করুন।</div>
+      </div>
+
+      <h2>১২. Common problems and fixes</h2>
+      <table class="route-table">
+        <thead><tr><th>Problem</th><th>Reason</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>cPanel-এ Setup Node.js App নেই</td><td>Plan Node.js support করে না</td><td>Hostever support-কে Node.js support enable করতে বলুন অথবা VPS/Node plan নিন</td></tr>
+          <tr><td>500 error</td><td>Missing env, build missing, DB connection fail</td><td>cPanel app logs দেখুন, env verify করুন, <code>npm run build</code> run করুন</td></tr>
+          <tr><td>Login callback wrong</td><td><code>NEXTAUTH_URL</code> ভুল</td><td>HTTPS live domain দিয়ে set করে app restart করুন</td></tr>
+          <tr><td>Image upload fail</td><td>Cloudinary env missing</td><td>Cloudinary keys set করুন</td></tr>
+          <tr><td>Shipping old value দেখায়</td><td>Cache/browser old state</td><td>Admin save করুন, app refresh করুন; current code <code>/api/settings</code> no-store ব্যবহার করে</td></tr>
+          <tr><td>Stripe payment fail</td><td>Wrong key/webhook/domain</td><td>Stripe live/test mode মিলিয়ে keys set করুন, webhook URL add করুন</td></tr>
+          <tr><td>Prisma connection closed</td><td>DB pooling/region issue</td><td>Neon pooled URL, connection_limit, pool_timeout use করুন</td></tr>
+        </tbody>
+      </table>
+
+      <h2>১৩. Final handover checklist</h2>
+      <ul>
+        <li>Hostever cPanel Node.js support confirmed.</li>
+        <li>Domain and SSL active.</li>
+        <li>All env variables set in cPanel, not in public files.</li>
+        <li>Neon database connected and schema pushed.</li>
+        <li>Admin user created and login tested.</li>
+        <li>Home, shop, product, cart, checkout, order confirmation tested.</li>
+        <li>Admin product, order, shipping/payment settings tested.</li>
+        <li>Email, Stripe, Cloudinary configured if client needs them live now.</li>
+        <li>Backup plan documented: GitHub repo + Neon backup/export + cPanel file backup.</li>
+      </ul>
+
+      <div class="footer">
+        Prepared for Best Mart. This guide does not include real production secret values. Hostever cPanel screens may vary by plan; if Node.js tools are missing, contact Hostever support or use a VPS/Node-supported package.
+      </div>
+    </main>
+  </body>
+</html>

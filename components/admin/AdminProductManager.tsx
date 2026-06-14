@@ -382,6 +382,22 @@ export function AdminProductManager({
     }));
   };
 
+  const addUploadedImages = (urls: string[]) => {
+    setForm((current) => {
+      const filledImages = current.images.filter((image) => image.url.trim());
+      const uploadedImages = urls.map((url, index) => ({
+        url,
+        alt: form.nameEn || `Product image ${filledImages.length + index + 1}`,
+        sortOrder: String(filledImages.length + index)
+      }));
+
+      return {
+        ...current,
+        images: [...filledImages, ...uploadedImages]
+      };
+    });
+  };
+
   const removeImage = (index: number) => {
     setForm((current) => ({
       ...current,
@@ -950,8 +966,10 @@ export function AdminProductManager({
                       label={`Image ${index + 1}`}
                       value={image.url}
                       onChange={(value) => updateImage(index, "url", value)}
+                      onUploadMany={addUploadedImages}
                       previewAlt={image.alt || form.nameEn}
                       aspectClassName="aspect-[4/3]"
+                      multiple
                     />
                     <div className="grid gap-3 sm:grid-cols-[1fr_96px_auto]">
                       <input

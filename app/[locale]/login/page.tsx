@@ -28,7 +28,8 @@ export default function LoginPage({ params, searchParams }: LoginPageProps) {
   }
 
   const dictionary = getDictionary(locale);
-  const callbackUrl = searchParams?.callbackUrl ?? `/${locale}/account`;
+  // Default to home page after login
+  const callbackUrl = searchParams?.callbackUrl ?? `/${locale}`;
 
   return (
     <main className="mx-auto grid min-h-[70vh] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">

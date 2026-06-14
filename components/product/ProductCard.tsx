@@ -11,9 +11,10 @@ type ProductCardProps = {
   product: Product;
   locale: Locale;
   dictionary: Dictionary;
+  priority?: boolean; // For LCP optimization
 };
 
-export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
+export function ProductCard({ product, locale, dictionary, priority = false }: ProductCardProps) {
   const colorLabel = locale === "ar" ? "الألوان" : "Colors";
   const hasSale = product.comparePrice && product.comparePrice > product.price;
   const colorSwatches = product.variants.reduce<typeof product.variants>((items, variant) => {
@@ -45,6 +46,7 @@ export function ProductCard({ product, locale, dictionary }: ProductCardProps) {
           fill
           sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 50vw"
           className="object-cover transition duration-500 group-hover:scale-105"
+          priority={priority}
         />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 sm:left-3 sm:top-3 rtl:left-auto rtl:right-2 sm:rtl:right-3">
           {product.isFeatured ? <Badge tone="gold">{dictionary.common.featured}</Badge> : null}

@@ -68,21 +68,35 @@ export default async function HomePage({ params }: { params: { locale: string } 
     getStoreCategories(),
     getActiveBanners(3)
   ]);
-  const heroSlides: HeroSlide[] = banners.map((banner) => ({
-    id: banner.id,
-    title: locale === "ar" ? banner.titleAr : banner.titleEn,
-    subtitle:
-      locale === "ar"
-        ? banner.subtitleAr || dictionary.home.subtitle
-        : banner.subtitleEn || dictionary.home.subtitle,
-    buttonText:
-      locale === "ar"
-        ? banner.buttonTextAr || dictionary.actions.shopNow
-        : banner.buttonTextEn || dictionary.actions.shopNow,
-    href: getLocalizedPath(locale, banner.buttonLink),
-    desktopImage: safeRemoteImage(banner.desktopImage, fallbackHeroImage, { width: 1800 }),
-    mobileImage: safeRemoteImage(banner.mobileImage, "", { width: 900 })
-  }));
+  const heroSlides: HeroSlide[] = banners.map((banner) => {
+    const desktopUrl = safeRemoteImage(banner.desktopImage, fallbackHeroImage, { width: 1800 });
+    const mobileUrl = safeRemoteImage(banner.mobileImage, "", { width: 900 });
+    
+    // Detect if banner is a video
+    const isDesktopVideo = Boolean(banner.desktopImage && (
+      banner.desktopImage.includes('.mp4') || 
+      banner.desktopImage.includes('.webm') || 
+      banner.desktopImage.includes('.mov') ||
+      banner.desktopImage.includes('/video/')
+    ));
+    
+    return {
+      id: banner.id,
+      title: locale === "ar" ? banner.titleAr : banner.titleEn,
+      subtitle:
+        locale === "ar"
+          ? banner.subtitleAr || dictionary.home.subtitle
+          : banner.subtitleEn || dictionary.home.subtitle,
+      buttonText:
+        locale === "ar"
+          ? banner.buttonTextAr || dictionary.actions.shopNow
+          : banner.buttonTextEn || dictionary.actions.shopNow,
+      href: getLocalizedPath(locale, banner.buttonLink),
+      desktopImage: isDesktopVideo ? banner.desktopImage : desktopUrl,
+      mobileImage: mobileUrl,
+      isVideo: isDesktopVideo
+    };
+  });
   const fallbackSlide: HeroSlide = {
     id: "fallback",
     title: dictionary.home.title,

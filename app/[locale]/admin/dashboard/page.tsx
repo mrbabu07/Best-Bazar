@@ -193,7 +193,9 @@ async function loadDashboardDataWithRetry() {
     console.error("Admin dashboard data load failed. Retrying once.", error);
 
     try {
-      await prisma.$disconnect();
+      // DO NOT call $disconnect() - it breaks the singleton pattern
+      // Just retry the operation - connection pool will handle recovery
+      await new Promise(resolve => setTimeout(resolve, 100));
       return await loadDashboardData();
     } catch (retryError) {
       console.error("Admin dashboard data load failed after retry.", retryError);

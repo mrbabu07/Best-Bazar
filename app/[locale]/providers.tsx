@@ -1,12 +1,13 @@
 "use client";
 
 import { Suspense, type ReactNode } from "react";
+import { SessionProvider } from "next-auth/react";
 import { NavigationFeedback } from "@/components/layout/NavigationFeedback";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <>
+    <SessionProvider>
       <Suspense fallback={null}>
         <NavigationFeedback />
       </Suspense>
@@ -21,6 +22,6 @@ export function Providers({ children }: { children: ReactNode }) {
           }
         }}
       />
-    </>
+    </SessionProvider>
   );
 }

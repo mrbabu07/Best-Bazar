@@ -1,0 +1,55 @@
+# Vercel Ignore File
+# Files and folders that should not be uploaded to Vercel
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+
+# Production
+build/
+dist/
+
+# Environment files (use Vercel dashboard for env vars)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Documentation (optional - comment out if you want these on Vercel)
+*.md
+!README.md
+
+# Scripts (local dev only)
+scripts/
+
+# Public uploads (if using local storage)
+public/uploads/

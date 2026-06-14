@@ -3,6 +3,7 @@ import { Save } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AdminSettingsForm } from "@/components/admin/AdminSettingsForm";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { normalizeCourierSettings } from "@/lib/courier-config";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { normalizePaymentSettings } from "@/lib/payment-config";
 import { prisma } from "@/lib/prisma";
@@ -46,6 +47,7 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
     aedToBdt: String(settings.aedToBdt),
     aedToUsd: String(settings.aedToUsd),
     freeShippingThreshold: String(settings.freeShippingThreshold),
+    courierSettings: normalizeCourierSettings(settings.courierSettings),
     paymentSettings,
     themeSettings: normalizeThemeSettings(settings.themeSettings),
     shippingRates: shippingSettings.shippingRates.map((rate) => ({

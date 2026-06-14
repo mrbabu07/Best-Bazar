@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
-import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
+import { AdminMediaUploadField } from "@/components/admin/AdminMediaUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
@@ -230,19 +230,23 @@ export function AdminBannerManager({ locale, banners }: AdminBannerManagerProps)
               className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
           </label>
-          <AdminImageUploadField
-            label="Desktop image"
+          <AdminMediaUploadField
+            label="Desktop image or video"
             value={form.desktopImage}
             onChange={(value) => updateForm("desktopImage", value)}
             previewAlt={form.titleEn}
             aspectClassName="aspect-[16/9]"
+            acceptVideo={true}
+            acceptImage={true}
           />
-          <AdminImageUploadField
-            label="Mobile image"
+          <AdminMediaUploadField
+            label="Mobile image or video"
             value={form.mobileImage}
             onChange={(value) => updateForm("mobileImage", value)}
             previewAlt={form.titleEn}
             aspectClassName="aspect-[4/5]"
+            acceptVideo={true}
+            acceptImage={true}
           />
           <label className="flex items-center gap-2 text-sm font-semibold text-navy">
             <input

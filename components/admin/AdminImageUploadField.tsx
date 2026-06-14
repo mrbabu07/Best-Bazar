@@ -11,16 +11,20 @@ type AdminImageUploadFieldProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onUploadMany?: (values: string[]) => void;
   previewAlt: string;
   aspectClassName?: string;
+  multiple?: boolean;
 };
 
 export function AdminImageUploadField({
   label,
   value,
   onChange,
+  onUploadMany,
   previewAlt,
-  aspectClassName = "aspect-[4/3]"
+  aspectClassName = "aspect-[4/3]",
+  multiple = false
 }: AdminImageUploadFieldProps) {
   const [uploading, setUploading] = useState(false);
   const canPreview = isAllowedRemoteImage(value);
@@ -28,24 +32,44 @@ export function AdminImageUploadField({
   const uploadFile = async (file: File) => {
     const formData = new FormData();
     formData.set("file", file);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData
+    });
+    const result = await safeResponseJson<{ error?: string; secureUrl?: string }>(response, {});
+
+    if (!response.ok) {
+      throw new Error(result?.error ?? "Unable to upload image.");
+    }
+
+    if (!result?.secureUrl) {
+      throw new Error("Uploaded image URL was not returned.");
+    }
+
+    return result.secureUrl;
+  };
+
+  const uploadFiles = async (files: File[]) => {
     setUploading(true);
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-      const result = await safeResponseJson<{ error?: string; secureUrl?: string }>(response, {});
+      const uploadedUrls: string[] = [];
 
-      if (!response.ok) {
-        throw new Error(result?.error ?? "Unable to upload image.");
+      for (const file of files) {
+        uploadedUrls.push(await uploadFile(file));
       }
 
-      if (!result?.secureUrl) {
-        throw new Error("Uploaded image URL was not returned.");
+      if (multiple && uploadedUrls.length > 1) {
+        onUploadMany?.(uploadedUrls);
+        if (!onUploadMany) {
+          onChange(uploadedUrls[0]);
+        }
+        toast.success(`${uploadedUrls.length} images uploaded`);
+        return;
       }
 
-      onChange(result.secureUrl);
+      onChange(uploadedUrls[0]);
       toast.success("Image uploaded");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to upload image.");
@@ -76,16 +100,17 @@ export function AdminImageUploadField({
       />
       <label className="flex h-24 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gold-300 bg-gold-50 text-sm font-bold text-navy hover:bg-gold-100">
         <ImagePlus size={18} />
-        {uploading ? "Uploading..." : "Upload image"}
+        {uploading ? "Uploading..." : multiple ? "Upload image(s)" : "Upload image"}
         <input
           type="file"
           accept="image/*"
+          multiple={multiple}
           disabled={uploading}
           className="sr-only"
           onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) {
-              void uploadFile(file);
+            const files = Array.from(event.target.files ?? []);
+            if (files.length) {
+              void uploadFiles(files);
             }
             event.currentTarget.value = "";
           }}

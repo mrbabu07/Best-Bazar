@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { AppFrame } from "@/components/layout/AppFrame";
+import { NavigationProgress } from "@/components/layout/NavigationProgress";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { getCachedPublicSettings } from "@/lib/settings";
 import { normalizeThemeSettings } from "@/lib/theme-config";
@@ -29,7 +31,30 @@ export const metadata: Metadata = {
     default: "Best Mart",
     template: "%s | Best Mart"
   },
-  description: "Luxury Dubai-based online shopping experience."
+  description: "Luxury Dubai-based online shopping experience.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Best Mart",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Best Mart",
+    title: "Best Mart - Dubai Online Shopping",
+    description: "Luxury Dubai-based online shopping experience",
+  },
+  twitter: {
+    card: "summary",
+    title: "Best Mart - Dubai Online Shopping",
+    description: "Luxury Dubai-based online shopping experience",
+  },
 };
 
 async function getFrameSettings() {
@@ -78,10 +103,12 @@ export default async function LocaleLayout({
       className={`${inter.variable} ${cairo.variable}`}
     >
       <body className={isArabic ? "font-[var(--font-cairo)]" : "font-[var(--font-inter)]"}>
+        <NavigationProgress />
         <Providers>
           <AppFrame locale={params.locale} dictionary={dictionary} settings={settings}>
             {children}
           </AppFrame>
+          <PWAInstallPrompt />
         </Providers>
       </body>
     </html>

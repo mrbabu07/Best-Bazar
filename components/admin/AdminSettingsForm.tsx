@@ -1,11 +1,12 @@
 "use client";
 
-import { CreditCard, HandCoins, Save } from "lucide-react";
+import { CreditCard, HandCoins, Save, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { Button } from "@/components/ui/Button";
+import { courierProviderOptions, type CourierSettings } from "@/lib/courier-config";
 import type { Locale } from "@/lib/i18n";
 import type { PaymentSettings } from "@/lib/payment-config";
 import { safeResponseJson } from "@/lib/safe-json";
@@ -43,6 +44,7 @@ export type AdminSettingsData = {
   aedToBdt: string;
   aedToUsd: string;
   freeShippingThreshold: string;
+  courierSettings: CourierSettings;
   paymentSettings: PaymentSettings;
   themeSettings: ThemeSettings;
   shippingRates: ShippingRate[];
@@ -124,6 +126,16 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
+  const updateCourier = <Key extends keyof CourierSettings>(key: Key, value: CourierSettings[Key]) => {
+    setForm((current) => ({
+      ...current,
+      courierSettings: {
+        ...current.courierSettings,
+        [key]: value
+      }
+    }));
+  };
+
   const stripeReady =
     Boolean(form.paymentSettings.stripe.secretKey.trim()) &&
     (form.paymentSettings.stripe.mode === "hosted_checkout" ||
@@ -182,6 +194,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       aedToBdt: Number(form.aedToBdt),
       aedToUsd: Number(form.aedToUsd),
       freeShippingThreshold: Number(form.freeShippingThreshold),
+      courierSettings: form.courierSettings,
       paymentSettings: form.paymentSettings,
       themeSettings: form.themeSettings,
       shippingRates: shippingRatesToRecord(
@@ -422,6 +435,125 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <Save size={16} />
             {saving ? "Saving..." : "Save Shipping Rates"}
           </Button>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-bold text-navy">
+              <Truck size={20} className="text-gold-700" />
+              Dubai courier integration
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-neutral-500">
+              Save courier provider details now; shipment booking and live tracking can be connected when the provider account is ready.
+            </p>
+          </div>
+          <label className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 bg-gold-50 px-3 text-xs font-black text-navy">
+            <input
+              type="checkbox"
+              checked={form.courierSettings.enabled}
+              onChange={(event) => updateCourier("enabled", event.target.checked)}
+              className="accent-gold-500"
+            />
+            Courier ready
+          </label>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Provider
+            <select
+              value={form.courierSettings.provider}
+              onChange={(event) => updateCourier("provider", event.target.value as CourierSettings["provider"])}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            >
+              {courierProviderOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Display name
+            <input
+              value={form.courierSettings.displayName}
+              onChange={(event) => updateCourier("displayName", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Pickup city
+            <input
+              value={form.courierSettings.pickupCity}
+              onChange={(event) => updateCourier("pickupCity", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Service level
+            <input
+              value={form.courierSettings.serviceLevel}
+              onChange={(event) => updateCourier("serviceLevel", event.target.value)}
+              placeholder="standard, same-day, express"
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Account number
+            <input
+              value={form.courierSettings.accountNumber}
+              onChange={(event) => updateCourier("accountNumber", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            API key
+            <input
+              type="password"
+              value={form.courierSettings.apiKey}
+              onChange={(event) => updateCourier("apiKey", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            API secret
+            <input
+              type="password"
+              value={form.courierSettings.apiSecret}
+              onChange={(event) => updateCourier("apiSecret", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Webhook secret
+            <input
+              type="password"
+              value={form.courierSettings.webhookSecret}
+              onChange={(event) => updateCourier("webhookSecret", event.target.value)}
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy md:col-span-2">
+            Tracking URL template
+            <input
+              value={form.courierSettings.trackingUrlTemplate}
+              onChange={(event) => updateCourier("trackingUrlTemplate", event.target.value)}
+              placeholder="https://provider.example/track/{trackingNumber}"
+              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy md:col-span-2">
+            Courier notes
+            <textarea
+              rows={3}
+              value={form.courierSettings.notes}
+              onChange={(event) => updateCourier("notes", event.target.value)}
+              placeholder="Pickup timing, contact person, API environment, or provider notes"
+              className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+            />
+          </label>
         </div>
       </section>
 

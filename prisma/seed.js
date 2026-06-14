@@ -497,6 +497,19 @@ async function main() {
         { emirate: "Fujairah", cost: 40, deliveryDays: "3-4" },
         { emirate: "Umm Al Quwain", cost: 35, deliveryDays: "3-4" }
       ],
+      courierSettings: {
+        enabled: false,
+        provider: "manual",
+        displayName: "Dubai delivery partner",
+        accountNumber: "",
+        apiKey: "",
+        apiSecret: "",
+        webhookSecret: "",
+        trackingUrlTemplate: "",
+        pickupCity: "Dubai",
+        serviceLevel: "standard",
+        notes: ""
+      },
       metaTitleEn: "Best Mart Dubai",
       metaTitleAr: "بيست مارت دبي",
       metaDescriptionEn: "Luxury Dubai ecommerce for gifts, fashion, electronics, beauty, and home.",
