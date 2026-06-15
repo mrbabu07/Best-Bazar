@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { LockKeyhole } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { BackButton } from "@/components/ui/BackButton";
+import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
 
 type LoginPageProps = {
@@ -20,7 +22,7 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
   };
 }
 
-export default function LoginPage({ params, searchParams }: LoginPageProps) {
+export default async function LoginPage({ params, searchParams }: LoginPageProps) {
   const locale = params.locale;
 
   if (!isLocale(locale)) {
@@ -29,7 +31,20 @@ export default function LoginPage({ params, searchParams }: LoginPageProps) {
 
   const dictionary = getDictionary(locale);
   // Default to home page after login
-  const callbackUrl = searchParams?.callbackUrl ?? `/${locale}`;
+  const fallbackUrl = `/${locale}`;
+  const callbackUrl =
+    searchParams?.callbackUrl?.startsWith(`/${locale}`) && !searchParams.callbackUrl.startsWith("//")
+      ? searchParams.callbackUrl
+      : fallbackUrl;
+  const session = await getServerSession(authOptions);
+
+  if (session?.user) {
+    if (callbackUrl.includes("/admin") && session.user.role !== "admin") {
+      redirect(fallbackUrl);
+    }
+
+    redirect(callbackUrl);
+  }
 
   return (
     <main className="mx-auto grid min-h-[70vh] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">

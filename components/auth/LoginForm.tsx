@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { getSession, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -69,7 +68,6 @@ const copy = {
 
 export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
   const labels = copy[locale];
-  const router = useRouter();
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,6 +78,24 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
   const fallbackUrl = `/${locale}`;
   const redirectTarget =
     callbackUrl?.startsWith(`/${locale}`) && !callbackUrl.startsWith("//") ? callbackUrl : fallbackUrl;
+
+  function resolveRedirectUrl(url?: string | null) {
+    if (!url) {
+      return redirectTarget;
+    }
+
+    try {
+      const parsed = new URL(url, window.location.origin);
+
+      if (parsed.origin === window.location.origin && parsed.pathname.startsWith(`/${locale}`)) {
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+      }
+    } catch {
+      return redirectTarget;
+    }
+
+    return redirectTarget;
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -120,11 +136,7 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
 
     toast.success(mode === "register" ? labels.accountCreated : labels.signedIn);
 
-    await getSession();
-
-    router.replace(result.url && result.url.startsWith("/") ? result.url : redirectTarget);
-    router.refresh();
-    setLoading(false);
+    window.location.replace(resolveRedirectUrl(result.url));
   };
 
   return (
