@@ -15,9 +15,11 @@ import {
 } from "@/utils/shipping";
 
 type PreferencesState = {
+  colorMode: "light" | "dark";
   currency: CurrencyCode;
   currencyRates: CurrencyRates;
   shippingSettings: ShippingSettings;
+  toggleColorMode: () => void;
   setCurrency: (currency: CurrencyCode) => void;
   setStorefrontSettings: (settings: {
     currencyRates: CurrencyRates;
@@ -28,9 +30,14 @@ type PreferencesState = {
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
+      colorMode: "light",
       currency: "AED",
       currencyRates: defaultCurrencyRates,
       shippingSettings: defaultShippingSettings,
+      toggleColorMode: () =>
+        set((state) => ({
+          colorMode: state.colorMode === "dark" ? "light" : "dark"
+        })),
       setCurrency: (currency) => set({ currency }),
       setStorefrontSettings: (settings) =>
         set({
@@ -41,7 +48,7 @@ export const usePreferencesStore = create<PreferencesState>()(
     {
       name: "best-mart-preferences",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ currency: state.currency })
+      partialize: (state) => ({ colorMode: state.colorMode, currency: state.currency })
     }
   )
 );

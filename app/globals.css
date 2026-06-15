@@ -86,6 +86,87 @@ body {
   box-shadow: 0 24px 70px color-mix(in srgb, var(--bb-primary) 22%, transparent);
 }
 
+.storefront-theme.dark {
+  color-scheme: dark;
+  --bb-dark-surface: #101624;
+  --bb-dark-panel: #151d2d;
+  --bb-dark-panel-soft: #1d2637;
+  --bb-dark-border: #2b3548;
+  --bb-dark-muted: #aab3c2;
+  --bb-dark-ink: #f6f7fb;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--bb-primary) 18%, transparent), transparent 30rem),
+    linear-gradient(180deg, #0b101b 0%, #111827 50%, #0b101b 100%);
+  color: var(--bb-dark-ink);
+}
+
+.storefront-theme.dark header,
+.storefront-theme.dark footer,
+.storefront-theme.dark .bg-white,
+.storefront-theme.dark .bg-paper {
+  background-color: var(--bb-dark-panel) !important;
+}
+
+.storefront-theme.dark header {
+  border-color: var(--bb-dark-border) !important;
+}
+
+.storefront-theme.dark .bg-white\/92 {
+  background-color: rgb(16 22 36 / 0.92) !important;
+}
+
+.storefront-theme.dark .text-navy,
+.storefront-theme.dark .text-ink,
+.storefront-theme.dark .text-neutral-900,
+.storefront-theme.dark .text-neutral-800,
+.storefront-theme.dark .text-neutral-700 {
+  color: var(--bb-dark-ink) !important;
+}
+
+.storefront-theme.dark .text-neutral-600,
+.storefront-theme.dark .text-neutral-500,
+.storefront-theme.dark .text-neutral-400 {
+  color: var(--bb-dark-muted) !important;
+}
+
+.storefront-theme.dark .border-neutral-100,
+.storefront-theme.dark .border-neutral-200,
+.storefront-theme.dark .border-gold-100,
+.storefront-theme.dark .border-gold-200 {
+  border-color: var(--bb-dark-border) !important;
+}
+
+.storefront-theme.dark input,
+.storefront-theme.dark select,
+.storefront-theme.dark textarea {
+  background-color: var(--bb-dark-surface) !important;
+  border-color: var(--bb-dark-border) !important;
+  color: var(--bb-dark-ink) !important;
+}
+
+.storefront-theme.dark input::placeholder,
+.storefront-theme.dark textarea::placeholder {
+  color: #7e899a !important;
+}
+
+.storefront-theme.dark .hover\:bg-gold-50:hover,
+.storefront-theme.dark .bg-gold-50,
+.storefront-theme.dark .bg-gold-100 {
+  background-color: var(--bb-dark-panel-soft) !important;
+}
+
+.storefront-theme.dark .shadow-soft,
+.storefront-theme.dark .shadow-lift {
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.34) !important;
+}
+
+.storefront-theme.dark table,
+.storefront-theme.dark thead,
+.storefront-theme.dark tbody,
+.storefront-theme.dark tr {
+  border-color: var(--bb-dark-border) !important;
+}
+
 button,
 a,
 input,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Globe2, LayoutDashboard, Menu, PackagePlus, Search, ShoppingBag, Truck, User, X } from "lucide-react";
+import { Bell, Globe2, LayoutDashboard, Menu, Moon, PackagePlus, Search, ShoppingBag, Sun, Truck, User, X } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/types";
@@ -45,10 +45,13 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
+  const storedColorMode = usePreferencesStore((state) => state.colorMode);
   const setCurrency = usePreferencesStore((state) => state.setCurrency);
+  const toggleColorMode = usePreferencesStore((state) => state.toggleColorMode);
   const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
   const cartCount = hydrated ? storedCartCount : 0;
   const currency = hydrated ? storedCurrency : "AED";
+  const colorMode = hydrated ? storedColorMode : "light";
 
   const navItems = [
     { label: dictionary.nav.home, href: `/${locale}` },
@@ -303,6 +306,15 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             {locale === "en" ? "AR" : "EN"}
           </Link>
 
+          <button
+            type="button"
+            onClick={toggleColorMode}
+            className="grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
+            aria-label={colorMode === "dark" ? "Use light mode" : "Use dark mode"}
+          >
+            {colorMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           <Link
             href={`/${locale}/admin/dashboard`}
             prefetch={false}
@@ -321,6 +333,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           </Link>
 
           <div className="relative">
+            <button
+              type="button"
+              onClick={toggleColorMode}
+              className="flex items-center justify-between rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
+            >
+              <span>{colorMode === "dark" ? "Light mode" : "Dark mode"}</span>
+              {colorMode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
             <button
               type="button"
               onClick={() => setNotificationsOpen((value) => !value)}

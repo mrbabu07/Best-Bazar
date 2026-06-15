@@ -12,6 +12,7 @@ import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
 export function StorefrontFrame({ children, locale, dictionary, settings }: StorefrontFrameProps) {
+  const colorMode = usePreferencesStore((state) => state.colorMode);
   const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
 
   useEffect(() => {
@@ -61,7 +62,7 @@ export function StorefrontFrame({ children, locale, dictionary, settings }: Stor
 
   return (
     <div
-      className={`storefront-theme min-h-screen theme-buttons-${settings.themeSettings.buttonStyle} theme-cards-${settings.themeSettings.productCardStyle}`}
+      className={`storefront-theme min-h-screen theme-buttons-${settings.themeSettings.buttonStyle} theme-cards-${settings.themeSettings.productCardStyle} ${colorMode === "dark" ? "dark" : "light"}`}
       style={storefrontThemeStyle(settings.themeSettings)}
     >
       <Header locale={locale} dictionary={dictionary} settings={settings} />
