@@ -20,11 +20,13 @@ export function PWAInstallPrompt() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
-      // Show prompt after 30 seconds
-      setTimeout(() => {
+
+      const dismissed = localStorage.getItem("pwa-prompt-dismissed");
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+      if (!dismissed || Date.now() - Number(dismissed) >= sevenDays) {
         setShowPrompt(true);
-      }, 30000);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -37,7 +39,7 @@ export function PWAInstallPrompt() {
   const handleInstall = async () => {
     if (!deferredPrompt) return;
 
-    deferredPrompt.prompt();
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") {
@@ -58,7 +60,7 @@ export function PWAInstallPrompt() {
   useEffect(() => {
     const dismissed = localStorage.getItem("pwa-prompt-dismissed");
     if (dismissed) {
-      const dismissedTime = parseInt(dismissed);
+      const dismissedTime = Number(dismissed);
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
       if (Date.now() - dismissedTime < sevenDays) {
         setShowPrompt(false);

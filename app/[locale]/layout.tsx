@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AppFrame } from "@/components/layout/AppFrame";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
-import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { getCachedPublicSettings } from "@/lib/settings";
 import { normalizeThemeSettings } from "@/lib/theme-config";
@@ -111,7 +110,6 @@ export default async function LocaleLayout({
           <AppFrame locale={params.locale} dictionary={dictionary} settings={settings}>
             {children}
           </AppFrame>
-          <PWAInstallPrompt />
         </Providers>
       </body>
     </html>
