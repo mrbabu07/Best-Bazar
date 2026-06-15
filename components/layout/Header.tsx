@@ -373,9 +373,16 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 ) : null}
               </button>
               {notificationsOpen ? (
-                <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-neutral-200 bg-white p-3 text-left shadow-lift rtl:left-0 rtl:right-auto rtl:text-right">
-                  <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-2">
-                    <p className="text-sm font-bold text-navy">Notifications</p>
+                <div className="fixed left-4 right-4 top-[4.75rem] z-50 rounded-lg border border-neutral-200 bg-white p-3 text-left shadow-lift sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80 rtl:text-right sm:rtl:left-0 sm:rtl:right-auto">
+                  <div className="flex items-start justify-between gap-3 border-b border-neutral-100 pb-3">
+                    <div>
+                      <p className="text-sm font-bold text-navy">Notifications</p>
+                      <p className="mt-1 text-xs font-semibold text-neutral-500">
+                        {visibleNotifications.length > 0
+                          ? `${visibleNotifications.length} update${visibleNotifications.length === 1 ? "" : "s"} available`
+                          : "You are all caught up"}
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setNotificationsOpen(false)}
@@ -385,32 +392,37 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                       <X size={15} />
                     </button>
                   </div>
-                  <div className="mt-2 grid gap-2">
+                  <div className="mt-3 grid max-h-[60vh] gap-2 overflow-y-auto pr-1">
                     {visibleNotifications.length > 0 ? (
                       visibleNotifications.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-start gap-2 rounded-md bg-paper p-3 transition hover:bg-gold-50"
+                          className="flex items-start gap-3 rounded-md border border-neutral-100 bg-paper p-3 transition hover:border-gold-200 hover:bg-gold-50"
                         >
                           <Link
                             href={item.href}
                             onClick={() => setNotificationsOpen(false)}
-                            className="flex min-w-0 flex-1 items-start gap-2"
+                            className="flex min-w-0 flex-1 items-start gap-3"
                           >
-                            {item.icon === "product" ? (
-                              <PackagePlus size={16} className="mt-0.5 shrink-0 text-gold-700" />
-                            ) : (
-                              <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
-                            )}
+                            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white text-gold-700 shadow-soft">
+                              {item.icon === "product" ? <PackagePlus size={17} /> : <Truck size={17} />}
+                            </span>
                             <div className="min-w-0">
-                              <p className="text-sm font-bold text-navy">{item.title}</p>
-                              <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-bold text-navy">{item.title}</p>
+                                <span className="rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-bold uppercase text-gold-700">
+                                  {item.icon === "product" ? "Product" : "Delivery"}
+                                </span>
+                              </div>
+                              <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-neutral-500">
+                                {item.detail}
+                              </p>
                             </div>
                           </Link>
                           <button
                             type="button"
                             onClick={() => dismissNotification(item.id)}
-                            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-neutral-400 hover:bg-white hover:text-sale"
+                            className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-neutral-400 hover:bg-white hover:text-sale"
                             aria-label="Dismiss notification"
                           >
                             <X size={14} />
@@ -418,7 +430,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                         </div>
                       ))
                     ) : (
-                      <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">No notifications</p>
+                      <div className="rounded-md border border-dashed border-neutral-200 bg-paper p-4 text-center">
+                        <p className="text-sm font-bold text-navy">No notifications</p>
+                        <p className="mt-1 text-xs font-semibold text-neutral-500">
+                          New products, delivery updates, and cart reminders will appear here.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
