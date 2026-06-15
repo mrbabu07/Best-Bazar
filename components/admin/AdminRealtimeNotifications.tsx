@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
  * Shows toast notifications for new orders and status updates
  */
 export function AdminRealtimeNotifications() {
-  const { socket, isConnected, notifications } = useAdminSocket();
+  const { socket, isConnected } = useAdminSocket();
 
   useEffect(() => {
     if (!isConnected) return;

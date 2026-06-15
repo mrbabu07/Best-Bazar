@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { AppFrame } from "@/components/layout/AppFrame";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
@@ -103,7 +104,9 @@ export default async function LocaleLayout({
       className={`${inter.variable} ${cairo.variable}`}
     >
       <body className={isArabic ? "font-[var(--font-cairo)]" : "font-[var(--font-inter)]"}>
-        <NavigationProgress />
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <Providers>
           <AppFrame locale={params.locale} dictionary={dictionary} settings={settings}>
             {children}

@@ -115,6 +115,7 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
     price: Number(product.price),
     comparePrice: toNumber(product.comparePrice),
     images,
+    shortVideoUrl: product.shortVideoUrl ?? undefined,
     stock: variants.length ? variantStock : product.stock,
     sku: product.sku,
     brand: product.brand,

@@ -23,6 +23,7 @@ import { FormEvent, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
+import { AdminMediaUploadField } from "@/components/admin/AdminMediaUploadField";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -91,6 +92,7 @@ export type AdminProductRow = {
   metaDescriptionEn: string;
   metaDescriptionAr: string;
   ogImage: string;
+  shortVideoUrl: string;
   slug: string;
   categoryId: string;
   categoryNameEn: string;
@@ -121,6 +123,7 @@ type ProductForm = {
   metaDescriptionEn: string;
   metaDescriptionAr: string;
   ogImage: string;
+  shortVideoUrl: string;
   slug: string;
   categoryId: string;
   subcategoryId: string;
@@ -159,6 +162,7 @@ function createEmptyForm(categoryId = ""): ProductForm {
     metaDescriptionEn: "",
     metaDescriptionAr: "",
     ogImage: "",
+    shortVideoUrl: "",
     slug: "",
     categoryId,
     subcategoryId: "",
@@ -189,6 +193,7 @@ function fromProduct(product: AdminProductRow): ProductForm {
     metaDescriptionEn: product.metaDescriptionEn,
     metaDescriptionAr: product.metaDescriptionAr,
     ogImage: product.ogImage,
+    shortVideoUrl: product.shortVideoUrl,
     slug: product.slug,
     categoryId: product.categoryId,
     subcategoryId: product.subcategoryId,
@@ -511,6 +516,7 @@ export function AdminProductManager({
       metaDescriptionEn: form.metaDescriptionEn || null,
       metaDescriptionAr: form.metaDescriptionAr || null,
       ogImage: form.ogImage || null,
+      shortVideoUrl: form.shortVideoUrl || null,
       slug: form.slug,
       categoryId: form.categoryId,
       subcategoryId: form.subcategoryId || null,
@@ -960,6 +966,18 @@ export function AdminProductManager({
                     Add image
                   </Button>
                 </div>
+                <AdminMediaUploadField
+                  label="Short product video"
+                  value={form.shortVideoUrl}
+                  onChange={(value) => updateForm("shortVideoUrl", value)}
+                  previewAlt={form.nameEn || "Product video"}
+                  aspectClassName="aspect-video"
+                  acceptVideo
+                  acceptImage={false}
+                />
+                <p className="-mt-2 text-xs font-semibold text-neutral-500">
+                  Optional. Upload a short MP4/WebM/MOV clip for the product details page.
+                </p>
                 {form.images.map((image, index) => (
                   <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
                     <AdminImageUploadField

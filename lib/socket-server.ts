@@ -1,6 +1,5 @@
 import { Server as HTTPServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import { prisma } from "@/lib/prisma";
 
 export type ServerToClientEvents = {
   "order:new": (data: { orderId: string; orderNumber: string; total: number }) => void;

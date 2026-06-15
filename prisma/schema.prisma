@@ -126,6 +126,7 @@ model Product {
   metaDescriptionEn String?             @db.Text
   metaDescriptionAr String?             @db.Text
   ogImage        String?
+  shortVideoUrl  String?
   slug           String                 @unique
   categoryId     String
   subcategoryId  String?

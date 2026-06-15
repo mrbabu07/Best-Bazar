@@ -140,6 +140,7 @@ export const productSchema = z.object({
   metaDescriptionEn: nullableString,
   metaDescriptionAr: nullableString,
   ogImage: nullableImageUrl,
+  shortVideoUrl: nullableString,
   slug: z.string().trim().min(1).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   categoryId: z.string().min(1),
   subcategoryId: nullableString,

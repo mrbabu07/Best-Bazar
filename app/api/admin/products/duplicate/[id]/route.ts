@@ -37,6 +37,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
         metaDescriptionEn: original.metaDescriptionEn,
         metaDescriptionAr: original.metaDescriptionAr,
         ogImage: original.ogImage,
+        shortVideoUrl: original.shortVideoUrl,
         slug: `${original.slug}-copy-${suffix}`,
         categoryId: original.categoryId,
         subcategoryId: original.subcategoryId,

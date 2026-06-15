@@ -5,7 +5,7 @@ import { FileVideo, ImagePlus } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { imageUrlValidationMessage, isAllowedRemoteImage } from "@/lib/images";
-import { safeResponseJson } from "@/lib/safe-json";
+import { uploadToCloudinary } from "@/lib/client-cloudinary-upload";
 
 type AdminMediaUploadFieldProps = {
   label: string;
@@ -39,24 +39,10 @@ export function AdminMediaUploadField({
   };
 
   const uploadFile = async (file: File) => {
-    const formData = new FormData();
-    formData.set("file", file);
     setUploading(true);
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-      const result = await safeResponseJson<{ error?: string; secureUrl?: string; resourceType?: string }>(response, {});
-
-      if (!response.ok) {
-        throw new Error(result?.error ?? "Unable to upload file.");
-      }
-
-      if (!result?.secureUrl) {
-        throw new Error("Uploaded file URL was not returned.");
-      }
+      const result = await uploadToCloudinary(file, "best-mart/media");
 
       onChange(result.secureUrl);
       const fileType = result.resourceType === 'video' ? 'Video' : 'Image';
@@ -99,7 +85,7 @@ export function AdminMediaUploadField({
       />
       <label className="flex h-24 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-gold-300 bg-gold-50 text-sm font-bold text-navy hover:bg-gold-100">
         {acceptVideo ? <FileVideo size={18} /> : <ImagePlus size={18} />}
-        {uploading ? "Uploading..." : acceptVideo ? "Upload image or video" : "Upload image"}
+        {uploading ? "Uploading..." : acceptVideo && acceptImage ? "Upload image or video" : acceptVideo ? "Upload video" : "Upload image"}
         <input
           type="file"
           accept={getAcceptTypes()}

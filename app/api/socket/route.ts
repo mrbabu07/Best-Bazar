@@ -1,10 +1,8 @@
-import { NextRequest } from "next/server";
-
 /**
  * Socket.IO endpoint
  * This is a placeholder - actual Socket.IO server runs in server.js
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   return new Response(
     JSON.stringify({
       message: "Socket.IO server is running",

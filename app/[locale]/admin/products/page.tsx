@@ -54,6 +54,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
     metaDescriptionEn: product.metaDescriptionEn ?? "",
     metaDescriptionAr: product.metaDescriptionAr ?? "",
     ogImage: product.ogImage ?? "",
+    shortVideoUrl: product.shortVideoUrl ?? "",
     slug: product.slug,
     categoryId: product.categoryId,
     categoryNameEn: product.category.nameEn,

@@ -197,6 +197,19 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             </button>
           ))}
         </div>
+        {product.shortVideoUrl ? (
+          <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-black shadow-soft">
+            <video
+              src={product.shortVideoUrl}
+              controls
+              playsInline
+              preload="metadata"
+              className="aspect-video w-full bg-black object-contain"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        ) : null}
       </div>
 
       <div className="lg:pt-4">

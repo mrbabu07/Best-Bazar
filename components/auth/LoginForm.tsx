@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -69,7 +68,6 @@ const copy = {
 
 export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
   const labels = copy[locale];
-  const router = useRouter();
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

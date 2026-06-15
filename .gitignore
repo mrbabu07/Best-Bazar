@@ -22,6 +22,7 @@ dev-server*.log
 # env files
 .env
 .env*.local
+QUICK_ENV_COPY.md
 
 # vercel
 .vercel

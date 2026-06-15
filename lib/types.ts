@@ -79,6 +79,7 @@ export type Product = {
   price: number;
   comparePrice?: number;
   images: ProductImage[];
+  shortVideoUrl?: string;
   stock: number;
   sku: string;
   brand: string;
