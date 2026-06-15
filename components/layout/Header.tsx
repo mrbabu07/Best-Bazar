@@ -2,16 +2,29 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Globe2, LayoutDashboard, Menu, Moon, PackagePlus, Search, ShoppingBag, Sun, Truck, User, X } from "lucide-react";
+import {
+  Bell,
+  Globe2,
+  LayoutDashboard,
+  Menu,
+  Moon,
+  PackagePlus,
+  Search,
+  ShoppingBag,
+  Sun,
+  Truck,
+  User,
+  X
+} from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
-import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/types";
 import { useHydrated } from "@/hooks/useHydrated";
+import { safeJsonParse, safeResponseJson } from "@/lib/safe-json";
+import type { Dictionary, Locale } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
-import { currencyOptions, type CurrencyCode } from "@/utils/currency";
 import { cn } from "@/utils/cn";
-import { safeJsonParse, safeResponseJson } from "@/lib/safe-json";
+import { currencyOptions, type CurrencyCode } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
 type HeaderProps = {
@@ -69,7 +82,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     ...(liveSettings.announcementActive && announcement
       ? [
           {
-            title: locale === "ar" ? "إعلان المتجر" : "Store announcement",
+            title: locale === "ar" ? "Store announcement" : "Store announcement",
             id: `announcement:${announcement}`,
             detail: announcement,
             href: `/${locale}/shop`
@@ -80,37 +93,33 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       const productName = locale === "ar" ? product.name?.ar || product.name?.en : product.name?.en || product.name?.ar;
 
       return {
-        title: locale === "ar" ? "منتج جديد" : "New product",
+        title: locale === "ar" ? "New product" : "New product",
         id: product.id,
-        detail: productName ?? (locale === "ar" ? "منتج جديد متاح الآن" : "A new product is available now"),
+        detail: productName ?? "A new product is available now",
         href: (locale === "ar" ? product.href?.ar : product.href?.en) ?? `/${locale}/shop`,
         icon: "product" as const
       };
     }),
     {
-      title: locale === "ar" ? "توصيل دبي" : "Dubai delivery",
+      title: locale === "ar" ? "Dubai delivery" : "Dubai delivery",
       id: `delivery:${dubaiRate?.emirate ?? "uae"}:${dubaiRate?.deliveryDays ?? "available"}`,
-      detail: dubaiRate?.deliveryDays
-        ? `${dubaiRate.emirate}: ${dubaiRate.deliveryDays} days`
-        : locale === "ar"
-          ? "توصيل داخل الإمارات"
-          : "UAE delivery available",
+      detail: dubaiRate?.deliveryDays ? `${dubaiRate.emirate}: ${dubaiRate.deliveryDays} days` : "UAE delivery available",
       href: `/${locale}/checkout`,
       icon: "delivery" as const
     },
     {
-      title: locale === "ar" ? "توصيل مجاني" : "Free shipping",
+      title: locale === "ar" ? "Free shipping" : "Free shipping",
       id: `free-shipping:${freeShippingThreshold}`,
-      detail: `${locale === "ar" ? "فوق" : "Above"} AED ${freeShippingThreshold}`,
+      detail: `${locale === "ar" ? "Above" : "Above"} AED ${freeShippingThreshold}`,
       href: `/${locale}/checkout`,
       icon: "delivery" as const
     },
     ...(cartCount > 0
       ? [
           {
-            title: locale === "ar" ? "السلة" : "Cart reminder",
+            title: locale === "ar" ? "Cart reminder" : "Cart reminder",
             id: `cart:${cartCount}`,
-            detail: `${cartCount} ${locale === "ar" ? "منتج في السلة" : "item ready in cart"}`,
+            detail: `${cartCount} ${cartCount === 1 ? "item" : "items"} ready in cart`,
             href: `/${locale}/cart`,
             icon: "delivery" as const
           }
@@ -118,6 +127,11 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       : [])
   ];
   const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
+  const activeLinkClass = "bg-gold-50 text-navy";
+  const iconButtonClass =
+    "grid h-10 w-10 shrink-0 place-items-center rounded-md border border-gold-200 text-navy transition hover:bg-gold-50";
+  const mobileLinkClass =
+    "flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:border-gold-200 hover:bg-gold-50";
 
   useEffect(() => {
     setLiveSettings(settings);
@@ -233,227 +247,203 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 border-b border-gold-100 bg-white/92 backdrop-blur-xl">
       {liveSettings.announcementActive && announcement ? (
-        <div className="bg-navy px-4 py-2 text-center text-xs font-semibold text-white">
+        <div className="bg-navy px-4 py-2 text-center text-xs font-semibold leading-5 text-white">
           {announcement}
         </div>
       ) : null}
-      <div className="mx-auto flex h-20 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className="grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy lg:hidden"
-          aria-label="Toggle navigation"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
 
-        <Link href={`/${locale}`} className="shrink-0 text-2xl font-bold text-navy">
-          {brandName || dictionary.brand}
-        </Link>
-
-        <nav className="hidden items-center gap-1 lg:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "rounded-md px-3 py-2 text-sm font-semibold text-neutral-600 transition hover:bg-gold-50 hover:text-navy",
-                (pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
-                  "bg-gold-50 text-navy"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <form onSubmit={submitSearch} className="ml-auto hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex">
-          <label className="relative w-full max-w-sm">
-            <Search
-              size={18}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={dictionary.nav.search}
-              className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
-            />
-          </label>
-        </form>
-
-        <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <select
-            value={currency}
-            onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
-            className="h-10 rounded-md border border-gold-200 bg-white px-2 text-xs font-bold text-navy"
-            aria-label="Currency"
-          >
-            {currencyOptions.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <Link
-            href={switchLocalePath(locale === "en" ? "ar" : "en")}
-            onClick={() => persistLocale(locale === "en" ? "ar" : "en")}
-            className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy hover:bg-gold-50"
-          >
-            <Globe2 size={17} />
-            {locale === "en" ? "AR" : "EN"}
-          </Link>
-
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-16 items-center gap-2 py-3 lg:min-h-20 lg:gap-4">
           <button
             type="button"
-            onClick={toggleColorMode}
-            className="grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
-            aria-label={colorMode === "dark" ? "Use light mode" : "Use dark mode"}
+            onClick={() => setOpen((value) => !value)}
+            className={`${iconButtonClass} lg:hidden`}
+            aria-label="Toggle navigation"
+            aria-expanded={open}
           >
-            {colorMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {open ? <X size={20} /> : <Menu size={20} />}
           </button>
 
           <Link
-            href={`/${locale}/admin/dashboard`}
-            prefetch={false}
-            className="hidden h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50 sm:grid"
-            aria-label={dictionary.nav.admin}
+            href={`/${locale}`}
+            onClick={() => setOpen(false)}
+            className="min-w-0 max-w-[44vw] shrink truncate text-xl font-bold text-navy sm:max-w-none sm:text-2xl"
           >
-            <LayoutDashboard size={18} />
+            {brandName || dictionary.brand}
           </Link>
 
-          <Link
-            href={`/${locale}/account`}
-            className="hidden h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50 sm:grid"
-            aria-label={dictionary.nav.account}
-          >
-            <User size={18} />
-          </Link>
+          <nav className="hidden shrink-0 items-center gap-1 lg:flex">
+            {navItems.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-          <div className="relative">
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "rounded-md px-3 py-2 text-sm font-bold text-neutral-600 transition hover:bg-gold-50 hover:text-navy xl:px-4",
+                    active && activeLinkClass
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <form onSubmit={submitSearch} className="ml-auto hidden min-w-[180px] flex-1 justify-end md:flex">
+            <label className="relative w-full max-w-xs xl:max-w-md">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
+              />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={dictionary.nav.search}
+                className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
+              />
+            </label>
+          </form>
+
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0 lg:gap-2">
+            <select
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
+              className="hidden h-10 rounded-md border border-gold-200 bg-white px-2 text-xs font-bold text-navy sm:block"
+              aria-label="Currency"
+            >
+              {currencyOptions.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <Link
+              href={switchLocalePath(locale === "en" ? "ar" : "en")}
+              onClick={() => persistLocale(locale === "en" ? "ar" : "en")}
+              className="hidden h-10 shrink-0 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy transition hover:bg-gold-50 sm:inline-flex"
+            >
+              <Globe2 size={17} />
+              {locale === "en" ? "AR" : "EN"}
+            </Link>
+
             <button
               type="button"
               onClick={toggleColorMode}
-              className="flex items-center justify-between rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
+              className={iconButtonClass}
+              aria-label={colorMode === "dark" ? "Use light mode" : "Use dark mode"}
             >
-              <span>{colorMode === "dark" ? "Light mode" : "Dark mode"}</span>
-              {colorMode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+              {colorMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <button
-              type="button"
-              onClick={() => setNotificationsOpen((value) => !value)}
-              className="relative grid h-10 w-10 place-items-center rounded-md border border-gold-200 text-navy hover:bg-gold-50"
-              aria-label={locale === "ar" ? "الإشعارات" : "Notifications"}
-              aria-expanded={notificationsOpen}
+
+            <Link
+              href={`/${locale}/admin/dashboard`}
+              prefetch={false}
+              className={`hidden ${iconButtonClass} sm:grid`}
+              aria-label={dictionary.nav.admin}
             >
-              <Bell size={18} />
-              {visibleNotifications.length > 0 ? (
+              <LayoutDashboard size={18} />
+            </Link>
+
+            <Link
+              href={`/${locale}/account`}
+              className={`hidden ${iconButtonClass} sm:grid`}
+              aria-label={dictionary.nav.account}
+            >
+              <User size={18} />
+            </Link>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen((value) => !value)}
+                className={`relative ${iconButtonClass}`}
+                aria-label={locale === "ar" ? "Notifications" : "Notifications"}
+                aria-expanded={notificationsOpen}
+              >
+                <Bell size={18} />
+                {visibleNotifications.length > 0 ? (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
+                    {visibleNotifications.length}
+                  </span>
+                ) : null}
+              </button>
+              {notificationsOpen ? (
+                <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-neutral-200 bg-white p-3 text-left shadow-lift rtl:left-0 rtl:right-auto rtl:text-right">
+                  <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-2">
+                    <p className="text-sm font-bold text-navy">Notifications</p>
+                    <button
+                      type="button"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="grid h-7 w-7 place-items-center rounded-md text-neutral-500 hover:bg-paper"
+                      aria-label="Close notifications"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                  <div className="mt-2 grid gap-2">
+                    {visibleNotifications.length > 0 ? (
+                      visibleNotifications.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-start gap-2 rounded-md bg-paper p-3 transition hover:bg-gold-50"
+                        >
+                          <Link
+                            href={item.href}
+                            onClick={() => setNotificationsOpen(false)}
+                            className="flex min-w-0 flex-1 items-start gap-2"
+                          >
+                            {item.icon === "product" ? (
+                              <PackagePlus size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                            ) : (
+                              <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-navy">{item.title}</p>
+                              <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
+                            </div>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => dismissNotification(item.id)}
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-neutral-400 hover:bg-white hover:text-sale"
+                            aria-label="Dismiss notification"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">No notifications</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <Link
+              href={`/${locale}/cart`}
+              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-md bg-navy text-white transition hover:bg-neutral-800"
+              aria-label={dictionary.nav.cart}
+            >
+              <ShoppingBag size={18} />
+              {cartCount > 0 ? (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                  {visibleNotifications.length}
+                  {cartCount}
                 </span>
               ) : null}
-            </button>
-            {notificationsOpen ? (
-              <div className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-neutral-200 bg-white p-3 text-left shadow-lift rtl:left-0 rtl:right-auto rtl:text-right">
-                <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-2">
-                  <p className="text-sm font-bold text-navy">{locale === "ar" ? "الإشعارات" : "Notifications"}</p>
-                  <button
-                    type="button"
-                    onClick={() => setNotificationsOpen(false)}
-                    className="grid h-7 w-7 place-items-center rounded-md text-neutral-500 hover:bg-paper"
-                    aria-label="Close notifications"
-                  >
-                    <X size={15} />
-                  </button>
-                </div>
-                <div className="mt-2 grid gap-2">
-                  {visibleNotifications.length > 0 ? (
-                    visibleNotifications.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-start gap-2 rounded-md bg-paper p-3 transition hover:bg-gold-50"
-                      >
-                        <Link
-                          href={item.href}
-                          onClick={() => setNotificationsOpen(false)}
-                          className="flex min-w-0 flex-1 items-start gap-2"
-                        >
-                          {item.icon === "product" ? (
-                            <PackagePlus size={16} className="mt-0.5 shrink-0 text-gold-700" />
-                          ) : (
-                            <Truck size={16} className="mt-0.5 shrink-0 text-gold-700" />
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold text-navy">{item.title}</p>
-                            <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">{item.detail}</p>
-                          </div>
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => dismissNotification(item.id)}
-                          className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-neutral-400 hover:bg-white hover:text-sale"
-                          aria-label="Dismiss notification"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="rounded-md bg-paper p-3 text-sm font-semibold text-neutral-500">No notifications</p>
-                  )}
-                </div>
-              </div>
-            ) : null}
+            </Link>
           </div>
-
-          <Link
-            href={`/${locale}/cart`}
-            className="relative grid h-10 w-10 place-items-center rounded-md bg-navy text-white hover:bg-neutral-800"
-            aria-label={dictionary.nav.cart}
-          >
-            <ShoppingBag size={18} />
-            {cartCount > 0 ? (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                {cartCount}
-              </span>
-            ) : null}
-          </Link>
         </div>
       </div>
 
       {open ? (
-        <div className="border-t border-gold-100 bg-white px-4 py-4 lg:hidden">
-          <div className="grid gap-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link
-              href={`/${locale}/admin/dashboard`}
-              prefetch={false}
-              onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
-            >
-              {dictionary.nav.admin}
-            </Link>
-            <button
-              type="button"
-              onClick={() => setNotificationsOpen((value) => !value)}
-              className="flex items-center justify-between rounded-md px-3 py-3 text-sm font-semibold text-navy hover:bg-gold-50"
-            >
-              <span>{locale === "ar" ? "الإشعارات" : "Notifications"}</span>
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-sale px-1 text-[10px] font-bold text-white">
-                {visibleNotifications.length}
-              </span>
-            </button>
+        <div className="border-t border-gold-100 bg-white lg:hidden">
+          <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6">
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
@@ -467,6 +457,66 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
               />
             </form>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {navItems.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(mobileLinkClass, active && activeLinkClass)}
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+
+              <Link
+                href={`/${locale}/admin/dashboard`}
+                prefetch={false}
+                onClick={() => setOpen(false)}
+                className={mobileLinkClass}
+              >
+                <span>{dictionary.nav.admin}</span>
+                <LayoutDashboard size={17} />
+              </Link>
+
+              <Link
+                href={switchLocalePath(locale === "en" ? "ar" : "en")}
+                onClick={() => {
+                  persistLocale(locale === "en" ? "ar" : "en");
+                  setOpen(false);
+                }}
+                className={mobileLinkClass}
+              >
+                <span>{locale === "en" ? "Arabic" : "English"}</span>
+                <Globe2 size={17} />
+              </Link>
+
+              <button type="button" onClick={toggleColorMode} className={mobileLinkClass}>
+                <span>{colorMode === "dark" ? "Light mode" : "Dark mode"}</span>
+                {colorMode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+              </button>
+
+              <label className="grid gap-2 rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy sm:col-span-2">
+                Currency
+                <select
+                  value={currency}
+                  onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
+                  className="h-10 rounded-md border border-gold-200 bg-white px-2 text-xs font-bold text-navy"
+                  aria-label="Currency"
+                >
+                  {currencyOptions.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
         </div>
       ) : null}
