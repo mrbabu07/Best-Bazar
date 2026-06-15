@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { LockKeyhole, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -68,6 +69,7 @@ const copy = {
 
 export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
   const labels = copy[locale];
+  const router = useRouter();
   const [mode, setMode] = useState<"signin" | "register">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -75,6 +77,9 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const fallbackUrl = `/${locale}`;
+  const redirectTarget =
+    callbackUrl?.startsWith(`/${locale}`) && !callbackUrl.startsWith("//") ? callbackUrl : fallbackUrl;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -102,26 +107,24 @@ export function LoginForm({ locale, callbackUrl }: LoginFormProps) {
       email,
       password,
       redirect: false,
-      callbackUrl
+      callbackUrl: redirectTarget
     });
 
-    setLoading(false);
-
-    if (result?.error) {
+    if (!result?.ok || result.error) {
       const message = labels.invalidCredentials;
+      setLoading(false);
       setError(message);
       toast.error(labels.loginFailed);
       return;
     }
 
-    // Show success message
     toast.success(mode === "register" ? labels.accountCreated : labels.signedIn);
-    
-    // Redirect to callback URL or home page
-    const redirectUrl = result?.url || callbackUrl || `/${locale}`;
-    
-    // Use window.location for full page reload to ensure session is loaded
-    window.location.href = redirectUrl;
+
+    await getSession();
+
+    router.replace(result.url && result.url.startsWith("/") ? result.url : redirectTarget);
+    router.refresh();
+    setLoading(false);
   };
 
   return (
