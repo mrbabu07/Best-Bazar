@@ -5,6 +5,7 @@ import { optimizeCloudinaryImage } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const revalidate = 0;
 
 export async function POST(request: Request) {
   try {
@@ -51,15 +52,24 @@ export async function POST(request: Request) {
     });
     const secureUrl = isVideo ? upload.secure_url : optimizeCloudinaryImage(upload.secure_url, { width: 1800 });
 
-    return NextResponse.json({
-      publicId: upload.public_id,
-      secureUrl,
-      width: upload.width,
-      height: upload.height,
-      format: upload.format,
-      bytes: upload.bytes,
-      resourceType
-    });
+    return NextResponse.json(
+      {
+        publicId: upload.public_id,
+        secureUrl,
+        width: upload.width,
+        height: upload.height,
+        format: upload.format,
+        bytes: upload.bytes,
+        resourceType
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0"
+        }
+      }
+    );
   } catch (error) {
     return handleApiError(error);
   }

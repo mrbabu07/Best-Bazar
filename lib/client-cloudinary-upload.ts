@@ -1,6 +1,5 @@
 "use client";
 
-import { optimizeCloudinaryImage } from "@/lib/images";
 import { safeResponseJson } from "@/lib/safe-json";
 
 type UploadSignature = {
@@ -86,9 +85,39 @@ async function uploadWithSignature(file: File, resourceType: "image" | "video", 
   return upload.secure_url;
 }
 
+async function uploadThroughServer(file: File, folder: string) {
+  const formData = new FormData();
+  formData.set("file", file);
+  formData.set("folder", folder);
+
+  const response = await fetch(`/api/upload?ts=${Date.now()}`, {
+    method: "POST",
+    cache: "no-store",
+    body: formData
+  });
+  const upload = await safeResponseJson<{
+    secureUrl?: string;
+    resourceType?: "image" | "video";
+    error?: string;
+  }>(response, {});
+
+  if (!response.ok || !upload.secureUrl || !upload.resourceType) {
+    throw new Error(upload?.error ?? "Upload failed.");
+  }
+
+  return {
+    secureUrl: upload.secureUrl,
+    resourceType: upload.resourceType
+  };
+}
+
 export async function uploadToCloudinary(file: File, folder = "best-mart/uploads"): Promise<ClientUploadResult> {
   const resourceType = getResourceType(file);
   validateSize(file, resourceType);
+
+  if (resourceType === "image") {
+    return uploadThroughServer(file, folder);
+  }
 
   let signature = (await getFreshSignature(folder)) as Required<UploadSignature>;
   let secureUrl: string;
@@ -107,7 +136,7 @@ export async function uploadToCloudinary(file: File, folder = "best-mart/uploads
   }
 
   return {
-    secureUrl: resourceType === "image" ? optimizeCloudinaryImage(secureUrl, { width: 1800 }) : secureUrl,
+    secureUrl,
     resourceType
   };
 }

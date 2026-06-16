@@ -7,6 +7,16 @@ const withPWA = withPWAInit({
   skipWaiting: true,
   sw: "sw.js",
   scope: "/",
+  buildExcludes: [/middleware-manifest\.json$/],
+  runtimeCaching: [
+    {
+      urlPattern: /^https?:\/\/.*\/api\/upload(\/.*)?$/i,
+      handler: "NetworkOnly",
+      options: {
+        cacheName: "upload-api"
+      }
+    }
+  ],
 });
 
 /** @type {import('next').NextConfig} */
