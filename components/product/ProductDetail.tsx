@@ -49,11 +49,20 @@ const detailCopy = {
 >;
 
 function variantColorKey(variant: ProductVariant) {
-  return variant.colorName.en.trim().toLowerCase();
+  return variant.colorName.en.trim().toLowerCase() || variant.id;
 }
 
 function variantSizeKey(variant: ProductVariant) {
   return variant.sizeKey ?? variant.sizeName?.en.trim().toLowerCase() ?? "";
+}
+
+function cleanLengthSizeLabel(value: string) {
+  return value.replace(/^length\s+/i, "").trim();
+}
+
+function getVariantSizeLabel(variant: ProductVariant, locale: Locale) {
+  const label = variant.sizeName ? getLocalized(variant.sizeName, locale) : getLocalized(variant.name, locale);
+  return cleanLengthSizeLabel(label);
 }
 
 function uniqueVariantsBy(variants: ProductVariant[], getKey: (variant: ProductVariant) => string) {
@@ -66,7 +75,8 @@ function uniqueVariantsBy(variants: ProductVariant[], getKey: (variant: ProductV
 
 export function ProductDetail({ product, locale, dictionary }: ProductDetailProps) {
   const labels = detailCopy[locale];
-  const firstAvailableVariant = product.variants.find((variant) => variant.stock > 0) ?? product.variants[0];
+  const activeVariants = product.variants.filter((variant) => variant.isActive);
+  const firstAvailableVariant = activeVariants.find((variant) => variant.stock > 0) ?? activeVariants[0];
   const hydrated = useHydrated();
   const [activeImage, setActiveImage] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState(firstAvailableVariant?.id ?? "");
@@ -76,14 +86,14 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
-  const selectedVariant = product.variants.find((variant) => variant.id === selectedVariantId);
-  const hasSizedVariants = product.variants.some((variant) => variant.sizeName);
-  const colorOptions = uniqueVariantsBy(product.variants, variantColorKey);
+  const selectedVariant = activeVariants.find((variant) => variant.id === selectedVariantId);
+  const hasSizedVariants = activeVariants.some((variant) => variant.sizeName);
+  const colorOptions = uniqueVariantsBy(activeVariants, variantColorKey);
   const selectedColorKey = selectedVariant ? variantColorKey(selectedVariant) : "";
   const selectedSizeKey = selectedVariant ? variantSizeKey(selectedVariant) : "";
   const sizeOptions = hasSizedVariants
     ? uniqueVariantsBy(
-        product.variants.filter((variant) => variantColorKey(variant) === selectedColorKey),
+        activeVariants.filter((variant) => variantColorKey(variant) === selectedColorKey),
         variantSizeKey
       )
     : [];
@@ -130,7 +140,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   };
 
   const selectVariant = (variantId: string) => {
-    const variant = product.variants.find((item) => item.id === variantId);
+    const variant = activeVariants.find((item) => item.id === variantId);
 
     setSelectedVariantId(variantId);
     if (variant?.imageUrl) {
@@ -141,13 +151,13 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
   const selectColor = (variant: ProductVariant) => {
     const colorKey = variantColorKey(variant);
-    const sameSizeVariant = product.variants.find(
+    const sameSizeVariant = activeVariants.find(
       (item) => variantColorKey(item) === colorKey && variantSizeKey(item) === selectedSizeKey && item.stock > 0
     );
     const nextVariant =
       sameSizeVariant ??
-      product.variants.find((item) => variantColorKey(item) === colorKey && item.stock > 0) ??
-      product.variants.find((item) => variantColorKey(item) === colorKey);
+      activeVariants.find((item) => variantColorKey(item) === colorKey && item.stock > 0) ??
+      activeVariants.find((item) => variantColorKey(item) === colorKey);
 
     if (nextVariant) {
       selectVariant(nextVariant.id);
@@ -157,10 +167,10 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const selectSize = (variant: ProductVariant) => {
     const sizeKey = variantSizeKey(variant);
     const nextVariant =
-      product.variants.find(
+      activeVariants.find(
         (item) => variantColorKey(item) === selectedColorKey && variantSizeKey(item) === sizeKey && item.stock > 0
       ) ??
-      product.variants.find(
+      activeVariants.find(
         (item) => variantColorKey(item) === selectedColorKey && variantSizeKey(item) === sizeKey
       );
 
@@ -246,7 +256,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           ) : null}
         </div>
 
-        {product.variants.length ? (
+        {activeVariants.length ? (
           <div className="mt-6">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-bold text-navy">{labels.color}</p>
@@ -255,7 +265,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             <div className="mt-3 flex flex-wrap gap-2">
               {colorOptions.map((variant) => {
                 const selected = variantColorKey(variant) === selectedColorKey;
-                const colorStock = product.variants
+                const colorStock = activeVariants
                   .filter((item) => variantColorKey(item) === variantColorKey(variant))
                   .reduce((total, item) => total + item.stock, 0);
 
@@ -285,13 +295,19 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                 <div className="mt-3 flex flex-wrap gap-2">
                   {sizeOptions.map((variant) => {
                     const selected = variantSizeKey(variant) === selectedSizeKey;
+                    const stock = activeVariants
+                      .filter(
+                        (item) =>
+                          variantColorKey(item) === selectedColorKey && variantSizeKey(item) === variantSizeKey(variant)
+                      )
+                      .reduce((total, item) => total + Math.max(0, item.stock), 0);
 
                     return (
                       <button
                         key={`${variant.id}-${variantSizeKey(variant)}`}
                         type="button"
                         onClick={() => selectSize(variant)}
-                        disabled={variant.stock <= 0}
+                        disabled={stock <= 0}
                         aria-pressed={selected}
                         className={`inline-flex h-10 items-center rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
                           selected
@@ -299,7 +315,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                             : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
                         }`}
                       >
-                        {getLocalized(variant.sizeName ?? variant.name, locale)}
+                        {getVariantSizeLabel(variant, locale)}
                       </button>
                     );
                   })}

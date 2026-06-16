@@ -39,6 +39,10 @@ function getSizeKey(variant?: ProductVariant) {
   return variant?.sizeKey || variant?.sizeName?.en.trim().toLowerCase() || "";
 }
 
+function cleanLengthSizeLabel(value: string) {
+  return value.replace(/^length\s+/i, "").trim();
+}
+
 function uniqueSizeVariants(variants: ProductVariant[]) {
   return variants.reduce<ProductVariant[]>((items, variant) => {
     const key = getSizeKey(variant);
@@ -125,7 +129,7 @@ export function ProductCardAddButton({
 
               return (
                 <option key={key} value={key} disabled={stock <= 0}>
-                  {getLocalized(variant.sizeName ?? variant.name, locale)} - {stock} pcs
+                  {cleanLengthSizeLabel(getLocalized(variant.sizeName ?? variant.name, locale))} - {stock} pcs
                 </option>
               );
             })}

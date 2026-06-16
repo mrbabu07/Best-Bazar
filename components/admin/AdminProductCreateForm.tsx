@@ -683,14 +683,22 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </section>
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">SEO</p>
-            <h2 className="mt-1 text-xl font-bold text-navy">Search and sharing metadata</h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              Optional product-specific title, description, and image for Google and social sharing.
-            </p>
-          </div>
+        <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <summary className="flex cursor-pointer list-none flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Optional SEO</p>
+              <h2 className="mt-1 text-xl font-bold text-navy">Search and sharing metadata</h2>
+              <p className="mt-1 text-sm text-neutral-600">
+                Hidden by default. Open only when you want custom Google/social metadata.
+              </p>
+            </div>
+            <span className="inline-flex h-10 items-center justify-center rounded-md border border-gold-200 bg-gold-50 px-4 text-sm font-bold text-navy group-open:hidden">
+              Show SEO fields
+            </span>
+            <span className="hidden h-10 items-center justify-center rounded-md border border-neutral-200 bg-paper px-4 text-sm font-bold text-navy group-open:inline-flex">
+              Hide SEO fields
+            </span>
+          </summary>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-semibold text-navy">
               Meta title EN
@@ -740,7 +748,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               />
             </div>
           </div>
-        </section>
+        </details>
 
         <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

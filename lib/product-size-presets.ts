@@ -18,13 +18,11 @@ const sizePresets: Array<{
 }> = [
   {
     keywords: ["burka", "burqa", "abaya", "jilbab", "khimar", "kaftan", "modest"],
-    sizes: ["Length 50", "Length 52", "Length 54", "Length 56", "Length 58", "Length 60", "Length 62"].map(
-      (size) => ({
-        key: size.toLowerCase().replace(/\s+/g, "-"),
-        nameEn: size,
-        nameAr: size
-      })
-    )
+    sizes: ["50", "52", "54", "56", "58", "60", "62"].map((size) => ({
+      key: `length-${size}`,
+      nameEn: size,
+      nameAr: size
+    }))
   },
   {
     keywords: ["shoe", "footwear", "sneaker", "sandal", "boot"],
