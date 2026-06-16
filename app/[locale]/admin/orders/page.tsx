@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Prisma } from "@prisma/client";
 import { Download, Search } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
@@ -9,6 +10,7 @@ import { AdminPrintButton } from "@/components/admin/AdminPrintButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getDictionary, isLocale } from "@/lib/i18n";
+import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
@@ -41,6 +43,24 @@ function formatAddress(order: {
   return [order.street, order.tower, order.apartment, order.city, order.emirate, order.country]
     .filter(Boolean)
     .join(", ");
+}
+
+function formatDubaiDate(value: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE" : "en-AE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Dubai"
+  }).format(value);
+}
+
+function formatCompactDate(value: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE" : "en-AE", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Dubai"
+  }).format(value);
 }
 
 function buildOrderHref(locale: string, searchParams: AdminOrdersPageProps["searchParams"], selectedId: string) {
@@ -120,7 +140,18 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
   const [orders, settings] = await prisma.$transaction([
     prisma.order.findMany({
       where,
-      include: { items: true },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                sku: true,
+                brand: true
+              }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: "desc" },
       take: 50
     }),
@@ -212,7 +243,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         <Button type="submit" variant="secondary">{dictionary.actions.apply}</Button>
       </form>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_560px]">
         <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-neutral-200 text-sm">
@@ -220,6 +251,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <tr>
                   <th className="px-5 py-3">Order</th>
                   <th className="px-5 py-3">Customer</th>
+                  <th className="px-5 py-3">Delivery</th>
                   <th className="px-5 py-3">Payment</th>
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3">Total</th>
@@ -235,10 +267,20 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       >
                         {order.orderNumber}
                       </Link>
+                      <p className="mt-1 text-xs font-semibold text-neutral-500">
+                        {formatCompactDate(order.createdAt, locale)}
+                      </p>
+                      <p className="mt-1 text-xs text-neutral-500">{order.items.length} item(s)</p>
                     </td>
                     <td className="px-5 py-4 text-neutral-600">
                       <p className="font-semibold text-navy">{order.customerName}</p>
                       <p className="mt-1 text-xs text-neutral-500">{order.customerEmail}</p>
+                      <p className="mt-1 text-xs text-neutral-500">{order.customerPhone}</p>
+                    </td>
+                    <td className="px-5 py-4 text-xs font-semibold text-neutral-500">
+                      <p className="text-sm font-bold text-navy">{order.emirate}</p>
+                      <p className="mt-1">{order.city}</p>
+                      {order.deliverySlot ? <p className="mt-1 text-gold-700">{order.deliverySlot}</p> : null}
                     </td>
                     <td className="px-5 py-4">
                       <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>
@@ -263,35 +305,132 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
           {selectedOrder ? (
             <>
               <div className="mb-5 hidden border-b border-neutral-200 pb-4 admin-print-block">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Invoice</p>
-                <h1 className="mt-1 text-2xl font-bold text-navy">Best Mart</h1>
-                {settings?.trn ? <p className="mt-1 text-sm font-semibold text-neutral-600">TRN: {settings.trn}</p> : null}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Tax invoice</p>
+                    <h1 className="mt-1 text-2xl font-bold text-navy">Best Mart</h1>
+                    {settings?.trn ? (
+                      <p className="mt-1 text-sm font-semibold text-neutral-600">TRN: {settings.trn}</p>
+                    ) : null}
+                  </div>
+                  <div className="text-right text-sm font-semibold text-neutral-600">
+                    <p>{selectedOrder.orderNumber}</p>
+                    <p className="mt-1">{formatDubaiDate(selectedOrder.createdAt, locale)}</p>
+                  </div>
+                </div>
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-navy">{selectedOrder.orderNumber}</h2>
-                  <p className="mt-1 text-sm text-neutral-500">{selectedOrder.customerEmail}</p>
+                  <p className="mt-1 text-sm text-neutral-500">
+                    Placed {formatDubaiDate(selectedOrder.createdAt, locale)}
+                  </p>
                 </div>
                 <AdminPrintButton label={dictionary.actions.print} />
               </div>
-              <div className="mt-5 grid gap-4">
+
+              <div className="invoice-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2">
+                <div className="invoice-card rounded-md border border-neutral-200 bg-paper p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Customer</p>
+                  <p className="mt-2 font-bold text-navy">{selectedOrder.customerName}</p>
+                  <p className="mt-1 text-neutral-600">{selectedOrder.customerPhone}</p>
+                  <p className="mt-1 text-neutral-600">{selectedOrder.customerEmail}</p>
+                </div>
+                <div className="invoice-card rounded-md border border-neutral-200 bg-paper p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Payment</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge tone={selectedOrder.paymentStatus === "PAID" ? "green" : "gold"}>
+                      {selectedOrder.paymentStatus}
+                    </Badge>
+                    <Badge>{selectedOrder.paymentMethod}</Badge>
+                  </div>
+                  {selectedOrder.paymentProviderReference ? (
+                    <p className="mt-2 break-all text-xs font-semibold text-neutral-500">
+                      Ref: {selectedOrder.paymentProviderReference}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="invoice-card rounded-md border border-neutral-200 bg-paper p-4 sm:col-span-2">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Dubai delivery</p>
+                  <p className="mt-2 font-semibold text-navy">{formatAddress(selectedOrder)}</p>
+                  <div className="mt-2 grid gap-1 text-xs text-neutral-600 sm:grid-cols-2">
+                    <p>Emirate: {selectedOrder.emirate}</p>
+                    <p>City: {selectedOrder.city}</p>
+                    {selectedOrder.tower ? <p>Tower/Villa: {selectedOrder.tower}</p> : null}
+                    {selectedOrder.apartment ? <p>Apartment: {selectedOrder.apartment}</p> : null}
+                    {selectedOrder.deliverySlot ? <p className="font-bold text-gold-700">Slot: {selectedOrder.deliverySlot}</p> : null}
+                  </div>
+                  {selectedOrder.notes ? (
+                    <p className="mt-3 rounded-md bg-white p-3 text-xs font-semibold text-neutral-600">
+                      Customer note: {selectedOrder.notes}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="invoice-products mt-5 rounded-md border border-neutral-200">
+                <div className="border-b border-neutral-200 bg-paper px-4 py-3">
+                  <p className="text-sm font-bold text-navy">Ordered products</p>
+                  <p className="mt-1 text-xs text-neutral-500">Images, variants, SKU, quantity, and line totals.</p>
+                </div>
                 {selectedOrder.items.map((item) => (
-                  <div key={item.id} className="flex justify-between gap-4 text-sm">
-                    <span className="text-neutral-600">
-                      {item.quantity} x {locale === "ar" ? item.nameAr : item.nameEn}
-                      {item.variantNameEn ? ` / ${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn}` : ""}
-                    </span>
-                    <span className="font-bold text-navy">
-                      {formatCurrency(
-                        Number(item.price) * item.quantity,
-                        getCurrency(selectedOrder.currency),
-                        locale,
-                        currencyRates
-                      )}
-                    </span>
+                  <div key={item.id} className="invoice-item grid gap-3 border-b border-neutral-100 p-4 last:border-b-0 sm:grid-cols-[72px_1fr_auto]">
+                    <div className="invoice-image relative h-[72px] w-[72px] overflow-hidden rounded-md border border-neutral-200 bg-white">
+                      <Image
+                        src={safeRemoteImage(item.image, fallbackProductImage, { width: 160, height: 160, crop: "fill" })}
+                        alt={locale === "ar" ? item.nameAr : item.nameEn}
+                        fill
+                        sizes="72px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="invoice-item-body min-w-0">
+                      <p className="font-bold text-navy">{locale === "ar" ? item.nameAr : item.nameEn}</p>
+                      {item.product?.brand ? (
+                        <p className="mt-1 text-xs font-semibold text-neutral-500">Brand: {item.product.brand}</p>
+                      ) : null}
+                      {item.variantNameEn ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-600">
+                          {item.variantColorHex ? (
+                            <span
+                              className="h-4 w-4 rounded-full border border-neutral-200"
+                              style={{ backgroundColor: item.variantColorHex }}
+                              aria-label="Variant color"
+                            />
+                          ) : null}
+                          <span>{locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn}</span>
+                        </div>
+                      ) : null}
+                      <div className="mt-2 grid gap-1 text-xs font-semibold text-neutral-500 sm:grid-cols-2">
+                        <p>Admin SKU: {item.product?.sku ?? item.variantSku ?? "Not set"}</p>
+                        {item.variantSku ? <p>Variant SKU: {item.variantSku}</p> : null}
+                        <p>Qty: {item.quantity}</p>
+                        <p>
+                          Unit:{" "}
+                          {formatCurrency(
+                            Number(item.price),
+                            getCurrency(selectedOrder.currency),
+                            locale,
+                            currencyRates
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="invoice-line-total text-left sm:text-right">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Line total</p>
+                      <p className="mt-1 font-bold text-navy">
+                        {formatCurrency(
+                          Number(item.price) * item.quantity,
+                          getCurrency(selectedOrder.currency),
+                          locale,
+                          currencyRates
+                        )}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
+
               <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">
                 {selectedTotals.map((item) => (
                   <div
@@ -307,16 +446,12 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   </div>
                 ))}
               </div>
-              <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">
-                <p className="font-bold text-navy">{selectedOrder.customerName}</p>
-                <p className="text-neutral-600">{selectedOrder.customerPhone}</p>
-                <p className="text-neutral-600">
-                  {formatAddress(selectedOrder)}
-                </p>
-                {selectedOrder.deliverySlot ? (
-                  <p className="font-semibold text-gold-700">Delivery slot: {selectedOrder.deliverySlot}</p>
-                ) : null}
-              </div>
+              {selectedOrder.internalNotes ? (
+                <div className="mt-5 rounded-md border border-gold-200 bg-gold-50 p-4 text-sm admin-print-hide">
+                  <p className="font-bold text-navy">Admin note</p>
+                  <p className="mt-1 text-neutral-600">{selectedOrder.internalNotes}</p>
+                </div>
+              ) : null}
             </>
           ) : (
             <p className="text-sm font-semibold text-neutral-500">No orders yet.</p>
