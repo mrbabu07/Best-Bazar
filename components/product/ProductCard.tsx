@@ -35,7 +35,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   };
 
   return (
-    <article className="group flex h-[386px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
+    <article className="group flex h-[430px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[510px] lg:h-[540px]">
       <Link
         href={`/${locale}/product/${product.slug}`}
         className="relative block h-[174px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[260px] lg:h-[280px]"

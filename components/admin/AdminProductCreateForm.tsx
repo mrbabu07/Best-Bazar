@@ -149,6 +149,12 @@ function slugify(value: string) {
 }
 
 const customSizeValue = "__custom__";
+const quickColors = [
+  { nameEn: "Black", nameAr: "Black", colorHex: "#111827" },
+  { nameEn: "White", nameAr: "White", colorHex: "#ffffff" },
+  { nameEn: "Navy", nameAr: "Navy", colorHex: "#1e3a8a" },
+  { nameEn: "Beige", nameAr: "Beige", colorHex: "#d6c4a3" }
+];
 
 function sizeFields(size?: ProductSizeOption) {
   return {
@@ -156,6 +162,14 @@ function sizeFields(size?: ProductSizeOption) {
     sizeNameEn: size?.nameEn ?? "",
     sizeNameAr: size?.nameAr ?? ""
   };
+}
+
+function safeJsonClone<T>(value: T, fallback: T) {
+  try {
+    return JSON.parse(JSON.stringify(value)) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 export function AdminProductCreateForm({ locale, categories, productsHref }: AdminProductCreateFormProps) {
@@ -344,6 +358,76 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     }));
   };
 
+  const addCategorySizeRows = () => {
+    const rows = sizeOptions.map((size, index) => ({
+      colorNameEn: "Default",
+      colorNameAr: "Default",
+      colorHex: "#111827",
+      ...sizeFields(size),
+      styleNameEn: "",
+      styleNameAr: "",
+      fitNameEn: "",
+      fitNameAr: "",
+      imageUrl: "",
+      sku: form.sku ? `${form.sku}-${size.key}`.toUpperCase() : "",
+      stock: "0",
+      sortOrder: String(form.variants.length + index),
+      isActive: true
+    }));
+
+    setForm((current) => ({
+      ...current,
+      variants: [...current.variants, ...rows]
+    }));
+  };
+
+  const addCommonColorRows = () => {
+    const size = sizeOptions[0];
+    const rows = quickColors.map((color, index) => ({
+      colorNameEn: color.nameEn,
+      colorNameAr: color.nameAr,
+      colorHex: color.colorHex,
+      ...sizeFields(size),
+      styleNameEn: "",
+      styleNameAr: "",
+      fitNameEn: "",
+      fitNameAr: "",
+      imageUrl: "",
+      sku: form.sku ? `${form.sku}-${color.nameEn}`.toUpperCase().replace(/\s+/g, "-") : "",
+      stock: "0",
+      sortOrder: String(form.variants.length + index),
+      isActive: true
+    }));
+
+    setForm((current) => ({
+      ...current,
+      variants: [...current.variants, ...rows]
+    }));
+  };
+
+  const duplicateLastVariant = () => {
+    setForm((current) => {
+      const lastVariant = current.variants[current.variants.length - 1];
+
+      if (!lastVariant) {
+        return current;
+      }
+
+      return {
+        ...current,
+        variants: [
+          ...current.variants,
+          {
+            ...lastVariant,
+            sku: "",
+            stock: "0",
+            sortOrder: String(current.variants.length)
+          }
+        ]
+      };
+    });
+  };
+
   const removeVariant = (index: number) => {
     setForm((current) => ({
       ...current,
@@ -415,9 +499,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
-      fashionFields: isFashionCategory ? form.fashionFields : { ...emptyFashionFields },
-      customFieldValues: Object.fromEntries(
-        categoryCustomFields.map((field) => [field.id, form.customFieldValues[field.id] ?? ""])
+      fashionFields: safeJsonClone(isFashionCategory ? form.fashionFields : { ...emptyFashionFields }, {
+        ...emptyFashionFields
+      }),
+      customFieldValues: safeJsonClone(
+        Object.fromEntries(categoryCustomFields.map((field) => [field.id, form.customFieldValues[field.id] ?? ""])),
+        {}
       ),
       isActive: form.isActive,
       isFeatured: form.isFeatured,
@@ -462,7 +549,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       const response = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(safeJsonClone(payload, payload))
       });
       const result = await safeResponseJson<{ error?: string }>(response, {});
 
@@ -808,10 +895,30 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <h2 className="mt-1 text-xl font-bold text-navy">Color and size stock rows</h2>
               <p className="mt-1 text-sm text-neutral-600">Each row can control one color, size, image, SKU, and stock quantity.</p>
             </div>
-            <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
-              <Plus size={15} />
-              Add stock row
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="secondary" size="sm" onClick={addCategorySizeRows}>
+                <Plus size={15} />
+                Add all sizes
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={addCommonColorRows}>
+                <Palette size={15} />
+                Common colors
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={duplicateLastVariant} disabled={!form.variants.length}>
+                <PackageCheck size={15} />
+                Duplicate row
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
+                <Plus size={15} />
+                Add row
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-2 rounded-md border border-gold-100 bg-gold-50 p-3 text-sm text-neutral-700 sm:grid-cols-3">
+            <p><strong>Add all sizes:</strong> creates one stock row per category size.</p>
+            <p><strong>Common colors:</strong> starts Black, White, Navy, Beige rows.</p>
+            <p><strong>Duplicate row:</strong> fastest way to add another color/size stock entry.</p>
           </div>
 
           <div className="mt-5 grid gap-4">
