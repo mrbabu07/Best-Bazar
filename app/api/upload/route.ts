@@ -7,6 +7,10 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const revalidate = 0;
 
+function cloudinaryTimestamp() {
+  return Math.round(Date.now() / 1000) + 300;
+}
+
 export async function POST(request: Request) {
   try {
     await requireAdmin();
@@ -45,11 +49,19 @@ export async function POST(request: Request) {
 
     const dataUri = `data:${file.type};base64,${Buffer.from(await file.arrayBuffer()).toString("base64")}`;
     const resourceType = isVideo ? "video" : "image";
-    const upload = await cloudinary.uploader.upload(dataUri, {
-      folder,
-      resource_type: resourceType,
-      timeout: 120000
-    });
+    let upload;
+
+    try {
+      upload = await cloudinary.uploader.upload(dataUri, {
+        folder,
+        resource_type: resourceType,
+        timeout: 120000,
+        timestamp: cloudinaryTimestamp()
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Cloudinary upload failed.";
+      throw new ApiError(message, 502);
+    }
     const secureUrl = isVideo ? upload.secure_url : optimizeCloudinaryImage(upload.secure_url, { width: 1800 });
 
     return NextResponse.json(

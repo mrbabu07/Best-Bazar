@@ -7,6 +7,10 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const revalidate = 0;
 
+function cloudinaryTimestamp() {
+  return Math.round(Date.now() / 1000) + 300;
+}
+
 export async function POST(request: Request) {
   try {
     await requireAdmin();
@@ -22,7 +26,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as { folder?: unknown; nonce?: unknown };
     const folder = typeof body.folder === "string" && body.folder.trim() ? body.folder.trim() : "best-mart/uploads";
-    const timestamp = Math.round(Date.now() / 1000);
+    const timestamp = cloudinaryTimestamp();
     const apiSecret = process.env.CLOUDINARY_API_SECRET ?? "";
     const apiKey = process.env.CLOUDINARY_API_KEY ?? "";
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME ?? "";
