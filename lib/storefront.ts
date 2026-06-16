@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { normalizeCategoryCustomFields, normalizeCustomFieldValues, normalizeFashionFields } from "@/lib/category-fields";
 import { getPresetColorHex, normalizeColorKey, shopColorPalette } from "@/lib/color-palette";
+import { cleanLengthSizeLabel, normalizeSizeFilterValue, sizeFilterCandidates } from "@/lib/product-size-label";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { prisma } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
@@ -249,20 +250,21 @@ async function readStoreVariantSizes() {
   const sizes = new Map<string, ProductSize>();
 
   for (const variant of variants) {
-    const labelEn = variant.sizeNameEn?.trim() || variant.sizeNameAr?.trim() || variant.sizeKey?.trim() || "";
+    const rawLabelEn = variant.sizeNameEn?.trim() || variant.sizeNameAr?.trim() || variant.sizeKey?.trim() || "";
+    const labelEn = cleanLengthSizeLabel(rawLabelEn);
 
     if (!labelEn) {
       continue;
     }
 
-    const key = (variant.sizeKey?.trim() || labelEn).toLowerCase();
+    const key = normalizeSizeFilterValue(labelEn);
     const current = sizes.get(key);
 
     sizes.set(key, {
       key,
       name: current?.name ?? {
         en: labelEn,
-        ar: variant.sizeNameAr?.trim() || labelEn
+        ar: cleanLengthSizeLabel(variant.sizeNameAr?.trim() || labelEn)
       },
       count: (current?.count ?? 0) + 1
     });
@@ -325,10 +327,13 @@ function getProductWhere(filters: StoreProductFilters = {}) {
 
   if (sizes.length) {
     variantClauses.push({
-      OR: sizes.flatMap((size) => [
-        { sizeKey: { equals: size, mode: "insensitive" } },
-        { sizeNameEn: { equals: size, mode: "insensitive" } }
-      ])
+      OR: sizes.flatMap((size) =>
+        sizeFilterCandidates(size).flatMap((candidate) => [
+          { sizeKey: { equals: candidate, mode: "insensitive" } },
+          { sizeNameEn: { equals: candidate, mode: "insensitive" } },
+          { sizeNameAr: { equals: candidate, mode: "insensitive" } }
+        ])
+      )
     });
   }
 

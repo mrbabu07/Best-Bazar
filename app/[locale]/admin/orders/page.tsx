@@ -96,11 +96,30 @@ function buildSalesExportHref(searchParams: AdminOrdersPageProps["searchParams"]
   return `/api/admin/reports/sales${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
-function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"]) {
+function buildStatusHref(locale: string, searchParams: AdminOrdersPageProps["searchParams"], nextStatus?: string) {
+  const params = new URLSearchParams();
+
+  for (const key of ["search", "from", "to"]) {
+    const value = readParam(searchParams, key);
+
+    if (value) {
+      params.set(key, value);
+    }
+  }
+
+  if (nextStatus) {
+    params.set("status", nextStatus);
+  }
+
+  return `/${locale}/admin/orders${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
+function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"], options: { includeStatus?: boolean } = {}) {
   const search = readParam(searchParams, "search")?.trim();
   const status = readParam(searchParams, "status");
   const from = readParam(searchParams, "from");
   const to = readParam(searchParams, "to");
+  const includeStatus = options.includeStatus ?? true;
   const createdAt: Prisma.DateTimeFilter = {};
 
   if (from) {
@@ -122,9 +141,22 @@ function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"]) {
           ]
         }
       : {}),
-    ...(status ? { orderStatus: status as Prisma.EnumOrderStatusFilter["equals"] } : {}),
+    ...(includeStatus && status ? { orderStatus: status as Prisma.EnumOrderStatusFilter["equals"] } : {}),
     ...(Object.keys(createdAt).length ? { createdAt } : {})
   } satisfies Prisma.OrderWhereInput;
+}
+
+function orderStatusTone(status: string): "gold" | "green" | "red" | "blue" | "neutral" {
+  if (status === "DELIVERED") return "green";
+  if (status === "SHIPPED" || status === "PROCESSING") return "blue";
+  if (status === "CANCELLED") return "red";
+  if (status === "PENDING" || status === "CONFIRMED") return "gold";
+  return "neutral";
+}
+
+function isNewOrder(createdAt: Date, status: string) {
+  const ageMs = Date.now() - createdAt.getTime();
+  return ageMs <= 24 * 60 * 60 * 1000 && ["PENDING", "CONFIRMED"].includes(status);
 }
 
 export default async function AdminOrdersPage({ params, searchParams }: AdminOrdersPageProps) {
@@ -142,7 +174,16 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
   const to = readParam(searchParams, "to") ?? "";
   const selectedId = readParam(searchParams, "selected");
   const where = buildOrderWhere(searchParams);
-  const [orders, settings] = await prisma.$transaction([
+  const baseWhere = buildOrderWhere(searchParams, { includeStatus: false });
+  const newOrderWhere = {
+    ...baseWhere,
+    createdAt: {
+      ...(baseWhere.createdAt && typeof baseWhere.createdAt === "object" ? baseWhere.createdAt : {}),
+      gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+    },
+    orderStatus: { in: ["PENDING", "CONFIRMED"] }
+  } satisfies Prisma.OrderWhereInput;
+  const [orders, settings, allFilteredOrdersCount, pendingOrdersCount, confirmedOrdersCount, processingOrdersCount, shippedOrdersCount, deliveredOrdersCount, newOrdersCount] = await prisma.$transaction([
     prisma.order.findMany({
       where,
       include: {
@@ -163,7 +204,14 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     prisma.setting.findUnique({
       where: { id: "store-settings" },
       select: { aedToBdt: true, aedToUsd: true, trn: true }
-    })
+    }),
+    prisma.order.count({ where: baseWhere }),
+    prisma.order.count({ where: { ...baseWhere, orderStatus: "PENDING" } }),
+    prisma.order.count({ where: { ...baseWhere, orderStatus: "CONFIRMED" } }),
+    prisma.order.count({ where: { ...baseWhere, orderStatus: "PROCESSING" } }),
+    prisma.order.count({ where: { ...baseWhere, orderStatus: "SHIPPED" } }),
+    prisma.order.count({ where: { ...baseWhere, orderStatus: "DELIVERED" } }),
+    prisma.order.count({ where: newOrderWhere })
   ]);
   const selectedOrder = orders.find((order) => order.id === selectedId) ?? orders[0];
   const currencyRates = normalizeCurrencyRates({
@@ -188,6 +236,13 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         { label: dictionary.common.total, value: Number(selectedOrder.total), tone: "strong" }
       ]
     : [];
+  const statusCards = [
+    { label: "All", value: allFilteredOrdersCount, href: buildStatusHref(locale, searchParams), active: !status, tone: "neutral" as const },
+    { label: "Pending/New", value: pendingOrdersCount + confirmedOrdersCount, href: buildStatusHref(locale, searchParams, "PENDING"), active: status === "PENDING", tone: "gold" as const },
+    { label: "Processing", value: processingOrdersCount, href: buildStatusHref(locale, searchParams, "PROCESSING"), active: status === "PROCESSING", tone: "blue" as const },
+    { label: "Shipped", value: shippedOrdersCount, href: buildStatusHref(locale, searchParams, "SHIPPED"), active: status === "SHIPPED", tone: "blue" as const },
+    { label: "Delivered", value: deliveredOrdersCount, href: buildStatusHref(locale, searchParams, "DELIVERED"), active: status === "DELIVERED", tone: "green" as const }
+  ];
 
   return (
     <div>
@@ -205,6 +260,30 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
           </a>
         }
       />
+
+      <section className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {statusCards.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={`rounded-lg border p-4 shadow-soft transition hover:border-gold-300 hover:bg-gold-50/50 ${
+              item.active ? "border-gold-300 bg-gold-50" : "border-neutral-200 bg-white"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-bold text-navy">{item.label}</p>
+              <Badge tone={item.tone}>{item.value}</Badge>
+            </div>
+            <p className="mt-2 text-xs font-semibold text-neutral-500">
+              {item.label === "Pending/New"
+                ? `${newOrdersCount} new in last 24h`
+                : item.label === "All"
+                  ? "Current filtered orders"
+                  : `${item.label} orders`}
+            </p>
+          </Link>
+        ))}
+      </section>
 
       <form
         action={`/${locale}/admin/orders`}
@@ -264,14 +343,26 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {orders.map((order) => (
-                  <tr key={order.id} className={order.id === selectedOrder?.id ? "bg-gold-50/70" : undefined}>
+                  <tr
+                    key={order.id}
+                    className={
+                      order.id === selectedOrder?.id
+                        ? "bg-gold-50/70"
+                        : isNewOrder(order.createdAt, order.orderStatus)
+                          ? "bg-sky-50/50"
+                          : undefined
+                    }
+                  >
                     <td className="px-5 py-4 font-bold text-navy">
-                      <Link
-                        href={buildOrderHref(locale, searchParams, order.id)}
-                        className="hover:text-gold-700"
-                      >
-                        {order.orderNumber}
-                      </Link>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={buildOrderHref(locale, searchParams, order.id)}
+                          className="hover:text-gold-700"
+                        >
+                          {order.orderNumber}
+                        </Link>
+                        {isNewOrder(order.createdAt, order.orderStatus) ? <Badge tone="blue">New</Badge> : null}
+                      </div>
                       <p className="mt-1 text-xs font-semibold text-neutral-500">
                         {formatCompactDate(order.createdAt, locale)}
                       </p>
@@ -294,6 +385,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       <p className="mt-1 text-xs font-semibold text-neutral-500">{order.paymentMethod}</p>
                     </td>
                     <td className="px-5 py-4">
+                      <Badge tone={orderStatusTone(order.orderStatus)}>{order.orderStatus}</Badge>
                       <AdminOrderStatusSelect orderId={order.id} initialStatus={order.orderStatus} />
                     </td>
                     <td className="px-5 py-4 font-bold text-navy">
@@ -330,6 +422,13 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="mt-1 text-sm text-neutral-500">
                     Placed {formatDubaiDate(selectedOrder.createdAt, locale)}
                   </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {isNewOrder(selectedOrder.createdAt, selectedOrder.orderStatus) ? <Badge tone="blue">New order</Badge> : null}
+                    <Badge tone={orderStatusTone(selectedOrder.orderStatus)}>Order: {selectedOrder.orderStatus}</Badge>
+                    <Badge tone={selectedOrder.paymentStatus === "PAID" ? "green" : "gold"}>
+                      Payment: {selectedOrder.paymentStatus}
+                    </Badge>
+                  </div>
                 </div>
                 <AdminPrintButton label={dictionary.actions.print} />
               </div>
@@ -390,7 +489,12 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       />
                     </div>
                     <div className="invoice-item-body min-w-0">
-                      <p className="font-bold text-navy">{locale === "ar" ? item.nameAr : item.nameEn}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-bold text-navy">{locale === "ar" ? item.nameAr : item.nameEn}</p>
+                        <Badge tone={orderStatusTone(selectedOrder.orderStatus)}>
+                          Product: {selectedOrder.orderStatus}
+                        </Badge>
+                      </div>
                       {item.product?.brand ? (
                         <p className="mt-1 text-xs font-semibold text-neutral-500">Brand: {item.product.brand}</p>
                       ) : null}

@@ -15,6 +15,7 @@ import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { fashionCoreFields } from "@/lib/category-fields";
+import { cleanLengthSizeLabel } from "@/lib/product-size-label";
 
 type ProductDetailProps = {
   product: Product;
@@ -54,10 +55,6 @@ function variantColorKey(variant: ProductVariant) {
 
 function variantSizeKey(variant: ProductVariant) {
   return variant.sizeKey ?? variant.sizeName?.en.trim().toLowerCase() ?? "";
-}
-
-function cleanLengthSizeLabel(value: string) {
-  return value.replace(/^length\s+/i, "").trim();
 }
 
 function getVariantSizeLabel(variant: ProductVariant, locale: Locale) {

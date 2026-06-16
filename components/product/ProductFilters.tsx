@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { normalizeSizeFilterValue } from "@/lib/product-size-label";
 import type { Category, ProductColor, ProductSize } from "@/lib/types";
 
 type ProductFiltersProps = {
@@ -93,6 +94,18 @@ function hasFilterValue(values: string[], value: string) {
 function toggleFilterValue(values: string[], value: string) {
   return hasFilterValue(values, value)
     ? values.filter((item) => normalizeFilterValue(item) !== normalizeFilterValue(value))
+    : [...values, value];
+}
+
+function hasSizeFilterValue(values: string[], value: string) {
+  const normalized = normalizeSizeFilterValue(value);
+
+  return values.some((item) => normalizeSizeFilterValue(item) === normalized);
+}
+
+function toggleSizeFilterValue(values: string[], value: string) {
+  return hasSizeFilterValue(values, value)
+    ? values.filter((item) => normalizeSizeFilterValue(item) !== normalizeSizeFilterValue(value))
     : [...values, value];
 }
 
@@ -296,13 +309,13 @@ export function ProductFilters({
             </div>
             <div className="flex flex-wrap gap-2">
               {sizes.map((item) => {
-                const selected = hasFilterValue(selectedSizes, item.key);
+                const selected = hasSizeFilterValue(selectedSizes, item.key);
 
                 return (
                   <button
                     key={item.key}
                     type="button"
-                    onClick={() => setSelectedSizes((currentValues) => toggleFilterValue(currentValues, item.key))}
+                    onClick={() => setSelectedSizes((currentValues) => toggleSizeFilterValue(currentValues, item.key))}
                     aria-pressed={selected}
                     title={`${getLocalized(item.name, locale)} (${item.count})`}
                     className={`inline-flex h-9 items-center rounded-md border px-3 text-xs font-bold transition ${
