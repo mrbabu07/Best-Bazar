@@ -5,6 +5,7 @@ import { assertCloudinaryConfigured } from "@/lib/cloudinary";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const revalidate = 0;
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = (await request.json()) as { folder?: unknown };
+    const body = (await request.json()) as { folder?: unknown; nonce?: unknown };
     const folder = typeof body.folder === "string" && body.folder.trim() ? body.folder.trim() : "best-mart/uploads";
     const timestamp = Math.round(Date.now() / 1000);
     const apiSecret = process.env.CLOUDINARY_API_SECRET ?? "";
@@ -27,13 +28,22 @@ export async function POST(request: Request) {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME ?? "";
     const signature = cloudinary.utils.api_sign_request({ folder, timestamp }, apiSecret);
 
-    return NextResponse.json({
-      cloudName,
-      apiKey,
-      folder,
-      timestamp,
-      signature
-    });
+    return NextResponse.json(
+      {
+        cloudName,
+        apiKey,
+        folder,
+        timestamp,
+        signature
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0"
+        }
+      }
+    );
   } catch (error) {
     return handleApiError(error);
   }

@@ -42,14 +42,12 @@ function validateSize(file: File, resourceType: "image" | "video") {
   }
 }
 
-export async function uploadToCloudinary(file: File, folder = "best-mart/uploads"): Promise<ClientUploadResult> {
-  const resourceType = getResourceType(file);
-  validateSize(file, resourceType);
-
-  const signatureResponse = await fetch("/api/upload/signature", {
+async function getFreshSignature(folder: string) {
+  const signatureResponse = await fetch(`/api/upload/signature?ts=${Date.now()}`, {
     method: "POST",
+    cache: "no-store",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ folder })
+    body: JSON.stringify({ folder, nonce: crypto.randomUUID?.() ?? String(Date.now()) })
   });
   const signature = await safeResponseJson<UploadSignature>(signatureResponse, {});
 
@@ -61,6 +59,10 @@ export async function uploadToCloudinary(file: File, folder = "best-mart/uploads
     throw new Error("Upload signature was not returned.");
   }
 
+  return signature;
+}
+
+async function uploadWithSignature(file: File, resourceType: "image" | "video", signature: Required<UploadSignature>) {
   const formData = new FormData();
   formData.set("file", file);
   formData.set("api_key", signature.apiKey);
@@ -81,8 +83,31 @@ export async function uploadToCloudinary(file: File, folder = "best-mart/uploads
     throw new Error(upload?.error?.message ?? "Cloudinary upload failed.");
   }
 
+  return upload.secure_url;
+}
+
+export async function uploadToCloudinary(file: File, folder = "best-mart/uploads"): Promise<ClientUploadResult> {
+  const resourceType = getResourceType(file);
+  validateSize(file, resourceType);
+
+  let signature = (await getFreshSignature(folder)) as Required<UploadSignature>;
+  let secureUrl: string;
+
+  try {
+    secureUrl = await uploadWithSignature(file, resourceType, signature);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+
+    if (!message.toLowerCase().includes("stale request")) {
+      throw error;
+    }
+
+    signature = (await getFreshSignature(folder)) as Required<UploadSignature>;
+    secureUrl = await uploadWithSignature(file, resourceType, signature);
+  }
+
   return {
-    secureUrl: resourceType === "image" ? optimizeCloudinaryImage(upload.secure_url, { width: 1800 }) : upload.secure_url,
+    secureUrl: resourceType === "image" ? optimizeCloudinaryImage(secureUrl, { width: 1800 }) : secureUrl,
     resourceType
   };
 }
