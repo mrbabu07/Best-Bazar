@@ -20,10 +20,18 @@ export default async function AdminNewProductPage({ params }: { params: { locale
   }
 
   const dictionary = getDictionary(locale);
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }]
-  });
+  let categories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  let databaseError = "";
+
+  try {
+    categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }]
+    });
+  } catch (error) {
+    databaseError = error instanceof Error ? error.message : "Unable to load categories from the database.";
+    console.error("Add product categories unavailable.", error);
+  }
   const categoryRows = categories.map((category) => ({
     id: category.id,
     slug: category.slug,
@@ -53,7 +61,18 @@ export default async function AdminNewProductPage({ params }: { params: { locale
         }
       />
 
-      {categoryRows.length ? (
+      {databaseError ? (
+        <div className="rounded-lg border border-red-100 bg-white p-8 text-center shadow-soft">
+          <h2 className="text-xl font-bold text-navy">Database connection needed</h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
+            Add Product needs active categories from the database before it can open. Check your Neon connection,
+            internet access, and `DATABASE_URL`, then refresh this page.
+          </p>
+          <p className="mx-auto mt-4 max-w-2xl rounded-md bg-paper p-3 text-left text-xs font-semibold text-sale">
+            {databaseError}
+          </p>
+        </div>
+      ) : categoryRows.length ? (
         <AdminProductCreateForm locale={locale} categories={categoryRows} productsHref={productsHref} />
       ) : (
         <div className="rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft">

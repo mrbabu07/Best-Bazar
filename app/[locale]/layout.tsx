@@ -58,7 +58,14 @@ export const metadata: Metadata = {
 };
 
 async function getFrameSettings() {
-  const settings = await getCachedPublicSettings();
+  let settings: Awaited<ReturnType<typeof getCachedPublicSettings>> = null;
+
+  try {
+    settings = await getCachedPublicSettings();
+  } catch (error) {
+    console.error("Public settings unavailable. Rendering storefront defaults.", error);
+  }
+
   return {
     storeNameEn: settings?.storeNameEn ?? "Best Mart",
     storeNameAr: settings?.storeNameAr ?? "Best Mart",
