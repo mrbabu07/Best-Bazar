@@ -104,8 +104,9 @@ function clearNextOutput() {
 
 stopPreviousDevServer();
 stopStaleNextProcesses();
+const keepWarmCache = process.env.KEEP_NEXT_CACHE === "1";
+const shouldClearWebpackCache = !keepWarmCache || process.env.CLEAR_NEXT_CACHE === "1";
 const clearedProductionOutput = clearProductionBuildOutput();
-const shouldClearWebpackCache = process.env.CLEAR_NEXT_CACHE === "1";
 const clearedForcedOutput = !clearedProductionOutput && shouldClearWebpackCache ? clearNextOutput() : false;
 
 fs.writeFileSync(pidFile, String(process.pid));
@@ -113,11 +114,11 @@ fs.writeFileSync(pidFile, String(process.pid));
 if (clearedProductionOutput) {
   console.log("Removed production .next output before starting dev.");
 } else if (clearedForcedOutput) {
-  console.log("Cleared full .next output because CLEAR_NEXT_CACHE=1 was set.");
+  console.log("Cleared .next output before starting dev to avoid stale chunk errors.");
 } else if (shouldClearWebpackCache) {
   console.log("No .next output existed to clear.");
 } else {
-  console.log("Keeping warm Next dev cache. Set CLEAR_NEXT_CACHE=1 only when you need a clean rebuild.");
+  console.log("Keeping warm Next dev cache because KEEP_NEXT_CACHE=1 was set.");
 }
 
 console.log(`Starting Next dev server on http://localhost:${port}`);
