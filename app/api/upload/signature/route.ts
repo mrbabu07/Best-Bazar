@@ -2,14 +2,11 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { ApiError, handleApiError, requireAdmin } from "@/lib/api/admin";
 import { assertCloudinaryConfigured } from "@/lib/cloudinary";
+import { getCloudinaryTimestamp } from "@/lib/cloudinary-time";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const revalidate = 0;
-
-function cloudinaryTimestamp() {
-  return Math.round(Date.now() / 1000) + 300;
-}
 
 export async function POST(request: Request) {
   try {
@@ -26,7 +23,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as { folder?: unknown; nonce?: unknown };
     const folder = typeof body.folder === "string" && body.folder.trim() ? body.folder.trim() : "best-mart/uploads";
-    const timestamp = cloudinaryTimestamp();
+    const timestamp = await getCloudinaryTimestamp();
     const apiSecret = process.env.CLOUDINARY_API_SECRET ?? "";
     const apiKey = process.env.CLOUDINARY_API_KEY ?? "";
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME ?? "";

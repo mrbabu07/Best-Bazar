@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ApiError, handleApiError, requireAdmin } from "@/lib/api/admin";
 import { assertCloudinaryConfigured, cloudinary } from "@/lib/cloudinary";
+import { getCloudinaryTimestamp } from "@/lib/cloudinary-time";
 import { optimizeCloudinaryImage } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,8 @@ export async function POST(request: Request) {
       upload = await cloudinary.uploader.upload(dataUri, {
         folder,
         resource_type: resourceType,
-        timeout: 120000
+        timeout: 120000,
+        timestamp: await getCloudinaryTimestamp()
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Cloudinary upload failed.";
