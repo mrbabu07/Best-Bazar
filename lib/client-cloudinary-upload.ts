@@ -102,7 +102,7 @@ async function uploadThroughServer(file: File, folder: string) {
   }>(response, {});
 
   if (!response.ok || !upload.secureUrl || !upload.resourceType) {
-    throw new Error(upload?.error ?? "Upload failed.");
+    throw new Error(upload?.error ? `Upload failed: ${upload.error}` : "Upload failed.");
   }
 
   return {

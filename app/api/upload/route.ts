@@ -7,10 +7,6 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const revalidate = 0;
 
-function cloudinaryTimestamp() {
-  return Math.round(Date.now() / 1000) + 300;
-}
-
 export async function POST(request: Request) {
   try {
     await requireAdmin();
@@ -55,8 +51,7 @@ export async function POST(request: Request) {
       upload = await cloudinary.uploader.upload(dataUri, {
         folder,
         resource_type: resourceType,
-        timeout: 120000,
-        timestamp: cloudinaryTimestamp()
+        timeout: 120000
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Cloudinary upload failed.";
