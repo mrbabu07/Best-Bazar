@@ -1,6 +1,6 @@
 import { OrderStatus, type OrderItem, type PaymentStatus, type Prisma } from "@prisma/client";
 import { ApiError } from "@/lib/api/admin";
-import { revalidateCacheTags } from "@/lib/cache";
+import { revalidateAdminOrderViews, revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export const CUSTOMER_CANCELLABLE_ORDER_STATUSES = [OrderStatus.PENDING, OrderStatus.CONFIRMED] as const;
@@ -148,7 +148,8 @@ export async function updateOrderStatus({
     return updatedOrder;
   });
 
-  revalidateCacheTags(["storefront", "products", "admin-notifications"]);
+  revalidateCacheTags(["storefront", "products", "admin-orders", "admin-notifications"]);
+  revalidateAdminOrderViews(updatedOrder.locale);
 
   return updatedOrder;
 }

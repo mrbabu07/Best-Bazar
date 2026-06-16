@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import {
   AlertTriangle,
   Bell,
@@ -25,6 +26,9 @@ import { notFound } from "next/navigation";
 export const metadata: Metadata = {
   title: "Admin Dashboard | Best Mart"
 };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function startOfMonth() {
   const now = new Date();
@@ -205,6 +209,7 @@ async function loadDashboardDataWithRetry() {
 }
 
 export default async function AdminDashboardPage({ params }: { params: { locale: string } }) {
+  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {

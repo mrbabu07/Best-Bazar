@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Prisma } from "@prisma/client";
 import { Download, Search } from "lucide-react";
 import Image from "next/image";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminOrderStatusSelect } from "@/components/admin/AdminOrderStatusSelect";
@@ -17,6 +18,9 @@ import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/uti
 export const metadata: Metadata = {
   title: "Order Management | Best Mart"
 };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type AdminOrdersPageProps = {
   params: { locale: string };
@@ -124,6 +128,7 @@ function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"]) {
 }
 
 export default async function AdminOrdersPage({ params, searchParams }: AdminOrdersPageProps) {
+  noStore();
   const locale = params.locale;
 
   if (!isLocale(locale)) {

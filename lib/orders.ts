@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
-import { revalidateCacheTags } from "@/lib/cache";
+import { revalidateAdminOrderViews, revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import type { orderCreateSchema } from "@/lib/validations/store";
 import { getShippingFee } from "@/utils/shipping";
@@ -233,7 +233,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     return order;
   });
 
-  revalidateCacheTags(["storefront", "products", "admin-notifications"]);
+  revalidateCacheTags(["storefront", "products", "admin-orders", "admin-notifications"]);
+  revalidateAdminOrderViews(data.locale);
 
   return order;
 }
