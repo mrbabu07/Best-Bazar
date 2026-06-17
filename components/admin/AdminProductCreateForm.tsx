@@ -14,7 +14,7 @@ import {
   Trash2,
   type LucideIcon
 } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { AdminImageUploadField } from "@/components/admin/AdminImageUploadField";
 import { AdminMediaUploadField } from "@/components/admin/AdminMediaUploadField";
@@ -233,7 +233,10 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const [quickColorHex, setQuickColorHex] = useState("#111827");
   const [quickColorRows, setQuickColorRows] = useState<QuickColorForm[]>([]);
   const [quickSizeStock, setQuickSizeStock] = useState<Record<string, string>>({});
-  const currentCategory = categories.find((category) => category.id === form.categoryId);
+  const currentCategory = useMemo(
+    () => categories.find((category) => category.id === form.categoryId),
+    [categories, form.categoryId]
+  );
   const currentCategoryName = currentCategory
     ? locale === "ar"
       ? currentCategory.nameAr
@@ -241,7 +244,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     : "No category";
   const isFashionCategory = isFashionProductType(currentCategory?.productType);
   const categoryCustomFields = currentCategory?.customFields ?? [];
-  const sizeOptions = getCategorySizeOptions(currentCategory);
+  const sizeOptions = useMemo(() => getCategorySizeOptions(currentCategory), [currentCategory]);
   const sizeRequired = !isSingleDefaultSize(sizeOptions);
   const activeVariants = form.variants.filter((variant) => variant.isActive && variant.colorNameEn.trim());
   const activeVariantCount = activeVariants.length;
@@ -258,6 +261,72 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       (!variant.colorNameEn.trim() && !variant.colorNameAr.trim()) ||
       (variant.colorNameEn.trim() && (!sizeRequired || variant.sizeNameEn.trim() || variant.sizeNameAr.trim()))
   );
+
+  const buildQuickVariantRows = useCallback(
+    (colors: QuickColorForm[], baseSku: string, totalStock: string) => {
+      const visibleSizes = sizeOptions.length ? sizeOptions : [{ key: "one-size", nameEn: "One Size", nameAr: "One Size" }];
+      const usableColors = colors.filter((color) => color.nameEn.trim());
+      const stockFallback = Number(totalStock || 0);
+
+      return usableColors.flatMap((color, colorIndex) => {
+        const quickColorKey = color.nameEn.trim().toLowerCase() || "default";
+        const colorSkuBase = color.sku.trim() || baseSku.trim();
+        const colorTotal = Object.values(color.sizeStock).reduce((total, value) => total + Number(value || 0), 0);
+        const fallbackTotal = colorTotal || Math.floor(stockFallback / Math.max(usableColors.length, 1));
+        const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
+        const remainder = visibleSizes.length ? fallbackTotal % visibleSizes.length : 0;
+
+        return visibleSizes.map((size, sizeIndex) => {
+          const manualStock = color.sizeStock[size.key];
+          const stock = manualStock !== undefined && manualStock !== ""
+            ? manualStock
+            : String(Math.max(0, splitStock + (sizeIndex < remainder ? 1 : 0)));
+
+          return {
+            colorNameEn: color.nameEn.trim() || "Default",
+            colorNameAr: color.nameAr.trim() || color.nameEn.trim() || "Default",
+            colorHex: normalizeHexColor(color.colorHex),
+            ...sizeFields(size),
+            styleNameEn: "",
+            styleNameAr: "",
+            fitNameEn: "",
+            fitNameAr: "",
+            imageUrl: color.imageUrl || "",
+            sku: colorSkuBase
+              ? `${colorSkuBase}-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-")
+              : `AUTO-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-"),
+            stock,
+            sortOrder: String(colorIndex * visibleSizes.length + sizeIndex),
+            isActive: true
+          };
+        });
+      });
+    },
+    [sizeOptions]
+  );
+
+  useEffect(() => {
+    if (!quickColorRows.length) {
+      return;
+    }
+
+    setForm((current) => {
+      const rows = buildQuickVariantRows(quickColorRows, current.sku, current.stock);
+      const nextStock = String(rows.reduce((total, row) => total + Number(row.stock || 0), 0));
+      const currentSignature = JSON.stringify(current.variants);
+      const nextSignature = JSON.stringify(rows);
+
+      if (currentSignature === nextSignature && current.stock === nextStock) {
+        return current;
+      }
+
+      return {
+        ...current,
+        stock: nextStock,
+        variants: rows
+      };
+    });
+  }, [buildQuickVariantRows, quickColorRows]);
   const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && isVariantSetupReady && form.isActive;
   const readiness: { label: string; value: string; ready: boolean; icon: LucideIcon }[] = [
     {
@@ -489,61 +558,17 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   };
 
   const applyQuickStockRows = () => {
-    const visibleSizes = sizeOptions.length ? sizeOptions : [{ key: "one-size", nameEn: "One Size", nameAr: "One Size" }];
-    const usableColors = quickColorRows.filter((color) => color.nameEn.trim());
-    const colors = usableColors.length ? usableColors : [createQuickColor()];
-    const rows = colors.flatMap((color, colorIndex) => {
-      const quickColorKey = color.nameEn.trim().toLowerCase() || "default";
-      const colorSkuBase = color.sku.trim() || form.sku.trim();
-      const colorTotal = Object.values(color.sizeStock).reduce((total, value) => total + Number(value || 0), 0);
-      const fallbackTotal = colorTotal || Math.floor(Number(form.stock || 0) / Math.max(colors.length, 1));
-      const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
-      const remainder = visibleSizes.length ? fallbackTotal % visibleSizes.length : 0;
-
-      return visibleSizes.map((size, sizeIndex) => {
-        const manualStock = color.sizeStock[size.key];
-        const stock = manualStock !== undefined && manualStock !== ""
-          ? manualStock
-          : String(Math.max(0, splitStock + (sizeIndex < remainder ? 1 : 0)));
-
-        return {
-          colorNameEn: color.nameEn.trim() || "Default",
-          colorNameAr: color.nameAr.trim() || color.nameEn.trim() || "Default",
-          colorHex: normalizeHexColor(color.colorHex),
-          ...sizeFields(size),
-          styleNameEn: "",
-          styleNameAr: "",
-          fitNameEn: "",
-          fitNameAr: "",
-          imageUrl: color.imageUrl || "",
-          sku: colorSkuBase ? `${colorSkuBase}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : `AUTO-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-"),
-          stock,
-          sortOrder: String(colorIndex * visibleSizes.length + sizeIndex),
-          isActive: true
-        };
-      });
-    });
+    const rows = buildQuickVariantRows(quickColorRows.length ? quickColorRows : [createQuickColor()], form.sku, form.stock);
 
     setForm((current) => {
-      const rowKeys = new Set(rows.map((row) => `${row.colorNameEn.trim().toLowerCase()}:${row.sizeKey}`));
-      const otherVariants = current.variants.filter(
-        (variant) => !rowKeys.has(`${variant.colorNameEn.trim().toLowerCase()}:${variant.sizeKey}`)
-      );
-
       return {
         ...current,
         stock: String(rows.reduce((total, row) => total + Number(row.stock || 0), 0)),
-        variants: [
-          ...rows.map((row, index) => ({ ...row, sortOrder: String(index) })),
-          ...otherVariants.map((variant, index) => ({
-            ...variant,
-            sortOrder: String(rows.length + index)
-          }))
-        ]
+        variants: rows.map((row, index) => ({ ...row, sortOrder: String(index) }))
       };
     });
 
-    toast.success("Default color and size stock rows updated.");
+    toast.success("Color-wise image, SKU, and size stock rows updated.");
   };
 
   const addCommonColorRows = () => {
@@ -793,7 +818,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 />
               </label>
               <label className="grid gap-2 text-sm font-semibold text-navy">
-                Total stock
+                Total stock {form.variants.length ? "(auto)" : ""}
                 <input
                   type="number"
                   min="0"
@@ -801,8 +826,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   value={form.stock}
                   onChange={(event) => updateForm("stock", event.target.value)}
                   required
-                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                  readOnly={Boolean(form.variants.length)}
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm read-only:bg-neutral-100 read-only:text-neutral-500"
                 />
+                <span className="text-xs font-semibold text-neutral-500">
+                  {form.variants.length ? "Calculated from selected color and size stock." : "Use this only before adding color-wise stock."}
+                </span>
               </label>
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 Description
@@ -837,9 +866,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-navy">Color-wise variant setup</p>
+                    <p className="text-sm font-bold text-navy">Step 2: Select colors, images, SKU and stock</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Choose the product colors, then add each color image, SKU, and size-wise stock.
+                      Main image stays as product cover. Every selected color opens its own image upload, SKU code, and size-wise stock fields.
                     </p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow}>
@@ -850,13 +879,13 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 <div className="mt-4 grid gap-4">
                   {!hasMainImage ? (
                     <div className="rounded-xl border border-gold-200 bg-gold-50 p-3 text-xs font-semibold leading-5 text-neutral-700">
-                      Main product image is still required before save. You can select colors now, then upload main and color-wise images.
+                      Step 1: upload the main product image above. You can still prepare colors now, but save needs at least one main image.
                     </div>
                   ) : null}
                     <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose product colors</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose visible product colors</p>
                       <p className="mt-1 text-xs font-semibold text-neutral-500">
-                        Use presets or click Add custom color, then type any color name and hex code.
+                        If only one color is selected, product will have one color option. If multiple colors are selected, each color gets separate stock fields.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {quickColors.map((preset) => {
@@ -890,6 +919,23 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                     {quickColorRows.length ? (
                       quickColorRows.map((color, index) => (
                         <div key={color.id} className="grid min-w-0 gap-4 rounded-xl border border-neutral-200 bg-white p-3">
+                          <div className="flex flex-col gap-2 border-b border-neutral-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="h-6 w-6 rounded-full border-2 border-white ring-1 ring-neutral-300"
+                                style={{ backgroundColor: normalizeHexColor(color.colorHex) }}
+                              />
+                              <div>
+                                <p className="text-sm font-bold text-navy">
+                                  Color variant {index + 1}: {color.nameEn || "Custom color"}
+                                </p>
+                                <p className="text-xs font-semibold text-neutral-500">
+                                  Add this color image, SKU, then fill stock by size.
+                                </p>
+                              </div>
+                            </div>
+                            <Badge tone="green">Auto syncs to variant table</Badge>
+                          </div>
                       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
                         <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_160px]">
                           <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
@@ -981,11 +1027,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                         Select a preset color or click Add custom color to open the color-specific variant form.
                       </div>
                     )}
-                    <div className="flex flex-wrap gap-2">
-                      <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows} disabled={!quickColorRows.length}>
-                        <PackageCheck size={15} />
-                        Generate variant table
-                      </Button>
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-green-100 bg-green-50 p-3 text-xs font-bold text-green-800">
+                      <CheckCircle2 size={16} />
+                      Color image, SKU, and size-stock rows update automatically below.
                     </div>
                   </div>
               </div>
