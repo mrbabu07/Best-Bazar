@@ -895,7 +895,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   acceptImage={false}
                 />
               </div>
-              <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
+              <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2 sm:p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-navy">Step 2: Select colors, images, SKU and stock</p>
@@ -903,7 +903,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       Main image stays as product cover. Every selected color opens its own image upload, SKU code, and size-wise stock fields.
                     </p>
                   </div>
-                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow}>
+                  <Button type="button" variant="secondary" size="sm" className="w-full shrink-0 sm:w-auto" onClick={addQuickColorRow}>
                     <Plus size={15} />
                     Add custom color
                   </Button>
@@ -914,12 +914,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       Step 1: upload the main product image above. You can still prepare colors now, but save needs at least one main image.
                     </div>
                   ) : null}
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3">
+                    <div className="rounded-xl border border-neutral-200 bg-white p-3 sm:p-4">
                       <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose visible product colors</p>
                       <p className="mt-1 text-xs font-semibold text-neutral-500">
                         If only one color is selected, product will have one color option. If multiple colors are selected, each color gets separate stock fields.
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                         {quickColors.map((preset) => {
                           const selected = quickColorRows.some(
                             (color) => color.nameEn.trim().toLowerCase() === preset.nameEn.toLowerCase()
@@ -930,7 +930,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                               key={preset.nameEn}
                               type="button"
                               onClick={() => addQuickColorPreset(preset)}
-                              className={`inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-bold transition ${
+                              className={`inline-flex h-10 min-w-0 items-center gap-2 rounded-md border px-3 text-sm font-bold transition ${
                                 selected
                                   ? "border-gold-500 bg-gold-50 text-navy ring-2 ring-gold-200"
                                   : "border-neutral-200 bg-white text-neutral-700 hover:border-gold-300"
@@ -941,7 +941,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                                 className="h-5 w-5 rounded-full border-2 border-white ring-1 ring-neutral-300"
                                 style={{ backgroundColor: preset.colorHex }}
                               />
-                              {preset.nameEn}
+                              <span className="truncate">{preset.nameEn}</span>
                             </button>
                           );
                         })}
@@ -950,109 +950,113 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
 
                     {quickColorRows.length ? (
                       quickColorRows.map((color, index) => (
-                        <div key={color.id} className="grid min-w-0 gap-4 rounded-xl border border-neutral-200 bg-white p-3">
-                          <div className="flex flex-col gap-2 border-b border-neutral-100 pb-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-2">
+                        <div key={color.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+                          <div className="flex flex-col gap-3 border-b border-neutral-100 bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                            <div className="flex min-w-0 items-center gap-3">
                               <span
-                                className="h-6 w-6 rounded-full border-2 border-white ring-1 ring-neutral-300"
+                                className="h-9 w-9 shrink-0 rounded-full border-2 border-white ring-1 ring-neutral-300"
                                 style={{ backgroundColor: normalizeHexColor(color.colorHex) }}
                               />
-                              <div>
-                                <p className="text-sm font-bold text-navy">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-bold text-navy">
                                   Color variant {index + 1}: {color.nameEn || "Custom color"}
                                 </p>
-                                <p className="text-xs font-semibold text-neutral-500">
+                                <p className="mt-1 text-xs font-semibold text-neutral-500">
                                   Add this color image, SKU, then fill stock by size.
                                 </p>
                               </div>
                             </div>
-                            <Badge tone="green">Auto syncs to variant table</Badge>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <Badge tone="green">Auto sync</Badge>
+                              <button
+                                type="button"
+                                onClick={() => removeQuickColorRow(color.id)}
+                                disabled={quickColorRows.length === 1}
+                                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-red-100 px-3 text-xs font-bold text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                              >
+                                <Trash2 size={14} />
+                                Remove
+                              </button>
+                            </div>
                           </div>
-                      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
-                        <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_160px]">
-                          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-                            Color name
-                            <input
-                              value={color.nameEn}
-                              onChange={(event) => updateQuickColorRow(color.id, "nameEn", event.target.value)}
-                              placeholder={index === 0 ? "Black" : "Maroon"}
-                              className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
-                            />
-                          </label>
-                          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-                            Color
-                            <div className="grid grid-cols-[1fr_42px] gap-2">
-                              <input
-                                value={color.colorHex}
-                                onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
-                                placeholder="#111827"
-                                className="h-10 rounded-md border border-neutral-200 bg-paper px-2 text-xs font-bold normal-case tracking-normal text-navy"
-                              />
-                              <input
-                                type="color"
-                                value={normalizeHexColor(color.colorHex)}
-                                onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
-                                aria-label="Color picker"
-                                className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-1"
-                              />
-                            </div>
-                          </label>
-                          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500 sm:col-span-2">
-                            SKU code for this color
-                            <input
-                              value={color.sku}
-                              onChange={(event) => updateQuickColorRow(color.id, "sku", event.target.value)}
-                              placeholder={`${form.sku || "BM-PRODUCT"}-${color.nameEn || "BLACK"}`}
-                              className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
-                            />
-                          </label>
-                          <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Size-wise stock</p>
-                                <p className="mt-1 text-xs font-semibold text-neutral-500">
-                                  Example: 52 = 5, 54 = 5, 56 = 10 for this color only.
-                                </p>
-                              </div>
-                              <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
-                            </div>
-                            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(78px,1fr))] gap-2">
-                              {sizeOptions.map((size) => (
-                                <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
-                                  <span className="text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
+                          <div className="grid min-w-0 gap-4 p-3 lg:grid-cols-[minmax(0,1fr)_280px] lg:p-4">
+                            <div className="grid min-w-0 gap-3">
+                              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+                                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                                  Color name
                                   <input
-                                    type="number"
-                                    min="0"
-                                    value={color.sizeStock[size.key] ?? ""}
-                                    onChange={(event) => updateQuickColorSizeStock(color.id, size.key, event.target.value)}
-                                    placeholder="0"
-                                    className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                                    value={color.nameEn}
+                                    onChange={(event) => updateQuickColorRow(color.id, "nameEn", event.target.value)}
+                                    placeholder={index === 0 ? "Black" : "Maroon"}
+                                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
                                   />
                                 </label>
-                              ))}
+                                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                                  Color code
+                                  <div className="grid grid-cols-[minmax(0,1fr)_46px] gap-2">
+                                    <input
+                                      value={color.colorHex}
+                                      onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
+                                      placeholder="#111827"
+                                      className="h-11 min-w-0 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-bold normal-case tracking-normal text-navy"
+                                    />
+                                    <input
+                                      type="color"
+                                      value={normalizeHexColor(color.colorHex)}
+                                      onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
+                                      aria-label="Color picker"
+                                      className="h-11 w-full rounded-md border border-neutral-200 bg-paper p-1"
+                                    />
+                                  </div>
+                                </label>
+                              </div>
+                              <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                                SKU code for this color
+                                <input
+                                  value={color.sku}
+                                  onChange={(event) => updateQuickColorRow(color.id, "sku", event.target.value)}
+                                  placeholder={`${form.sku || "BM-PRODUCT"}-${color.nameEn || "BLACK"}`}
+                                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                                />
+                              </label>
+                              <div className="rounded-lg border border-neutral-200 bg-paper p-3">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Size-wise stock</p>
+                                    <p className="mt-1 text-xs font-semibold text-neutral-500">
+                                      Example: 52 = 5, 54 = 5, 56 = 10 for this color only.
+                                    </p>
+                                  </div>
+                                  <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
+                                </div>
+                                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(96px,1fr))]">
+                                  {sizeOptions.map((size) => (
+                                    <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
+                                      <span className="truncate text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={color.sizeStock[size.key] ?? ""}
+                                        onChange={(event) => updateQuickColorSizeStock(color.id, size.key, event.target.value)}
+                                        placeholder="0"
+                                        className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                                      />
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="min-w-0 rounded-lg border border-neutral-200 bg-paper p-3">
+                              <AdminImageUploadField
+                                label={`${color.nameEn || `Color ${index + 1}`} image`}
+                                value={color.imageUrl}
+                                onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
+                                previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
+                                aspectClassName="aspect-square"
+                              />
                             </div>
                           </div>
                         </div>
-                        <div className="grid min-w-0 gap-3">
-                          <AdminImageUploadField
-                            label={`${color.nameEn || `Color ${index + 1}`} image`}
-                            value={color.imageUrl}
-                            onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
-                            previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
-                            aspectClassName="aspect-square"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeQuickColorRow(color.id)}
-                            disabled={quickColorRows.length === 1}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-red-100 px-3 text-sm font-semibold text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                          >
-                            <Trash2 size={15} />
-                            Remove color
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                       ))
                     ) : (
                       <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-4 text-sm font-semibold text-neutral-500">
