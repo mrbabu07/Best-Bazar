@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
+import { CreditCard, HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -138,6 +138,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stripePayment, setStripePayment] = useState<StripePaymentState | null>(null);
+  const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapLink, setMapLink] = useState("");
+  const [locating, setLocating] = useState(false);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -169,6 +172,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     selectedEmirate.trim().toLowerCase() === "dubai"
       ? ["Today 6 PM - 10 PM", "Tomorrow 9 AM - 1 PM", "Tomorrow 1 PM - 5 PM", "Tomorrow 5 PM - 9 PM"]
       : ["Standard delivery 10 AM - 6 PM", "Evening delivery 5 PM - 9 PM"];
+  const mapQuery = mapPin
+    ? `${mapPin.lat},${mapPin.lng}`
+    : `${selectedEmirate || emirate}, UAE`;
+  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=${mapPin ? "16" : "11"}&output=embed`;
+  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
 
   const paymentMethod = () => {
     if (payment === "cod") {
@@ -261,6 +269,34 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     }
   };
 
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Location is not supported on this device.");
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setMapPin({
+          lat: Number(position.coords.latitude.toFixed(6)),
+          lng: Number(position.coords.longitude.toFixed(6))
+        });
+        setLocating(false);
+        toast.success("Delivery map pin added.");
+      },
+      () => {
+        setLocating(false);
+        toast.error("Unable to get location. Please allow location permission or paste a map link.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 60000
+      }
+    );
+  };
+
   const applyCoupon = async () => {
     const code = coupon.trim();
 
@@ -300,6 +336,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
+    const customerNotes = String(formData.get("notes") ?? "").trim();
+    const mapNotes = [
+      mapPin ? `Map pin: https://www.google.com/maps?q=${mapPin.lat},${mapPin.lng}` : "",
+      mapLink.trim() ? `Customer map link: ${mapLink.trim()}` : ""
+    ].filter(Boolean);
+    const orderNotes = [customerNotes, ...mapNotes].filter(Boolean).join("\n");
     const payload = {
       items: items.map((item) => ({
         productId: item.productId ?? item.id,
@@ -322,7 +364,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       currency,
       locale,
       couponCode: appliedCoupon || coupon.trim() || undefined,
-      notes: String(formData.get("notes") ?? "") || undefined
+      notes: orderNotes || undefined
     };
 
     try {
@@ -499,6 +541,53 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   ))}
                 </select>
               </label>
+              <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-bold text-navy">
+                      <MapPin size={17} className="text-gold-700" />
+                      Delivery map pin
+                    </p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
+                      Optional. Add an exact pin so the courier can find the address faster.
+                    </p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
+                    <LocateFixed size={15} />
+                    {locating ? "Locating..." : "Use my location"}
+                  </Button>
+                </div>
+                <div className="overflow-hidden rounded-md border border-neutral-200 bg-white">
+                  <iframe
+                    title="Delivery map preview"
+                    src={mapEmbedUrl}
+                    className="h-52 w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    value={mapLink}
+                    onChange={(event) => setMapLink(event.target.value)}
+                    placeholder="Paste Google Maps pin/share link"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700"
+                  />
+                  <a
+                    href={mapOpenUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-11 items-center justify-center rounded-md border border-gold-200 bg-white px-4 text-sm font-bold text-navy hover:bg-gold-50"
+                  >
+                    Open map
+                  </a>
+                </div>
+                {mapPin ? (
+                  <p className="rounded-md bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                    Pin added: {mapPin.lat}, {mapPin.lng}
+                  </p>
+                ) : null}
+              </div>
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 {labels.notes}
                 <textarea
