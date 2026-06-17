@@ -239,10 +239,20 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }
   };
 
+  const SectionSaveButton = ({ label = "Save this section" }: { label?: string }) => (
+    <Button type="submit" variant="secondary" size="sm" disabled={saving}>
+      <Save size={16} />
+      {saving ? "Saving..." : label}
+    </Button>
+  );
+
   return (
     <form onSubmit={submit} className="grid gap-6 xl:grid-cols-2">
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-        <h2 className="text-lg font-bold text-navy">Store identity</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-bold text-navy">Store identity</h2>
+          <SectionSaveButton />
+        </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-navy">
             Store name EN
@@ -300,7 +310,10 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       </section>
 
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-        <h2 className="text-lg font-bold text-navy">Currency and shipping</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-bold text-navy">Currency and shipping</h2>
+          <SectionSaveButton />
+        </div>
         <div className="mt-5 grid gap-4">
           <label className="grid gap-2 text-sm font-semibold text-navy">
             AED to BDT
@@ -458,6 +471,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             />
             Courier ready
           </label>
+          <SectionSaveButton />
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -558,10 +572,15 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       </section>
 
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
-        <h2 className="text-lg font-bold text-navy">Payment controls</h2>
-        <p className="mt-1 text-sm font-semibold text-neutral-500">
-          Enable methods, edit checkout labels, and add provider/account details from admin.
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-navy">Payment controls</h2>
+            <p className="mt-1 text-sm font-semibold text-neutral-500">
+              Enable methods, edit checkout labels, and add provider/account details from admin.
+            </p>
+          </div>
+          <SectionSaveButton />
+        </div>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           {paymentStatusCards.map((item) => {
             const Icon = item.icon;
@@ -701,10 +720,15 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       </section>
 
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
-        <h2 className="text-lg font-bold text-navy">Storefront UI controls</h2>
-        <p className="mt-1 text-sm font-semibold text-neutral-500">
-          Change the storefront colors and styling from admin without editing code.
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-navy">Storefront UI controls</h2>
+            <p className="mt-1 text-sm font-semibold text-neutral-500">
+              Change the storefront colors and styling from admin without editing code.
+            </p>
+          </div>
+          <SectionSaveButton />
+        </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["primaryColor", "Primary color"],
@@ -775,7 +799,10 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       </section>
 
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-        <h2 className="text-lg font-bold text-navy">Contact and social</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-bold text-navy">Contact and social</h2>
+          <SectionSaveButton />
+        </div>
         <div className="mt-5 grid gap-4">
           {[
             ["phone", "Phone", true],
@@ -802,7 +829,10 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       </section>
 
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-        <h2 className="text-lg font-bold text-navy">SEO and tracking</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-bold text-navy">SEO and tracking</h2>
+          <SectionSaveButton />
+        </div>
         <div className="mt-5 grid gap-4">
           {[
             ["metaTitleEn", "Meta title EN"],
