@@ -51,7 +51,8 @@ export function AdminShell({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const nextLocale = locale === "en" ? "ar" : "en";
-  const switchLocalePath = pathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
+  const currentPathname = pathname ?? `/${locale}/admin/dashboard`;
+  const switchLocalePath = currentPathname.replace(new RegExp(`^/${locale}`), `/${nextLocale}`);
   const totalNotifications =
     notifications.pendingOrders + notifications.pendingReviews + notifications.lowStockProducts;
   const formatCount = (count: number) => (count > 99 ? "99+" : String(count));
@@ -59,7 +60,7 @@ export function AdminShell({
   const prefetchRoute = (href: string) => {
     const route = href.split("#")[0];
 
-    if (route && route !== pathname) {
+    if (route && route !== currentPathname) {
       router.prefetch(route);
     }
   };
@@ -269,7 +270,7 @@ export function AdminShell({
                 <div className="grid gap-1">
                   {group.items.map((item) => {
                     const itemPath = item.href.split(/[?#]/)[0];
-                    const active = pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+                    const active = currentPathname === itemPath || currentPathname.startsWith(`${itemPath}/`);
                     const Icon = item.icon;
                     const count = "count" in item ? item.count ?? 0 : 0;
 

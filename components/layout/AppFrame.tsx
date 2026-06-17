@@ -12,7 +12,8 @@ export type { StorefrontFrameSettings } from "@/components/layout/types";
 
 export function AppFrame({ children, locale, dictionary, settings }: StorefrontFrameProps) {
   const pathname = usePathname();
-  const isAdmin = pathname.includes(`/${locale}/admin`);
+  const currentPathname = pathname ?? `/${locale}`;
+  const isAdmin = currentPathname.includes(`/${locale}/admin`);
 
   if (isAdmin) {
     return <div className="min-h-screen">{children}</div>;

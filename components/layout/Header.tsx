@@ -48,6 +48,7 @@ type ProductNotification = {
 
 export function Header({ locale, dictionary, settings }: HeaderProps) {
   const pathname = usePathname();
+  const currentPathname = pathname ?? `/${locale}`;
   const router = useRouter();
   const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
@@ -208,7 +209,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   }, [setStorefrontSettings, settings]);
 
   const switchLocalePath = (nextLocale: Locale) => {
-    const segments = pathname.split("/");
+    const segments = currentPathname.split("/");
     segments[1] = nextLocale;
     return segments.join("/") || `/${nextLocale}`;
   };
@@ -274,7 +275,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
           <nav className="hidden shrink-0 items-center gap-1 lg:flex">
             {navItems.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const active = currentPathname === item.href || currentPathname.startsWith(`${item.href}/`);
 
               return (
                 <Link
@@ -477,7 +478,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
             <div className="grid gap-2 sm:grid-cols-2">
               {navItems.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const active = currentPathname === item.href || currentPathname.startsWith(`${item.href}/`);
 
                 return (
                   <Link

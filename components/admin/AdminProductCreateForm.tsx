@@ -176,6 +176,20 @@ function createQuickColor(index = 0): QuickColorForm {
   };
 }
 
+function normalizeHexColor(value: string, fallback = "#111827") {
+  const trimmed = value.trim();
+
+  if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`.toLowerCase();
+  }
+
+  return fallback;
+}
+
 function sizeFields(size?: ProductSizeOption) {
   return {
     sizeKey: size?.key ?? "",
@@ -455,7 +469,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
         return {
           colorNameEn: color.nameEn.trim() || "Default",
           colorNameAr: color.nameAr.trim() || color.nameEn.trim() || "Default",
-          colorHex: color.colorHex || "#111827",
+          colorHex: normalizeHexColor(color.colorHex),
           ...sizeFields(size),
           styleNameEn: "",
           styleNameAr: "",
@@ -685,7 +699,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="mx-auto grid w-full max-w-6xl gap-6">
       <form id="create-product-form" onSubmit={submit} className="grid gap-6">
         <section className="rounded-lg border border-gold-200 bg-white p-5 shadow-soft">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -798,7 +812,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                               />
                               <input
                                 type="color"
-                                value={color.colorHex || "#111827"}
+                                value={normalizeHexColor(color.colorHex)}
                                 onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
                                 aria-label="Color picker"
                                 className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-1"
@@ -942,9 +956,128 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               />
             </div>
           </div>
+
+          <details className="mt-5 rounded-xl border border-neutral-200 bg-paper p-4">
+            <summary className="cursor-pointer text-sm font-bold text-navy">
+              Optional product details
+              <span className="ml-2 text-xs font-semibold text-neutral-500">brand, Arabic, offer, fabric, publish</span>
+            </summary>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Brand
+                <input
+                  value={form.brand}
+                  onChange={(event) => updateForm("brand", event.target.value)}
+                  placeholder="Best Mart"
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Compare price AED
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.comparePrice}
+                  onChange={(event) => updateForm("comparePrice", event.target.value)}
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Product name AR
+                <input
+                  value={form.nameAr}
+                  onChange={(event) => updateForm("nameAr", event.target.value)}
+                  placeholder="Arabic name"
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Tags
+                <input
+                  value={form.tags}
+                  onChange={(event) => updateForm("tags", event.target.value)}
+                  placeholder="abaya, dubai, new"
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                Description AR
+                <textarea
+                  rows={3}
+                  value={form.descriptionAr}
+                  onChange={(event) => updateForm("descriptionAr", event.target.value)}
+                  placeholder="Arabic description"
+                  className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+                />
+              </label>
+              {isFashionCategory ? (
+                <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 sm:col-span-2 sm:grid-cols-2">
+                  {fashionCoreFields.map((field) =>
+                    field.type === "boolean" ? (
+                      <label key={field.key} className="flex h-11 items-center gap-2 text-sm font-semibold text-navy">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(form.fashionFields[field.key])}
+                          onChange={(event) => updateFashionField(field.key, event.target.checked)}
+                          className="accent-gold-500"
+                        />
+                        {locale === "ar" ? field.labelAr : field.labelEn}
+                      </label>
+                    ) : (
+                      <label key={field.key} className="grid gap-2 text-sm font-semibold text-navy">
+                        {locale === "ar" ? field.labelAr : field.labelEn}
+                        <input
+                          value={String(form.fashionFields[field.key] ?? "")}
+                          onChange={(event) => updateFashionField(field.key, event.target.value)}
+                          className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                      </label>
+                    )
+                  )}
+                </div>
+              ) : null}
+              <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-semibold text-navy sm:col-span-2 sm:grid-cols-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(event) => updateForm("isActive", event.target.checked)}
+                    className="accent-gold-500"
+                  />
+                  Active on storefront
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.isFeatured}
+                    onChange={(event) => updateForm("isFeatured", event.target.checked)}
+                    className="accent-gold-500"
+                  />
+                  Featured product
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Button type="submit" disabled={saving || categories.length === 0}>
+              {saving ? "Saving..." : "Create product"}
+            </Button>
+            <Button type="button" variant="secondary" onClick={resetForm}>
+              <RotateCcw size={16} />
+              Reset
+            </Button>
+            <Link
+              href={productsHref}
+              className="inline-flex h-11 items-center justify-center rounded-md border border-neutral-200 px-5 text-sm font-semibold text-navy hover:bg-paper"
+            >
+              Back to products
+            </Link>
+          </div>
         </section>
 
-        <details className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <details className="hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="cursor-pointer list-none">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1120,7 +1253,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <details className="hidden group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="flex cursor-pointer list-none flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Optional SEO</p>
@@ -1187,7 +1320,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <details className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <details className="hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="cursor-pointer list-none">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1303,7 +1436,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <details className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <details className="hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="cursor-pointer list-none">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1407,7 +1540,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   Color
                   <input
                     type="color"
-                    value={quickColorHex}
+                    value={normalizeHexColor(quickColorHex)}
                     onChange={(event) => setQuickColorHex(event.target.value)}
                     className="h-10 w-full rounded-md border border-neutral-200 bg-white px-2"
                   />
@@ -1464,7 +1597,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <details className="hidden group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
@@ -1532,7 +1665,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       />
                       <input
                         type="color"
-                        value={variant.colorHex || "#000000"}
+                        value={normalizeHexColor(variant.colorHex || "#000000", "#000000")}
                         onChange={(event) => updateVariant(index, "colorHex", event.target.value)}
                         aria-label="Color"
                         className="h-7 w-10 cursor-pointer bg-transparent"
@@ -1653,7 +1786,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <details className="hidden group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
@@ -1751,7 +1884,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <section className="hidden rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Final</p>
@@ -1852,7 +1985,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
         </section>
       </form>
 
-      <aside className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
+      <aside className="hidden h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Create product</p>

@@ -13,7 +13,8 @@ type BackButtonProps = {
 export function BackButton({ label, fallbackHref = "/", className }: BackButtonProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const resolvedLabel = label ?? (pathname.startsWith("/ar") ? "رجوع" : "Back");
+  const currentPathname = pathname ?? fallbackHref;
+  const resolvedLabel = label ?? (currentPathname.startsWith("/ar") ? "\u0631\u062c\u0648\u0639" : "Back");
 
   const goBack = () => {
     if (window.history.length > 1) {
