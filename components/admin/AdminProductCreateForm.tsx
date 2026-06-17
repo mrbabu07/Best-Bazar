@@ -163,12 +163,22 @@ const quickColors = [
   { nameEn: "Black", nameAr: "Black", colorHex: "#111827" },
   { nameEn: "Maroon", nameAr: "Maroon", colorHex: "#7f1d1d" },
   { nameEn: "Red", nameAr: "Red", colorHex: "#dc2626" },
+  { nameEn: "Rose", nameAr: "Rose", colorHex: "#f43f5e" },
+  { nameEn: "Pink", nameAr: "Pink", colorHex: "#ec4899" },
+  { nameEn: "Purple", nameAr: "Purple", colorHex: "#7c3aed" },
   { nameEn: "Blue", nameAr: "Blue", colorHex: "#2563eb" },
+  { nameEn: "Sky Blue", nameAr: "Sky Blue", colorHex: "#38bdf8" },
   { nameEn: "Gold", nameAr: "Gold", colorHex: "#d4af37" },
+  { nameEn: "Silver", nameAr: "Silver", colorHex: "#cbd5e1" },
+  { nameEn: "Grey", nameAr: "Grey", colorHex: "#6b7280" },
   { nameEn: "White", nameAr: "White", colorHex: "#ffffff" },
   { nameEn: "Navy", nameAr: "Navy", colorHex: "#1e3a8a" },
   { nameEn: "Beige", nameAr: "Beige", colorHex: "#d6c4a3" },
-  { nameEn: "Green", nameAr: "Green", colorHex: "#16a34a" }
+  { nameEn: "Brown", nameAr: "Brown", colorHex: "#92400e" },
+  { nameEn: "Olive", nameAr: "Olive", colorHex: "#556b2f" },
+  { nameEn: "Green", nameAr: "Green", colorHex: "#16a34a" },
+  { nameEn: "Orange", nameAr: "Orange", colorHex: "#f97316" },
+  { nameEn: "Yellow", nameAr: "Yellow", colorHex: "#facc15" }
 ];
 
 function createQuickColor(index = 0): QuickColorForm {
@@ -356,7 +366,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           nameEn: preset.nameEn,
           nameAr: preset.nameAr,
           colorHex: preset.colorHex,
-          imageUrl: mainImageUrl
+          imageUrl: ""
         }
       ];
     });
@@ -482,7 +492,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     const visibleSizes = sizeOptions.length ? sizeOptions : [{ key: "one-size", nameEn: "One Size", nameAr: "One Size" }];
     const usableColors = quickColorRows.filter((color) => color.nameEn.trim());
     const colors = usableColors.length ? usableColors : [createQuickColor()];
-    const mainImageUrl = form.images.find((image) => image.url.trim())?.url ?? "";
     const rows = colors.flatMap((color, colorIndex) => {
       const quickColorKey = color.nameEn.trim().toLowerCase() || "default";
       const colorSkuBase = color.sku.trim() || form.sku.trim();
@@ -506,7 +515,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           styleNameAr: "",
           fitNameEn: "",
           fitNameAr: "",
-          imageUrl: color.imageUrl || mainImageUrl,
+          imageUrl: color.imageUrl || "",
           sku: colorSkuBase ? `${colorSkuBase}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : `AUTO-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-"),
           stock,
           sortOrder: String(colorIndex * visibleSizes.length + sizeIndex),
@@ -835,13 +844,16 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   </div>
                   <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow} disabled={!hasMainImage}>
                     <Plus size={15} />
-                    Custom color
+                    Add custom color
                   </Button>
                 </div>
                 {hasMainImage ? (
                   <div className="mt-4 grid gap-4">
                     <div className="rounded-xl border border-neutral-200 bg-white p-3">
                       <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose product colors</p>
+                      <p className="mt-1 text-xs font-semibold text-neutral-500">
+                        Use presets or click Add custom color, then type any color name and hex code.
+                      </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {quickColors.map((preset) => {
                           const selected = quickColorRows.some(
@@ -962,7 +974,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       ))
                     ) : (
                       <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-4 text-sm font-semibold text-neutral-500">
-                        Select at least one color above to open the color-specific variant form.
+                        Select a preset color or click Add custom color to open the color-specific variant form.
                       </div>
                     )}
                     <div className="flex flex-wrap gap-2">
