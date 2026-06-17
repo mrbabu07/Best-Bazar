@@ -15,6 +15,7 @@ export type StorefrontFrameSettings = {
   address: string;
   instagram: string;
   facebook: string;
+  tiktok: string;
   currencyRates: CurrencyRates;
   shippingSettings: ShippingSettings;
   themeSettings: ThemeSettings;

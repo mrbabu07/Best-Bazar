@@ -2,6 +2,7 @@
 
 import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -15,6 +16,7 @@ import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { defaultShippingSettings, getShippingFee } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
+import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
 
@@ -402,21 +404,35 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   ];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8">
+    <main className="bg-paper/60">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-6 flex flex-col gap-4 border-b border-neutral-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
         <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}/cart`} className="mb-4" />
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">
           {dictionary.actions.checkout}
         </p>
-        <h1 className="mt-2 text-3xl font-bold text-navy">{dictionary.checkout.title}</h1>
+        <h1 className="mt-2 text-3xl font-bold text-navy sm:text-4xl">{dictionary.checkout.title}</h1>
         <p className="mt-3 max-w-2xl text-neutral-600">{dictionary.checkout.subtitle}</p>
+          </div>
+          <div className="rounded-md border border-gold-200 bg-white px-4 py-3 text-sm font-bold text-navy shadow-soft">
+            Secure Dubai checkout
+          </div>
       </div>
 
-      <form onSubmit={submitOrder} className="grid gap-8 lg:grid-cols-[1fr_390px]">
+      <form onSubmit={submitOrder} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_430px]">
         <section className="grid gap-6">
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
+              <div className="flex items-start gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-sm font-bold text-white">
+                  1
+                </span>
+                <div>
+                  <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
+                  <p className="mt-1 text-sm font-semibold text-neutral-500">Contact and delivery address</p>
+                </div>
+              </div>
               <div className="rounded-md bg-gold-50 px-3 py-2 text-xs font-semibold text-navy">
                 <p>Guest checkout</p>
                 <p className="mt-1 text-neutral-500">
@@ -426,7 +442,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {fields.map((field) => (
-                <label key={field.name} className="grid gap-2 text-sm font-semibold text-navy">
+                <label
+                  key={field.name}
+                  className={cn(
+                    "grid gap-2 text-sm font-semibold text-navy",
+                    ["name", "email", "street"].includes(field.name) && "sm:col-span-2"
+                  )}
+                >
                   {field.label}
                   <input
                     name={field.name}
@@ -488,8 +510,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
             </div>
           </div>
 
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-            <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
+          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-sm font-bold text-white">
+                2
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
+                <p className="mt-1 text-sm font-semibold text-neutral-500">Choose payment method</p>
+              </div>
+            </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {visiblePaymentOptions.map((option) => {
                 const Icon = option.icon;
@@ -570,17 +600,38 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         </section>
 
         <aside className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft lg:sticky lg:top-28">
-          <h2 className="text-xl font-bold text-navy">{dictionary.cart.summary}</h2>
-          <div className="mt-5 grid gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-navy">{dictionary.cart.summary}</h2>
+              <p className="mt-1 text-sm font-semibold text-neutral-500">{items.length} item(s) in cart</p>
+            </div>
+            <span className="rounded-md bg-gold-50 px-3 py-2 text-xs font-bold text-gold-800">AED</span>
+          </div>
+          <div className="mt-5 grid max-h-[360px] gap-4 overflow-y-auto pr-1">
             {items.length === 0 ? (
               <p className="text-sm text-neutral-500">{dictionary.cart.emptySubtitle}</p>
             ) : (
               items.map((item) => (
-                <div key={item.id} className="flex justify-between gap-4 text-sm">
-                  <span className="text-neutral-600">
-                    {item.quantity} x {getLocalized(item.name, locale)}
-                    {item.variantName ? ` / ${getLocalized(item.variantName, locale)}` : ""}
-                  </span>
+                <div key={item.id} className="grid grid-cols-[64px_1fr_auto] gap-3 text-sm">
+                  <div className="relative h-16 w-16 overflow-hidden rounded-md border border-neutral-200 bg-paper">
+                    <Image
+                      src={safeRemoteImage(item.image, fallbackProductImage, { width: 160, height: 160, crop: "fill" })}
+                      alt={getLocalized(item.name, locale)}
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                    <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-navy px-1 text-[10px] font-bold text-white">
+                      {item.quantity}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-navy">{getLocalized(item.name, locale)}</p>
+                    {item.variantName ? (
+                      <p className="mt-1 text-xs font-semibold text-neutral-500">{getLocalized(item.variantName, locale)}</p>
+                    ) : null}
+                    <p className="mt-1 text-xs text-neutral-500">{item.brand}</p>
+                  </div>
                   <span className="font-semibold text-navy">
                     {formatCurrency(item.price * item.quantity, currency, locale, currencyRates)}
                   </span>
@@ -642,6 +693,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
           </Button>
         </aside>
       </form>
+      </div>
     </main>
   );
 }

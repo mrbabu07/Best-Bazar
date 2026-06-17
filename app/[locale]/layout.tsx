@@ -78,6 +78,7 @@ async function getFrameSettings() {
     address: settings?.address ?? "",
     instagram: settings?.instagram ?? "",
     facebook: settings?.facebook ?? "",
+    tiktok: settings?.tiktok ?? "",
     currencyRates: normalizeCurrencyRates({
       AED: 1,
       BDT: settings?.aedToBdt,

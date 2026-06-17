@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, MessageCircle, Music2, Phone } from "lucide-react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
 
@@ -39,6 +39,15 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
                 className="grid h-9 w-9 place-items-center rounded-md border border-gold-200 hover:bg-gold-50"
               >
                 <Facebook size={18} />
+              </Link>
+            ) : null}
+            {settings.tiktok ? (
+              <Link
+                href={settings.tiktok}
+                aria-label="TikTok"
+                className="grid h-9 w-9 place-items-center rounded-md border border-gold-200 hover:bg-gold-50"
+              >
+                <Music2 size={18} />
               </Link>
             ) : null}
           </div>
