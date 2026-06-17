@@ -627,7 +627,172 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <form id="create-product-form" onSubmit={submit} className="grid gap-6">
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <section className="rounded-lg border border-gold-200 bg-white p-5 shadow-soft">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Quick add</p>
+              <h2 className="mt-1 text-xl font-bold text-navy">Simple product setup</h2>
+              <p className="mt-1 text-sm text-neutral-600">
+                Fill only what customers see first: name, price, description, image, color, size, and stock.
+              </p>
+            </div>
+            <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Needs info"}</Badge>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                Product name
+                <input
+                  value={form.nameEn}
+                  onChange={(event) => updateNameEn(event.target.value)}
+                  placeholder="Premium abaya / handbag / perfume"
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Category
+                <select
+                  value={form.categoryId}
+                  onChange={(event) => updateForm("categoryId", event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {locale === "ar" ? category.nameAr : category.nameEn}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Price AED
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.price}
+                  onChange={(event) => updateForm("price", event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Color
+                <div className="grid grid-cols-[1fr_52px] gap-2">
+                  <input
+                    value={quickColorNameEn}
+                    onChange={(event) => setQuickColorNameEn(event.target.value)}
+                    placeholder="Black"
+                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                  />
+                  <input
+                    type="color"
+                    value={quickColorHex}
+                    onChange={(event) => setQuickColorHex(event.target.value)}
+                    aria-label="Product color"
+                    className="h-11 w-full rounded-md border border-neutral-200 bg-paper px-2"
+                  />
+                </div>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Total stock
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.stock}
+                  onChange={(event) => updateForm("stock", event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                Description
+                <textarea
+                  rows={3}
+                  value={form.descriptionEn}
+                  onChange={(event) => updateForm("descriptionEn", event.target.value)}
+                  placeholder="Short description shown on product details page."
+                  className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
+                />
+              </label>
+              <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-navy">Size and stock</p>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">
+                      Add stock by size if needed. Empty boxes will split total stock automatically.
+                    </p>
+                  </div>
+                  <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-5">
+                  {sizeOptions.map((size) => (
+                    <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
+                      <span className="text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={quickSizeStock[size.key] ?? ""}
+                        onChange={(event) =>
+                          setQuickSizeStock((current) => ({
+                            ...current,
+                            [size.key]: event.target.value
+                          }))
+                        }
+                        placeholder="0"
+                        className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows}>
+                    <PackageCheck size={15} />
+                    Apply color and size stock
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setQuickSizeStock({})}>
+                    Clear sizes
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              <AdminImageUploadField
+                label="Main product image"
+                value={form.images[0]?.url ?? ""}
+                onChange={(value) => updateImage(0, "url", value)}
+                onUploadMany={addUploadedImages}
+                previewAlt={form.nameEn || "Product image"}
+                aspectClassName="aspect-[4/3]"
+                multiple
+              />
+              <AdminMediaUploadField
+                label="Short video"
+                value={form.shortVideoUrl}
+                onChange={(value) => updateForm("shortVideoUrl", value)}
+                previewAlt={form.nameEn || "Product video"}
+                aspectClassName="aspect-video"
+                acceptVideo
+                acceptImage={false}
+              />
+            </div>
+          </div>
+        </section>
+
+        <details className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <summary className="cursor-pointer list-none">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
+                <h2 className="mt-1 text-xl font-bold text-navy">Catalog controls</h2>
+                <p className="mt-1 text-sm text-neutral-600">Open only for brand, Arabic name, slug, SKU, and category presets.</p>
+              </div>
+              <Badge tone="neutral">Optional</Badge>
+            </div>
+          </summary>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 1</p>
@@ -644,7 +809,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 value={form.nameEn}
                 onChange={(event) => updateNameEn(event.target.value)}
                 placeholder="Premium travel trolley"
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -693,7 +857,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <select
                 value={form.categoryId}
                 onChange={(event) => updateForm("categoryId", event.target.value)}
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               >
                 {categories.map((category) => (
@@ -793,7 +956,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               />
             </label>
           </div>
-        </section>
+        </details>
 
         <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="flex cursor-pointer list-none flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -862,15 +1025,17 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </details>
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 2</p>
-              <h2 className="mt-1 text-xl font-bold text-navy">Pricing and product copy</h2>
-              <p className="mt-1 text-sm text-neutral-600">AED pricing, base stock, tags, and bilingual descriptions.</p>
+        <details className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <summary className="cursor-pointer list-none">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
+                <h2 className="mt-1 text-xl font-bold text-navy">Extra pricing and copy</h2>
+                <p className="mt-1 text-sm text-neutral-600">Open only for compare price, tags, Arabic description, or copy edits.</p>
+              </div>
+              <Badge tone={isPricingReady ? "green" : "gold"}>{isPricingReady ? "Ready" : "Needs stock"}</Badge>
             </div>
-            <Badge tone={isPricingReady ? "green" : "gold"}>{isPricingReady ? "Ready" : "Needs stock"}</Badge>
-          </div>
+          </summary>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <label className="grid gap-2 text-sm font-semibold text-navy">
@@ -881,7 +1046,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 step="0.01"
                 value={form.price}
                 onChange={(event) => updateForm("price", event.target.value)}
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -904,7 +1068,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 step="1"
                 value={form.stock}
                 onChange={(event) => updateForm("stock", event.target.value)}
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -976,15 +1139,21 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               </div>
             </details>
           </div>
-        </section>
+        </details>
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 3</p>
-              <h2 className="mt-1 text-xl font-bold text-navy">Product media</h2>
-              <p className="mt-1 text-sm text-neutral-600">The first image becomes the product card image.</p>
+        <details className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <summary className="cursor-pointer list-none">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
+                <h2 className="mt-1 text-xl font-bold text-navy">Gallery and media controls</h2>
+                <p className="mt-1 text-sm text-neutral-600">Open only for extra gallery images, alt text, sort order, and detailed stock helper.</p>
+              </div>
+              <Badge tone={isMediaReady ? "green" : "gold"}>{imageCount ? `${imageCount} image${imageCount === 1 ? "" : "s"}` : "No image"}</Badge>
             </div>
+          </summary>
+
+          <div className="mt-4 flex justify-start">
             <Button type="button" variant="secondary" size="sm" onClick={addImage}>
               <Plus size={15} />
               Add image
@@ -1131,7 +1300,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               </div>
             </div>
           </div>
-        </section>
+        </details>
 
         <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
