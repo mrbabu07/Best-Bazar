@@ -71,6 +71,7 @@ type QuickColorForm = {
   nameAr: string;
   colorHex: string;
   imageUrl: string;
+  sizeStock: Record<string, string>;
 };
 
 type ProductForm = {
@@ -167,10 +168,11 @@ const quickColors = [
 function createQuickColor(index = 0): QuickColorForm {
   return {
     id: `${Date.now()}-${index}`,
-    nameEn: index === 0 ? "Default" : "",
-    nameAr: index === 0 ? "Default" : "",
+    nameEn: index === 0 ? "Black" : "",
+    nameAr: index === 0 ? "Black" : "",
     colorHex: index === 0 ? "#111827" : "#000000",
-    imageUrl: ""
+    imageUrl: "",
+    sizeStock: {}
   };
 }
 
@@ -290,9 +292,25 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     setQuickSizeStock({});
   };
 
-  const updateQuickColorRow = (id: string, key: keyof Omit<QuickColorForm, "id">, value: string) => {
+  const updateQuickColorRow = (id: string, key: keyof Omit<QuickColorForm, "id" | "sizeStock">, value: string) => {
     setQuickColorRows((current) =>
       current.map((color) => (color.id === id ? { ...color, [key]: value } : color))
+    );
+  };
+
+  const updateQuickColorSizeStock = (id: string, sizeKey: string, value: string) => {
+    setQuickColorRows((current) =>
+      current.map((color) =>
+        color.id === id
+          ? {
+              ...color,
+              sizeStock: {
+                ...color.sizeStock,
+                [sizeKey]: value
+              }
+            }
+          : color
+      )
     );
   };
 
@@ -418,17 +436,18 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
 
   const applyQuickStockRows = () => {
     const visibleSizes = sizeOptions.length ? sizeOptions : [{ key: "one-size", nameEn: "One Size", nameAr: "One Size" }];
-    const fallbackTotal = Number(form.stock || 0);
-    const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
-    const remainder = visibleSizes.length ? fallbackTotal % visibleSizes.length : 0;
     const usableColors = quickColorRows.filter((color) => color.nameEn.trim());
     const colors = usableColors.length ? usableColors : [createQuickColor()];
     const mainImageUrl = form.images.find((image) => image.url.trim())?.url ?? "";
     const rows = colors.flatMap((color, colorIndex) => {
       const quickColorKey = color.nameEn.trim().toLowerCase() || "default";
+      const colorTotal = Object.values(color.sizeStock).reduce((total, value) => total + Number(value || 0), 0);
+      const fallbackTotal = colorTotal || Math.floor(Number(form.stock || 0) / Math.max(colors.length, 1));
+      const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
+      const remainder = visibleSizes.length ? fallbackTotal % visibleSizes.length : 0;
 
       return visibleSizes.map((size, sizeIndex) => {
-        const manualStock = quickSizeStock[size.key];
+        const manualStock = color.sizeStock[size.key];
         const stock = manualStock !== undefined && manualStock !== ""
           ? manualStock
           : String(Math.max(0, splitStock + (sizeIndex < remainder ? 1 : 0)));
@@ -744,105 +763,99 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <div className="rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-bold text-navy">Colors</p>
+                    <p className="text-sm font-bold text-navy">Color-wise size stock</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Each color can use its own image for cards and product details.
+                      Add Black, Maroon, or any color, then enter stock for each size inside that color.
                     </p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={addQuickColorRow}>
                     <Plus size={15} />
-                    Add Another Color
+                    Add color stock group
                   </Button>
                 </div>
                 <div className="mt-3 grid gap-3">
                   {quickColorRows.map((color, index) => (
-                    <div key={color.id} className="grid gap-3 rounded-xl border border-neutral-200 bg-white p-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-                      <div className="grid gap-3 sm:grid-cols-[1fr_110px]">
-                        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-                          Color name
-                          <input
-                            value={color.nameEn}
-                            onChange={(event) => updateQuickColorRow(color.id, "nameEn", event.target.value)}
-                            placeholder="Black"
-                            className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
-                          />
-                        </label>
-                        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-                          Hex
-                          <div className="grid grid-cols-[1fr_42px] gap-2">
+                    <div key={color.id} className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-3">
+                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+                        <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+                          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                            Color name
                             <input
-                              value={color.colorHex}
-                              onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
-                              placeholder="#111827"
-                              className="h-10 rounded-md border border-neutral-200 bg-paper px-2 text-xs font-bold normal-case tracking-normal text-navy"
+                              value={color.nameEn}
+                              onChange={(event) => updateQuickColorRow(color.id, "nameEn", event.target.value)}
+                              placeholder={index === 0 ? "Black" : "Maroon"}
+                              className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
                             />
-                            <input
-                              type="color"
-                              value={color.colorHex || "#111827"}
-                              onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
-                              aria-label="Color picker"
-                              className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-1"
-                            />
+                          </label>
+                          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                            Color
+                            <div className="grid grid-cols-[1fr_42px] gap-2">
+                              <input
+                                value={color.colorHex}
+                                onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
+                                placeholder="#111827"
+                                className="h-10 rounded-md border border-neutral-200 bg-paper px-2 text-xs font-bold normal-case tracking-normal text-navy"
+                              />
+                              <input
+                                type="color"
+                                value={color.colorHex || "#111827"}
+                                onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
+                                aria-label="Color picker"
+                                className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-1"
+                              />
+                            </div>
+                          </label>
+                          <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Size-wise stock</p>
+                                <p className="mt-1 text-xs font-semibold text-neutral-500">
+                                  Example: 52 = 5, 54 = 5, 56 = 10 for this color only.
+                                </p>
+                              </div>
+                              <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
+                            </div>
+                            <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-5">
+                              {sizeOptions.map((size) => (
+                                <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
+                                  <span className="text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={color.sizeStock[size.key] ?? ""}
+                                    onChange={(event) => updateQuickColorSizeStock(color.id, size.key, event.target.value)}
+                                    placeholder="0"
+                                    className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                                  />
+                                </label>
+                              ))}
+                            </div>
                           </div>
-                        </label>
+                        </div>
+                        <AdminImageUploadField
+                          label={`${color.nameEn || `Color ${index + 1}`} image`}
+                          value={color.imageUrl}
+                          onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
+                          previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
+                          aspectClassName="aspect-square"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeQuickColorRow(color.id)}
+                          disabled={quickColorRows.length === 1}
+                          className="grid h-10 w-10 place-items-center self-start rounded-md border border-red-100 text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          aria-label="Remove color"
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
-                      <AdminImageUploadField
-                        label={`${color.nameEn || `Color ${index + 1}`} image`}
-                        value={color.imageUrl}
-                        onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
-                        previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
-                        aspectClassName="aspect-square"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeQuickColorRow(color.id)}
-                        disabled={quickColorRows.length === 1}
-                        className="grid h-10 w-10 place-items-center self-start rounded-md border border-red-100 text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                        aria-label="Remove color"
-                      >
-                        <Trash2 size={15} />
-                      </button>
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-navy">Size and stock</p>
-                    <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Add stock by size if needed. Empty boxes will split total stock automatically.
-                    </p>
-                  </div>
-                  <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-5">
-                  {sizeOptions.map((size) => (
-                    <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
-                      <span className="text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
-                      <input
-                        type="number"
-                        min="0"
-                        value={quickSizeStock[size.key] ?? ""}
-                        onChange={(event) =>
-                          setQuickSizeStock((current) => ({
-                            ...current,
-                            [size.key]: event.target.value
-                          }))
-                        }
-                        placeholder="0"
-                        className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
-                      />
-                    </label>
                   ))}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows}>
                     <PackageCheck size={15} />
                     Generate variant table
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setQuickSizeStock({})}>
-                    Clear sizes
                   </Button>
                 </div>
               </div>
