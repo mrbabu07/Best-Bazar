@@ -21,9 +21,19 @@ const categoryCustomFieldSchema = z.object({
 });
 const fashionFieldsSchema = z.object({
   fabric: nullableString.default(""),
+  material: nullableString.default(""),
+  lining: nullableString.default(""),
   occasion: nullableString.default(""),
   season: nullableString.default(""),
   care: nullableString.default(""),
+  fit: nullableString.default(""),
+  style: nullableString.default(""),
+  length: nullableString.default(""),
+  closure: nullableString.default(""),
+  transparency: nullableString.default(""),
+  origin: nullableString.default(""),
+  warranty: nullableString.default(""),
+  returnNote: nullableString.default(""),
   halalBadge: z.boolean().default(false)
 });
 const paymentSettingsSchema = z.object({

@@ -181,6 +181,15 @@ const quickColors = [
   { nameEn: "Yellow", nameAr: "Yellow", colorHex: "#facc15" }
 ];
 
+const optionalSpecPresets = [
+  { keyEn: "Material", keyAr: "الخامة", valueEn: "", valueAr: "" },
+  { keyEn: "Country of origin", keyAr: "بلد المنشأ", valueEn: "", valueAr: "" },
+  { keyEn: "Package includes", keyAr: "محتويات العبوة", valueEn: "", valueAr: "" },
+  { keyEn: "Warranty", keyAr: "الضمان", valueEn: "", valueAr: "" },
+  { keyEn: "Delivery note", keyAr: "ملاحظة التوصيل", valueEn: "", valueAr: "" },
+  { keyEn: "Return policy", keyAr: "سياسة الإرجاع", valueEn: "", valueAr: "" }
+];
+
 function createQuickColor(index = 0): QuickColorForm {
   return {
     id: `${Date.now()}-${index}`,
@@ -642,6 +651,29 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
         { keyEn: "", keyAr: "", valueEn: "", valueAr: "", sortOrder: String(current.specifications.length) }
       ]
     }));
+  };
+
+  const addSpecificationPreset = (preset: (typeof optionalSpecPresets)[number]) => {
+    setForm((current) => {
+      const exists = current.specifications.some(
+        (specification) => specification.keyEn.trim().toLowerCase() === preset.keyEn.toLowerCase()
+      );
+
+      if (exists) {
+        return current;
+      }
+
+      return {
+        ...current,
+        specifications: [
+          ...current.specifications,
+          {
+            ...preset,
+            sortOrder: String(current.specifications.length)
+          }
+        ]
+      };
+    });
   };
 
   const removeSpecification = (index: number) => {
@@ -1123,7 +1155,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           <details className="mt-5 rounded-xl border border-neutral-200 bg-paper p-4">
             <summary className="cursor-pointer text-sm font-bold text-navy">
               Optional product details
-              <span className="ml-2 text-xs font-semibold text-neutral-500">brand, Arabic, offer, fabric, publish</span>
+              <span className="ml-2 text-xs font-semibold text-neutral-500">brand, Arabic, fabric, occasion, warranty, publish</span>
             </summary>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-semibold text-navy">
@@ -1176,6 +1208,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               </label>
               {isFashionCategory ? (
                 <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 sm:col-span-2 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <h3 className="text-sm font-bold text-navy">Product detail fields</h3>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">
+                      Fill only what matters. These rows show on the product details page so customers understand fabric, fit, length, care, and return notes.
+                    </p>
+                  </div>
                   {fashionCoreFields.map((field) =>
                     field.type === "boolean" ? (
                       <label key={field.key} className="flex h-11 items-center gap-2 text-sm font-semibold text-navy">
@@ -1200,6 +1238,88 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   )}
                 </div>
               ) : null}
+              <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 sm:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-navy">Extra product facts</h3>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">
+                      Add any customer-facing details like package includes, warranty, origin, delivery note, or return policy.
+                    </p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
+                    <Plus size={15} />
+                    Add custom fact
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {optionalSpecPresets.map((preset) => (
+                    <button
+                      key={preset.keyEn}
+                      type="button"
+                      onClick={() => addSpecificationPreset(preset)}
+                      className="rounded-md border border-neutral-200 bg-paper px-3 py-2 text-xs font-bold text-neutral-700 transition hover:border-gold-300 hover:bg-gold-50"
+                    >
+                      + {preset.keyEn}
+                    </button>
+                  ))}
+                </div>
+                {form.specifications.length ? (
+                  <div className="grid gap-3">
+                    {form.specifications.map((specification, index) => (
+                      <div key={index} className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <input
+                            value={specification.keyEn}
+                            onChange={(event) => updateSpecification(index, "keyEn", event.target.value)}
+                            placeholder="Label EN, e.g. Warranty"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={specification.keyAr}
+                            onChange={(event) => updateSpecification(index, "keyAr", event.target.value)}
+                            placeholder="Label AR"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={specification.valueEn}
+                            onChange={(event) => updateSpecification(index, "valueEn", event.target.value)}
+                            placeholder="Value EN, e.g. 7 days exchange"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <input
+                            value={specification.valueAr}
+                            onChange={(event) => updateSpecification(index, "valueAr", event.target.value)}
+                            placeholder="Value AR"
+                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={specification.sortOrder}
+                            onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
+                            aria-label="Specification sort order"
+                            className="h-10 w-24 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeSpecification(index)}
+                            className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                            aria-label="Remove specification"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
+                    No extra facts yet. Product can still be created without them.
+                  </p>
+                )}
+              </div>
               <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-semibold text-navy sm:col-span-2 sm:grid-cols-2">
                 <label className="flex items-center gap-2">
                   <input
