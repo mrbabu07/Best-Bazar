@@ -181,6 +181,8 @@ const quickColors = [
   { nameEn: "Yellow", nameAr: "Yellow", colorHex: "#facc15" }
 ];
 
+const visibleQuickColorNames = new Set(["Black", "Maroon", "Red", "Blue", "Gold", "White"]);
+
 const optionalSpecPresets = [
   { keyEn: "Material", keyAr: "الخامة", valueEn: "", valueAr: "" },
   { keyEn: "Country of origin", keyAr: "بلد المنشأ", valueEn: "", valueAr: "" },
@@ -919,22 +921,20 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       Step 1: upload the main product image above. You can still prepare colors now, but save needs at least one main image.
                     </div>
                   ) : null}
-                    <details className="rounded-xl border border-neutral-200 bg-paper p-3 sm:p-4">
-                      <summary className="cursor-pointer list-none">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose visible product colors</p>
-                            <p className="mt-1 text-xs font-semibold text-neutral-500">
-                              Tap to show/hide color options. Selected colors stay below.
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600">
-                            {quickColorRows.length} selected
-                          </span>
+                    <div className="rounded-xl border border-neutral-200 bg-paper p-3 sm:p-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose product colors</p>
+                          <p className="mt-1 text-xs font-semibold text-neutral-500">
+                            Pick a color below. More colors are inside the dropdown.
+                          </p>
                         </div>
-                      </summary>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600">
+                          {quickColorRows.length} selected
+                        </span>
+                      </div>
                       <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                        {quickColors.map((preset) => {
+                        {quickColors.filter((preset) => visibleQuickColorNames.has(preset.nameEn)).map((preset) => {
                           const selected = quickColorRows.some(
                             (color) => color.nameEn.trim().toLowerCase() === preset.nameEn.toLowerCase()
                           );
@@ -960,7 +960,39 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                           );
                         })}
                       </div>
-                    </details>
+                      <details className="mt-3 rounded-lg border border-neutral-200 bg-white p-3">
+                        <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                          More colors
+                        </summary>
+                        <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                          {quickColors.filter((preset) => !visibleQuickColorNames.has(preset.nameEn)).map((preset) => {
+                            const selected = quickColorRows.some(
+                              (color) => color.nameEn.trim().toLowerCase() === preset.nameEn.toLowerCase()
+                            );
+
+                            return (
+                              <button
+                                key={preset.nameEn}
+                                type="button"
+                                onClick={() => addQuickColorPreset(preset)}
+                                className={`inline-flex h-10 min-w-0 items-center gap-2 rounded-md border px-3 text-sm font-bold transition ${
+                                  selected
+                                    ? "border-gold-500 bg-gold-50 text-navy ring-2 ring-gold-200"
+                                    : "border-neutral-200 bg-white text-neutral-700 hover:border-gold-300"
+                                }`}
+                                aria-pressed={selected}
+                              >
+                                <span
+                                  className="h-5 w-5 rounded-full border-2 border-white ring-1 ring-neutral-300"
+                                  style={{ backgroundColor: preset.colorHex }}
+                                />
+                                <span className="truncate">{preset.nameEn}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </details>
+                    </div>
 
                     {quickColorRows.length ? (
                       quickColorRows.map((color, index) => (
