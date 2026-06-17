@@ -839,16 +839,20 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-navy">Color-wise variant setup</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Upload the main image first, then choose colors. Each selected color gets its own image, SKU, and size stock.
+                      Choose the product colors, then add each color image, SKU, and size-wise stock.
                     </p>
                   </div>
-                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow} disabled={!hasMainImage}>
+                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow}>
                     <Plus size={15} />
                     Add custom color
                   </Button>
                 </div>
-                {hasMainImage ? (
-                  <div className="mt-4 grid gap-4">
+                <div className="mt-4 grid gap-4">
+                  {!hasMainImage ? (
+                    <div className="rounded-xl border border-gold-200 bg-gold-50 p-3 text-xs font-semibold leading-5 text-neutral-700">
+                      Main product image is still required before save. You can select colors now, then upload main and color-wise images.
+                    </div>
+                  ) : null}
                     <div className="rounded-xl border border-neutral-200 bg-white p-3">
                       <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose product colors</p>
                       <p className="mt-1 text-xs font-semibold text-neutral-500">
@@ -984,11 +988,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       </Button>
                     </div>
                   </div>
-                ) : (
-                  <div className="mt-4 rounded-xl border border-dashed border-neutral-300 bg-white p-4 text-sm font-semibold text-neutral-500">
-                    Add the main product image above. Color choices and variant stock fields will appear here after the image is set.
-                  </div>
-                )}
               </div>
               {form.variants.length ? (
                 <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white sm:col-span-2">

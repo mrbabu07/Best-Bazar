@@ -1,8 +1,10 @@
 import withPWAInit from "@ducanh2912/next-pwa";
 
+const enablePWA = process.env.NEXT_PUBLIC_ENABLE_PWA === "true";
+
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "development",
+  disable: process.env.NODE_ENV === "development" || !enablePWA,
   register: true,
   skipWaiting: true,
   sw: "sw.js",
@@ -23,6 +25,7 @@ const withPWA = withPWAInit({
 const nextConfig = {
   poweredByHeader: false,
   compress: true,
+  pageExtensions: ["tsx", "ts", "jsx", "js"],
   
   // Image optimization
   images: {
@@ -72,4 +75,4 @@ const nextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+export default enablePWA ? withPWA(nextConfig) : nextConfig;
