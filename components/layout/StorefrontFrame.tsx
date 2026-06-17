@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import type { StorefrontFrameProps } from "@/components/layout/types";
 import { WhatsAppQuickButton } from "@/components/layout/WhatsAppQuickButton";
 import { safeResponseJson } from "@/lib/safe-json";
@@ -88,8 +89,9 @@ export function StorefrontFrame({ children, locale, dictionary, settings }: Stor
       style={storefrontThemeStyle(liveSettings.themeSettings)}
     >
       <Header locale={locale} dictionary={dictionary} settings={liveSettings} />
-      {children}
+      <div className="pb-20 lg:pb-0">{children}</div>
       <Footer locale={locale} dictionary={dictionary} settings={liveSettings} />
+      <MobileBottomNav locale={locale} />
       <WhatsAppQuickButton locale={locale} phone={liveSettings.whatsapp} />
     </div>
   );

@@ -14,6 +14,7 @@ import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { FavouriteButton, ShareProductButton } from "@/components/product/ProductActions";
 import { fashionCoreFields } from "@/lib/category-fields";
 import { cleanLengthSizeLabel } from "@/lib/product-size-label";
 
@@ -357,6 +358,8 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             <ShoppingBag size={18} />
             {dictionary.actions.addToCart}
           </Button>
+          <FavouriteButton product={product} locale={locale} />
+          <ShareProductButton product={product} locale={locale} />
         </div>
 
         <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">

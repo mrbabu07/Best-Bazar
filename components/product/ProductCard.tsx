@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ProductCardAddButton, ProductCardPrice } from "@/components/product/ProductCardPurchase";
+import { FavouriteButton, ShareProductButton } from "@/components/product/ProductActions";
 import { Badge } from "@/components/ui/Badge";
 import type { Product } from "@/lib/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -47,7 +48,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   };
 
   return (
-    <article className="group flex h-[390px] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition-all duration-200 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
+    <article className="group relative flex h-[390px] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition-all duration-200 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
       <Link
         href={`/${locale}/product/${product.slug}`}
         className="relative block h-[174px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[260px] lg:h-[280px]"
@@ -66,6 +67,10 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
           {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
         </div>
       </Link>
+      <div className="absolute right-2 top-2 z-10 flex gap-1.5 rtl:left-2 rtl:right-auto">
+        <FavouriteButton product={cartProduct} locale={locale} compact />
+        <ShareProductButton product={cartProduct} locale={locale} compact />
+      </div>
 
       <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
         <Link
