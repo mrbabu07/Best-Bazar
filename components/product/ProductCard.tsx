@@ -1,6 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { useState } from "react";
 import { ProductCardAddButton, ProductCardPrice } from "@/components/product/ProductCardPurchase";
 import { Badge } from "@/components/ui/Badge";
 import type { Product } from "@/lib/types";
@@ -11,19 +13,29 @@ type ProductCardProps = {
   product: Product;
   locale: Locale;
   dictionary: Dictionary;
-  priority?: boolean; // For LCP optimization
+  priority?: boolean;
 };
 
 export function ProductCard({ product, locale, dictionary, priority = false }: ProductCardProps) {
-  const colorLabel = locale === "ar" ? "الألوان" : "Colors";
   const hasSale = product.comparePrice && product.comparePrice > product.price;
   const colorSwatches = product.variants.reduce<typeof product.variants>((items, variant) => {
     const key = variant.colorName.en.trim().toLowerCase();
 
     return items.some((item) => item.colorName.en.trim().toLowerCase() === key) ? items : [...items, variant];
   }, []);
-  const visibleColorSwatches = colorSwatches.slice(0, 3);
+  const [selectedColorId, setSelectedColorId] = useState(colorSwatches[0]?.id ?? "");
+  const selectedColor = colorSwatches.find((variant) => variant.id === selectedColorId) ?? colorSwatches[0];
+  const cardImage = selectedColor?.imageUrl
+    ? {
+        url: selectedColor.imageUrl,
+        alt: `${getLocalized(product.name, locale)} - ${getLocalized(selectedColor.colorName, locale)}`
+      }
+    : product.images[0];
+  const visibleColorSwatches = colorSwatches.slice(0, 5);
   const hiddenColorCount = Math.max(colorSwatches.length - visibleColorSwatches.length, 0);
+  const totalStock = product.variants.length
+    ? product.variants.filter((variant) => variant.isActive).reduce((total, variant) => total + Math.max(0, variant.stock), 0)
+    : product.stock;
   const cartProduct = {
     id: product.id,
     slug: product.slug,
@@ -35,74 +47,67 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   };
 
   return (
-    <article className="group flex h-[430px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[510px] lg:h-[540px]">
+    <article className="group flex h-[390px] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition-all duration-200 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[470px] lg:h-[500px]">
       <Link
         href={`/${locale}/product/${product.slug}`}
         className="relative block h-[174px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[260px] lg:h-[280px]"
       >
         <Image
-          src={product.images[0].url}
-          alt={product.images[0].alt}
+          src={cardImage.url}
+          alt={cardImage.alt}
           fill
           sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 50vw"
-          className="object-cover transition duration-500 group-hover:scale-105"
+          className="object-cover transition-all duration-200 group-hover:scale-105"
           priority={priority}
         />
         <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 sm:left-3 sm:top-3 rtl:left-auto rtl:right-2 sm:rtl:right-3">
           {product.isFeatured ? <Badge tone="gold">{dictionary.common.featured}</Badge> : null}
           {hasSale ? <Badge tone="red">{dictionary.common.sale}</Badge> : null}
+          {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
         </div>
       </Link>
 
       <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-2 sm:gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.12em] text-gold-700 sm:text-xs sm:tracking-[0.16em]">
-              {product.brand}
-            </p>
-            <Link
-              href={`/${locale}/product/${product.slug}`}
-              className="mt-1 line-clamp-2 block text-sm font-bold leading-5 text-navy hover:text-gold-700 sm:text-base sm:leading-6"
-            >
-              {getLocalized(product.name, locale)}
-            </Link>
-          </div>
-          <div className="flex shrink-0 items-center gap-1 rounded-full bg-paper px-2 py-1 text-xs font-bold text-navy">
-            <Star size={13} className="fill-gold-400 text-gold-400" />
-            {product.rating.toFixed(1)}
-          </div>
-        </div>
+        <Link
+          href={`/${locale}/product/${product.slug}`}
+          className="line-clamp-2 min-h-[40px] text-sm font-bold leading-5 text-navy transition hover:text-gold-700 sm:min-h-[48px] sm:text-base sm:leading-6"
+        >
+          {getLocalized(product.name, locale)}
+        </Link>
 
-        <ProductCardPrice
-          price={product.price}
-          comparePrice={product.comparePrice}
-          locale={locale}
-        />
+        <ProductCardPrice price={product.price} comparePrice={product.comparePrice} locale={locale} />
 
         {product.variants.length ? (
-          <div className="mt-2 flex min-h-7 items-center justify-between gap-2 sm:gap-3">
-            <p className="text-xs font-bold text-neutral-500">{colorLabel}</p>
-            <div className="flex flex-wrap justify-end gap-1.5">
-              {visibleColorSwatches.map((variant) => (
-                <Link
+          <div className="mt-2 flex min-h-7 flex-wrap items-center gap-1.5">
+            {visibleColorSwatches.map((variant) => {
+              const selected = selectedColor?.id === variant.id;
+
+              return (
+                <button
                   key={variant.id}
-                  href={`/${locale}/shop?color=${encodeURIComponent(variant.colorName.en.toLowerCase())}`}
+                  type="button"
+                  onClick={() => setSelectedColorId(variant.id)}
                   title={`${getLocalized(variant.colorName, locale)} (${variant.stock})`}
-                  className="grid h-5 w-5 place-items-center rounded-full border border-neutral-200 bg-white shadow-sm transition hover:scale-110 hover:border-gold-400 sm:h-6 sm:w-6"
+                  className={`grid h-6 w-6 place-items-center rounded-full border-2 bg-white shadow-sm transition-all duration-200 hover:scale-110 ${
+                    selected
+                      ? "border-gold-500 ring-2 ring-gold-300 ring-offset-1"
+                      : "border-neutral-200 hover:border-gold-400"
+                  }`}
                   aria-label={getLocalized(variant.colorName, locale)}
+                  aria-pressed={selected}
                 >
                   <span
-                    className="h-3.5 w-3.5 rounded-full border border-white sm:h-4 sm:w-4"
+                    className="h-4 w-4 rounded-full border border-white"
                     style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
                   />
-                </Link>
-              ))}
-              {hiddenColorCount > 0 ? (
-                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-paper px-1 text-[9px] font-bold text-neutral-500 sm:h-6 sm:min-w-6 sm:px-1.5 sm:text-[10px]">
-                  +{hiddenColorCount}
-                </span>
-              ) : null}
-            </div>
+                </button>
+              );
+            })}
+            {hiddenColorCount > 0 ? (
+              <span className="grid h-6 min-w-6 place-items-center rounded-full bg-paper px-1.5 text-[10px] font-bold text-neutral-500">
+                +{hiddenColorCount}
+              </span>
+            ) : null}
           </div>
         ) : (
           <div className="mt-2 min-h-7" aria-hidden="true" />

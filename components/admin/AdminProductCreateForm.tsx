@@ -65,6 +65,14 @@ type ProductSpecificationForm = {
   sortOrder: string;
 };
 
+type QuickColorForm = {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  colorHex: string;
+  imageUrl: string;
+};
+
 type ProductForm = {
   nameEn: string;
   nameAr: string;
@@ -156,6 +164,16 @@ const quickColors = [
   { nameEn: "Beige", nameAr: "Beige", colorHex: "#d6c4a3" }
 ];
 
+function createQuickColor(index = 0): QuickColorForm {
+  return {
+    id: `${Date.now()}-${index}`,
+    nameEn: index === 0 ? "Default" : "",
+    nameAr: index === 0 ? "Default" : "",
+    colorHex: index === 0 ? "#111827" : "#000000",
+    imageUrl: ""
+  };
+}
+
 function sizeFields(size?: ProductSizeOption) {
   return {
     sizeKey: size?.key ?? "",
@@ -180,6 +198,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const [quickColorNameEn, setQuickColorNameEn] = useState("Default");
   const [quickColorNameAr, setQuickColorNameAr] = useState("Default");
   const [quickColorHex, setQuickColorHex] = useState("#111827");
+  const [quickColorRows, setQuickColorRows] = useState<QuickColorForm[]>(() => [createQuickColor()]);
   const [quickSizeStock, setQuickSizeStock] = useState<Record<string, string>>({});
   const currentCategory = categories.find((category) => category.id === form.categoryId);
   const currentCategoryName = currentCategory
@@ -267,6 +286,22 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const resetForm = () => {
     setForm(createEmptyForm(categories[0]?.id ?? ""));
     setSlugEdited(false);
+    setQuickColorRows([createQuickColor()]);
+    setQuickSizeStock({});
+  };
+
+  const updateQuickColorRow = (id: string, key: keyof Omit<QuickColorForm, "id">, value: string) => {
+    setQuickColorRows((current) =>
+      current.map((color) => (color.id === id ? { ...color, [key]: value } : color))
+    );
+  };
+
+  const addQuickColorRow = () => {
+    setQuickColorRows((current) => [...current, createQuickColor(current.length)]);
+  };
+
+  const removeQuickColorRow = (id: string) => {
+    setQuickColorRows((current) => (current.length === 1 ? current : current.filter((color) => color.id !== id)));
   };
 
   const updateImage = (index: number, key: keyof ProductImageForm, value: string) => {
@@ -386,28 +421,34 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     const fallbackTotal = Number(form.stock || 0);
     const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
     const remainder = visibleSizes.length ? fallbackTotal % visibleSizes.length : 0;
-    const quickColorKey = quickColorNameEn.trim().toLowerCase() || "default";
-    const rows = visibleSizes.map((size, index) => {
-      const manualStock = quickSizeStock[size.key];
-      const stock = manualStock !== undefined && manualStock !== ""
-        ? manualStock
-        : String(Math.max(0, splitStock + (index < remainder ? 1 : 0)));
+    const usableColors = quickColorRows.filter((color) => color.nameEn.trim());
+    const colors = usableColors.length ? usableColors : [createQuickColor()];
+    const mainImageUrl = form.images.find((image) => image.url.trim())?.url ?? "";
+    const rows = colors.flatMap((color, colorIndex) => {
+      const quickColorKey = color.nameEn.trim().toLowerCase() || "default";
 
-      return {
-        colorNameEn: quickColorNameEn.trim() || "Default",
-        colorNameAr: quickColorNameAr.trim() || quickColorNameEn.trim() || "Default",
-        colorHex: quickColorHex,
-        ...sizeFields(size),
-        styleNameEn: "",
-        styleNameAr: "",
-        fitNameEn: "",
-        fitNameAr: "",
-        imageUrl: form.images.find((image) => image.url.trim())?.url ?? "",
-        sku: form.sku ? `${form.sku}-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : "",
-        stock,
-        sortOrder: String(index),
-        isActive: true
-      };
+      return visibleSizes.map((size, sizeIndex) => {
+        const manualStock = quickSizeStock[size.key];
+        const stock = manualStock !== undefined && manualStock !== ""
+          ? manualStock
+          : String(Math.max(0, splitStock + (sizeIndex < remainder ? 1 : 0)));
+
+        return {
+          colorNameEn: color.nameEn.trim() || "Default",
+          colorNameAr: color.nameAr.trim() || color.nameEn.trim() || "Default",
+          colorHex: color.colorHex || "#111827",
+          ...sizeFields(size),
+          styleNameEn: "",
+          styleNameAr: "",
+          fitNameEn: "",
+          fitNameAr: "",
+          imageUrl: color.imageUrl || mainImageUrl,
+          sku: form.sku ? `${form.sku}-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : "",
+          stock,
+          sortOrder: String(colorIndex * visibleSizes.length + sizeIndex),
+          isActive: true
+        };
+      });
     });
 
     setForm((current) => {
@@ -679,24 +720,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 />
               </label>
               <label className="grid gap-2 text-sm font-semibold text-navy">
-                Color
-                <div className="grid grid-cols-[1fr_52px] gap-2">
-                  <input
-                    value={quickColorNameEn}
-                    onChange={(event) => setQuickColorNameEn(event.target.value)}
-                    placeholder="Black"
-                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                  />
-                  <input
-                    type="color"
-                    value={quickColorHex}
-                    onChange={(event) => setQuickColorHex(event.target.value)}
-                    aria-label="Product color"
-                    className="h-11 w-full rounded-md border border-neutral-200 bg-paper px-2"
-                  />
-                </div>
-              </label>
-              <label className="grid gap-2 text-sm font-semibold text-navy">
                 Total stock
                 <input
                   type="number"
@@ -718,6 +741,71 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
                 />
               </label>
+              <div className="rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-navy">Colors</p>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">
+                      Each color can use its own image for cards and product details.
+                    </p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={addQuickColorRow}>
+                    <Plus size={15} />
+                    Add Another Color
+                  </Button>
+                </div>
+                <div className="mt-3 grid gap-3">
+                  {quickColorRows.map((color, index) => (
+                    <div key={color.id} className="grid gap-3 rounded-xl border border-neutral-200 bg-white p-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+                      <div className="grid gap-3 sm:grid-cols-[1fr_110px]">
+                        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                          Color name
+                          <input
+                            value={color.nameEn}
+                            onChange={(event) => updateQuickColorRow(color.id, "nameEn", event.target.value)}
+                            placeholder="Black"
+                            className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                          />
+                        </label>
+                        <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                          Hex
+                          <div className="grid grid-cols-[1fr_42px] gap-2">
+                            <input
+                              value={color.colorHex}
+                              onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
+                              placeholder="#111827"
+                              className="h-10 rounded-md border border-neutral-200 bg-paper px-2 text-xs font-bold normal-case tracking-normal text-navy"
+                            />
+                            <input
+                              type="color"
+                              value={color.colorHex || "#111827"}
+                              onChange={(event) => updateQuickColorRow(color.id, "colorHex", event.target.value)}
+                              aria-label="Color picker"
+                              className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-1"
+                            />
+                          </div>
+                        </label>
+                      </div>
+                      <AdminImageUploadField
+                        label={`${color.nameEn || `Color ${index + 1}`} image`}
+                        value={color.imageUrl}
+                        onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
+                        previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
+                        aspectClassName="aspect-square"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeQuickColorRow(color.id)}
+                        disabled={quickColorRows.length === 1}
+                        className="grid h-10 w-10 place-items-center self-start rounded-md border border-red-100 text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Remove color"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -751,13 +839,72 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows}>
                     <PackageCheck size={15} />
-                    Apply color and size stock
+                    Generate variant table
                   </Button>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setQuickSizeStock({})}>
                     Clear sizes
                   </Button>
                 </div>
               </div>
+              {form.variants.length ? (
+                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white sm:col-span-2">
+                  <div className="border-b border-neutral-200 bg-paper px-3 py-2">
+                    <p className="text-sm font-bold text-navy">Variant table</p>
+                    <p className="mt-1 text-xs font-semibold text-neutral-500">Color, size, stock, and auto SKU rows.</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="bg-white text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                        <tr>
+                          <th className="px-3 py-2">Color</th>
+                          <th className="px-3 py-2">Size</th>
+                          <th className="px-3 py-2">Stock</th>
+                          <th className="px-3 py-2">SKU</th>
+                          <th className="px-3 py-2 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-100">
+                        {form.variants.map((variant, index) => (
+                          <tr key={`${variant.colorNameEn}-${variant.sizeKey}-${index}`} className="transition hover:bg-paper">
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-2 font-semibold text-navy">
+                                <span
+                                  className="h-5 w-5 rounded-full border-2 border-white ring-1 ring-neutral-200"
+                                  style={{ backgroundColor: variant.colorHex || "#ffffff" }}
+                                />
+                                {variant.colorNameEn || "Default"}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 font-semibold text-neutral-700">{variant.sizeNameEn || "One Size"}</td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.stock}
+                                onChange={(event) => updateVariant(index, "stock", event.target.value)}
+                                className="h-9 w-24 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-xs font-semibold text-neutral-500">
+                              {variant.sku || "Auto on save"}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <button
+                                type="button"
+                                onClick={() => removeVariant(index)}
+                                className="inline-grid h-9 w-9 place-items-center rounded-md border border-red-100 text-sale transition hover:bg-red-50"
+                                aria-label="Delete variant"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="grid gap-4">
               <AdminImageUploadField

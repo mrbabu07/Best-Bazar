@@ -129,7 +129,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
     return text ? [{ key: field.label, value: { en: text, ar: text } }] : [];
   });
-  const detailRows: Product["specifications"] = [...product.specifications, ...fashionRows, ...customRows];
+  const fashionDetailRows: Product["specifications"] = [...fashionRows, ...customRows];
 
   const handleAdd = () => {
     addItem(product, quantity, selectedVariant);
@@ -234,13 +234,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           <Star size={17} className="fill-gold-400 text-gold-400" />
           <span>{product.rating.toFixed(1)}</span>
           <span>({product.reviewCount} {dictionary.common.reviews})</span>
-          <span className="text-neutral-300">|</span>
-          <span>{selectedVariant?.sku ?? product.sku}</span>
         </div>
-
-        <p className="mt-5 text-base leading-7 text-neutral-600">
-          {getLocalized(product.description, locale)}
-        </p>
 
         <div className="mt-6 flex items-end gap-3">
           <p className="text-3xl font-bold text-navy">
@@ -273,19 +267,25 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                     onClick={() => selectColor(variant)}
                     disabled={colorStock <= 0}
                     aria-pressed={selected}
-                    className={`inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
-                      selected ? "border-gold-500 bg-gold-50 text-navy" : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
+                    className={`grid h-8 w-8 place-items-center rounded-full border-2 bg-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
+                      selected
+                        ? "border-gold-500 ring-2 ring-gold-300 ring-offset-1"
+                        : "border-neutral-200 hover:border-gold-400"
                     }`}
                   >
                     <span
-                      className="h-4 w-4 rounded-full border border-neutral-200"
+                      className="h-5 w-5 rounded-full border border-white"
                       style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
                     />
-                    {getLocalized(variant.colorName, locale)}
                   </button>
                 );
               })}
             </div>
+            {selectedVariant ? (
+              <p className="mt-2 text-sm font-semibold text-neutral-600">
+                {getLocalized(selectedVariant.colorName, locale)}
+              </p>
+            ) : null}
             {hasSizedVariants ? (
               <div className="mt-4">
                 <p className="text-sm font-bold text-navy">Size</p>
@@ -306,7 +306,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                         onClick={() => selectSize(variant)}
                         disabled={stock <= 0}
                         aria-pressed={selected}
-                        className={`inline-flex h-10 items-center rounded-md border px-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                        className={`inline-flex h-10 items-center rounded-md border px-3 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
                           selected
                             ? "border-gold-500 bg-gold-50 text-navy"
                             : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
@@ -321,6 +321,14 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             ) : null}
           </div>
         ) : null}
+
+        <div className="mt-5">
+          {availableStock > 0 ? (
+            <p className="text-sm font-bold text-emerald-700">In Stock ({availableStock} left)</p>
+          ) : (
+            <p className="text-sm font-bold text-sale">Out of Stock</p>
+          )}
+        </div>
 
         <div className="mt-7 flex flex-wrap gap-3">
           <div className="inline-flex h-12 items-center overflow-hidden rounded-md border border-neutral-200 bg-white">
@@ -351,6 +359,13 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           </Button>
         </div>
 
+        <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <h2 className="text-lg font-bold text-navy">Description</h2>
+          <p className="mt-3 text-base leading-7 text-neutral-600">
+            {getLocalized(product.description, locale)}
+          </p>
+        </div>
+
         <div className="mt-8 grid gap-3 sm:grid-cols-3">
           {[
             { icon: ShieldCheck, label: dictionary.product.secure },
@@ -367,16 +382,30 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           ))}
         </div>
 
+        {fashionDetailRows.length ? (
+          <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+            <h2 className="text-lg font-bold text-navy">Fashion details</h2>
+            <div className="mt-4 grid gap-3">
+              {fashionDetailRows.map((spec, index) => (
+                <div key={`${getLocalized(spec.key, locale)}-${index}`} className="flex justify-between gap-4 text-sm">
+                  <span className="text-neutral-500">{getLocalized(spec.key, locale)}</span>
+                  <span className="font-semibold text-navy">{getLocalized(spec.value, locale)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <h2 className="text-lg font-bold text-navy">{dictionary.product.specifications}</h2>
           <div className="mt-4 grid gap-3">
-            {detailRows.map((spec, index) => (
+            {product.specifications.map((spec, index) => (
               <div key={`${getLocalized(spec.key, locale)}-${index}`} className="flex justify-between gap-4 text-sm">
                 <span className="text-neutral-500">{getLocalized(spec.key, locale)}</span>
                 <span className="font-semibold text-navy">{getLocalized(spec.value, locale)}</span>
               </div>
             ))}
-            {!detailRows.length ? (
+            {!product.specifications.length ? (
               <p className="text-sm font-semibold text-neutral-500">Product details will be added soon.</p>
             ) : null}
           </div>
