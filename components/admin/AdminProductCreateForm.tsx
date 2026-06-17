@@ -177,6 +177,10 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const [form, setForm] = useState<ProductForm>(() => createEmptyForm(categories[0]?.id ?? ""));
   const [slugEdited, setSlugEdited] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [quickColorNameEn, setQuickColorNameEn] = useState("Default");
+  const [quickColorNameAr, setQuickColorNameAr] = useState("Default");
+  const [quickColorHex, setQuickColorHex] = useState("#111827");
+  const [quickSizeStock, setQuickSizeStock] = useState<Record<string, string>>({});
   const currentCategory = categories.find((category) => category.id === form.categoryId);
   const currentCategoryName = currentCategory
     ? locale === "ar"
@@ -379,6 +383,57 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       ...current,
       variants: [...current.variants, ...rows]
     }));
+  };
+
+  const applyQuickStockRows = () => {
+    const visibleSizes = sizeOptions.length ? sizeOptions : [{ key: "one-size", nameEn: "One Size", nameAr: "One Size" }];
+    const fallbackTotal = Number(form.stock || 0);
+    const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
+    const remainder = visibleSizes.length ? fallbackTotal % visibleSizes.length : 0;
+    const quickColorKey = quickColorNameEn.trim().toLowerCase() || "default";
+    const rows = visibleSizes.map((size, index) => {
+      const manualStock = quickSizeStock[size.key];
+      const stock = manualStock !== undefined && manualStock !== ""
+        ? manualStock
+        : String(Math.max(0, splitStock + (index < remainder ? 1 : 0)));
+
+      return {
+        colorNameEn: quickColorNameEn.trim() || "Default",
+        colorNameAr: quickColorNameAr.trim() || quickColorNameEn.trim() || "Default",
+        colorHex: quickColorHex,
+        ...sizeFields(size),
+        styleNameEn: "",
+        styleNameAr: "",
+        fitNameEn: "",
+        fitNameAr: "",
+        imageUrl: form.images.find((image) => image.url.trim())?.url ?? "",
+        sku: form.sku ? `${form.sku}-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : "",
+        stock,
+        sortOrder: String(index),
+        isActive: true
+      };
+    });
+
+    setForm((current) => {
+      const rowKeys = new Set(rows.map((row) => `${row.colorNameEn.trim().toLowerCase()}:${row.sizeKey}`));
+      const otherVariants = current.variants.filter(
+        (variant) => !rowKeys.has(`${variant.colorNameEn.trim().toLowerCase()}:${variant.sizeKey}`)
+      );
+
+      return {
+        ...current,
+        stock: String(rows.reduce((total, row) => total + Number(row.stock || 0), 0)),
+        variants: [
+          ...rows.map((row, index) => ({ ...row, sortOrder: String(index) })),
+          ...otherVariants.map((variant, index) => ({
+            ...variant,
+            sortOrder: String(rows.length + index)
+          }))
+        ]
+      };
+    });
+
+    toast.success("Default color and size stock rows updated.");
   };
 
   const addCommonColorRows = () => {
@@ -893,6 +948,95 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 </div>
               </div>
             ))}
+            <div className="grid gap-4 rounded-md border border-gold-100 bg-gold-50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-navy">Easy stock setup</h3>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-neutral-600">
+                    Add main image/video first, then set default color and size-wise stock in one click. Advanced variants stay available below.
+                  </p>
+                </div>
+                <Badge tone={form.variants.length ? "green" : "gold"}>
+                  {form.variants.length ? `${form.variants.length} rows ready` : "No rows yet"}
+                </Badge>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-[1fr_1fr_110px_140px]">
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                  Default color EN
+                  <input
+                    value={quickColorNameEn}
+                    onChange={(event) => setQuickColorNameEn(event.target.value)}
+                    placeholder="Black"
+                    className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                  />
+                </label>
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                  Default color AR
+                  <input
+                    value={quickColorNameAr}
+                    onChange={(event) => setQuickColorNameAr(event.target.value)}
+                    placeholder="Arabic color"
+                    className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                  />
+                </label>
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                  Color
+                  <input
+                    type="color"
+                    value={quickColorHex}
+                    onChange={(event) => setQuickColorHex(event.target.value)}
+                    className="h-10 w-full rounded-md border border-neutral-200 bg-white px-2"
+                  />
+                </label>
+                <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                  Total stock
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.stock}
+                    onChange={(event) => updateForm("stock", event.target.value)}
+                    className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                  />
+                </label>
+              </div>
+              <div className="grid gap-2">
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                  Size-wise stock for {currentCategoryName}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                  {sizeOptions.map((size) => (
+                    <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
+                      <span className="text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={quickSizeStock[size.key] ?? ""}
+                        onChange={(event) =>
+                          setQuickSizeStock((current) => ({
+                            ...current,
+                            [size.key]: event.target.value
+                          }))
+                        }
+                        placeholder="0"
+                        className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                      />
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs font-semibold text-neutral-500">
+                  Leave size boxes empty to split total stock automatically across all sizes.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows}>
+                  <PackageCheck size={15} />
+                  Create default color size stock
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setQuickSizeStock({})}>
+                  Clear size stock
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
 
