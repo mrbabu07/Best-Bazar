@@ -71,6 +71,7 @@ type QuickColorForm = {
   nameAr: string;
   colorHex: string;
   imageUrl: string;
+  sku: string;
   sizeStock: Record<string, string>;
 };
 
@@ -172,6 +173,7 @@ function createQuickColor(index = 0): QuickColorForm {
     nameAr: index === 0 ? "Black" : "",
     colorHex: index === 0 ? "#111827" : "#000000",
     imageUrl: "",
+    sku: "",
     sizeStock: {}
   };
 }
@@ -455,6 +457,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     const mainImageUrl = form.images.find((image) => image.url.trim())?.url ?? "";
     const rows = colors.flatMap((color, colorIndex) => {
       const quickColorKey = color.nameEn.trim().toLowerCase() || "default";
+      const colorSkuBase = color.sku.trim() || form.sku.trim();
       const colorTotal = Object.values(color.sizeStock).reduce((total, value) => total + Number(value || 0), 0);
       const fallbackTotal = colorTotal || Math.floor(Number(form.stock || 0) / Math.max(colors.length, 1));
       const splitStock = visibleSizes.length ? Math.floor(fallbackTotal / visibleSizes.length) : fallbackTotal;
@@ -476,7 +479,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           fitNameEn: "",
           fitNameAr: "",
           imageUrl: color.imageUrl || mainImageUrl,
-          sku: form.sku ? `${form.sku}-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : "",
+          sku: colorSkuBase ? `${colorSkuBase}-${size.key}`.toUpperCase().replace(/\s+/g, "-") : `AUTO-${quickColorKey}-${size.key}`.toUpperCase().replace(/\s+/g, "-"),
           stock,
           sortOrder: String(colorIndex * visibleSizes.length + sizeIndex),
           isActive: true
@@ -774,6 +777,26 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
                 />
               </label>
+              <div className="grid min-w-0 gap-4 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2 lg:grid-cols-2">
+                <AdminImageUploadField
+                  label="Main product image"
+                  value={form.images[0]?.url ?? ""}
+                  onChange={(value) => updateImage(0, "url", value)}
+                  onUploadMany={addUploadedImages}
+                  previewAlt={form.nameEn || "Product image"}
+                  aspectClassName="aspect-[4/3]"
+                  multiple
+                />
+                <AdminMediaUploadField
+                  label="Short video"
+                  value={form.shortVideoUrl}
+                  onChange={(value) => updateForm("shortVideoUrl", value)}
+                  previewAlt={form.nameEn || "Product video"}
+                  aspectClassName="aspect-video"
+                  acceptVideo
+                  acceptImage={false}
+                />
+              </div>
               <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
@@ -818,6 +841,15 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                                 className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-1"
                               />
                             </div>
+                          </label>
+                          <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500 sm:col-span-2">
+                            SKU code for this color
+                            <input
+                              value={color.sku}
+                              onChange={(event) => updateQuickColorRow(color.id, "sku", event.target.value)}
+                              placeholder={`${form.sku || "BM-PRODUCT"}-${color.nameEn || "BLACK"}`}
+                              className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
+                            />
                           </label>
                           <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -914,8 +946,13 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                                 className="h-9 w-24 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
                               />
                             </td>
-                            <td className="px-3 py-2 text-xs font-semibold text-neutral-500">
-                              {variant.sku || "Auto on save"}
+                            <td className="px-3 py-2">
+                              <input
+                                value={variant.sku}
+                                onChange={(event) => updateVariant(index, "sku", event.target.value)}
+                                placeholder="Auto on save"
+                                className="h-9 min-w-36 rounded-md border border-neutral-200 bg-paper px-2 text-xs font-semibold text-navy"
+                              />
                             </td>
                             <td className="px-3 py-2 text-right">
                               <button
@@ -935,7 +972,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 </div>
               ) : null}
             </div>
-            <div className="grid min-w-0 gap-4">
+            <div className="hidden min-w-0 gap-4">
               <AdminImageUploadField
                 label="Main product image"
                 value={form.images[0]?.url ?? ""}
