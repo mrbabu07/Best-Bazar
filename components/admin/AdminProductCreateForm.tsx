@@ -699,8 +699,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
             <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Needs info"}</Badge>
           </div>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="grid gap-4 sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 Product name
                 <input
@@ -760,24 +760,24 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
                 />
               </label>
-              <div className="rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+              <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
                     <p className="text-sm font-bold text-navy">Color-wise size stock</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
                       Add Black, Maroon, or any color, then enter stock for each size inside that color.
                     </p>
                   </div>
-                  <Button type="button" variant="secondary" size="sm" onClick={addQuickColorRow}>
+                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow}>
                     <Plus size={15} />
                     Add color stock group
                   </Button>
                 </div>
                 <div className="mt-3 grid gap-3">
                   {quickColorRows.map((color, index) => (
-                    <div key={color.id} className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-3">
-                      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-                        <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+                    <div key={color.id} className="grid min-w-0 gap-4 rounded-xl border border-neutral-200 bg-white p-3">
+                      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+                        <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_160px]">
                           <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
                             Color name
                             <input
@@ -806,8 +806,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                             </div>
                           </label>
                           <div className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div className="min-w-0">
                                 <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Size-wise stock</p>
                                 <p className="mt-1 text-xs font-semibold text-neutral-500">
                                   Example: 52 = 5, 54 = 5, 56 = 10 for this color only.
@@ -815,7 +815,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                               </div>
                               <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
                             </div>
-                            <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-5">
+                            <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(78px,1fr))] gap-2">
                               {sizeOptions.map((size) => (
                                 <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
                                   <span className="text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
@@ -832,22 +832,24 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                             </div>
                           </div>
                         </div>
-                        <AdminImageUploadField
-                          label={`${color.nameEn || `Color ${index + 1}`} image`}
-                          value={color.imageUrl}
-                          onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
-                          previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
-                          aspectClassName="aspect-square"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeQuickColorRow(color.id)}
-                          disabled={quickColorRows.length === 1}
-                          className="grid h-10 w-10 place-items-center self-start rounded-md border border-red-100 text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                          aria-label="Remove color"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <div className="grid min-w-0 gap-3">
+                          <AdminImageUploadField
+                            label={`${color.nameEn || `Color ${index + 1}`} image`}
+                            value={color.imageUrl}
+                            onChange={(value) => updateQuickColorRow(color.id, "imageUrl", value)}
+                            previewAlt={`${form.nameEn || "Product"} ${color.nameEn || "color"}`}
+                            aspectClassName="aspect-square"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeQuickColorRow(color.id)}
+                            disabled={quickColorRows.length === 1}
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-red-100 px-3 text-sm font-semibold text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Trash2 size={15} />
+                            Remove color
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -919,7 +921,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 </div>
               ) : null}
             </div>
-            <div className="grid gap-4">
+            <div className="grid min-w-0 gap-4">
               <AdminImageUploadField
                 label="Main product image"
                 value={form.images[0]?.url ?? ""}
