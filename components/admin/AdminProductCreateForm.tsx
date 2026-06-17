@@ -128,7 +128,7 @@ function createEmptyForm(categoryId = ""): ProductForm {
     comparePrice: "",
     stock: "0",
     sku: "",
-    brand: "",
+    brand: "Best Mart",
     tags: "",
     fashionFields: { ...emptyFashionFields },
     customFieldValues: {},
@@ -196,17 +196,13 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const variantStock = activeVariants.reduce((total, variant) => total + Number(variant.stock || 0), 0);
   const effectiveStock = form.variants.length ? variantStock : Number(form.stock || 0);
   const imageCount = form.images.filter((image) => image.url.trim()).length;
-  const isCatalogReady = Boolean(
-    form.nameEn.trim() && form.nameAr.trim() && form.slug.trim() && form.sku.trim() && form.categoryId
-  );
+  const isCatalogReady = Boolean(form.nameEn.trim() && form.categoryId);
   const isPricingReady = Number(form.price || 0) > 0 && effectiveStock > 0;
   const isMediaReady = imageCount > 0;
   const isVariantSetupReady = form.variants.every(
     (variant) =>
       (!variant.colorNameEn.trim() && !variant.colorNameAr.trim()) ||
-      (variant.colorNameEn.trim() &&
-        variant.colorNameAr.trim() &&
-        (!sizeRequired || variant.sizeNameEn.trim() || variant.sizeNameAr.trim()))
+      (variant.colorNameEn.trim() && (!sizeRequired || variant.sizeNameEn.trim() || variant.sizeNameAr.trim()))
   );
   const isReadyForSale = isCatalogReady && isPricingReady && isMediaReady && isVariantSetupReady && form.isActive;
   const readiness: { label: string; value: string; ready: boolean; icon: LucideIcon }[] = [
@@ -530,26 +526,32 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     }
 
     setSaving(true);
+    const fallbackName = form.nameEn.trim();
+    const fallbackSlug = form.slug.trim() || slugify(fallbackName);
+    const fallbackSku =
+      form.sku.trim() ||
+      `BM-${(fallbackSlug || "PRODUCT").toUpperCase()}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+    const fallbackDescription = form.descriptionEn.trim() || fallbackName;
 
     const payload = {
-      nameEn: form.nameEn,
-      nameAr: form.nameAr,
-      descriptionEn: form.descriptionEn,
-      descriptionAr: form.descriptionAr,
+      nameEn: fallbackName,
+      nameAr: form.nameAr.trim() || fallbackName,
+      descriptionEn: fallbackDescription,
+      descriptionAr: form.descriptionAr.trim() || fallbackDescription,
       metaTitleEn: form.metaTitleEn || null,
       metaTitleAr: form.metaTitleAr || null,
       metaDescriptionEn: form.metaDescriptionEn || null,
       metaDescriptionAr: form.metaDescriptionAr || null,
       ogImage: form.ogImage || null,
       shortVideoUrl: form.shortVideoUrl || null,
-      slug: form.slug,
+      slug: fallbackSlug,
       categoryId: form.categoryId,
       subcategoryId: form.subcategoryId || null,
       price: Number(form.price),
       comparePrice: form.comparePrice ? Number(form.comparePrice) : null,
       stock: Number(form.stock),
-      sku: form.sku,
-      brand: form.brand,
+      sku: fallbackSku,
+      brand: form.brand.trim() || "Best Mart",
       tags: form.tags
         .split(",")
         .map((tag) => tag.trim())
@@ -571,14 +573,14 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           sortOrder: Number(image.sortOrder || index)
         })),
       variants: form.variants
-        .filter((variant) => variant.colorNameEn.trim() && variant.colorNameAr.trim())
+        .filter((variant) => variant.colorNameEn.trim())
         .map((variant, index) => ({
           colorNameEn: variant.colorNameEn,
-          colorNameAr: variant.colorNameAr,
+          colorNameAr: variant.colorNameAr || variant.colorNameEn,
           colorHex: variant.colorHex || null,
           sizeKey: variant.sizeKey || null,
           sizeNameEn: variant.sizeNameEn || null,
-          sizeNameAr: variant.sizeNameAr || null,
+          sizeNameAr: variant.sizeNameAr || variant.sizeNameEn || null,
           styleNameEn: isFashionCategory ? variant.styleNameEn || null : null,
           styleNameAr: isFashionCategory ? variant.styleNameAr || null : null,
           fitNameEn: isFashionCategory ? variant.fitNameEn || null : null,
@@ -629,8 +631,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 1</p>
-              <h2 className="mt-1 text-xl font-bold text-navy">Catalog identity</h2>
-              <p className="mt-1 text-sm text-neutral-600">Name, URL, SKU, brand, and category for the storefront.</p>
+              <h2 className="mt-1 text-xl font-bold text-navy">Basic product info</h2>
+              <p className="mt-1 text-sm text-neutral-600">Start with the minimum fields. URL, SKU, Arabic copy, and collection are optional.</p>
             </div>
             <Badge tone={isCatalogReady ? "green" : "gold"}>{isCatalogReady ? "Complete" : "Required"}</Badge>
           </div>
@@ -646,17 +648,16 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
+            <label className="hidden gap-2 text-sm font-semibold text-navy">
               Product name AR
               <input
                 value={form.nameAr}
                 onChange={(event) => updateForm("nameAr", event.target.value)}
                 placeholder="Arabic product name"
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
+            <label className="hidden gap-2 text-sm font-semibold text-navy">
               Product URL slug
               <input
                 value={form.slug}
@@ -666,27 +667,24 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 }}
                 pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
                 placeholder="premium-travel-trolley"
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
+            <label className="hidden gap-2 text-sm font-semibold text-navy">
               Main SKU
               <input
                 value={form.sku}
                 onChange={(event) => updateForm("sku", event.target.value)}
                 placeholder="BB-DXB-1001"
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
+            <label className="hidden gap-2 text-sm font-semibold text-navy">
               Brand
               <input
                 value={form.brand}
                 onChange={(event) => updateForm("brand", event.target.value)}
                 placeholder="Best Mart"
-                required
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -705,6 +703,65 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 ))}
               </select>
             </label>
+            <details className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
+              <summary className="cursor-pointer text-sm font-bold text-navy">
+                Advanced catalog fields
+                <span className="ml-2 text-xs font-semibold text-neutral-500">
+                  Brand, Arabic name, URL slug, SKU, collection
+                </span>
+              </summary>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Brand
+                  <input
+                    value={form.brand}
+                    onChange={(event) => updateForm("brand", event.target.value)}
+                    placeholder="Best Mart"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Product name AR
+                  <input
+                    value={form.nameAr}
+                    onChange={(event) => updateForm("nameAr", event.target.value)}
+                    placeholder="Arabic product name"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Product URL slug
+                  <input
+                    value={form.slug}
+                    onChange={(event) => {
+                      setSlugEdited(true);
+                      updateForm("slug", slugify(event.target.value));
+                    }}
+                    pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                    placeholder="premium-travel-trolley"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Main SKU
+                  <input
+                    value={form.sku}
+                    onChange={(event) => updateForm("sku", event.target.value)}
+                    placeholder="Auto-generated if empty"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Subcategory / collection key
+                  <input
+                    value={form.subcategoryId}
+                    onChange={(event) => updateForm("subcategoryId", event.target.value)}
+                    placeholder="dubai-deals"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+              </div>
+            </details>
             <div className="rounded-md border border-neutral-200 bg-paper p-3 text-sm sm:col-span-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -726,7 +783,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 ))}
               </div>
             </div>
-            <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+            <label className="hidden gap-2 text-sm font-semibold text-navy sm:col-span-2">
               Subcategory / collection key
               <input
                 value={form.subcategoryId}
@@ -828,7 +885,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
+            <label className="hidden gap-2 text-sm font-semibold text-navy">
               Compare at AED
               <input
                 type="number"
@@ -851,7 +908,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-3">
+            <label className="hidden gap-2 text-sm font-semibold text-navy sm:col-span-3">
               Tags
               <input
                 value={form.tags}
@@ -867,21 +924,57 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 value={form.descriptionEn}
                 onChange={(event) => updateForm("descriptionEn", event.target.value)}
                 placeholder="Short selling description for the product page."
-                required
                 className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
               />
             </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-3">
+            <label className="hidden gap-2 text-sm font-semibold text-navy sm:col-span-3">
               Description AR
               <textarea
                 rows={4}
                 value={form.descriptionAr}
                 onChange={(event) => updateForm("descriptionAr", event.target.value)}
                 placeholder="Arabic product description"
-                required
                 className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm"
               />
             </label>
+            <details className="rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-3">
+              <summary className="cursor-pointer text-sm font-bold text-navy">
+                Advanced pricing and copy
+                <span className="ml-2 text-xs font-semibold text-neutral-500">Compare price, tags, Arabic description</span>
+              </summary>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Compare at AED
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.comparePrice}
+                    onChange={(event) => updateForm("comparePrice", event.target.value)}
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  Tags
+                  <input
+                    value={form.tags}
+                    onChange={(event) => updateForm("tags", event.target.value)}
+                    placeholder="featured, dubai, sale"
+                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                  />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                  Description AR
+                  <textarea
+                    rows={4}
+                    value={form.descriptionAr}
+                    onChange={(event) => updateForm("descriptionAr", event.target.value)}
+                    placeholder="Arabic product description"
+                    className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+                  />
+                </label>
+              </div>
+            </details>
           </div>
         </section>
 
@@ -1040,31 +1133,35 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           </div>
         </section>
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 4</p>
-              <h2 className="mt-1 text-xl font-bold text-navy">Color and size stock rows</h2>
-              <p className="mt-1 text-sm text-neutral-600">Each row can control one color, size, image, SKU, and stock quantity.</p>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
+              <h2 className="mt-1 text-xl font-bold text-navy">More colors and product variants</h2>
+              <p className="mt-1 text-sm text-neutral-600">Open only when this product needs extra color/size/image/SKU stock rows.</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="secondary" size="sm" onClick={addCategorySizeRows}>
-                <Plus size={15} />
-                Add all sizes
-              </Button>
-              <Button type="button" variant="secondary" size="sm" onClick={addCommonColorRows}>
-                <Palette size={15} />
-                Common colors
-              </Button>
-              <Button type="button" variant="secondary" size="sm" onClick={duplicateLastVariant} disabled={!form.variants.length}>
-                <PackageCheck size={15} />
-                Duplicate row
-              </Button>
-              <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
-                <Plus size={15} />
-                Add row
-              </Button>
-            </div>
+            <span className="rounded-full bg-paper px-3 py-1 text-xs font-bold text-neutral-600 group-open:bg-gold-50 group-open:text-gold-700">
+              {form.variants.length} stock row{form.variants.length === 1 ? "" : "s"}
+            </span>
+          </summary>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={addCategorySizeRows}>
+              <Plus size={15} />
+              Add all sizes
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={addCommonColorRows}>
+              <Palette size={15} />
+              Common colors
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={duplicateLastVariant} disabled={!form.variants.length}>
+              <PackageCheck size={15} />
+              Duplicate row
+            </Button>
+            <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
+              <Plus size={15} />
+              Add row
+            </Button>
           </div>
 
           <div className="mt-4 grid gap-2 rounded-md border border-gold-100 bg-gold-50 p-3 text-sm text-neutral-700 sm:grid-cols-3">
@@ -1223,19 +1320,19 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               </p>
             )}
           </div>
-        </section>
+        </details>
 
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <details className="group rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+          <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 5</p>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Advanced</p>
               <h2 className="mt-1 text-xl font-bold text-navy">Fashion and custom fields</h2>
-              <p className="mt-1 text-sm text-neutral-600">Category-driven fields for fabric, fit details, and client-added product data.</p>
+              <p className="mt-1 text-sm text-neutral-600">Open when this category needs fabric, fit, occasion, or custom product data.</p>
             </div>
             <Badge tone={isFashionCategory ? "blue" : "neutral"}>
               {isFashionCategory ? "Women's Fashion" : "General"}
             </Badge>
-          </div>
+          </summary>
 
           <div className="mt-5 grid gap-4">
             {isFashionCategory ? (
@@ -1298,7 +1395,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                           rows={3}
                           value={form.customFieldValues[field.id] ?? ""}
                           onChange={(event) => updateCustomFieldValue(field.id, event.target.value)}
-                          required={field.required}
                           className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
                         />
                       </label>
@@ -1309,7 +1405,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                           type={field.type === "NUMBER" ? "number" : "text"}
                           value={form.customFieldValues[field.id] ?? ""}
                           onChange={(event) => updateCustomFieldValue(field.id, event.target.value)}
-                          required={field.required}
                           className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
                         />
                       </label>
@@ -1323,62 +1418,85 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               )}
             </div>
           </div>
-        </section>
+        </details>
 
         <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Step 6</p>
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Final</p>
               <h2 className="mt-1 text-xl font-bold text-navy">Specifications and publishing</h2>
               <p className="mt-1 text-sm text-neutral-600">Optional product facts plus active and featured controls.</p>
             </div>
-            <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
-              <Plus size={15} />
-              Add spec
-            </Button>
           </div>
 
           <div className="mt-5 grid gap-4">
-            {form.specifications.map((specification, index) => (
-              <div key={index} className="grid gap-3 rounded-md border border-neutral-200 p-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["keyEn", "Key EN"],
-                    ["keyAr", "Key AR"],
-                    ["valueEn", "Value EN"],
-                    ["valueAr", "Value AR"]
-                  ].map(([key, label]) => (
-                    <input
-                      key={key}
-                      value={specification[key as keyof ProductSpecificationForm]}
-                      onChange={(event) =>
-                        updateSpecification(index, key as keyof ProductSpecificationForm, event.target.value)
-                      }
-                      placeholder={label}
-                      className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                    />
-                  ))}
+            <details className="rounded-md border border-neutral-200 bg-paper p-4">
+              <summary className="flex cursor-pointer list-none flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-navy">Optional specifications</h3>
+                  <p className="mt-1 text-xs font-semibold text-neutral-500">
+                    Add material, warranty, country, or other facts only when needed.
+                  </p>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <input
-                    type="number"
-                    min="0"
-                    value={specification.sortOrder}
-                    onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
-                    aria-label="Specification sort order"
-                    className="h-10 w-24 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeSpecification(index)}
-                    className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                    aria-label="Remove specification"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600">
+                  {form.specifications.length} spec{form.specifications.length === 1 ? "" : "s"}
+                </span>
+              </summary>
+              <div className="mt-4 flex justify-start">
+                <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
+                  <Plus size={15} />
+                  Add spec
+                </Button>
               </div>
-            ))}
+              <div className="mt-4 grid gap-3">
+                {form.specifications.length ? (
+                  form.specifications.map((specification, index) => (
+                    <div key={index} className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {[
+                          ["keyEn", "Key EN"],
+                          ["keyAr", "Key AR"],
+                          ["valueEn", "Value EN"],
+                          ["valueAr", "Value AR"]
+                        ].map(([key, label]) => (
+                          <input
+                            key={key}
+                            value={specification[key as keyof ProductSpecificationForm]}
+                            onChange={(event) =>
+                              updateSpecification(index, key as keyof ProductSpecificationForm, event.target.value)
+                            }
+                            placeholder={label}
+                            className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                          />
+                        ))}
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          value={specification.sortOrder}
+                          onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
+                          aria-label="Specification sort order"
+                          className="h-10 w-24 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSpecification(index)}
+                          className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                          aria-label="Remove specification"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="rounded-md border border-dashed border-neutral-200 bg-white p-3 text-sm font-semibold text-neutral-500">
+                    No specifications yet. You can create the product without them.
+                  </p>
+                )}
+              </div>
+            </details>
             <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-4 text-sm font-semibold text-navy sm:grid-cols-2">
               <label className="flex items-center gap-2">
                 <input
