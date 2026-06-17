@@ -127,6 +127,7 @@ const nextCli = require.resolve("next/dist/bin/next");
 let child;
 let restartCount = 0;
 let stopping = false;
+let pendingColdRestart = false;
 
 function stopChild() {
   stopping = true;
@@ -142,6 +143,39 @@ function clearPidFile() {
   }
 }
 
+function isStaleNextChunkError(output) {
+  return (
+    output.includes("Cannot find module './vendor-chunks/") ||
+    (output.includes("Cannot find module './") &&
+      output.includes(".next") &&
+      output.includes("webpack-runtime"))
+  );
+}
+
+function requestColdRestart(reason) {
+  if (pendingColdRestart || stopping) {
+    return;
+  }
+
+  pendingColdRestart = true;
+  console.warn(`${reason} Clearing .next and restarting dev server...`);
+
+  if (child && !child.killed) {
+    child.kill("SIGTERM");
+  }
+}
+
+function attachOutputWatch(stream, writer) {
+  stream.on("data", (chunk) => {
+    const output = chunk.toString();
+    writer.write(chunk);
+
+    if (isStaleNextChunkError(output)) {
+      requestColdRestart("Detected stale Next.js chunk cache.");
+    }
+  });
+}
+
 process.on("SIGINT", () => {
   stopChild();
   clearPidFile();
@@ -155,19 +189,39 @@ process.on("SIGTERM", () => {
 });
 
 function startNextDevServer() {
+  pendingColdRestart = false;
   child = spawn(process.execPath, [nextCli, "dev", "-p", port], {
     cwd: root,
     env: process.env,
-    stdio: "inherit"
+    stdio: ["ignore", "pipe", "pipe"]
   });
 
+  attachOutputWatch(child.stdout, process.stdout);
+  attachOutputWatch(child.stderr, process.stderr);
+
   child.on("exit", (code, signal) => {
+    if (pendingColdRestart) {
+      if (restartCount >= maxRestarts) {
+        clearPidFile();
+        process.exit(code ?? 1);
+      }
+
+      restartCount += 1;
+      clearNextOutput();
+      const delay = Math.min(1000 * restartCount, 5000);
+
+      console.warn(`Next dev server restarting with clean cache (${restartCount}/${maxRestarts}) in ${delay}ms...`);
+      setTimeout(startNextDevServer, delay);
+      return;
+    }
+
     if (stopping || signal) {
       clearPidFile();
       process.exit(0);
     }
 
     if ((code ?? 0) === 0) {
+      console.log("Next dev server exited normally.");
       clearPidFile();
       process.exit(0);
     }
@@ -175,9 +229,10 @@ function startNextDevServer() {
     if (restartCount < maxRestarts) {
       restartCount += 1;
       const delay = Math.min(1000 * restartCount, 5000);
+      clearNextOutput();
 
       console.warn(
-        `Next dev server exited with code ${code ?? "unknown"}. Restarting with warm cache (${restartCount}/${maxRestarts}) in ${delay}ms...`
+        `Next dev server exited with code ${code ?? "unknown"}. Restarting with clean cache (${restartCount}/${maxRestarts}) in ${delay}ms...`
       );
       setTimeout(startNextDevServer, delay);
       return;
