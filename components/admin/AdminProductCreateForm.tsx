@@ -810,7 +810,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
             <Badge tone={isReadyForSale ? "green" : "gold"}>{isReadyForSale ? "Ready" : "Needs info"}</Badge>
           </div>
 
-          <div className="mt-5 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="mt-5 grid gap-4">
             <div className="grid min-w-0 gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 Product name
@@ -895,12 +895,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   acceptImage={false}
                 />
               </div>
-              <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2 sm:p-4">
+              <div className="min-w-0 rounded-xl border border-neutral-200 bg-white p-3 sm:col-span-2 sm:p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-navy">Step 2: Select colors, images, SKU and stock</p>
+                    <p className="text-sm font-bold text-navy">Color variants</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Main image stays as product cover. Every selected color opens its own image upload, SKU code, and size-wise stock fields.
+                      Select colors. Each color gets its own image, SKU, and size-wise stock fields.
                     </p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" className="w-full shrink-0 sm:w-auto" onClick={addQuickColorRow}>
@@ -914,7 +914,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       Step 1: upload the main product image above. You can still prepare colors now, but save needs at least one main image.
                     </div>
                   ) : null}
-                    <div className="rounded-xl border border-neutral-200 bg-white p-3 sm:p-4">
+                    <div className="rounded-xl border border-neutral-200 bg-paper p-3 sm:p-4">
                       <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose visible product colors</p>
                       <p className="mt-1 text-xs font-semibold text-neutral-500">
                         If only one color is selected, product will have one color option. If multiple colors are selected, each color gets separate stock fields.
@@ -950,8 +950,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
 
                     {quickColorRows.length ? (
                       quickColorRows.map((color, index) => (
-                        <div key={color.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-                          <div className="flex flex-col gap-3 border-b border-neutral-100 bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                        <div key={color.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                          <div className="flex flex-col gap-3 border-b border-neutral-100 bg-paper p-3 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex min-w-0 items-center gap-3">
                               <span
                                 className="h-9 w-9 shrink-0 rounded-full border-2 border-white ring-1 ring-neutral-300"
@@ -967,7 +967,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                               </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
-                              <Badge tone="green">Auto sync</Badge>
                               <button
                                 type="button"
                                 onClick={() => removeQuickColorRow(color.id)}
@@ -979,7 +978,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                               </button>
                             </div>
                           </div>
-                          <div className="grid min-w-0 gap-4 p-3 lg:grid-cols-[minmax(0,1fr)_280px] lg:p-4">
+                          <div className="grid min-w-0 gap-4 p-3 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <div className="grid min-w-0 gap-3">
                               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
                                 <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
@@ -1065,12 +1064,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                     )}
                     <div className="flex flex-wrap items-center gap-2 rounded-xl border border-green-100 bg-green-50 p-3 text-xs font-bold text-green-800">
                       <CheckCircle2 size={16} />
-                      Color image, SKU, and size-stock rows update automatically below.
+                      Total stock and order SKU rows update automatically from these color fields.
                     </div>
                   </div>
               </div>
               {form.variants.length ? (
-                <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white sm:col-span-2">
+                <div className="hidden overflow-hidden rounded-xl border border-neutral-200 bg-white sm:col-span-2">
                   <div className="border-b border-neutral-200 bg-paper px-3 py-2">
                     <p className="text-sm font-bold text-navy">Variant table</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">Color, size, stock, and auto SKU rows.</p>
