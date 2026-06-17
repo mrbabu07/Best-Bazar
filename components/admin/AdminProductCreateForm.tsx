@@ -161,9 +161,14 @@ function slugify(value: string) {
 const customSizeValue = "__custom__";
 const quickColors = [
   { nameEn: "Black", nameAr: "Black", colorHex: "#111827" },
+  { nameEn: "Maroon", nameAr: "Maroon", colorHex: "#7f1d1d" },
+  { nameEn: "Red", nameAr: "Red", colorHex: "#dc2626" },
+  { nameEn: "Blue", nameAr: "Blue", colorHex: "#2563eb" },
+  { nameEn: "Gold", nameAr: "Gold", colorHex: "#d4af37" },
   { nameEn: "White", nameAr: "White", colorHex: "#ffffff" },
   { nameEn: "Navy", nameAr: "Navy", colorHex: "#1e3a8a" },
-  { nameEn: "Beige", nameAr: "Beige", colorHex: "#d6c4a3" }
+  { nameEn: "Beige", nameAr: "Beige", colorHex: "#d6c4a3" },
+  { nameEn: "Green", nameAr: "Green", colorHex: "#16a34a" }
 ];
 
 function createQuickColor(index = 0): QuickColorForm {
@@ -216,7 +221,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const [quickColorNameEn, setQuickColorNameEn] = useState("Default");
   const [quickColorNameAr, setQuickColorNameAr] = useState("Default");
   const [quickColorHex, setQuickColorHex] = useState("#111827");
-  const [quickColorRows, setQuickColorRows] = useState<QuickColorForm[]>(() => [createQuickColor()]);
+  const [quickColorRows, setQuickColorRows] = useState<QuickColorForm[]>([]);
   const [quickSizeStock, setQuickSizeStock] = useState<Record<string, string>>({});
   const currentCategory = categories.find((category) => category.id === form.categoryId);
   const currentCategoryName = currentCategory
@@ -233,6 +238,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const variantStock = activeVariants.reduce((total, variant) => total + Number(variant.stock || 0), 0);
   const effectiveStock = form.variants.length ? variantStock : Number(form.stock || 0);
   const imageCount = form.images.filter((image) => image.url.trim()).length;
+  const mainImageUrl = form.images[0]?.url.trim() ?? "";
+  const hasMainImage = Boolean(mainImageUrl);
   const isCatalogReady = Boolean(form.nameEn.trim() && form.categoryId);
   const isPricingReady = Number(form.price || 0) > 0 && effectiveStock > 0;
   const isMediaReady = imageCount > 0;
@@ -304,7 +311,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   const resetForm = () => {
     setForm(createEmptyForm(categories[0]?.id ?? ""));
     setSlugEdited(false);
-    setQuickColorRows([createQuickColor()]);
+    setQuickColorRows([]);
     setQuickSizeStock({});
   };
 
@@ -332,6 +339,27 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
 
   const addQuickColorRow = () => {
     setQuickColorRows((current) => [...current, createQuickColor(current.length)]);
+  };
+
+  const addQuickColorPreset = (preset: (typeof quickColors)[number]) => {
+    setQuickColorRows((current) => {
+      const exists = current.some((color) => color.nameEn.trim().toLowerCase() === preset.nameEn.toLowerCase());
+
+      if (exists) {
+        return current;
+      }
+
+      return [
+        ...current,
+        {
+          ...createQuickColor(current.length),
+          nameEn: preset.nameEn,
+          nameAr: preset.nameAr,
+          colorHex: preset.colorHex,
+          imageUrl: mainImageUrl
+        }
+      ];
+    });
   };
 
   const removeQuickColorRow = (id: string) => {
@@ -800,19 +828,52 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <div className="min-w-0 rounded-xl border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold text-navy">Color-wise size stock</p>
+                    <p className="text-sm font-bold text-navy">Color-wise variant setup</p>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
-                      Add Black, Maroon, or any color, then enter stock for each size inside that color.
+                      Upload the main image first, then choose colors. Each selected color gets its own image, SKU, and size stock.
                     </p>
                   </div>
-                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow}>
+                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={addQuickColorRow} disabled={!hasMainImage}>
                     <Plus size={15} />
-                    Add color stock group
+                    Custom color
                   </Button>
                 </div>
-                <div className="mt-3 grid gap-3">
-                  {quickColorRows.map((color, index) => (
-                    <div key={color.id} className="grid min-w-0 gap-4 rounded-xl border border-neutral-200 bg-white p-3">
+                {hasMainImage ? (
+                  <div className="mt-4 grid gap-4">
+                    <div className="rounded-xl border border-neutral-200 bg-white p-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose product colors</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {quickColors.map((preset) => {
+                          const selected = quickColorRows.some(
+                            (color) => color.nameEn.trim().toLowerCase() === preset.nameEn.toLowerCase()
+                          );
+
+                          return (
+                            <button
+                              key={preset.nameEn}
+                              type="button"
+                              onClick={() => addQuickColorPreset(preset)}
+                              className={`inline-flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-bold transition ${
+                                selected
+                                  ? "border-gold-500 bg-gold-50 text-navy ring-2 ring-gold-200"
+                                  : "border-neutral-200 bg-white text-neutral-700 hover:border-gold-300"
+                              }`}
+                              aria-pressed={selected}
+                            >
+                              <span
+                                className="h-5 w-5 rounded-full border-2 border-white ring-1 ring-neutral-300"
+                                style={{ backgroundColor: preset.colorHex }}
+                              />
+                              {preset.nameEn}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {quickColorRows.length ? (
+                      quickColorRows.map((color, index) => (
+                        <div key={color.id} className="grid min-w-0 gap-4 rounded-xl border border-neutral-200 bg-white p-3">
                       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
                         <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_160px]">
                           <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
@@ -898,14 +959,24 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows}>
-                    <PackageCheck size={15} />
-                    Generate variant table
-                  </Button>
-                </div>
+                      ))
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-4 text-sm font-semibold text-neutral-500">
+                        Select at least one color above to open the color-specific variant form.
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="secondary" size="sm" onClick={applyQuickStockRows} disabled={!quickColorRows.length}>
+                        <PackageCheck size={15} />
+                        Generate variant table
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-xl border border-dashed border-neutral-300 bg-white p-4 text-sm font-semibold text-neutral-500">
+                    Add the main product image above. Color choices and variant stock fields will appear here after the image is set.
+                  </div>
+                )}
               </div>
               {form.variants.length ? (
                 <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white sm:col-span-2">
