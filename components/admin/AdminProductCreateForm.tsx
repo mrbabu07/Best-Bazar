@@ -184,6 +184,12 @@ const quickColors = [
 const visibleQuickColorNames = new Set(["Black", "Maroon", "Red", "Blue", "Gold", "White"]);
 
 const optionalSpecPresets = [
+  { keyEn: "Occasion", keyAr: "Occasion", valueEn: "", valueAr: "" },
+  { keyEn: "Product type", keyAr: "Product type", valueEn: "", valueAr: "" },
+  { keyEn: "Fit", keyAr: "Fit", valueEn: "", valueAr: "" },
+  { keyEn: "Style", keyAr: "Style", valueEn: "", valueAr: "" },
+  { keyEn: "Length", keyAr: "Length", valueEn: "", valueAr: "" },
+  { keyEn: "Care instructions", keyAr: "Care instructions", valueEn: "", valueAr: "" },
   { keyEn: "Material", keyAr: "الخامة", valueEn: "", valueAr: "" },
   { keyEn: "Country of origin", keyAr: "بلد المنشأ", valueEn: "", valueAr: "" },
   { keyEn: "Package includes", keyAr: "محتويات العبوة", valueEn: "", valueAr: "" },
@@ -1080,9 +1086,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                                   </div>
                                   <Badge tone={sizeRequired ? "gold" : "neutral"}>{sizeRequired ? currentCategoryName : "One size"}</Badge>
                                 </div>
-                                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fit,minmax(96px,1fr))]">
+                                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                                   {sizeOptions.map((size) => (
-                                    <label key={size.key} className="grid gap-1 rounded-md border border-neutral-200 bg-white p-2">
+                                    <label key={size.key} className="grid min-w-0 gap-1 rounded-md border border-neutral-200 bg-white p-2">
                                       <span className="truncate text-xs font-bold text-navy">{locale === "ar" ? size.nameAr : size.nameEn}</span>
                                       <input
                                         type="number"
@@ -1090,7 +1096,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                                         value={color.sizeStock[size.key] ?? ""}
                                         onChange={(event) => updateQuickColorSizeStock(color.id, size.key, event.target.value)}
                                         placeholder="0"
-                                        className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
+                                        className="h-9 w-full min-w-0 rounded-md border border-neutral-200 bg-paper px-2 text-sm font-bold text-navy"
                                       />
                                     </label>
                                   ))}
