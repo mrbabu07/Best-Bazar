@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import { authOptions } from "@/lib/auth";
 import { toJsonSafeValue } from "@/lib/safe-json";
@@ -48,6 +49,13 @@ export function handleApiError(error: unknown) {
 
   if (error instanceof ApiError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      const fields = Array.isArray(error.meta?.target) ? error.meta.target.join(", ") : "unique field";
+      return NextResponse.json({ error: `Duplicate ${fields}. Please use a different SKU or slug.` }, { status: 409 });
+    }
   }
 
   console.error(error);

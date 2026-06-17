@@ -757,7 +757,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           fitNameEn: isFashionCategory ? variant.fitNameEn || null : null,
           fitNameAr: isFashionCategory ? variant.fitNameAr || null : null,
           imageUrl: variant.imageUrl || null,
-          sku: variant.sku || null,
+          sku: variant.sku && !variant.sku.toUpperCase().startsWith("AUTO-")
+            ? variant.sku
+            : `${fallbackSku}-${variant.colorNameEn || "COLOR"}-${variant.sizeKey || index + 1}`
+              .toUpperCase()
+              .replace(/[^A-Z0-9]+/g, "-")
+              .replace(/^-+|-+$/g, ""),
           stock: Number(variant.stock || 0),
           sortOrder: Number(variant.sortOrder || index),
           isActive: variant.isActive
@@ -914,11 +919,20 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                       Step 1: upload the main product image above. You can still prepare colors now, but save needs at least one main image.
                     </div>
                   ) : null}
-                    <div className="rounded-xl border border-neutral-200 bg-paper p-3 sm:p-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose visible product colors</p>
-                      <p className="mt-1 text-xs font-semibold text-neutral-500">
-                        If only one color is selected, product will have one color option. If multiple colors are selected, each color gets separate stock fields.
-                      </p>
+                    <details className="rounded-xl border border-neutral-200 bg-paper p-3 sm:p-4">
+                      <summary className="cursor-pointer list-none">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">Choose visible product colors</p>
+                            <p className="mt-1 text-xs font-semibold text-neutral-500">
+                              Tap to show/hide color options. Selected colors stay below.
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600">
+                            {quickColorRows.length} selected
+                          </span>
+                        </div>
+                      </summary>
                       <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                         {quickColors.map((preset) => {
                           const selected = quickColorRows.some(
@@ -946,7 +960,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                           );
                         })}
                       </div>
-                    </div>
+                    </details>
 
                     {quickColorRows.length ? (
                       quickColorRows.map((color, index) => (
@@ -1268,54 +1282,93 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 </div>
                 {form.specifications.length ? (
                   <div className="grid gap-3">
-                    {form.specifications.map((specification, index) => (
-                      <div key={index} className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <input
-                            value={specification.keyEn}
-                            onChange={(event) => updateSpecification(index, "keyEn", event.target.value)}
-                            placeholder="Label EN, e.g. Warranty"
-                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                          />
-                          <input
-                            value={specification.keyAr}
-                            onChange={(event) => updateSpecification(index, "keyAr", event.target.value)}
-                            placeholder="Label AR"
-                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                          />
-                          <input
-                            value={specification.valueEn}
-                            onChange={(event) => updateSpecification(index, "valueEn", event.target.value)}
-                            placeholder="Value EN, e.g. 7 days exchange"
-                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                          />
-                          <input
-                            value={specification.valueAr}
-                            onChange={(event) => updateSpecification(index, "valueAr", event.target.value)}
-                            placeholder="Value AR"
-                            className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                          />
+                    {form.specifications.map((specification, index) => {
+                      const isPresetFact = optionalSpecPresets.some((preset) => preset.keyEn === specification.keyEn);
+
+                      return (
+                        <div key={index} className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3">
+                          {isPresetFact ? (
+                            <>
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-bold text-navy">{specification.keyEn}</p>
+                                  <p className="text-xs font-semibold text-neutral-500">{specification.keyAr}</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeSpecification(index)}
+                                  className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                                  aria-label="Remove specification"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <input
+                                  value={specification.valueEn}
+                                  onChange={(event) => updateSpecification(index, "valueEn", event.target.value)}
+                                  placeholder={`Enter ${specification.keyEn.toLowerCase()}`}
+                                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                                <input
+                                  value={specification.valueAr}
+                                  onChange={(event) => updateSpecification(index, "valueAr", event.target.value)}
+                                  placeholder="Arabic value"
+                                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <input
+                                  value={specification.keyEn}
+                                  onChange={(event) => updateSpecification(index, "keyEn", event.target.value)}
+                                  placeholder="Label EN, e.g. Warranty"
+                                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                                <input
+                                  value={specification.keyAr}
+                                  onChange={(event) => updateSpecification(index, "keyAr", event.target.value)}
+                                  placeholder="Label AR"
+                                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                                <input
+                                  value={specification.valueEn}
+                                  onChange={(event) => updateSpecification(index, "valueEn", event.target.value)}
+                                  placeholder="Value EN, e.g. 7 days exchange"
+                                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                                <input
+                                  value={specification.valueAr}
+                                  onChange={(event) => updateSpecification(index, "valueAr", event.target.value)}
+                                  placeholder="Value AR"
+                                  className="h-10 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                              </div>
+                              <div className="flex justify-end gap-2">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={specification.sortOrder}
+                                  onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
+                                  aria-label="Specification sort order"
+                                  className="h-10 w-24 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeSpecification(index)}
+                                  className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                                  aria-label="Remove specification"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
-                        <div className="flex justify-end gap-2">
-                          <input
-                            type="number"
-                            min="0"
-                            value={specification.sortOrder}
-                            onChange={(event) => updateSpecification(index, "sortOrder", event.target.value)}
-                            aria-label="Specification sort order"
-                            className="h-10 w-24 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeSpecification(index)}
-                            className="grid h-10 w-10 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
-                            aria-label="Remove specification"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="rounded-md border border-dashed border-neutral-200 bg-paper p-3 text-sm font-semibold text-neutral-500">
