@@ -22,11 +22,15 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
           <p className="mt-4 max-w-md text-sm leading-6 text-neutral-600">
             {dictionary.footer.tagline}
           </p>
-          <div className="mt-5 flex gap-3 text-navy">
+          <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">Follow us</p>
+          <div className="mt-3 flex flex-wrap gap-3 text-navy">
             {settings.instagram ? (
               <Link
                 href={settings.instagram}
+                target="_blank"
+                rel="noreferrer"
                 aria-label="Instagram"
+                title="Instagram"
                 className="grid h-9 w-9 place-items-center rounded-md border border-gold-200 hover:bg-gold-50"
               >
                 <Instagram size={18} />
@@ -35,7 +39,10 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             {settings.facebook ? (
               <Link
                 href={settings.facebook}
+                target="_blank"
+                rel="noreferrer"
                 aria-label="Facebook"
+                title="Facebook"
                 className="grid h-9 w-9 place-items-center rounded-md border border-gold-200 hover:bg-gold-50"
               >
                 <Facebook size={18} />
@@ -44,7 +51,10 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             {settings.tiktok ? (
               <Link
                 href={settings.tiktok}
+                target="_blank"
+                rel="noreferrer"
                 aria-label="TikTok"
+                title="TikTok"
                 className="grid h-9 w-9 place-items-center rounded-md border border-gold-200 hover:bg-gold-50"
               >
                 <Music2 size={18} />

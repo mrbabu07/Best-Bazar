@@ -3,7 +3,7 @@
 import { CreditCard, HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -120,6 +120,23 @@ type StripePaymentState = {
   orderConfirmUrl: string;
 };
 
+type ReverseGeocodeResponse = {
+  address?: {
+    road?: string;
+    pedestrian?: string;
+    house_number?: string;
+    building?: string;
+    amenity?: string;
+    neighbourhood?: string;
+    suburb?: string;
+    city?: string;
+    town?: string;
+    state?: string;
+    country?: string;
+  };
+  display_name?: string;
+};
+
 export function CheckoutPageContent({ locale, dictionary, paymentAvailability }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
@@ -141,6 +158,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
   const [mapLink, setMapLink] = useState("");
   const [locating, setLocating] = useState(false);
+  const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -177,6 +195,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     : `${selectedEmirate || emirate}, UAE`;
   const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=${mapPin ? "16" : "11"}&output=embed`;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
+  const mapBounds = selectedEmirate.trim().toLowerCase() === "dubai"
+    ? { north: 25.35, south: 24.95, west: 54.9, east: 55.6 }
+    : { north: 26.2, south: 22.6, west: 51.5, east: 56.5 };
 
   const paymentMethod = () => {
     if (payment === "cod") {
@@ -269,6 +290,80 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     }
   };
 
+  const setFieldValue = (field: CheckoutFieldName, value?: string) => {
+    const input = fieldRefs.current[field];
+
+    if (input && value) {
+      input.value = value;
+    }
+  };
+
+  const fillAddressFromPin = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { Accept: "application/json" } }
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const result = await safeResponseJson<ReverseGeocodeResponse>(response, {});
+      const address = result.address ?? {};
+      const street = [address.house_number, address.road ?? address.pedestrian]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      const tower = address.building ?? address.amenity ?? address.neighbourhood ?? address.suburb;
+      const city = address.city ?? address.town ?? address.state;
+      const country = address.country;
+      const matchedRate = shippingOptions.find((rate) => {
+        const emirateName = rate.emirate.toLowerCase();
+        const state = (address.state ?? "").toLowerCase();
+        const cityName = (city ?? "").toLowerCase();
+
+        return state.includes(emirateName) || cityName.includes(emirateName) || Boolean(cityName && emirateName.includes(cityName));
+      });
+
+      setFieldValue("street", street || result.display_name);
+      setFieldValue("tower", tower);
+      setFieldValue("city", city);
+      setFieldValue("country", country || "United Arab Emirates");
+
+      if (matchedRate) {
+        setEmirate(matchedRate.emirate);
+      }
+    } catch {
+      // The map pin still works even when public reverse geocoding is unavailable.
+    }
+  };
+
+  const setDeliveryPin = (lat: number, lng: number, shouldFillAddress = true) => {
+    const nextPin = {
+      lat: Number(lat.toFixed(6)),
+      lng: Number(lng.toFixed(6))
+    };
+
+    setMapPin(nextPin);
+    setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
+
+    if (shouldFillAddress) {
+      void fillAddressFromPin(nextPin.lat, nextPin.lng);
+    }
+  };
+
+  const handleMapClick = (event: MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const xRatio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const yRatio = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
+    const lat = mapBounds.north - (mapBounds.north - mapBounds.south) * yRatio;
+    const lng = mapBounds.west + (mapBounds.east - mapBounds.west) * xRatio;
+
+    setDeliveryPin(lat, lng);
+    toast.success("Delivery map pin updated.");
+  };
+
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
       toast.error("Location is not supported on this device.");
@@ -278,10 +373,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setMapPin({
-          lat: Number(position.coords.latitude.toFixed(6)),
-          lng: Number(position.coords.longitude.toFixed(6))
-        });
+        setDeliveryPin(position.coords.latitude, position.coords.longitude);
         setLocating(false);
         toast.success("Delivery map pin added.");
       },
@@ -493,6 +585,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                 >
                   {field.label}
                   <input
+                    ref={(node) => {
+                      fieldRefs.current[field.name] = node;
+                    }}
                     name={field.name}
                     type={field.type}
                     autoComplete={field.autoComplete}
@@ -557,7 +652,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     {locating ? "Locating..." : "Use my location"}
                   </Button>
                 </div>
-                <div className="overflow-hidden rounded-md border border-neutral-200 bg-white">
+                <div className="relative overflow-hidden rounded-md border border-neutral-200 bg-white">
                   <iframe
                     title="Delivery map preview"
                     src={mapEmbedUrl}
@@ -565,6 +660,21 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                   />
+                  <button
+                    type="button"
+                    onClick={handleMapClick}
+                    className="absolute inset-0 cursor-crosshair"
+                    aria-label="Tap map to set delivery pin"
+                  >
+                    <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-navy shadow-soft">
+                      Tap map to set pin
+                    </span>
+                    {mapPin ? (
+                      <span className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-gold-500 text-navy shadow-soft ring-4 ring-white/90">
+                        <MapPin size={20} />
+                      </span>
+                    ) : null}
+                  </button>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
                   <input
