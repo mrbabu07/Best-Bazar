@@ -854,7 +854,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />
               </label>
-              <label className="grid gap-2 text-sm font-semibold text-navy">
+              <label className={`gap-2 text-sm font-semibold text-navy ${quickColorRows.length ? "hidden" : "grid"}`}>
                 Total stock {form.variants.length ? "(auto)" : ""}
                 <input
                   type="number"
@@ -964,35 +964,41 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
 
                     {quickColorRows.length ? (
                       quickColorRows.map((color, index) => (
-                        <div key={color.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-                          <div className="flex flex-col gap-3 border-b border-neutral-100 bg-paper p-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <span
-                                className="h-9 w-9 shrink-0 rounded-full border-2 border-white ring-1 ring-neutral-300"
-                                style={{ backgroundColor: normalizeHexColor(color.colorHex) }}
-                              />
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-bold text-navy">
-                                  Color variant {index + 1}: {color.nameEn || "Custom color"}
-                                </p>
-                                <p className="mt-1 text-xs font-semibold text-neutral-500">
-                                  Add this color image, SKU, then fill stock by size.
-                                </p>
+                        <details key={color.id} className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+                          <summary className="cursor-pointer list-none">
+                            <div className="flex flex-col gap-3 bg-paper p-3 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <span
+                                  className="h-9 w-9 shrink-0 rounded-full border-2 border-white ring-1 ring-neutral-300"
+                                  style={{ backgroundColor: normalizeHexColor(color.colorHex) }}
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-bold text-navy">
+                                    {color.nameEn || `Color ${index + 1}`}
+                                  </p>
+                                  <p className="mt-1 text-xs font-semibold text-neutral-500">
+                                    {Object.values(color.sizeStock).reduce((total, value) => total + Number(value || 0), 0)} stock added
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-2">
+                                <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-neutral-600">Edit</span>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    removeQuickColorRow(color.id);
+                                  }}
+                                  disabled={quickColorRows.length === 1}
+                                  className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-red-100 px-3 text-xs font-bold text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                  <Trash2 size={14} />
+                                  Remove
+                                </button>
                               </div>
                             </div>
-                            <div className="flex shrink-0 items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => removeQuickColorRow(color.id)}
-                                disabled={quickColorRows.length === 1}
-                                className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-red-100 px-3 text-xs font-bold text-sale transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                              >
-                                <Trash2 size={14} />
-                                Remove
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid min-w-0 gap-4 p-3 lg:grid-cols-[minmax(0,1fr)_260px]">
+                          </summary>
+                          <div className="grid min-w-0 gap-4 border-t border-neutral-100 p-3 lg:grid-cols-[minmax(0,1fr)_260px]">
                             <div className="grid min-w-0 gap-3">
                               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
                                 <label className="grid gap-2 text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
@@ -1069,7 +1075,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                               />
                             </div>
                           </div>
-                        </div>
+                        </details>
                       ))
                     ) : (
                       <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-4 text-sm font-semibold text-neutral-500">
@@ -1255,10 +1261,14 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   )}
                 </div>
               ) : null}
-              <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 sm:col-span-2">
+              <details className="rounded-md border border-neutral-200 bg-white p-3 sm:col-span-2">
+                <summary className="cursor-pointer text-sm font-bold text-navy">
+                  Extra product facts
+                  <span className="ml-2 text-xs font-semibold text-neutral-500">optional</span>
+                </summary>
+                <div className="mt-3 grid gap-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-navy">Extra product facts</h3>
                     <p className="mt-1 text-xs font-semibold text-neutral-500">
                       Add any customer-facing details like package includes, warranty, origin, delivery note, or return policy.
                     </p>
@@ -1375,7 +1385,8 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                     No extra facts yet. Product can still be created without them.
                   </p>
                 )}
-              </div>
+                </div>
+              </details>
               <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-semibold text-navy sm:col-span-2 sm:grid-cols-2">
                 <label className="flex items-center gap-2">
                   <input
