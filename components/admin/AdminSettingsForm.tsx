@@ -808,7 +808,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             ["phone", "Phone", true],
             ["storeEmail", "Email", true],
             ["whatsapp", "WhatsApp", false],
-            ["address", "Address", true],
+            ["address", "Footer address", false],
             ["instagram", "Instagram", false],
             ["facebook", "Facebook", false],
             ["twitter", "Twitter", false],

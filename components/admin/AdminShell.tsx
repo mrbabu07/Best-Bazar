@@ -68,111 +68,111 @@ export function AdminShell({
   const navGroups = [
     {
       title: "Overview",
-      description: "Daily snapshot",
+      description: "Dashboard",
       items: [
         {
           label: dictionary.admin.dashboard,
           href: `/${locale}/admin/dashboard`,
           icon: LayoutDashboard,
-          description: "Revenue, orders, stock, and recent activity"
+          description: "Sales, orders, stock"
         },
         {
           label: "Notifications",
           href: `/${locale}/admin/dashboard#notifications`,
           icon: Bell,
-          description: "Pending orders, low stock, and reviews",
+          description: "Needs attention",
           count: totalNotifications
         }
       ]
     },
     {
-      title: "Orders and fulfillment",
-      description: "Confirm, deliver, print",
+      title: "Sales",
+      description: "Orders",
       items: [
         {
           label: dictionary.admin.orders,
           href: `/${locale}/admin/orders`,
           icon: Receipt,
-          description: "Payment status, delivery status, invoices",
+          description: "Status, invoice, print",
           count: notifications.pendingOrders
         }
       ]
     },
     {
-      title: "Catalog setup",
-      description: "Products, sizes, stock",
+      title: "Catalog",
+      description: "Products",
       items: [
         {
           label: dictionary.admin.products,
           href: `/${locale}/admin/products`,
           icon: Package,
-          description: "Variants, images, prices, stock, SEO",
+          description: "Manage products",
           count: notifications.lowStockProducts
         },
         {
           label: "Add product",
           href: `/${locale}/admin/products/new`,
           icon: Plus,
-          description: "Color, size, stock, category rules"
+          description: "Create product",
         },
         {
           label: dictionary.admin.categories,
           href: `/${locale}/admin/categories`,
           icon: Tags,
-          description: "Category tree, product types, size options"
+          description: "Categories and sizes"
         }
       ]
     },
     {
-      title: "Customers and growth",
-      description: "People, reviews, offers",
+      title: "Customers",
+      description: "Users",
       items: [
         {
           label: dictionary.admin.users,
           href: `/${locale}/admin/users`,
           icon: Users,
-          description: "Customers, admin roles, account status"
+          description: "Accounts and roles"
         },
         {
           label: dictionary.admin.reviews,
           href: `/${locale}/admin/reviews`,
           icon: Star,
-          description: "Approve, hide, delete, search",
+          description: "Approve reviews",
           count: notifications.pendingReviews
         },
         {
           label: dictionary.admin.coupons,
           href: `/${locale}/admin/coupons`,
           icon: TicketPercent,
-          description: "Discounts, expiry, usage limits"
+          description: "Discount codes"
         }
       ]
     },
     {
-      title: "Storefront and business",
-      description: "Homepage, payments, UI",
+      title: "Storefront",
+      description: "Site",
       items: [
         {
           label: "Banners",
           href: `/${locale}/admin/banners`,
           icon: ImagePlus,
-          description: "Hero slides, campaign images, CTA links"
+          description: "Hero and campaigns"
         },
         {
           label: dictionary.admin.settings,
           href: `/${locale}/admin/settings`,
           icon: Settings,
-          description: "Payments, shipping, VAT/TRN, theme"
+          description: "Footer, payments, UI"
         }
       ]
     }
   ];
 
   return (
-    <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[320px_1fr]">
+    <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[292px_1fr]">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-80 flex-col border-r border-gold-100 bg-navy text-white shadow-lift transition lg:static lg:w-auto lg:shadow-none rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
+          "fixed inset-y-0 left-0 z-50 flex w-[292px] flex-col border-r border-gold-100 bg-navy text-white shadow-lift transition lg:static lg:w-auto lg:shadow-none rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
           open ? "translate-x-0 rtl:translate-x-0" : "-translate-x-full lg:translate-x-0 rtl:translate-x-full lg:rtl:translate-x-0"
         )}
       >
@@ -219,7 +219,7 @@ export function AdminShell({
             onMouseEnter={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
             onFocus={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
             onClick={() => setOpen(false)}
-            className="flex items-center justify-between gap-3 rounded-md border border-gold-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:bg-gold-50"
+            className="flex items-center justify-between gap-3 rounded-md border border-gold-200 bg-white px-3 py-2.5 text-sm font-bold text-navy transition hover:bg-gold-50"
           >
             <span className="inline-flex min-w-0 items-center gap-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gold-100 text-gold-800">
@@ -254,15 +254,14 @@ export function AdminShell({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 pb-4">
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {navGroups.map((group) => (
-              <section key={group.title} className="rounded-md border border-white/10 bg-white/[0.04] p-2">
-                <div className="flex items-center justify-between gap-3 px-2 pb-2">
+              <section key={group.title} className="rounded-md border border-white/10 bg-white/[0.035] p-2">
+                <div className="flex items-center justify-between gap-3 px-2 pb-1.5">
                   <div className="min-w-0">
-                    <p className="truncate text-[11px] font-black uppercase tracking-[0.14em] text-gold-200">{group.title}</p>
-                    <p className="mt-0.5 truncate text-[11px] font-semibold text-white/45">{group.description}</p>
+                    <p className="truncate text-[11px] font-black uppercase tracking-[0.12em] text-gold-200">{group.title}</p>
                   </div>
-                  <span className="rounded-full bg-white/8 px-2 py-1 text-[10px] font-bold text-white/55">
+                  <span className="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-bold text-white/55">
                     {group.items.length}
                   </span>
                 </div>
@@ -283,14 +282,14 @@ export function AdminShell({
                         onFocus={() => prefetchRoute(item.href)}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "group relative flex items-start gap-3 rounded-md px-3 py-2.5 text-white/72 transition hover:bg-white/10 hover:text-white",
+                          "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-white/76 transition hover:bg-white/10 hover:text-white",
                           active && "bg-white text-navy shadow-soft hover:bg-white hover:text-navy"
                         )}
                       >
                         {active ? <span className="absolute left-0 top-2 h-9 w-1 rounded-r-full bg-gold-500 rtl:left-auto rtl:right-0 rtl:rounded-l-full rtl:rounded-r-none" /> : null}
                         <span
                           className={cn(
-                            "mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/8 text-gold-200 transition",
+                            "grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white/8 text-gold-200 transition",
                             active && "bg-gold-100 text-gold-800"
                           )}
                         >
@@ -315,8 +314,8 @@ export function AdminShell({
                           </span>
                         </span>
                         <ChevronRight
-                          size={15}
-                          className={cn("mt-2 shrink-0 text-white/35 transition group-hover:translate-x-0.5", active && "text-gold-700")}
+                          size={14}
+                          className={cn("shrink-0 text-white/35 transition group-hover:translate-x-0.5", active && "text-gold-700")}
                         />
                       </Link>
                     );

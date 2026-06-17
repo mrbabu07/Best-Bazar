@@ -219,7 +219,7 @@ export const settingsSchema = z.object({
   whatsapp: nullableString,
   trn: nullableString,
   vatRate: money,
-  address: z.string().trim().min(1),
+  address: z.string().trim().default(""),
   instagram: nullableString,
   facebook: nullableString,
   twitter: nullableString,

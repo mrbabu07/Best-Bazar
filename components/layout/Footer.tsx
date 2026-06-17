@@ -94,10 +94,12 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             {dictionary.footer.contact}
           </h3>
           <div className="mt-4 grid gap-3 text-sm text-neutral-600">
-            <p className="flex items-center gap-2">
-              <MapPin size={16} />
-              {settings.address}
-            </p>
+            {settings.address ? (
+              <p className="flex items-center gap-2">
+                <MapPin size={16} />
+                {settings.address}
+              </p>
+            ) : null}
             <p className="flex items-center gap-2">
               <Phone size={16} />
               {settings.phone}

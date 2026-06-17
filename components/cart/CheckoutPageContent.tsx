@@ -186,10 +186,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const shippingSummary = shippingQuote.isFree
     ? `Shipping to ${shippingQuote.rate.emirate}: FREE shipping!`
     : `Shipping to ${shippingQuote.rate.emirate}: AED ${shipping.toFixed(0)} (${shippingQuote.estimatedDays} days)`;
-  const deliverySlotOptions =
-    selectedEmirate.trim().toLowerCase() === "dubai"
-      ? ["Today 6 PM - 10 PM", "Tomorrow 9 AM - 1 PM", "Tomorrow 1 PM - 5 PM", "Tomorrow 5 PM - 9 PM"]
-      : ["Standard delivery 10 AM - 6 PM", "Evening delivery 5 PM - 9 PM"];
   const mapQuery = mapPin
     ? `${mapPin.lat},${mapPin.lng}`
     : `${selectedEmirate || emirate}, UAE`;
@@ -451,7 +447,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         emirate: String(formData.get("emirate") ?? ""),
         country: String(formData.get("country") ?? "UAE")
       },
-      deliverySlot: String(formData.get("deliverySlot") ?? "") || undefined,
+      deliverySlot: undefined,
       paymentMethod: paymentMethod(),
       currency,
       locale,
@@ -622,20 +618,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   </p>
                 ) : null}
               </div>
-              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
-                Delivery slot
-                <select
-                  name="deliverySlot"
-                  required
-                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-                >
-                  {deliverySlotOptions.map((slot) => (
-                    <option key={slot} value={slot}>
-                      {slot}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
