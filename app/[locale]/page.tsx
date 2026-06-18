@@ -118,27 +118,38 @@ export default async function HomePage({ params }: { params: { locale: string } 
         metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
       />
 
-      <section className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf6_100%)] py-14">
+      <section className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf6_100%)] py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <SectionHeader
-              eyebrow={dictionary.common.categories}
-              title={dictionary.home.categoryTitle}
-              subtitle={dictionary.home.categorySubtitle}
-            />
+            <div className="sm:hidden">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-gold-700">
+                {dictionary.common.categories}
+              </p>
+              <h2 className="mt-2 text-2xl font-black leading-tight text-navy">{dictionary.home.categoryTitle}</h2>
+              <p className="mt-2 text-sm font-semibold leading-6 text-neutral-500">
+                Swipe to explore Dubai collections.
+              </p>
+            </div>
+            <div className="hidden sm:block">
+              <SectionHeader
+                eyebrow={dictionary.common.categories}
+                title={dictionary.home.categoryTitle}
+                subtitle={dictionary.home.categorySubtitle}
+              />
+            </div>
             <div className="hidden rounded-xl border border-gold-200 bg-white px-4 py-3 text-right shadow-soft sm:block rtl:text-left">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">UAE curated</p>
               <p className="mt-1 text-sm font-bold text-navy">Dubai styles, gifts, and daily essentials</p>
             </div>
           </div>
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-5">
+          <div className="-mx-4 mt-6 grid auto-cols-[minmax(136px,42vw)] grid-flow-col gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:mt-8 sm:grid-flow-row sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/${locale}/shop?category=${category.slug}`}
-                className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift"
+                className="group min-w-0 snap-start rounded-xl border border-neutral-200 bg-white p-2.5 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:p-3"
               >
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-paper">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper sm:aspect-square sm:rounded-xl">
                   <Image
                     src={category.image}
                     alt={getLocalized(category.name, locale)}
@@ -146,10 +157,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
                     sizes="(min-width: 1024px) 18vw, (min-width: 640px) 28vw, 42vw"
                     className="object-cover transition duration-500 group-hover:scale-110"
                   />
+                  <span className="absolute right-2 top-2 rounded-full bg-white/92 px-2 py-1 text-[10px] font-black text-navy shadow-sm rtl:left-2 rtl:right-auto sm:hidden">
+                    {category.productCount}
+                  </span>
                 </div>
                 <div className="mt-3">
                   <h3 className="line-clamp-1 text-sm font-extrabold text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
-                  <p className="mt-1 text-xs text-neutral-500">{category.productCount} {dictionary.shop.results}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-neutral-500 sm:text-xs">{category.productCount} {dictionary.shop.results}</p>
                 </div>
               </Link>
             ))}
