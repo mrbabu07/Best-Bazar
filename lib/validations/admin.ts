@@ -72,7 +72,12 @@ const themeSettingsSchema = z.object({
   inkColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
   radius: z.enum(["compact", "soft", "rounded"]),
   buttonStyle: z.enum(["gradient", "solid"]),
-  productCardStyle: z.enum(["standard", "compact", "elevated"])
+  productCardStyle: z.enum(["standard", "compact", "elevated"]),
+  maintenanceMode: z.boolean().default(false),
+  maintenanceTitleEn: z.string().trim().default("We are updating Best Mart"),
+  maintenanceTitleAr: z.string().trim().default("We are updating Best Mart"),
+  maintenanceMessageEn: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
+  maintenanceMessageAr: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon.")
 });
 const shippingRateSchema = z.object({
   emirate: z.string().trim().min(1).optional(),

@@ -8,6 +8,11 @@ export type ThemeSettings = {
   radius: "compact" | "soft" | "rounded";
   buttonStyle: "gradient" | "solid";
   productCardStyle: "standard" | "compact" | "elevated";
+  maintenanceMode: boolean;
+  maintenanceTitleEn: string;
+  maintenanceTitleAr: string;
+  maintenanceMessageEn: string;
+  maintenanceMessageAr: string;
 };
 
 export const defaultThemeSettings: ThemeSettings = {
@@ -17,7 +22,12 @@ export const defaultThemeSettings: ThemeSettings = {
   inkColor: "#2d2d2d",
   radius: "soft",
   buttonStyle: "gradient",
-  productCardStyle: "standard"
+  productCardStyle: "standard",
+  maintenanceMode: false,
+  maintenanceTitleEn: "We are updating Best Mart",
+  maintenanceTitleAr: "We are updating Best Mart",
+  maintenanceMessageEn: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
+  maintenanceMessageAr: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon."
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -44,7 +54,24 @@ export function normalizeThemeSettings(value: unknown): ThemeSettings {
     productCardStyle:
       input.productCardStyle === "compact" || input.productCardStyle === "elevated"
         ? input.productCardStyle
-        : "standard"
+        : "standard",
+    maintenanceMode: input.maintenanceMode === true,
+    maintenanceTitleEn:
+      typeof input.maintenanceTitleEn === "string" && input.maintenanceTitleEn.trim()
+        ? input.maintenanceTitleEn
+        : defaultThemeSettings.maintenanceTitleEn,
+    maintenanceTitleAr:
+      typeof input.maintenanceTitleAr === "string" && input.maintenanceTitleAr.trim()
+        ? input.maintenanceTitleAr
+        : defaultThemeSettings.maintenanceTitleAr,
+    maintenanceMessageEn:
+      typeof input.maintenanceMessageEn === "string" && input.maintenanceMessageEn.trim()
+        ? input.maintenanceMessageEn
+        : defaultThemeSettings.maintenanceMessageEn,
+    maintenanceMessageAr:
+      typeof input.maintenanceMessageAr === "string" && input.maintenanceMessageAr.trim()
+        ? input.maintenanceMessageAr
+        : defaultThemeSettings.maintenanceMessageAr
   };
 }
 

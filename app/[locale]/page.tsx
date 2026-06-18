@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { CreditCard, HandCoins, MapPin, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { CreditCard, HandCoins, RotateCcw, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -117,30 +117,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
         secondaryLabel={dictionary.actions.viewCollection}
         metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
       />
-
-      <section className="border-b border-gold-100 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-3 px-4 py-5 sm:grid-cols-3 sm:px-6 lg:px-8">
-          {[
-            { icon: MapPin, title: "Dubai-first shopping", detail: "AED pricing, UAE delivery areas, and local support." },
-            { icon: ShieldCheck, title: "Verified checkout", detail: "COD and card payment controls managed from admin." },
-            { icon: Truck, title: "Emirate delivery rates", detail: "Shipping fees update from admin settings." }
-          ].map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <div key={item.title} className="flex min-h-20 items-start gap-3 rounded-xl border border-neutral-200 bg-paper px-4 py-3 shadow-soft">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-gold-700 shadow-sm">
-                  <Icon size={19} />
-                </span>
-                <span>
-                  <span className="block text-sm font-extrabold text-navy">{item.title}</span>
-                  <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
 
       <section className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf6_100%)] py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

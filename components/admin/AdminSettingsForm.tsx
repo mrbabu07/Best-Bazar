@@ -795,6 +795,61 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               <span className="h-11 rounded-md border border-neutral-200" style={{ backgroundColor: form.themeSettings.paperColor }} />
             </div>
           </div>
+          <div className="grid gap-4 rounded-md border border-gold-100 bg-gold-50 p-4 lg:col-span-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-sm font-black text-navy">Maintenance mode</h3>
+                <p className="mt-1 text-xs font-semibold leading-5 text-neutral-600">
+                  Turn this on when the storefront should show a temporary closed message. Admin pages stay accessible.
+                </p>
+              </div>
+              <label className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 bg-white px-3 text-xs font-black text-navy">
+                <input
+                  type="checkbox"
+                  checked={form.themeSettings.maintenanceMode}
+                  onChange={(event) => updateTheme("maintenanceMode", event.target.checked)}
+                  className="accent-gold-500"
+                />
+                {form.themeSettings.maintenanceMode ? "Enabled" : "Disabled"}
+              </label>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Maintenance title EN
+                <input
+                  value={form.themeSettings.maintenanceTitleEn}
+                  onChange={(event) => updateTheme("maintenanceTitleEn", event.target.value)}
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Maintenance title AR
+                <input
+                  value={form.themeSettings.maintenanceTitleAr}
+                  onChange={(event) => updateTheme("maintenanceTitleAr", event.target.value)}
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Maintenance message EN
+                <textarea
+                  rows={3}
+                  value={form.themeSettings.maintenanceMessageEn}
+                  onChange={(event) => updateTheme("maintenanceMessageEn", event.target.value)}
+                  className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Maintenance message AR
+                <textarea
+                  rows={3}
+                  value={form.themeSettings.maintenanceMessageAr}
+                  onChange={(event) => updateTheme("maintenanceMessageAr", event.target.value)}
+                  className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
+                />
+              </label>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+import { MaintenanceScreen } from "@/components/layout/MaintenanceScreen";
 import { NextChunkRecovery } from "@/components/layout/NextChunkRecovery";
 import type { StorefrontFrameProps } from "@/components/layout/types";
 
@@ -15,6 +16,7 @@ export function AppFrame({ children, locale, dictionary, settings }: StorefrontF
   const pathname = usePathname();
   const currentPathname = pathname ?? `/${locale}`;
   const isAdmin = currentPathname.includes(`/${locale}/admin`);
+  const maintenanceMode = settings.themeSettings.maintenanceMode;
 
   if (isAdmin) {
     return (
@@ -22,6 +24,15 @@ export function AppFrame({ children, locale, dictionary, settings }: StorefrontF
         <NextChunkRecovery />
         {children}
       </div>
+    );
+  }
+
+  if (maintenanceMode) {
+    return (
+      <>
+        <NextChunkRecovery />
+        <MaintenanceScreen locale={locale} settings={settings} />
+      </>
     );
   }
 

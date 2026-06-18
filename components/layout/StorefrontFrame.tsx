@@ -7,7 +7,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import type { StorefrontFrameProps } from "@/components/layout/types";
 import { WhatsAppQuickButton } from "@/components/layout/WhatsAppQuickButton";
 import { safeResponseJson } from "@/lib/safe-json";
-import { storefrontThemeStyle } from "@/lib/theme-config";
+import { normalizeThemeSettings, storefrontThemeStyle } from "@/lib/theme-config";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
@@ -65,7 +65,8 @@ export function StorefrontFrame({ children, locale, dictionary, settings }: Stor
           facebook: text(data?.facebook, current.facebook),
           tiktok: text(data?.tiktok, current.tiktok),
           currencyRates: nextCurrencyRates,
-          shippingSettings: nextShippingSettings
+          shippingSettings: nextShippingSettings,
+          themeSettings: normalizeThemeSettings(data?.themeSettings ?? current.themeSettings)
         }));
         setStorefrontSettings({
           currencyRates: nextCurrencyRates,
