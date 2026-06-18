@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+import { NextChunkRecovery } from "@/components/layout/NextChunkRecovery";
 import type { StorefrontFrameProps } from "@/components/layout/types";
 
 const StorefrontFrame = dynamic(() =>
@@ -16,11 +17,17 @@ export function AppFrame({ children, locale, dictionary, settings }: StorefrontF
   const isAdmin = currentPathname.includes(`/${locale}/admin`);
 
   if (isAdmin) {
-    return <div className="min-h-screen">{children}</div>;
+    return (
+      <div className="min-h-screen">
+        <NextChunkRecovery />
+        {children}
+      </div>
+    );
   }
 
   return (
     <StorefrontFrame locale={locale} dictionary={dictionary} settings={settings}>
+      <NextChunkRecovery />
       {children}
     </StorefrontFrame>
   );
