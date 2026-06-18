@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { getDisplayName } from "@/lib/text-format";
 import type { PublicPaymentAvailability } from "@/lib/payment-config";
 import { safeResponseJson } from "@/lib/safe-json";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -797,7 +798,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   <div className="relative h-16 w-16 overflow-hidden rounded-md border border-neutral-200 bg-paper">
                     <Image
                       src={safeRemoteImage(item.image, fallbackProductImage, { width: 160, height: 160, crop: "fill" })}
-                      alt={getLocalized(item.name, locale)}
+                      alt={getDisplayName(item.name, locale)}
                       fill
                       sizes="64px"
                       className="object-cover"
@@ -807,7 +808,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-navy">{getLocalized(item.name, locale)}</p>
+                    <p className="font-bold text-navy">{getDisplayName(item.name, locale)}</p>
                     {item.variantName ? (
                       <p className="mt-1 text-xs font-semibold text-neutral-500">{getLocalized(item.variantName, locale)}</p>
                     ) : null}

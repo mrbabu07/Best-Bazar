@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import type { Product } from "@/lib/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { getDisplayName } from "@/lib/text-format";
 
 type ProductCardProps = {
   product: Product;
@@ -25,10 +26,11 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   }, []);
   const [selectedColorId, setSelectedColorId] = useState(colorSwatches[0]?.id ?? "");
   const selectedColor = colorSwatches.find((variant) => variant.id === selectedColorId) ?? colorSwatches[0];
+  const productName = getDisplayName(product.name, locale);
   const cardImage = selectedColor?.imageUrl
     ? {
         url: selectedColor.imageUrl,
-        alt: `${getLocalized(product.name, locale)} - ${getLocalized(selectedColor.colorName, locale)}`
+        alt: `${productName} - ${getLocalized(selectedColor.colorName, locale)}`
       }
     : product.images[0];
   const visibleColorSwatches = colorSwatches.slice(0, 5);
@@ -75,9 +77,9 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
       <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
         <Link
           href={`/${locale}/product/${product.slug}`}
-          className="line-clamp-2 min-h-[40px] text-sm font-bold leading-5 text-navy transition hover:text-gold-700 sm:min-h-[48px] sm:text-base sm:leading-6"
+          className="line-clamp-2 min-h-[42px] text-[15px] font-extrabold leading-5 text-navy transition hover:text-gold-700 sm:min-h-[52px] sm:text-lg sm:leading-6"
         >
-          {getLocalized(product.name, locale)}
+          {productName}
         </Link>
 
         <ProductCardPrice price={product.price} comparePrice={product.comparePrice} locale={locale} />

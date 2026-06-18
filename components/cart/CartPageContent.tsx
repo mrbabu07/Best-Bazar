@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { fallbackProductImage } from "@/lib/images";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
+import { getDisplayName } from "@/lib/text-format";
 import { safeResponseJson } from "@/lib/safe-json";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
@@ -188,7 +189,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
               <div className="relative aspect-square overflow-hidden rounded-md bg-neutral-100">
                 <Image
                   src={item.image || fallbackProductImage}
-                  alt={getLocalized(item.name, locale)}
+                  alt={getDisplayName(item.name, locale)}
                   fill
                   sizes="120px"
                   className="object-cover"
@@ -202,7 +203,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                   href={`/${locale}/product/${item.slug}`}
                   className="mt-1 block text-lg font-bold text-navy hover:text-gold-700"
                 >
-                  {getLocalized(item.name, locale)}
+                  {getDisplayName(item.name, locale)}
                 </Link>
                 {item.variantName ? (
                   <p className="mt-1 inline-flex items-center gap-2 text-xs font-semibold text-neutral-500">
@@ -245,7 +246,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
                   type="button"
                   onClick={() => removeItem(item.id)}
                   className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-sale hover:bg-red-50"
-                  aria-label={`${labels.remove} ${getLocalized(item.name, locale)}`}
+                  aria-label={`${labels.remove} ${getDisplayName(item.name, locale)}`}
                 >
                   <Trash2 size={16} />
                   {labels.remove}

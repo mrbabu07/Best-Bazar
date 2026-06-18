@@ -31,6 +31,7 @@ import {
 import type { Locale } from "@/lib/i18n";
 import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
 import { safeResponseJson } from "@/lib/safe-json";
+import { titleCaseWords } from "@/lib/text-format";
 import { formatCurrency } from "@/utils/currency";
 
 type ProductImageForm = {
@@ -397,10 +398,12 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   };
 
   const updateNameEn = (value: string) => {
+    const formattedValue = titleCaseWords(value);
+
     setForm((current) => ({
       ...current,
-      nameEn: value,
-      slug: slugEdited ? current.slug : slugify(value)
+      nameEn: formattedValue,
+      slug: slugEdited ? current.slug : slugify(formattedValue)
     }));
   };
 
@@ -705,7 +708,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     }
 
     setSaving(true);
-    const fallbackName = form.nameEn.trim();
+    const fallbackName = titleCaseWords(form.nameEn);
     const fallbackSlug = form.slug.trim() || slugify(fallbackName);
     const fallbackSku =
       form.sku.trim() ||
@@ -748,7 +751,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
         .filter((image) => image.url.trim())
         .map((image, index) => ({
           url: image.url,
-          alt: image.alt || form.nameEn,
+          alt: image.alt || fallbackName,
           sortOrder: Number(image.sortOrder || index)
         })),
       variants: form.variants

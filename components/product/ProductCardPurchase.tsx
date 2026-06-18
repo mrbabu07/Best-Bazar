@@ -4,8 +4,8 @@ import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useHydrated } from "@/hooks/useHydrated";
-import { getLocalized } from "@/lib/i18n";
 import type { Locale, ProductVariant } from "@/lib/types";
+import { getDisplayName } from "@/lib/text-format";
 import { type CartProductInput, useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
@@ -69,7 +69,7 @@ export function ProductCardAddButton({
   const handleAdd = () => {
     setAdding(true);
     addItem(product, 1, selectedVariant);
-    toast.success(labels.addedToCart(getLocalized(product.name, locale)));
+    toast.success(labels.addedToCart(getDisplayName(product.name, locale)));
     window.setTimeout(() => setAdding(false), 650);
   };
 

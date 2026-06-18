@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { FavouriteButton, ShareProductButton } from "@/components/product/ProductActions";
 import { fashionCoreFields } from "@/lib/category-fields";
 import { cleanLengthSizeLabel } from "@/lib/product-size-label";
+import { getDisplayName } from "@/lib/text-format";
 
 type ProductDetailProps = {
   product: Product;
@@ -79,6 +80,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const [activeImage, setActiveImage] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState(firstAvailableVariant?.id ?? "");
   const [quantity, setQuantity] = useState(1);
+  const productName = getDisplayName(product.name, locale);
   const addItem = useCartStore((state) => state.addItem);
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
@@ -98,7 +100,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const selectedVariantImage = selectedVariant?.imageUrl
     ? {
         url: selectedVariant.imageUrl,
-        alt: `${getLocalized(product.name, locale)} - ${getLocalized(selectedVariant.name, locale)}`
+        alt: `${productName} - ${getLocalized(selectedVariant.name, locale)}`
       }
     : null;
   const galleryImages = selectedVariantImage
@@ -134,7 +136,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
   const handleAdd = () => {
     addItem(product, quantity, selectedVariant);
-    toast.success(labels.addedToCart(quantity, getLocalized(product.name, locale)));
+    toast.success(labels.addedToCart(quantity, productName));
   };
 
   const selectVariant = (variantId: string) => {
@@ -228,7 +230,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         </div>
 
         <h1 className="mt-5 text-3xl font-bold text-navy sm:text-4xl">
-          {getLocalized(product.name, locale)}
+          {productName}
         </h1>
 
         <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-neutral-600">

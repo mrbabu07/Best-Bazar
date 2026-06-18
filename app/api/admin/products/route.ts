@@ -5,6 +5,7 @@ import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations/admin";
 import { created, getPagination, getSearchParam, handleApiError, ok, requireAdmin } from "@/lib/api/admin";
+import { titleCaseWords } from "@/lib/text-format";
 
 function buildProductWhere(request: Request): Prisma.ProductWhereInput {
   const search = getSearchParam(request, "search");
@@ -67,9 +68,12 @@ export async function POST(request: Request) {
   try {
     await requireAdmin();
     const { images, variants, specifications, stock, ...data } = productSchema.parse(await request.json());
+    const normalizedNameEn = titleCaseWords(data.nameEn);
     const product = await prisma.product.create({
       data: {
         ...data,
+        nameEn: normalizedNameEn,
+        nameAr: data.nameAr || normalizedNameEn,
         stock: stockFromVariants(stock, variants),
         images: { create: images },
         variants: { create: variants },
