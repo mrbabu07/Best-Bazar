@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { CreditCard, HandCoins, RotateCcw, Truck } from "lucide-react";
+import { CreditCard, HandCoins, MapPin, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -118,23 +118,22 @@ export default async function HomePage({ params }: { params: { locale: string } 
         metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
       />
 
-      <section className="border-y border-gold-100 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-3 px-4 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <section className="border-b border-gold-100 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-3 px-4 py-5 sm:grid-cols-3 sm:px-6 lg:px-8">
           {[
-            { icon: HandCoins, title: "Cash on delivery", detail: "Pay when your Dubai order arrives." },
-            { icon: Truck, title: "Fast Dubai delivery", detail: "Area-based delivery timing at checkout." },
-            { icon: CreditCard, title: "Secure payment", detail: "Card and flexible payment options." },
-            { icon: RotateCcw, title: "Return support", detail: "Clear support flow for returns and exchanges." }
+            { icon: MapPin, title: "Dubai-first shopping", detail: "AED pricing, UAE delivery areas, and local support." },
+            { icon: ShieldCheck, title: "Verified checkout", detail: "COD and card payment controls managed from admin." },
+            { icon: Truck, title: "Emirate delivery rates", detail: "Shipping fees update from admin settings." }
           ].map((item) => {
             const Icon = item.icon;
 
             return (
-              <div key={item.title} className="flex min-h-20 items-start gap-3 rounded-md bg-paper px-4 py-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white text-gold-700">
+              <div key={item.title} className="flex min-h-20 items-start gap-3 rounded-xl border border-neutral-200 bg-paper px-4 py-3 shadow-soft">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-gold-700 shadow-sm">
                   <Icon size={19} />
                 </span>
                 <span>
-                  <span className="block text-sm font-bold text-navy">{item.title}</span>
+                  <span className="block text-sm font-extrabold text-navy">{item.title}</span>
                   <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
                 </span>
               </div>
@@ -143,31 +142,37 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </div>
       </section>
 
-      <section className="bg-white py-14">
+      <section className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf6_100%)] py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeader
-            eyebrow={dictionary.common.categories}
-            title={dictionary.home.categoryTitle}
-            subtitle={dictionary.home.categorySubtitle}
-          />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <SectionHeader
+              eyebrow={dictionary.common.categories}
+              title={dictionary.home.categoryTitle}
+              subtitle={dictionary.home.categorySubtitle}
+            />
+            <div className="hidden rounded-xl border border-gold-200 bg-white px-4 py-3 text-right shadow-soft sm:block rtl:text-left">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">UAE curated</p>
+              <p className="mt-1 text-sm font-bold text-navy">Dubai styles, gifts, and daily essentials</p>
+            </div>
+          </div>
           <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-5">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/${locale}/shop?category=${category.slug}`}
-                className="group flex flex-col items-center"
+                className="group rounded-xl border border-neutral-200 bg-white p-3 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift"
               >
-                <div className="relative h-28 w-28 overflow-hidden rounded-full border-4 border-neutral-100 bg-paper shadow-md transition duration-300 group-hover:border-gold-200 group-hover:shadow-lg sm:h-36 sm:w-36">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-paper">
                   <Image
                     src={category.image}
                     alt={getLocalized(category.name, locale)}
                     fill
-                    sizes="(min-width: 640px) 144px, 112px"
+                    sizes="(min-width: 1024px) 18vw, (min-width: 640px) 28vw, 42vw"
                     className="object-cover transition duration-500 group-hover:scale-110"
                   />
                 </div>
-                <div className="mt-3 text-center">
-                  <h3 className="text-sm font-bold text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
+                <div className="mt-3">
+                  <h3 className="line-clamp-1 text-sm font-extrabold text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
                   <p className="mt-1 text-xs text-neutral-500">{category.productCount} {dictionary.shop.results}</p>
                 </div>
               </Link>
@@ -204,6 +209,33 @@ export default async function HomePage({ params }: { params: { locale: string } 
           {newArrivals.map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
           ))}
+        </div>
+      </section>
+
+      <section className="border-t border-gold-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: HandCoins, title: "Cash on delivery", detail: "Pay when your Dubai order arrives." },
+              { icon: Truck, title: "Fast Dubai delivery", detail: "Area-based delivery timing at checkout." },
+              { icon: CreditCard, title: "Secure payment", detail: "Stripe card checkout and admin payment visibility." },
+              { icon: RotateCcw, title: "Return support", detail: "Clear support flow for returns and exchanges." }
+            ].map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div key={item.title} className="flex min-h-24 items-start gap-3 rounded-xl border border-gold-100 bg-paper px-4 py-4 shadow-soft">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-gold-700 shadow-sm">
+                    <Icon size={20} />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-extrabold text-navy">{item.title}</span>
+                    <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
     </main>

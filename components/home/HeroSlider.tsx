@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, Truck } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, MapPin, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 
@@ -118,6 +118,16 @@ export function HeroSlider({
             <Sparkles size={17} />
             {eyebrow}
           </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.12em]">
+            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-white backdrop-blur">
+              <MapPin size={14} />
+              Dubai, UAE
+            </span>
+            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-white backdrop-blur">
+              <ShieldCheck size={14} />
+              AED checkout
+            </span>
+          </div>
           <h1 className="mt-5 text-5xl font-bold sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>
           <p className="mt-6 max-w-2xl text-base leading-7 text-white/84 sm:text-lg">
             {activeSlide.subtitle}
