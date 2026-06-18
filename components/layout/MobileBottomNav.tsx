@@ -16,10 +16,10 @@ export function MobileBottomNav({ locale }: MobileBottomNavProps) {
   const safeFavouriteCount = hydrated ? favouriteCount : 0;
 
   const items = [
-    { href: `/${locale}`, label: "Home", icon: Home, count: 0 },
-    { href: `/${locale}/shop`, label: "Shop", icon: Search, count: 0 },
-    { href: `/${locale}/favorites`, label: "Favourite", icon: Heart, count: safeFavouriteCount },
-    { href: `/${locale}/account`, label: "Account", icon: User, count: 0 }
+    { href: `/${locale}`, label: locale === "ar" ? "الرئيسية" : "Home", icon: Home, count: 0 },
+    { href: `/${locale}/shop`, label: locale === "ar" ? "المتجر" : "Shop", icon: Search, count: 0 },
+    { href: `/${locale}/favorites`, label: locale === "ar" ? "المفضلة" : "Favourite", icon: Heart, count: safeFavouriteCount },
+    { href: `/${locale}/account`, label: locale === "ar" ? "الحساب" : "Account", icon: User, count: 0 }
   ];
 
   return (

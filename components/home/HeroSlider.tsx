@@ -121,11 +121,11 @@ export function HeroSlider({
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.12em]">
             <span className="inline-flex h-8 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-white backdrop-blur">
               <MapPin size={14} />
-              Dubai, UAE
+              {locale === "ar" ? "دبي، الإمارات" : "Dubai, UAE"}
             </span>
             <span className="inline-flex h-8 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-white backdrop-blur">
               <ShieldCheck size={14} />
-              AED checkout
+              {locale === "ar" ? "الدفع بالدرهم" : "AED checkout"}
             </span>
           </div>
           <h1 className="mt-5 text-5xl font-bold sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>

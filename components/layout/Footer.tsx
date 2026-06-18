@@ -22,7 +22,9 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
           <p className="mt-4 max-w-md text-sm leading-6 text-neutral-600">
             {dictionary.footer.tagline}
           </p>
-          <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">Follow us</p>
+          <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">
+            {locale === "ar" ? "تابعنا" : "Follow us"}
+          </p>
           <div className="mt-3 flex flex-wrap gap-3 text-navy">
             {settings.instagram ? (
               <Link
@@ -78,13 +80,13 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
               {dictionary.nav.cart}
             </Link>
             <Link href={`/${locale}/track-order`} className="hover:text-navy">
-              Track order
+              {locale === "ar" ? "تتبع الطلب" : "Track order"}
             </Link>
             <Link href={`/${locale}/privacy`} className="hover:text-navy">
-              Privacy policy
+              {locale === "ar" ? "سياسة الخصوصية" : "Privacy policy"}
             </Link>
             <Link href={`/${locale}/terms`} className="hover:text-navy">
-              Terms
+              {locale === "ar" ? "الشروط" : "Terms"}
             </Link>
           </div>
         </div>
@@ -116,7 +118,7 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
                 className="flex items-center gap-2 hover:text-navy"
               >
                 <MessageCircle size={16} />
-                WhatsApp support
+                {locale === "ar" ? "دعم واتساب" : "WhatsApp support"}
               </Link>
             ) : null}
           </div>

@@ -127,7 +127,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
               </p>
               <h2 className="mt-2 text-2xl font-black leading-tight text-navy">{dictionary.home.categoryTitle}</h2>
               <p className="mt-2 text-sm font-semibold leading-6 text-neutral-500">
-                Swipe to explore Dubai collections.
+                {locale === "ar" ? "اسحب لاستكشاف مجموعات دبي." : "Swipe to explore Dubai collections."}
               </p>
             </div>
             <div className="hidden sm:block">
@@ -138,8 +138,12 @@ export default async function HomePage({ params }: { params: { locale: string } 
               />
             </div>
             <div className="hidden rounded-xl border border-gold-200 bg-white px-4 py-3 text-right shadow-soft sm:block rtl:text-left">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">UAE curated</p>
-              <p className="mt-1 text-sm font-bold text-navy">Dubai styles, gifts, and daily essentials</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">
+                {locale === "ar" ? "مختارات الإمارات" : "UAE curated"}
+              </p>
+              <p className="mt-1 text-sm font-bold text-navy">
+                {locale === "ar" ? "أزياء دبي والهدايا والاحتياجات اليومية" : "Dubai styles, gifts, and daily essentials"}
+              </p>
             </div>
           </div>
           <div className="-mx-4 mt-6 grid auto-cols-[minmax(136px,42vw)] grid-flow-col gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:mt-8 sm:grid-flow-row sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
@@ -206,10 +210,26 @@ export default async function HomePage({ params }: { params: { locale: string } 
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: HandCoins, title: "Cash on delivery", detail: "Pay when your Dubai order arrives." },
-              { icon: Truck, title: "Fast Dubai delivery", detail: "Area-based delivery timing at checkout." },
-              { icon: CreditCard, title: "Secure payment", detail: "Stripe card checkout and admin payment visibility." },
-              { icon: RotateCcw, title: "Return support", detail: "Clear support flow for returns and exchanges." }
+              {
+                icon: HandCoins,
+                title: locale === "ar" ? "الدفع عند الاستلام" : "Cash on delivery",
+                detail: locale === "ar" ? "ادفع عند وصول طلبك داخل دبي." : "Pay when your Dubai order arrives."
+              },
+              {
+                icon: Truck,
+                title: locale === "ar" ? "توصيل سريع داخل دبي" : "Fast Dubai delivery",
+                detail: locale === "ar" ? "مواعيد توصيل حسب المنطقة عند الدفع." : "Area-based delivery timing at checkout."
+              },
+              {
+                icon: CreditCard,
+                title: locale === "ar" ? "دفع آمن" : "Secure payment",
+                detail: locale === "ar" ? "دفع بالبطاقة عبر سترايب وتحكم كامل من الإدارة." : "Stripe card checkout and admin payment visibility."
+              },
+              {
+                icon: RotateCcw,
+                title: locale === "ar" ? "دعم الإرجاع" : "Return support",
+                detail: locale === "ar" ? "مسار واضح للإرجاع والاستبدال." : "Clear support flow for returns and exchanges."
+              }
             ].map((item) => {
               const Icon = item.icon;
 

@@ -291,7 +291,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             ) : null}
             {hasSizedVariants ? (
               <div className="mt-4">
-                <p className="text-sm font-bold text-navy">Size</p>
+                <p className="text-sm font-bold text-navy">{locale === "ar" ? "المقاس" : "Size"}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {sizeOptions.map((variant) => {
                     const selected = variantSizeKey(variant) === selectedSizeKey;
@@ -327,9 +327,11 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
         <div className="mt-5">
           {availableStock > 0 ? (
-            <p className="text-sm font-bold text-emerald-700">In Stock ({availableStock} left)</p>
+            <p className="text-sm font-bold text-emerald-700">
+              {locale === "ar" ? `متوفر (${availableStock} متبقي)` : `In Stock (${availableStock} left)`}
+            </p>
           ) : (
-            <p className="text-sm font-bold text-sale">Out of Stock</p>
+            <p className="text-sm font-bold text-sale">{locale === "ar" ? "غير متوفر" : "Out of Stock"}</p>
           )}
         </div>
 
@@ -365,7 +367,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         </div>
 
         <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <h2 className="text-lg font-bold text-navy">Description</h2>
+          <h2 className="text-lg font-bold text-navy">{locale === "ar" ? "الوصف" : "Description"}</h2>
           <p className="mt-3 text-base leading-7 text-neutral-600">
             {getLocalized(product.description, locale)}
           </p>
@@ -389,7 +391,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
         {fashionDetailRows.length ? (
           <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-            <h2 className="text-lg font-bold text-navy">Fashion details</h2>
+            <h2 className="text-lg font-bold text-navy">{locale === "ar" ? "تفاصيل الأزياء" : "Fashion details"}</h2>
             <div className="mt-4 grid gap-3">
               {fashionDetailRows.map((spec, index) => (
                 <div key={`${getLocalized(spec.key, locale)}-${index}`} className="flex justify-between gap-4 text-sm">
@@ -411,7 +413,9 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
               </div>
             ))}
             {!product.specifications.length ? (
-              <p className="text-sm font-semibold text-neutral-500">Product details will be added soon.</p>
+              <p className="text-sm font-semibold text-neutral-500">
+                {locale === "ar" ? "سيتم إضافة تفاصيل المنتج قريبا." : "Product details will be added soon."}
+              </p>
             ) : null}
           </div>
         </div>
