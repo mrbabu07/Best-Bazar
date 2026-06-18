@@ -183,7 +183,7 @@ export function AdminShell({
                 BB
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-lg font-bold leading-5">{dictionary.brand}</span>
+                <span className="croissant-one-regular block truncate text-lg leading-5">{dictionary.brand}</span>
                 <span className="mt-1 block truncate text-xs font-semibold text-gold-100">Admin control panel</span>
               </span>
             </Link>

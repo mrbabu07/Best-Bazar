@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cairo, Inter } from "next/font/google";
+import { Cairo, Croissant_One, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AppFrame } from "@/components/layout/AppFrame";
@@ -23,6 +23,13 @@ const inter = Inter({
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   variable: "--font-cairo",
+  display: "swap"
+});
+
+const croissantOne = Croissant_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-croissant-one",
   display: "swap"
 });
 
@@ -108,7 +115,7 @@ export default async function LocaleLayout({
     <html
       lang={params.locale}
       dir={isArabic ? "rtl" : "ltr"}
-      className={`${inter.variable} ${cairo.variable}`}
+      className={`${inter.variable} ${cairo.variable} ${croissantOne.variable}`}
     >
       <body className={isArabic ? "font-[var(--font-cairo)]" : "font-[var(--font-inter)]"}>
         <Suspense fallback={null}>

@@ -16,7 +16,7 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
     <footer className="border-t border-gold-100 bg-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_0.8fr_0.8fr] lg:px-8">
         <div>
-          <Link href={`/${locale}`} className="text-2xl font-bold text-navy">
+          <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
             {brandName || dictionary.brand}
           </Link>
           <p className="mt-4 max-w-md text-sm leading-6 text-neutral-600">

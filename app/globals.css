@@ -23,6 +23,12 @@ body {
   color: #2d2d2d;
 }
 
+.croissant-one-regular {
+  font-family: var(--font-croissant-one), serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 .storefront-theme {
   background:
     radial-gradient(circle at top left, color-mix(in srgb, var(--bb-primary) 16%, transparent), transparent 32rem),

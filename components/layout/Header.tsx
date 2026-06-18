@@ -268,7 +268,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="min-w-0 max-w-[44vw] shrink truncate text-xl font-bold text-navy sm:max-w-none sm:text-2xl"
+            className="croissant-one-regular min-w-0 max-w-[44vw] shrink truncate text-xl text-navy sm:max-w-none sm:text-2xl"
           >
             {brandName || dictionary.brand}
           </Link>
