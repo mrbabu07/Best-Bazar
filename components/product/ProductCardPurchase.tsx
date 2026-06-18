@@ -3,7 +3,6 @@
 import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/Button";
 import { useHydrated } from "@/hooks/useHydrated";
 import { getLocalized } from "@/lib/i18n";
 import type { Locale, ProductVariant } from "@/lib/types";
@@ -75,16 +74,21 @@ export function ProductCardAddButton({
   };
 
   return (
-    <div className="mt-auto grid gap-2">
-      <Button
-        className="h-10 w-full px-2 text-xs sm:h-11 sm:px-5 sm:text-sm"
-        onClick={handleAdd}
-        disabled={availableStock <= 0 || adding}
-        variant={availableStock <= 0 ? "secondary" : "primary"}
-      >
-        <ShoppingBag size={17} />
+    <button
+      type="button"
+      onClick={handleAdd}
+      disabled={availableStock <= 0 || adding}
+      aria-label={addToCartLabel}
+      title={addToCartLabel}
+      className="absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-full border border-neutral-200 bg-white/95 text-navy shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-300 hover:bg-white hover:text-gold-700 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 disabled:hover:translate-y-0 sm:right-3 sm:top-3 rtl:left-2 rtl:right-auto sm:rtl:left-3"
+    >
+      <ShoppingBag
+        size={17}
+        className={adding ? "scale-90 text-emerald-600 transition-transform" : "transition-transform"}
+      />
+      <span className="sr-only">
         {adding ? "Added" : addToCartLabel}
-      </Button>
-    </div>
+      </span>
+    </button>
   );
 }
