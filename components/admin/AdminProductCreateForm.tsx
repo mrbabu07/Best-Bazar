@@ -911,6 +911,61 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   acceptImage={false}
                 />
               </div>
+              <div className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-3 sm:col-span-2 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-navy">Extra gallery images</p>
+                    <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
+                      Add multiple product photos for the details page. Each slot can upload one image or many at once.
+                    </p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" className="w-full sm:w-auto" onClick={addImage}>
+                    <ImagePlus size={15} />
+                    Add gallery image
+                  </Button>
+                </div>
+                {form.images.length > 1 ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {form.images.slice(1).map((image, imageIndex) => {
+                      const realIndex = imageIndex + 1;
+
+                      return (
+                        <div key={realIndex} className="rounded-lg border border-neutral-200 bg-paper p-3">
+                          <AdminImageUploadField
+                            label={`Gallery image ${realIndex}`}
+                            value={image.url}
+                            onChange={(value) => updateImage(realIndex, "url", value)}
+                            onUploadMany={addUploadedImages}
+                            previewAlt={image.alt || form.nameEn || `Gallery image ${realIndex}`}
+                            aspectClassName="aspect-[4/3]"
+                            multiple
+                          />
+                          <div className="mt-3 flex items-center justify-between gap-3">
+                            <input
+                              value={image.alt}
+                              onChange={(event) => updateImage(realIndex, "alt", event.target.value)}
+                              placeholder="Image alt text"
+                              className="h-10 min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(realIndex)}
+                              className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-red-100 text-sale hover:bg-red-50"
+                              aria-label="Remove gallery image"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-neutral-300 bg-paper p-4 text-sm font-semibold text-neutral-500">
+                    No gallery image slot yet. Click Add gallery image to upload more product photos.
+                  </div>
+                )}
+              </div>
               <div className="min-w-0 rounded-xl border border-neutral-200 bg-white p-3 sm:col-span-2 sm:p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
