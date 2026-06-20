@@ -54,12 +54,13 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const tag = readParam(searchParams, "tag");
   const priceMin = readParam(searchParams, "priceMin");
   const priceMax = readParam(searchParams, "priceMax");
+  const availability = readParam(searchParams, "availability");
   const [categories, brands, colors, sizes, listing] = await Promise.all([
     getStoreCategories(),
     getStoreBrands(),
     getStoreVariantColors(),
     getStoreVariantSizes(),
-    getStoreProducts({ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax })
+    getStoreProducts({ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax, availability })
   ]);
 
   return (
@@ -90,7 +91,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
           brands={brands}
           colors={colors}
           sizes={sizes}
-          current={{ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax }}
+          current={{ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax, availability }}
         />
         <section className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-3 xl:grid-cols-4">
           {listing.length > 0 ? (
@@ -101,6 +102,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
                 locale={locale} 
                 dictionary={dictionary}
                 priority={index < 4} 
+                showQuickAdd={false}
               />
             ))
           ) : (

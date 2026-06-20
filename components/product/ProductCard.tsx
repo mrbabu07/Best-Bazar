@@ -14,9 +14,10 @@ type ProductCardProps = {
   locale: Locale;
   dictionary: Dictionary;
   priority?: boolean;
+  showQuickAdd?: boolean;
 };
 
-export function ProductCard({ product, locale, dictionary, priority = false }: ProductCardProps) {
+export function ProductCard({ product, locale, dictionary, priority = false, showQuickAdd = true }: ProductCardProps) {
   const hasSale = product.comparePrice && product.comparePrice > product.price;
   const selectedColor = product.variants.find((variant) => variant.isActive);
   const productName = getDisplayName(product.name, locale);
@@ -56,12 +57,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
             {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
           </div>
         </Link>
-        <ProductCardAddButton
-          product={cartProduct}
-          variants={product.variants}
-          locale={locale}
-          addToCartLabel={dictionary.actions.addToCart}
-        />
+        {showQuickAdd ? <ProductCardAddButton product={cartProduct} variants={product.variants} locale={locale} addToCartLabel={dictionary.actions.addToCart} /> : null}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-0.5 pt-3">

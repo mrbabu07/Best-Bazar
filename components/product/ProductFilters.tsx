@@ -27,6 +27,7 @@ type ProductFiltersProps = {
     tag?: string;
     priceMin?: string;
     priceMax?: string;
+    availability?: string;
   };
 };
 
@@ -130,6 +131,7 @@ export function ProductFilters({
   const [priceMin, setPriceMin] = useState(current.priceMin ?? "");
   const [priceMax, setPriceMax] = useState(current.priceMax ?? "");
   const [priceTouched, setPriceTouched] = useState(false);
+  const [availability, setAvailability] = useState(current.availability === "in-stock");
 
   const buildParams = useCallback(() => {
     const params = new URLSearchParams();
@@ -144,9 +146,10 @@ export function ProductFilters({
     if (sort && sort !== "featured") params.set("sort", sort);
     if (priceMin.trim()) params.set("priceMin", priceMin.trim());
     if (priceMax.trim()) params.set("priceMax", priceMax.trim());
+    if (availability) params.set("availability", "in-stock");
 
     return params;
-  }, [brand, category, current.tag, priceMax, priceMin, rating, search, selectedColors, selectedSizes, sort]);
+  }, [availability, brand, category, current.tag, priceMax, priceMin, rating, search, selectedColors, selectedSizes, sort]);
 
   const pushFilters = useCallback(() => {
     const params = buildParams();
@@ -177,6 +180,10 @@ export function ProductFilters({
       </div>
 
       <div className="mt-5 grid gap-5">
+        <div className="border-y border-neutral-200 py-5 text-sm text-neutral-800">
+          <div className="flex items-center justify-between"><span className="text-base font-medium">Availability</span><span aria-hidden="true">⌃</span></div>
+          <label className="mt-5 flex cursor-pointer items-center gap-3 font-normal"><input type="checkbox" checked={availability} onChange={(event) => { setAvailability(event.target.checked); setPriceTouched(true); }} className="h-5 w-5 accent-neutral-950" />In stock</label>
+        </div>
         <label className="grid gap-2 text-sm font-semibold text-navy">
           {dictionary.nav.search}
           <span className="relative">

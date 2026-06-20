@@ -289,6 +289,7 @@ export type StoreProductFilters = {
   search?: string;
   sort?: string;
   tag?: string;
+  availability?: string;
 };
 
 function csvValues(value?: string) {
@@ -306,6 +307,7 @@ function getProductWhere(filters: StoreProductFilters = {}) {
   const sizes = csvValues(filters.size);
   const search = filters.search?.trim();
   const tag = filters.tag?.trim();
+  const availability = filters.availability?.trim();
   const price: Prisma.DecimalFilter = {};
   const variantClauses: Prisma.ProductVariantWhereInput[] = [];
 
@@ -339,6 +341,18 @@ function getProductWhere(filters: StoreProductFilters = {}) {
 
   return {
     isActive: true,
+    ...(availability === "in-stock"
+      ? {
+          AND: [
+            {
+              OR: [
+                { stock: { gt: 0 } },
+                { variants: { some: { isActive: true, stock: { gt: 0 } } } }
+              ]
+            }
+          ]
+        }
+      : {}),
     ...(filters.category ? { category: { slug: filters.category } } : {}),
     ...(filters.brand ? { brand: filters.brand } : {}),
     ...(variantClauses.length
@@ -400,6 +414,7 @@ function stableProductFilters(filters: StoreProductFilters = {}) {
     search: filters.search ?? "",
     sort: filters.sort ?? "",
     tag: filters.tag ?? ""
+    ,availability: filters.availability ?? ""
   }) ?? "{}";
 }
 
