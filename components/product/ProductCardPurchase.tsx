@@ -42,14 +42,14 @@ export function ProductCardPrice({ price, comparePrice, locale }: ProductCardPri
 
   return (
     <div className="mt-1 flex min-h-7 flex-wrap items-end gap-x-2 gap-y-1">
-      <p className={`text-sm font-extrabold sm:text-base ${hasComparePrice ? "text-sale" : "text-navy"}`}>
-        {formatCurrency(price, currency, locale, currencyRates)}
-      </p>
       {hasComparePrice ? (
         <p className="text-xs text-neutral-400 line-through">
           {formatCurrency(comparePrice, currency, locale, currencyRates)}
         </p>
       ) : null}
+      <p className={`text-sm font-medium sm:text-base ${hasComparePrice ? "text-neutral-950" : "text-navy"}`}>
+        {formatCurrency(price, currency, locale, currencyRates)}
+      </p>
     </div>
   );
 }

@@ -23,7 +23,6 @@ import { safeJsonParse, safeResponseJson } from "@/lib/safe-json";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
-import { cn } from "@/utils/cn";
 import { currencyOptions, type CurrencyCode } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
@@ -143,7 +142,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       : [])
   ];
   const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
-  const activeLinkClass = "bg-neutral-100 text-navy";
   const iconButtonClass =
     "grid h-10 w-10 shrink-0 place-items-center rounded-md border border-neutral-200 text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
   const mobileLinkClass =
@@ -307,43 +305,16 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             {brandName || dictionary.brand}
           </Link>
 
-          <nav className="hidden shrink-0 items-center gap-1 2xl:flex">
-            {navItems.map((item) => {
-              const active = currentPathname === item.href || currentPathname.startsWith(`${item.href}/`);
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className={iconButtonClass}
+            aria-label={dictionary.nav.search}
+          >
+            <Search size={20} />
+          </button>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "rounded-md px-3 py-2 text-sm font-bold text-neutral-600 transition hover:bg-neutral-50 hover:text-navy xl:px-4",
-                    active && activeLinkClass
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <form onSubmit={submitSearch} className="ml-1 hidden min-w-[180px] flex-1 justify-end xl:flex">
-            <label className="relative w-full max-w-xs xl:max-w-md">
-              <Search
-                size={18}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
-              />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={dictionary.nav.search}
-                className="h-11 w-full rounded-md border border-neutral-200 bg-white pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-neutral-500 rtl:pl-3 rtl:pr-10"
-              />
-            </label>
-          </form>
-
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0 lg:gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:gap-2">
             <select
               value={currency}
               onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
@@ -493,19 +464,9 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       </div>
 
-      <div className="hidden border-t border-neutral-100 bg-white 2xl:block">
-        <nav className="mx-auto flex max-w-7xl items-center justify-center gap-7 overflow-x-auto px-4 py-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-neutral-600">
-          {fashionLinks.map((item) => (
-            <Link key={item.href} href={item.href} className="whitespace-nowrap transition hover:text-navy">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
       {open ? (
-        <div className="fixed inset-x-0 bottom-0 top-[4.75rem] z-50 border-t border-white/10 bg-neutral-950 text-white shadow-lift">
-          <div className="grid h-full max-w-md gap-3 overflow-y-auto px-5 py-5">
+        <div className="absolute inset-x-0 top-full z-50 min-h-[calc(100dvh-7rem)] bg-black/45">
+          <div className="grid min-h-[calc(100dvh-7rem)] w-full max-w-[420px] gap-3 overflow-y-auto bg-neutral-950 px-5 py-5 text-white shadow-lift">
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
@@ -520,21 +481,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               />
             </form>
 
-            <div className="grid gap-2">
-              {navItems.map((item) => {
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center justify-between border-b border-white/10 py-3 text-lg font-semibold text-white"
-                  >
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-
-              <div className="grid gap-1 pt-2">
+            <div className="grid gap-1">
+              <div className="grid gap-1">
                 {fashionLinks.map((item) => (
                   <Link
                     key={item.href}
@@ -545,6 +493,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                     {item.label}
                   </Link>
                 ))}
+              </div>
+
+              {!fashionLinks.length ? <p className="py-4 text-sm text-white/60">Add active categories from Admin to show them here.</p> : null}
+
+              <div className="mt-4 grid gap-1 border-t border-white/10 pt-3">
+                {navItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-white/75 hover:text-white">{item.label}</Link>)}
               </div>
 
               <Link

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import { ProductCardAddButton, ProductCardPrice } from "@/components/product/ProductCardPurchase";
 import { Badge } from "@/components/ui/Badge";
 import type { Product } from "@/lib/types";
@@ -19,13 +18,7 @@ type ProductCardProps = {
 
 export function ProductCard({ product, locale, dictionary, priority = false }: ProductCardProps) {
   const hasSale = product.comparePrice && product.comparePrice > product.price;
-  const colorSwatches = product.variants.reduce<typeof product.variants>((items, variant) => {
-    const key = variant.colorName.en.trim().toLowerCase();
-
-    return items.some((item) => item.colorName.en.trim().toLowerCase() === key) ? items : [...items, variant];
-  }, []);
-  const [selectedColorId, setSelectedColorId] = useState(colorSwatches[0]?.id ?? "");
-  const selectedColor = colorSwatches.find((variant) => variant.id === selectedColorId) ?? colorSwatches[0];
+  const selectedColor = product.variants.find((variant) => variant.isActive);
   const productName = getDisplayName(product.name, locale);
   const cardImage = selectedColor?.imageUrl
     ? {
@@ -33,8 +26,6 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
         alt: `${productName} - ${getLocalized(selectedColor.colorName, locale)}`
       }
     : product.images[0];
-  const visibleColorSwatches = colorSwatches.slice(0, 5);
-  const hiddenColorCount = Math.max(colorSwatches.length - visibleColorSwatches.length, 0);
   const totalStock = product.variants.length
     ? product.variants.filter((variant) => variant.isActive).reduce((total, variant) => total + Math.max(0, variant.stock), 0)
     : product.stock;
@@ -49,8 +40,8 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   };
 
   return (
-    <article className="group relative flex h-[340px] flex-col overflow-hidden bg-white transition-all duration-200 sm:h-[458px] lg:h-[486px]">
-      <div className="relative h-[238px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[348px] lg:h-[374px]">
+    <article className="group relative flex min-w-0 flex-col bg-white">
+      <div className="relative aspect-[.88] shrink-0 overflow-hidden bg-neutral-100 sm:aspect-[3/4]">
         <Link href={`/${locale}/product/${product.slug}`} className="block h-full">
           <Image
             src={cardImage.url}
@@ -82,42 +73,6 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
         </Link>
 
         <ProductCardPrice price={product.price} comparePrice={product.comparePrice} locale={locale} />
-
-        {product.variants.length ? (
-          <div className="mt-2 flex min-h-6 flex-wrap items-center gap-1.5">
-            {visibleColorSwatches.map((variant) => {
-              const selected = selectedColor?.id === variant.id;
-
-              return (
-                <button
-                  key={variant.id}
-                  type="button"
-                  onClick={() => setSelectedColorId(variant.id)}
-                  title={`${getLocalized(variant.colorName, locale)} (${variant.stock})`}
-                  className={`grid h-4 w-4 place-items-center rounded-full border bg-white transition-all duration-200 hover:scale-110 sm:h-5 sm:w-5 ${
-                    selected
-                      ? "border-neutral-900 ring-2 ring-neutral-300 ring-offset-1"
-                      : "border-neutral-200 hover:border-neutral-400"
-                  }`}
-                  aria-label={getLocalized(variant.colorName, locale)}
-                  aria-pressed={selected}
-                >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full border border-white sm:h-3 sm:w-3"
-                    style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
-                  />
-                </button>
-              );
-            })}
-            {hiddenColorCount > 0 ? (
-              <span className="grid h-6 min-w-6 place-items-center rounded-full bg-neutral-100 px-1.5 text-[10px] font-bold text-neutral-500">
-                +{hiddenColorCount}
-              </span>
-            ) : null}
-          </div>
-        ) : (
-          <div className="mt-2 min-h-7" aria-hidden="true" />
-        )}
 
       </div>
     </article>
