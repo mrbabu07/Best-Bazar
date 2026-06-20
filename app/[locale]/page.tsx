@@ -2,252 +2,81 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { CreditCard, HandCoins, RotateCcw, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
+import { getHomepageSections, type HomepageSection } from "@/lib/homepage-sections";
 import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
-import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
-import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories } from "@/lib/storefront";
+import { getDictionary, getLocalized, isLocale, type Locale } from "@/lib/i18n";
+import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories, getStoreProducts } from "@/lib/storefront";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 
-const HeroSlider = dynamic(
-  () => import("@/components/home/HeroSlider").then((module) => module.HeroSlider),
-  {
-    loading: () => <section className="min-h-[calc(100svh-9rem)] bg-navy" />
-  }
-);
+const HeroSlider = dynamic(() => import("@/components/home/HeroSlider").then((module) => module.HeroSlider), {
+  loading: () => <section className="min-h-[420px] bg-neutral-100" />
+});
 
-export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
-}
+export function generateStaticParams() { return [{ locale: "en" }, { locale: "ar" }]; }
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
-  const title = params.locale === "ar" ? "بيست مارت" : "Best Mart";
-
-  return {
-    title,
-    description: "Dubai luxury ecommerce storefront for premium products."
-  };
+  return { title: params.locale === "ar" ? "Best Mart" : "Best Mart", description: "Dubai online shopping." };
 }
 
-function getLocalizedPath(locale: string, href?: string | null) {
-  if (!href) {
-    return `/${locale}/shop`;
-  }
+function pathFor(locale: Locale, href?: string) {
+  if (!href) return `/${locale}/shop`;
+  if (href.startsWith("http")) return href;
+  if (href.startsWith("/en/") || href.startsWith("/ar/")) return href.replace(/^\/(en|ar)/, `/${locale}`);
+  return href.startsWith("/") ? `/${locale}${href}` : `/${locale}/${href}`;
+}
 
-  if (href.startsWith("http")) {
-    return href;
-  }
+async function productsForSection(section: HomepageSection) {
+  const { config } = section;
+  const limit = config.limit ?? 4;
+  if (config.source === "NEW") return (await getNewArrivals(limit)).slice(0, limit);
+  if (config.source === "CATEGORY") return (await getStoreProducts({ category: config.categorySlug, sort: "featured" })).slice(0, limit);
+  if (config.source === "TAG") return (await getStoreProducts({ tag: config.tag, sort: "featured" })).slice(0, limit);
+  return (await getFeaturedProducts(limit)).slice(0, limit);
+}
 
-  if (href.startsWith("/en/") || href.startsWith("/ar/")) {
-    return href.replace(/^\/(en|ar)/, `/${locale}`);
-  }
+async function HomepageSectionRenderer({ locale, sections }: { locale: Locale; sections: HomepageSection[] }) {
+  const dictionary = getDictionary(locale);
+  const categories = await getStoreCategories();
+  const fallbackSections: HomepageSection[] = [
+    { id: "fallback-categories", type: "CATEGORY_GRID", title: { en: "Shop by category", ar: "تسوق حسب الفئة" }, subtitle: { en: "", ar: "" }, config: { categoryLimit: 6, actionLink: "/shop" }, sortOrder: 1, isActive: true },
+    { id: "fallback-featured", type: "PRODUCT_GRID", title: { en: "Exclusive Sale", ar: "عروض حصرية" }, subtitle: { en: "", ar: "" }, config: { source: "FEATURED", limit: 4, actionLink: "/shop" }, sortOrder: 2, isActive: true },
+    { id: "fallback-new", type: "PRODUCT_GRID", title: { en: "New Arrival", ar: "وصل حديثا" }, subtitle: { en: "", ar: "" }, config: { source: "NEW", limit: 4, actionLink: "/shop?sort=new" }, sortOrder: 3, isActive: true }
+  ];
+  const visibleSections = sections.length ? sections : fallbackSections;
 
-  if (href.startsWith("/")) {
-    return `/${locale}${href}`;
-  }
-
-  return `/${locale}/${href}`;
+  return <>{await Promise.all(visibleSections.map(async (section) => {
+    const title = getLocalized(section.title, locale) || (section.type === "CATEGORY_GRID" ? dictionary.home.categoryTitle : dictionary.home.featuredTitle);
+    const subtitle = getLocalized(section.subtitle, locale);
+    const actionHref = pathFor(locale, section.config.actionLink);
+    if (section.type === "CATEGORY_GRID") {
+      return <section key={section.id} className="border-b border-neutral-100 bg-white py-12 sm:py-16"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><SectionHeader eyebrow={dictionary.common.categories} title={title} subtitle={subtitle} action={<Link href={actionHref} className="text-sm font-bold text-neutral-800 underline underline-offset-4">{section.config.actionLabelEn || "View all"}</Link>} /><div className="-mx-4 mt-8 grid auto-cols-[minmax(150px,43vw)] grid-flow-col gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid-flow-row sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-6 [&::-webkit-scrollbar]:hidden">{categories.slice(0, section.config.categoryLimit ?? 6).map((category) => <Link key={category.id} href={`/${locale}/shop?category=${category.slug}`} className="group min-w-0"><div className="relative aspect-[3/4] overflow-hidden bg-neutral-100"><Image src={category.image} alt={getLocalized(category.name, locale)} fill sizes="(min-width: 1024px) 16vw, (min-width: 640px) 30vw, 43vw" className="object-cover transition duration-300 group-hover:scale-[1.03]" /></div><h3 className="mt-3 text-sm font-semibold tracking-wide text-neutral-900">{getLocalized(category.name, locale)}</h3></Link>)}</div></div></section>;
+    }
+    const products = await productsForSection(section);
+    return <section key={section.id} className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8"><SectionHeader eyebrow={section.config.source === "NEW" ? dictionary.common.newArrivals : dictionary.common.featured} title={title} subtitle={subtitle} action={<Link href={actionHref} className="text-sm font-bold text-neutral-800 underline underline-offset-4">{section.config.actionLabelEn || "View all"}</Link>} /><div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4">{products.map((product, index) => <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} priority={index < 2} />)}</div></section>;
+  }))}</>;
 }
 
 export default async function HomePage({ params }: { params: { locale: string } }) {
+  if (!isLocale(params.locale)) notFound();
   const locale = params.locale;
-
-  if (!isLocale(locale)) {
-    notFound();
-  }
-
   const dictionary = getDictionary(locale);
-  const [featuredProducts, newArrivals, categories, banners] = await Promise.all([
-    getFeaturedProducts(4),
-    getNewArrivals(4),
-    getStoreCategories(),
-    getActiveBanners(3)
-  ]);
-  const heroSlides: HeroSlide[] = banners.map((banner) => {
-    const desktopUrl = safeRemoteImage(banner.desktopImage, fallbackHeroImage, { width: 1800 });
-    const mobileUrl = safeRemoteImage(banner.mobileImage, "", { width: 900 });
-    
-    // Detect if banner is a video
-    const isDesktopVideo = Boolean(banner.desktopImage && (
-      banner.desktopImage.includes('.mp4') || 
-      banner.desktopImage.includes('.webm') || 
-      banner.desktopImage.includes('.mov') ||
-      banner.desktopImage.includes('/video/')
-    ));
-    
-    return {
-      id: banner.id,
-      title: locale === "ar" ? banner.titleAr : banner.titleEn,
-      subtitle:
-        locale === "ar"
-          ? banner.subtitleAr || dictionary.home.subtitle
-          : banner.subtitleEn || dictionary.home.subtitle,
-      buttonText:
-        locale === "ar"
-          ? banner.buttonTextAr || dictionary.actions.shopNow
-          : banner.buttonTextEn || dictionary.actions.shopNow,
-      href: getLocalizedPath(locale, banner.buttonLink),
-      desktopImage: isDesktopVideo ? banner.desktopImage : desktopUrl,
-      mobileImage: mobileUrl,
-      isVideo: isDesktopVideo
-    };
-  });
-  const fallbackSlide: HeroSlide = {
-    id: "fallback",
-    title: dictionary.home.title,
-    subtitle: dictionary.home.subtitle,
-    buttonText: dictionary.actions.shopNow,
-    href: `/${locale}/shop`,
-    desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 })
-  };
-
-  return (
-    <main>
-      <HeroSlider
-        locale={locale}
-        eyebrow={dictionary.home.eyebrow}
-        slides={heroSlides}
-        fallbackSlide={fallbackSlide}
-        secondaryHref={`/${locale}/shop?tag=new`}
-        secondaryLabel={dictionary.actions.viewCollection}
-        metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
-      />
-
-      <section className="border-b border-neutral-100 bg-white py-10 sm:py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className="sm:hidden">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-neutral-500">
-                {dictionary.common.categories}
-              </p>
-              <h2 className="mt-2 text-2xl font-black leading-tight text-navy">{dictionary.home.categoryTitle}</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-neutral-500">
-                {locale === "ar" ? "اسحب لاستكشاف مجموعات دبي." : "Swipe to explore Dubai collections."}
-              </p>
-            </div>
-            <div className="hidden sm:block">
-              <SectionHeader
-                eyebrow={dictionary.common.categories}
-                title={dictionary.home.categoryTitle}
-                subtitle={dictionary.home.categorySubtitle}
-              />
-            </div>
-            <div className="hidden max-w-md rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-center sm:block">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
-                {locale === "ar" ? "مختارات الإمارات" : "UAE curated"}
-              </p>
-              <p className="mt-1 text-sm font-bold text-navy">
-                {locale === "ar" ? "أزياء دبي والهدايا والاحتياجات اليومية" : "Dubai styles, gifts, and daily essentials"}
-              </p>
-            </div>
-          </div>
-          <div className="-mx-4 mt-6 grid auto-cols-[minmax(136px,42vw)] grid-flow-col gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:mt-8 sm:grid-flow-row sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5 [&::-webkit-scrollbar]:hidden">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                href={`/${locale}/shop?category=${category.slug}`}
-                className="group min-w-0 snap-start rounded-lg bg-white transition duration-300 hover:-translate-y-1 sm:p-1"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-neutral-100 sm:aspect-square">
-                  <Image
-                    src={category.image}
-                    alt={getLocalized(category.name, locale)}
-                    fill
-                    sizes="(min-width: 1024px) 18vw, (min-width: 640px) 28vw, 42vw"
-                    className="object-cover transition duration-500 group-hover:scale-110"
-                  />
-                  <span className="absolute right-2 top-2 rounded-full bg-white/92 px-2 py-1 text-[10px] font-black text-navy shadow-sm rtl:left-2 rtl:right-auto sm:hidden">
-                    {category.productCount}
-                  </span>
-                </div>
-                <div className="mt-3 text-center">
-                  <h3 className="line-clamp-1 text-sm font-extrabold uppercase tracking-[0.06em] text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
-                  <p className="mt-1 text-[11px] font-semibold text-neutral-500 sm:text-xs">{category.productCount} {dictionary.shop.results}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <SectionHeader
-          eyebrow={dictionary.common.featured}
-          title={dictionary.home.featuredTitle}
-          subtitle={dictionary.home.featuredSubtitle}
-          action={
-            <Link href={`/${locale}/shop`} className="text-sm font-bold text-gold-700 hover:text-gold-800">
-              {dictionary.actions.viewCollection}
-            </Link>
-          }
-        />
-        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4">
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <SectionHeader
-          eyebrow={dictionary.common.newArrivals}
-          title={dictionary.home.arrivalTitle}
-          subtitle={dictionary.home.arrivalSubtitle}
-        />
-        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4">
-          {newArrivals.map((product) => (
-            <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
-          ))}
-        </div>
-      </section>
-
-      <section className="border-t border-gold-100 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                icon: HandCoins,
-                title: locale === "ar" ? "الدفع عند الاستلام" : "Cash on delivery",
-                detail: locale === "ar" ? "ادفع عند وصول طلبك داخل دبي." : "Pay when your Dubai order arrives."
-              },
-              {
-                icon: Truck,
-                title: locale === "ar" ? "توصيل سريع داخل دبي" : "Fast Dubai delivery",
-                detail: locale === "ar" ? "مواعيد توصيل حسب المنطقة عند الدفع." : "Area-based delivery timing at checkout."
-              },
-              {
-                icon: CreditCard,
-                title: locale === "ar" ? "دفع آمن" : "Secure payment",
-                detail: locale === "ar" ? "دفع بالبطاقة عبر سترايب وتحكم كامل من الإدارة." : "Stripe card checkout and admin payment visibility."
-              },
-              {
-                icon: RotateCcw,
-                title: locale === "ar" ? "دعم الإرجاع" : "Return support",
-                detail: locale === "ar" ? "مسار واضح للإرجاع والاستبدال." : "Clear support flow for returns and exchanges."
-              }
-            ].map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div key={item.title} className="flex min-h-24 items-start gap-3 rounded-xl border border-gold-100 bg-paper px-4 py-4 shadow-soft">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-gold-700 shadow-sm">
-                    <Icon size={20} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-extrabold text-navy">{item.title}</span>
-                    <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+  const [banners, sections] = await Promise.all([getActiveBanners(3), getHomepageSections()]);
+  const slides: HeroSlide[] = banners.map((banner) => ({
+    id: banner.id,
+    title: locale === "ar" ? banner.titleAr : banner.titleEn,
+    subtitle: locale === "ar" ? banner.subtitleAr || "" : banner.subtitleEn || "",
+    buttonText: locale === "ar" ? banner.buttonTextAr || dictionary.actions.shopNow : banner.buttonTextEn || dictionary.actions.shopNow,
+    href: pathFor(locale, banner.buttonLink),
+    desktopImage: safeRemoteImage(banner.desktopImage, fallbackHeroImage, { width: 1800 }),
+    mobileImage: safeRemoteImage(banner.mobileImage, "", { width: 900 }) || undefined,
+    isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage))
+  }));
+  const fallbackSlide: HeroSlide = { id: "fallback", title: dictionary.home.title, subtitle: dictionary.home.subtitle, buttonText: dictionary.actions.shopNow, href: `/${locale}/shop`, desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 }) };
+  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomepageSectionRenderer locale={locale} sections={sections} /></main>;
 }

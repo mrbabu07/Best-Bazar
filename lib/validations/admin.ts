@@ -215,6 +215,28 @@ export const bannerReorderSchema = z.object({
   ids: z.array(z.string().min(1)).min(1)
 });
 
+const homepageSectionConfigSchema = z.object({
+  source: z.enum(["FEATURED", "NEW", "CATEGORY", "TAG"]).optional(),
+  categorySlug: z.string().trim().optional(),
+  tag: z.string().trim().optional(),
+  limit: z.coerce.number().int().min(1).max(12).default(4),
+  actionLabelEn: z.string().trim().optional(),
+  actionLabelAr: z.string().trim().optional(),
+  actionLink: z.string().trim().optional(),
+  categoryLimit: z.coerce.number().int().min(1).max(12).default(6)
+});
+
+export const homepageSectionSchema = z.object({
+  type: z.enum(["CATEGORY_GRID", "PRODUCT_GRID"]),
+  titleEn: nullableString,
+  titleAr: nullableString,
+  subtitleEn: nullableString,
+  subtitleAr: nullableString,
+  config: homepageSectionConfigSchema.default({}),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true)
+});
+
 export const settingsSchema = z.object({
   storeNameEn: z.string().trim().min(1),
   storeNameAr: z.string().trim().min(1),

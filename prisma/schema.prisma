@@ -298,6 +298,22 @@ model Banner {
   updatedAt      DateTime @updatedAt
 }
 
+model HomepageSection {
+  id          String   @id @default(cuid())
+  type        String
+  titleEn     String?
+  titleAr     String?
+  subtitleEn  String?
+  subtitleAr  String?
+  config      Json     @default("{}")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 model Setting {
   id                    String   @id @default("store-settings")
   storeNameEn           String

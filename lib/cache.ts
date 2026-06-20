@@ -9,6 +9,7 @@ export type CacheTag =
   | "products"
   | "categories"
   | "banners"
+  | "homepage-sections"
   | "reviews"
   | "settings"
   | "admin-orders"

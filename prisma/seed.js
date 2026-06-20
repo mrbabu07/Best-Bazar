@@ -473,6 +473,50 @@ async function main() {
     });
   }
 
+  const homepageSections = [
+    {
+      id: "home-section-categories",
+      type: "CATEGORY_GRID",
+      titleEn: "Shop by category",
+      titleAr: "تسوق حسب الفئة",
+      subtitleEn: "Browse the collections managed from your admin panel.",
+      subtitleAr: "تصفح المجموعات التي تتم إدارتها من لوحة التحكم.",
+      config: { categoryLimit: 6, actionLink: "/shop", actionLabelEn: "View all", actionLabelAr: "عرض الكل" },
+      sortOrder: 1,
+      isActive: true
+    },
+    {
+      id: "home-section-featured",
+      type: "PRODUCT_GRID",
+      titleEn: "Exclusive Sale",
+      titleAr: "عروض حصرية",
+      subtitleEn: "Selected pieces with live product and stock data.",
+      subtitleAr: "منتجات مختارة مع بيانات المخزون المباشرة.",
+      config: { source: "FEATURED", limit: 4, actionLink: "/shop", actionLabelEn: "View all", actionLabelAr: "عرض الكل" },
+      sortOrder: 2,
+      isActive: true
+    },
+    {
+      id: "home-section-new",
+      type: "PRODUCT_GRID",
+      titleEn: "New Arrival",
+      titleAr: "وصل حديثا",
+      subtitleEn: "Fresh products published by the admin.",
+      subtitleAr: "منتجات جديدة تم نشرها من قبل الإدارة.",
+      config: { source: "NEW", limit: 4, actionLink: "/shop?sort=new", actionLabelEn: "View all", actionLabelAr: "عرض الكل" },
+      sortOrder: 3,
+      isActive: true
+    }
+  ];
+
+  for (const section of homepageSections) {
+    await prisma.homepageSection.upsert({
+      where: { id: section.id },
+      update: section,
+      create: section
+    });
+  }
+
   await prisma.setting.upsert({
     where: { id: "store-settings" },
     update: {},

@@ -159,6 +159,12 @@ export function AdminShell({
           description: "Hero and campaigns"
         },
         {
+          label: "Homepage",
+          href: `/${locale}/admin/homepage`,
+          icon: Home,
+          description: "Category and product rows"
+        },
+        {
           label: dictionary.admin.settings,
           href: `/${locale}/admin/settings`,
           icon: Settings,

@@ -46,6 +46,14 @@ type ProductNotification = {
   createdAt?: string;
 };
 
+type HeaderCategory = {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameAr: string;
+  parentCategoryId?: string | null;
+};
+
 export function Header({ locale, dictionary, settings }: HeaderProps) {
   const pathname = usePathname();
   const currentPathname = pathname ?? `/${locale}`;
@@ -57,6 +65,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [liveSettings, setLiveSettings] = useState(settings);
   const [productNotifications, setProductNotifications] = useState<ProductNotification[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
+  const [categories, setCategories] = useState<HeaderCategory[]>([]);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const storedColorMode = usePreferencesStore((state) => state.colorMode);
@@ -72,14 +81,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     { label: dictionary.nav.shop, href: `/${locale}/shop` },
     { label: dictionary.nav.account, href: `/${locale}/account` }
   ];
-  const fashionLinks = [
-    { label: locale === "ar" ? "عبايات" : "Abayas", href: `/${locale}/shop?search=abaya` },
-    { label: locale === "ar" ? "حجاب" : "Hijab", href: `/${locale}/shop?search=hijab` },
-    { label: locale === "ar" ? "نقاب" : "Niqab", href: `/${locale}/shop?search=niqab` },
-    { label: locale === "ar" ? "فساتين صلاة" : "Prayer Dress", href: `/${locale}/shop?search=prayer` },
-    { label: locale === "ar" ? "ملابس سفر" : "Travel Wear", href: `/${locale}/shop?search=travel` },
-    { label: locale === "ar" ? "الأطقم" : "Sets", href: `/${locale}/shop?search=set` }
-  ];
+  const fashionLinks = categories
+    .filter((category) => !category.parentCategoryId)
+    .map((category) => ({
+      label: locale === "ar" ? category.nameAr || category.nameEn : category.nameEn || category.nameAr,
+      href: `/${locale}/shop?category=${category.slug}`
+    }));
   const brandName = locale === "ar" ? liveSettings.storeNameAr : liveSettings.storeNameEn;
   const announcement = locale === "ar" ? liveSettings.announcementAr : liveSettings.announcementEn;
   const dubaiRate =
@@ -150,6 +157,23 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     const parsed = safeJsonParse<unknown[]>(window.localStorage.getItem(dismissedStorageKey), []);
     setDismissedNotifications(Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : []);
   }, [dismissedStorageKey]);
+
+  useEffect(() => {
+    let active = true;
+    const loadCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        const data = await safeResponseJson<unknown[]>(response, []);
+        if (active && Array.isArray(data)) {
+          setCategories(data.filter((item): item is HeaderCategory => Boolean(item && typeof item === "object" && "id" in item && "slug" in item && "nameEn" in item && "nameAr" in item)));
+        }
+      } catch {
+        // Category navigation remains optional when a refresh fails.
+      }
+    };
+    void loadCategories();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -266,7 +290,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className={`${iconButtonClass} lg:hidden`}
+            className={iconButtonClass}
             aria-label="Toggle navigation"
             aria-expanded={open}
           >
@@ -478,8 +502,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       </div>
 
       {open ? (
-        <div className="border-t border-neutral-200 bg-white lg:hidden">
-          <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6">
+        <div className="fixed inset-x-0 bottom-0 top-[4.75rem] z-50 border-t border-white/10 bg-neutral-950 text-white shadow-lift">
+          <div className="grid h-full max-w-md gap-3 overflow-y-auto px-5 py-5">
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
@@ -494,29 +518,27 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               />
             </form>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
               {navItems.map((item) => {
-                const active = currentPathname === item.href || currentPathname.startsWith(`${item.href}/`);
-
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className={cn(mobileLinkClass, active && activeLinkClass)}
+                    className="flex items-center justify-between border-b border-white/10 py-3 text-lg font-semibold text-white"
                   >
                     <span>{item.label}</span>
                   </Link>
                 );
               })}
 
-              <div className="grid gap-2 sm:col-span-2 sm:grid-cols-3">
+              <div className="grid gap-1 pt-2">
                 {fashionLinks.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-extrabold uppercase tracking-[0.12em] text-neutral-600"
+                    className="border-b border-white/10 py-3 text-left text-lg font-semibold text-white rtl:text-right"
                   >
                     {item.label}
                   </Link>
