@@ -63,8 +63,8 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   ]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <main className="mx-auto max-w-[1500px] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div className="sr-only">
         <div>
           <BackButton
             label={locale === "ar" ? "رجوع" : "Back"}
@@ -82,7 +82,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
         <ProductFilters
           locale={locale}
           dictionary={dictionary}
@@ -92,7 +92,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
           sizes={sizes}
           current={{ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax }}
         />
-        <section className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+        <section className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-3 xl:grid-cols-4">
           {listing.length > 0 ? (
             listing.map((product, index) => (
               <ProductCard 
@@ -104,7 +104,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
               />
             ))
           ) : (
-            <div className="col-span-2 rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft xl:col-span-3">
+            <div className="col-span-2 border border-neutral-200 bg-white p-8 text-center xl:col-span-4">
               <h2 className="text-xl font-bold text-navy">
                 {locale === "ar" ? "لم يتم العثور على منتجات" : "No products found"}
               </h2>

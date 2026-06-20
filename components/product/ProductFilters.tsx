@@ -170,13 +170,13 @@ export function ProductFilters({
   };
 
   return (
-    <aside className="rounded-lg border border-neutral-200 bg-white p-4 shadow-soft lg:sticky lg:top-28">
-      <div className="flex items-center gap-2 text-navy">
+    <aside className="border-t border-neutral-200 pt-5 lg:sticky lg:top-28 lg:border-t-0 lg:pt-0">
+      <div className="flex items-center gap-2 text-neutral-900">
         <SlidersHorizontal size={18} />
-        <h2 className="text-base font-bold">{dictionary.shop.filters}</h2>
+        <h2 className="text-lg font-medium">Filter:</h2>
       </div>
 
-      <div className="mt-5 grid gap-4">
+      <div className="mt-5 grid gap-5">
         <label className="grid gap-2 text-sm font-semibold text-navy">
           {dictionary.nav.search}
           <span className="relative">
