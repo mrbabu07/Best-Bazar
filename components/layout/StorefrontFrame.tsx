@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import type { StorefrontFrameProps } from "@/components/layout/types";
 import { WhatsAppQuickButton } from "@/components/layout/WhatsAppQuickButton";
+import { useHydrated } from "@/hooks/useHydrated";
 import { safeResponseJson } from "@/lib/safe-json";
 import { normalizeThemeSettings, storefrontThemeStyle } from "@/lib/theme-config";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -13,7 +14,9 @@ import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
 export function StorefrontFrame({ children, locale, dictionary, settings }: StorefrontFrameProps) {
-  const colorMode = usePreferencesStore((state) => state.colorMode);
+  const hydrated = useHydrated();
+  const storedColorMode = usePreferencesStore((state) => state.colorMode);
+  const colorMode = hydrated ? storedColorMode : "light";
   const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
   const [liveSettings, setLiveSettings] = useState(settings);
 

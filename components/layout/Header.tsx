@@ -278,15 +278,17 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
+    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
       {liveSettings.announcementActive && announcement ? (
-        <div className="bg-neutral-950 px-4 py-2 text-center text-xs font-semibold leading-5 tracking-wide text-white">
+        <div className="border-b border-neutral-200 bg-white px-4 py-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-800">
+          <span className="mr-8 text-neutral-500" aria-hidden="true">‹</span>
           {announcement}
+          <span className="ml-8 text-neutral-500" aria-hidden="true">›</span>
         </div>
       ) : null}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-16 items-center gap-2 py-3 lg:min-h-[4.75rem] lg:gap-4">
+        <div className="relative flex min-h-16 items-center gap-2 py-3 lg:min-h-[5.75rem] lg:gap-4">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -300,12 +302,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="croissant-one-regular min-w-0 max-w-[44vw] shrink truncate text-2xl text-navy sm:max-w-none sm:text-3xl"
+            className="croissant-one-regular absolute left-1/2 z-10 max-w-[46vw] -translate-x-1/2 truncate text-xl text-neutral-950 sm:max-w-none sm:text-2xl"
           >
             {brandName || dictionary.brand}
           </Link>
 
-          <nav className="hidden shrink-0 items-center gap-1 lg:flex">
+          <nav className="hidden shrink-0 items-center gap-1 2xl:flex">
             {navItems.map((item) => {
               const active = currentPathname === item.href || currentPathname.startsWith(`${item.href}/`);
 
@@ -325,7 +327,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             })}
           </nav>
 
-          <form onSubmit={submitSearch} className="ml-auto hidden min-w-[180px] flex-1 justify-end md:flex">
+          <form onSubmit={submitSearch} className="ml-1 hidden min-w-[180px] flex-1 justify-end xl:flex">
             <label className="relative w-full max-w-xs xl:max-w-md">
               <Search
                 size={18}
@@ -491,7 +493,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       </div>
 
-      <div className="hidden border-t border-neutral-100 bg-white lg:block">
+      <div className="hidden border-t border-neutral-100 bg-white 2xl:block">
         <nav className="mx-auto flex max-w-7xl items-center justify-center gap-7 overflow-x-auto px-4 py-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-neutral-600">
           {fashionLinks.map((item) => (
             <Link key={item.href} href={item.href} className="whitespace-nowrap transition hover:text-navy">

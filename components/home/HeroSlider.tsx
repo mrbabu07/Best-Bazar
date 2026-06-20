@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, MapPin, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 
@@ -36,6 +36,7 @@ export function HeroSlider({
   secondaryLabel,
   metrics
 }: HeroSliderProps) {
+  void metrics;
   const activeSlides = slides.length ? slides : [fallbackSlide];
   const [activeIndex, setActiveIndex] = useState(0);
   const activeSlide = activeSlides[activeIndex] ?? activeSlides[0];
@@ -62,7 +63,7 @@ export function HeroSlider({
   };
 
   return (
-    <section className="relative min-h-[calc(100svh-9rem)] overflow-hidden">
+    <section className="relative min-h-[390px] overflow-hidden sm:min-h-[540px] lg:min-h-[620px]">
       {/* Background Media */}
       {activeSlide.isVideo ? (
         <>
@@ -111,52 +112,25 @@ export function HeroSlider({
           />
         </>
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/68 to-navy/15 rtl:bg-gradient-to-l" />
-      <div className="relative mx-auto flex min-h-[calc(100svh-9rem)] max-w-7xl items-center px-4 py-20 sm:px-6 lg:px-8">
-        <div className="max-w-3xl text-white">
-          <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.2em] text-gold-200">
-            <Sparkles size={17} />
-            {eyebrow}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-[0.12em]">
-            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-white backdrop-blur">
-              <MapPin size={14} />
-              {locale === "ar" ? "دبي، الإمارات" : "Dubai, UAE"}
-            </span>
-            <span className="inline-flex h-8 items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 text-white backdrop-blur">
-              <ShieldCheck size={14} />
-              {locale === "ar" ? "الدفع بالدرهم" : "AED checkout"}
-            </span>
-          </div>
-          <h1 className="mt-5 text-5xl font-bold sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>
-          <p className="mt-6 max-w-2xl text-base leading-7 text-white/84 sm:text-lg">
-            {activeSlide.subtitle}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="relative mx-auto flex min-h-[390px] max-w-7xl items-end px-4 py-8 sm:min-h-[540px] sm:px-6 sm:py-12 lg:min-h-[620px] lg:px-8">
+        <div className="max-w-xl text-white">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/85">{eyebrow}</p>
+          <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-white/90 sm:text-base">{activeSlide.subtitle}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href={activeSlide.href}
-              className="inline-flex h-12 items-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-6 text-sm font-bold text-navy shadow-soft hover:from-gold-400 hover:to-gold-200"
+              className="inline-flex h-11 items-center bg-neutral-950 px-7 text-sm font-semibold text-white transition hover:bg-neutral-800"
             >
               {activeSlide.buttonText}
-              <ArrowRight size={18} className="rtl:rotate-180" />
             </Link>
             <Link
               href={secondaryHref}
-              className="inline-flex h-12 items-center gap-2 rounded-md border border-white/30 px-6 text-sm font-bold text-white backdrop-blur hover:bg-white/10"
+              className="hidden h-11 items-center border border-white/70 px-6 text-sm font-semibold text-white transition hover:bg-white hover:text-neutral-950 sm:inline-flex"
             >
-              <Truck size={18} />
               {secondaryLabel}
             </Link>
-          </div>
-          <div className="mt-10 grid max-w-3xl gap-3 sm:grid-cols-3">
-            {metrics.map((metric) => (
-              <div
-                key={metric}
-                className="border-l border-gold-300/60 pl-4 text-sm font-semibold text-white/90 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4"
-              >
-                {metric}
-              </div>
-            ))}
           </div>
         </div>
       </div>

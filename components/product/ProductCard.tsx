@@ -49,8 +49,8 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   };
 
   return (
-    <article className="group relative flex h-[318px] flex-col overflow-hidden bg-white transition-all duration-200 sm:h-[430px] lg:h-[452px]">
-      <div className="relative h-[210px] shrink-0 overflow-hidden rounded-lg bg-neutral-100 sm:h-[318px] lg:h-[336px]">
+    <article className="group relative flex h-[340px] flex-col overflow-hidden bg-white transition-all duration-200 sm:h-[458px] lg:h-[486px]">
+      <div className="relative h-[238px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[348px] lg:h-[374px]">
         <Link href={`/${locale}/product/${product.slug}`} className="block h-full">
           <Image
             src={cardImage.url}
@@ -60,9 +60,8 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
             className="object-cover transition-all duration-300 group-hover:scale-[1.03]"
             priority={priority}
           />
-          <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 rtl:left-auto rtl:right-2">
-            {product.isFeatured ? <Badge tone="gold">{dictionary.common.featured}</Badge> : null}
-            {hasSale ? <Badge tone="red">{dictionary.common.sale}</Badge> : null}
+          <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 rtl:left-auto rtl:right-2">
+            {hasSale ? <span className="rounded-full bg-neutral-950 px-3 py-1 text-[11px] font-semibold text-white">{dictionary.common.sale}</span> : null}
             {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
           </div>
         </Link>
@@ -77,7 +76,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
       <div className="flex min-h-0 flex-1 flex-col px-0.5 pt-3">
         <Link
           href={`/${locale}/product/${product.slug}`}
-          className="line-clamp-2 min-h-[38px] text-[13px] font-extrabold uppercase leading-5 tracking-[0.04em] text-navy transition hover:text-gold-700 sm:min-h-[44px] sm:text-[15px] sm:leading-6"
+          className="line-clamp-2 min-h-[40px] text-[13px] font-medium leading-5 tracking-[0.02em] text-neutral-900 transition hover:underline sm:min-h-[44px] sm:text-[15px] sm:leading-6"
         >
           {productName}
         </Link>
@@ -85,7 +84,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
         <ProductCardPrice price={product.price} comparePrice={product.comparePrice} locale={locale} />
 
         {product.variants.length ? (
-          <div className="mt-2 flex min-h-7 flex-wrap items-center gap-1.5">
+          <div className="mt-2 flex min-h-6 flex-wrap items-center gap-1.5">
             {visibleColorSwatches.map((variant) => {
               const selected = selectedColor?.id === variant.id;
 
@@ -95,7 +94,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
                   type="button"
                   onClick={() => setSelectedColorId(variant.id)}
                   title={`${getLocalized(variant.colorName, locale)} (${variant.stock})`}
-                  className={`grid h-5 w-5 place-items-center rounded-full border bg-white shadow-sm transition-all duration-200 hover:scale-110 sm:h-6 sm:w-6 ${
+                  className={`grid h-4 w-4 place-items-center rounded-full border bg-white transition-all duration-200 hover:scale-110 sm:h-5 sm:w-5 ${
                     selected
                       ? "border-neutral-900 ring-2 ring-neutral-300 ring-offset-1"
                       : "border-neutral-200 hover:border-neutral-400"
@@ -104,7 +103,7 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
                   aria-pressed={selected}
                 >
                   <span
-                    className="h-3.5 w-3.5 rounded-full border border-white sm:h-4 sm:w-4"
+                    className="h-2.5 w-2.5 rounded-full border border-white sm:h-3 sm:w-3"
                     style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
                   />
                 </button>
