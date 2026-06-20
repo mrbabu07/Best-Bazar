@@ -465,8 +465,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       </div>
 
       {open ? (
-        <div className="absolute inset-x-0 top-full z-50 min-h-[calc(100dvh-7rem)] bg-black/45">
-          <div className="grid min-h-[calc(100dvh-7rem)] w-full max-w-[420px] gap-3 overflow-y-auto bg-neutral-950 px-5 py-5 text-white shadow-lift">
+        <div className="absolute inset-x-0 top-full z-50 h-[calc(100dvh-7rem)] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 cursor-default bg-black/45"
+            aria-label="Close category navigation"
+          />
+          <aside className="relative grid h-full w-[min(100%,430px)] gap-3 overflow-y-auto bg-neutral-950 px-5 py-5 text-white shadow-lift sm:w-[34vw] sm:min-w-[320px]">
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
@@ -544,7 +550,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 </select>
               </label>
             </div>
-          </div>
+          </aside>
         </div>
       ) : null}
     </header>
