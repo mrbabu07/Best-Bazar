@@ -8,7 +8,7 @@ import { AdminDeleteButton } from "@/components/admin/AdminDeleteButton";
 import { Button } from "@/components/ui/Button";
 import { safeResponseJson } from "@/lib/safe-json";
 
-type SectionType = "CATEGORY_GRID" | "PRODUCT_GRID";
+type SectionType = "CATEGORY_GRID" | "PRODUCT_GRID" | "CATEGORY_PRODUCT_ROWS";
 type Source = "FEATURED" | "NEW" | "CATEGORY" | "TAG";
 
 export type AdminHomepageSectionRow = {
@@ -85,7 +85,7 @@ export function AdminHomepageSectionManager({ sections }: { sections: AdminHomep
     <aside className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
       <div className="flex items-center justify-between gap-3"><div><h2 className="font-bold text-navy">{selectedId ? "Edit section" : "Add homepage section"}</h2><p className="mt-1 text-xs font-semibold text-neutral-500">All visible copy and product sources are admin controlled.</p></div><Button type="button" variant="secondary" size="sm" onClick={reset}><Plus size={15} />New</Button></div>
       <form onSubmit={submit} className="mt-5 grid gap-4">
-        <label className="grid gap-2 text-sm font-semibold text-navy">Section type<select value={form.type} onChange={(event) => update("type", event.target.value as SectionType)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3"><option value="PRODUCT_GRID">Product grid</option><option value="CATEGORY_GRID">Category collection</option></select></label>
+        <label className="grid gap-2 text-sm font-semibold text-navy">Section type<select value={form.type} onChange={(event) => update("type", event.target.value as SectionType)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3"><option value="PRODUCT_GRID">Product grid</option><option value="CATEGORY_GRID">Category collection</option><option value="CATEGORY_PRODUCT_ROWS">All category product rows</option></select></label>
         <label className="grid gap-2 text-sm font-semibold text-navy">Title (English)<input value={form.titleEn} onChange={(event) => update("titleEn", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3" /></label>
         <label className="grid gap-2 text-sm font-semibold text-navy">Title (Arabic)<input value={form.titleAr} onChange={(event) => update("titleAr", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3" /></label>
         <label className="grid gap-2 text-sm font-semibold text-navy">Subtitle (English)<input value={form.subtitleEn} onChange={(event) => update("subtitleEn", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3" /></label>

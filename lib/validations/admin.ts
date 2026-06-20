@@ -227,7 +227,7 @@ const homepageSectionConfigSchema = z.object({
 });
 
 export const homepageSectionSchema = z.object({
-  type: z.enum(["CATEGORY_GRID", "PRODUCT_GRID"]),
+  type: z.enum(["CATEGORY_GRID", "PRODUCT_GRID", "CATEGORY_PRODUCT_ROWS"]),
   titleEn: nullableString,
   titleAr: nullableString,
   subtitleEn: nullableString,

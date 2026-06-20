@@ -486,6 +486,17 @@ async function main() {
       isActive: true
     },
     {
+      id: "home-section-category-products",
+      type: "CATEGORY_PRODUCT_ROWS",
+      titleEn: "Shop by category",
+      titleAr: "تسوق حسب الفئة",
+      subtitleEn: "",
+      subtitleAr: "",
+      config: { limit: 5, actionLink: "/shop", actionLabelEn: "View all", actionLabelAr: "عرض الكل" },
+      sortOrder: 2,
+      isActive: true
+    },
+    {
       id: "home-section-featured",
       type: "PRODUCT_GRID",
       titleEn: "Exclusive Sale",
@@ -493,7 +504,7 @@ async function main() {
       subtitleEn: "Selected pieces with live product and stock data.",
       subtitleAr: "منتجات مختارة مع بيانات المخزون المباشرة.",
       config: { source: "FEATURED", limit: 4, actionLink: "/shop", actionLabelEn: "View all", actionLabelAr: "عرض الكل" },
-      sortOrder: 2,
+      sortOrder: 3,
       isActive: true
     },
     {
@@ -504,7 +515,7 @@ async function main() {
       subtitleEn: "Fresh products published by the admin.",
       subtitleAr: "منتجات جديدة تم نشرها من قبل الإدارة.",
       config: { source: "NEW", limit: 4, actionLink: "/shop?sort=new", actionLabelEn: "View all", actionLabelAr: "عرض الكل" },
-      sortOrder: 3,
+      sortOrder: 4,
       isActive: true
     }
   ];

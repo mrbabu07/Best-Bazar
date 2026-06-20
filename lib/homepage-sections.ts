@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { safeJsonParse } from "@/lib/safe-json";
 
-export type HomepageSectionType = "CATEGORY_GRID" | "PRODUCT_GRID";
+export type HomepageSectionType = "CATEGORY_GRID" | "PRODUCT_GRID" | "CATEGORY_PRODUCT_ROWS";
 
 export type HomepageSectionConfig = {
   source?: "FEATURED" | "NEW" | "CATEGORY" | "TAG";
@@ -48,7 +48,11 @@ async function readHomepageSections(): Promise<HomepageSection[]> {
     });
 
     return sections.flatMap((section) => {
-      if (section.type !== "CATEGORY_GRID" && section.type !== "PRODUCT_GRID") {
+      if (
+        section.type !== "CATEGORY_GRID" &&
+        section.type !== "PRODUCT_GRID" &&
+        section.type !== "CATEGORY_PRODUCT_ROWS"
+      ) {
         return [];
       }
 
