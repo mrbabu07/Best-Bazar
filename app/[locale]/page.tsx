@@ -118,11 +118,11 @@ export default async function HomePage({ params }: { params: { locale: string } 
         metrics={[dictionary.home.heroMetricOne, dictionary.home.heroMetricTwo, dictionary.home.heroMetricThree]}
       />
 
-      <section className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf6_100%)] py-10 sm:py-14">
+      <section className="border-b border-neutral-100 bg-white py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col items-center gap-4 text-center">
             <div className="sm:hidden">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-gold-700">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-neutral-500">
                 {dictionary.common.categories}
               </p>
               <h2 className="mt-2 text-2xl font-black leading-tight text-navy">{dictionary.home.categoryTitle}</h2>
@@ -137,8 +137,8 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 subtitle={dictionary.home.categorySubtitle}
               />
             </div>
-            <div className="hidden rounded-xl border border-gold-200 bg-white px-4 py-3 text-right shadow-soft sm:block rtl:text-left">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">
+            <div className="hidden max-w-md rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-center sm:block">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-500">
                 {locale === "ar" ? "مختارات الإمارات" : "UAE curated"}
               </p>
               <p className="mt-1 text-sm font-bold text-navy">
@@ -151,9 +151,9 @@ export default async function HomePage({ params }: { params: { locale: string } 
               <Link
                 key={category.id}
                 href={`/${locale}/shop?category=${category.slug}`}
-                className="group min-w-0 snap-start rounded-xl border border-neutral-200 bg-white p-2.5 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:p-3"
+                className="group min-w-0 snap-start rounded-lg bg-white transition duration-300 hover:-translate-y-1 sm:p-1"
               >
-                <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-paper sm:aspect-square sm:rounded-xl">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-neutral-100 sm:aspect-square">
                   <Image
                     src={category.image}
                     alt={getLocalized(category.name, locale)}
@@ -165,8 +165,8 @@ export default async function HomePage({ params }: { params: { locale: string } 
                     {category.productCount}
                   </span>
                 </div>
-                <div className="mt-3">
-                  <h3 className="line-clamp-1 text-sm font-extrabold text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
+                <div className="mt-3 text-center">
+                  <h3 className="line-clamp-1 text-sm font-extrabold uppercase tracking-[0.06em] text-navy sm:text-base">{getLocalized(category.name, locale)}</h3>
                   <p className="mt-1 text-[11px] font-semibold text-neutral-500 sm:text-xs">{category.productCount} {dictionary.shop.results}</p>
                 </div>
               </Link>
@@ -175,7 +175,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <SectionHeader
           eyebrow={dictionary.common.featured}
           title={dictionary.home.featuredTitle}
@@ -186,20 +186,20 @@ export default async function HomePage({ params }: { params: { locale: string } 
             </Link>
           }
         />
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <SectionHeader
           eyebrow={dictionary.common.newArrivals}
           title={dictionary.home.arrivalTitle}
           subtitle={dictionary.home.arrivalSubtitle}
         />
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 sm:gap-y-10 lg:grid-cols-4">
           {newArrivals.map((product) => (
             <ProductCard key={product.id} product={product} locale={locale} dictionary={dictionary} />
           ))}

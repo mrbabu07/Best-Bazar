@@ -49,18 +49,18 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
   };
 
   return (
-    <article className="group relative flex h-[320px] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-soft ring-1 ring-black/[0.02] transition-all duration-200 hover:-translate-y-1 hover:border-gold-200 hover:shadow-lift sm:h-[410px] lg:h-[430px]">
-      <div className="relative h-[174px] shrink-0 overflow-hidden bg-neutral-100 sm:h-[260px] lg:h-[280px]">
+    <article className="group relative flex h-[318px] flex-col overflow-hidden bg-white transition-all duration-200 sm:h-[430px] lg:h-[452px]">
+      <div className="relative h-[210px] shrink-0 overflow-hidden rounded-lg bg-neutral-100 sm:h-[318px] lg:h-[336px]">
         <Link href={`/${locale}/product/${product.slug}`} className="block h-full">
           <Image
             src={cardImage.url}
             alt={cardImage.alt}
             fill
             sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 50vw"
-            className="object-cover transition-all duration-200 group-hover:scale-105"
+            className="object-cover transition-all duration-300 group-hover:scale-[1.03]"
             priority={priority}
           />
-          <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 sm:left-3 sm:top-3 rtl:left-auto rtl:right-2 sm:rtl:right-3">
+          <div className="absolute left-2 top-2 flex flex-wrap gap-1.5 rtl:left-auto rtl:right-2">
             {product.isFeatured ? <Badge tone="gold">{dictionary.common.featured}</Badge> : null}
             {hasSale ? <Badge tone="red">{dictionary.common.sale}</Badge> : null}
             {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
@@ -74,10 +74,10 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4">
+      <div className="flex min-h-0 flex-1 flex-col px-0.5 pt-3">
         <Link
           href={`/${locale}/product/${product.slug}`}
-          className="line-clamp-2 min-h-[42px] text-[15px] font-extrabold leading-5 text-navy transition hover:text-gold-700 sm:min-h-[52px] sm:text-lg sm:leading-6"
+          className="line-clamp-2 min-h-[38px] text-[13px] font-extrabold uppercase leading-5 tracking-[0.04em] text-navy transition hover:text-gold-700 sm:min-h-[44px] sm:text-[15px] sm:leading-6"
         >
           {productName}
         </Link>
@@ -95,23 +95,23 @@ export function ProductCard({ product, locale, dictionary, priority = false }: P
                   type="button"
                   onClick={() => setSelectedColorId(variant.id)}
                   title={`${getLocalized(variant.colorName, locale)} (${variant.stock})`}
-                  className={`grid h-6 w-6 place-items-center rounded-full border-2 bg-white shadow-sm transition-all duration-200 hover:scale-110 ${
+                  className={`grid h-5 w-5 place-items-center rounded-full border bg-white shadow-sm transition-all duration-200 hover:scale-110 sm:h-6 sm:w-6 ${
                     selected
-                      ? "border-gold-500 ring-2 ring-gold-300 ring-offset-1"
-                      : "border-neutral-200 hover:border-gold-400"
+                      ? "border-neutral-900 ring-2 ring-neutral-300 ring-offset-1"
+                      : "border-neutral-200 hover:border-neutral-400"
                   }`}
                   aria-label={getLocalized(variant.colorName, locale)}
                   aria-pressed={selected}
                 >
                   <span
-                    className="h-4 w-4 rounded-full border border-white"
+                    className="h-3.5 w-3.5 rounded-full border border-white sm:h-4 sm:w-4"
                     style={{ backgroundColor: variant.colorHex ?? "#ffffff" }}
                   />
                 </button>
               );
             })}
             {hiddenColorCount > 0 ? (
-              <span className="grid h-6 min-w-6 place-items-center rounded-full bg-paper px-1.5 text-[10px] font-bold text-neutral-500">
+              <span className="grid h-6 min-w-6 place-items-center rounded-full bg-neutral-100 px-1.5 text-[10px] font-bold text-neutral-500">
                 +{hiddenColorCount}
               </span>
             ) : null}

@@ -38,14 +38,15 @@ export function ProductCardPrice({ price, comparePrice, locale }: ProductCardPri
   const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
+  const hasComparePrice = typeof comparePrice === "number" && comparePrice > price;
 
   return (
-    <div className="mt-1.5 flex min-h-7 flex-wrap items-end gap-x-2 gap-y-1">
-      <p className="text-base font-bold text-navy sm:text-lg">
+    <div className="mt-1 flex min-h-7 flex-wrap items-end gap-x-2 gap-y-1">
+      <p className={`text-sm font-extrabold sm:text-base ${hasComparePrice ? "text-sale" : "text-navy"}`}>
         {formatCurrency(price, currency, locale, currencyRates)}
       </p>
-      {comparePrice ? (
-        <p className="text-xs text-neutral-400 line-through sm:text-sm">
+      {hasComparePrice ? (
+        <p className="text-xs text-neutral-400 line-through">
           {formatCurrency(comparePrice, currency, locale, currencyRates)}
         </p>
       ) : null}
@@ -80,7 +81,7 @@ export function ProductCardAddButton({
       disabled={availableStock <= 0 || adding}
       aria-label={addToCartLabel}
       title={addToCartLabel}
-      className="absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-full border border-neutral-200 bg-white/95 text-navy shadow-soft backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-300 hover:bg-white hover:text-gold-700 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 disabled:hover:translate-y-0 sm:right-3 sm:top-3 rtl:left-2 rtl:right-auto sm:rtl:left-3"
+      className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-neutral-200 bg-white/95 text-navy shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-400 hover:bg-white disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 disabled:hover:translate-y-0 sm:right-3 sm:top-3 sm:h-9 sm:w-9 rtl:left-2 rtl:right-auto sm:rtl:left-3"
     >
       <ShoppingBag
         size={17}

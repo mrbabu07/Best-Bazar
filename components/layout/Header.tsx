@@ -72,6 +72,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     { label: dictionary.nav.shop, href: `/${locale}/shop` },
     { label: dictionary.nav.account, href: `/${locale}/account` }
   ];
+  const fashionLinks = [
+    { label: locale === "ar" ? "عبايات" : "Abayas", href: `/${locale}/shop?search=abaya` },
+    { label: locale === "ar" ? "حجاب" : "Hijab", href: `/${locale}/shop?search=hijab` },
+    { label: locale === "ar" ? "نقاب" : "Niqab", href: `/${locale}/shop?search=niqab` },
+    { label: locale === "ar" ? "فساتين صلاة" : "Prayer Dress", href: `/${locale}/shop?search=prayer` },
+    { label: locale === "ar" ? "ملابس سفر" : "Travel Wear", href: `/${locale}/shop?search=travel` },
+    { label: locale === "ar" ? "الأطقم" : "Sets", href: `/${locale}/shop?search=set` }
+  ];
   const brandName = locale === "ar" ? liveSettings.storeNameAr : liveSettings.storeNameEn;
   const announcement = locale === "ar" ? liveSettings.announcementAr : liveSettings.announcementEn;
   const dubaiRate =
@@ -128,11 +136,11 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       : [])
   ];
   const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
-  const activeLinkClass = "bg-gold-50 text-navy";
+  const activeLinkClass = "bg-neutral-100 text-navy";
   const iconButtonClass =
-    "grid h-10 w-10 shrink-0 place-items-center rounded-md border border-gold-200 text-navy transition hover:bg-gold-50";
+    "grid h-10 w-10 shrink-0 place-items-center rounded-md border border-neutral-200 text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
   const mobileLinkClass =
-    "flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:border-gold-200 hover:bg-gold-50";
+    "flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
 
   useEffect(() => {
     setLiveSettings(settings);
@@ -246,15 +254,15 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gold-100 bg-white/92 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
       {liveSettings.announcementActive && announcement ? (
-        <div className="bg-navy px-4 py-2 text-center text-xs font-semibold leading-5 text-white">
+        <div className="bg-neutral-950 px-4 py-2 text-center text-xs font-semibold leading-5 tracking-wide text-white">
           {announcement}
         </div>
       ) : null}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-16 items-center gap-2 py-3 lg:min-h-20 lg:gap-4">
+        <div className="flex min-h-16 items-center gap-2 py-3 lg:min-h-[4.75rem] lg:gap-4">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -268,7 +276,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="croissant-one-regular min-w-0 max-w-[44vw] shrink truncate text-xl text-navy sm:max-w-none sm:text-2xl"
+            className="croissant-one-regular min-w-0 max-w-[44vw] shrink truncate text-2xl text-navy sm:max-w-none sm:text-3xl"
           >
             {brandName || dictionary.brand}
           </Link>
@@ -283,7 +291,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "rounded-md px-3 py-2 text-sm font-bold text-neutral-600 transition hover:bg-gold-50 hover:text-navy xl:px-4",
+                    "rounded-md px-3 py-2 text-sm font-bold text-neutral-600 transition hover:bg-neutral-50 hover:text-navy xl:px-4",
                     active && activeLinkClass
                   )}
                 >
@@ -304,7 +312,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={dictionary.nav.search}
-                className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
+                className="h-11 w-full rounded-md border border-neutral-200 bg-white pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-neutral-500 rtl:pl-3 rtl:pr-10"
               />
             </label>
           </form>
@@ -313,7 +321,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <select
               value={currency}
               onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
-              className="hidden h-10 rounded-md border border-gold-200 bg-white px-2 text-xs font-bold text-navy sm:block"
+              className="hidden h-10 rounded-md border border-neutral-200 bg-white px-2 text-xs font-bold text-navy sm:block"
               aria-label="Currency"
             >
               {currencyOptions.map((option) => (
@@ -326,7 +334,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <Link
               href={switchLocalePath(locale === "en" ? "ar" : "en")}
               onClick={() => persistLocale(locale === "en" ? "ar" : "en")}
-              className="hidden h-10 shrink-0 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy transition hover:bg-gold-50 sm:inline-flex"
+              className="hidden h-10 shrink-0 items-center gap-2 rounded-md border border-neutral-200 px-3 text-xs font-bold text-navy transition hover:bg-neutral-50 sm:inline-flex"
             >
               <Globe2 size={17} />
               {locale === "en" ? "AR" : "EN"}
@@ -459,8 +467,18 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       </div>
 
+      <div className="hidden border-t border-neutral-100 bg-white lg:block">
+        <nav className="mx-auto flex max-w-7xl items-center justify-center gap-7 overflow-x-auto px-4 py-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-neutral-600">
+          {fashionLinks.map((item) => (
+            <Link key={item.href} href={item.href} className="whitespace-nowrap transition hover:text-navy">
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
       {open ? (
-        <div className="border-t border-gold-100 bg-white lg:hidden">
+        <div className="border-t border-neutral-200 bg-white lg:hidden">
           <div className="mx-auto grid max-w-7xl gap-3 px-4 py-4 sm:px-6">
             <form onSubmit={submitSearch} className="relative">
               <Search
@@ -472,7 +490,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={dictionary.nav.search}
-                className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-gold-400 rtl:pl-3 rtl:pr-10"
+                className="h-11 w-full rounded-md border border-neutral-200 bg-white pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-neutral-500 rtl:pl-3 rtl:pr-10"
               />
             </form>
 
@@ -491,6 +509,19 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                   </Link>
                 );
               })}
+
+              <div className="grid gap-2 sm:col-span-2 sm:grid-cols-3">
+                {fashionLinks.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs font-extrabold uppercase tracking-[0.12em] text-neutral-600"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
 
               <Link
                 href={`/${locale}/admin/dashboard`}
@@ -524,7 +555,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 <select
                   value={currency}
                   onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
-                  className="h-10 rounded-md border border-gold-200 bg-white px-2 text-xs font-bold text-navy"
+                  className="h-10 rounded-md border border-neutral-200 bg-white px-2 text-xs font-bold text-navy"
                   aria-label="Currency"
                 >
                   {currencyOptions.map((option) => (
