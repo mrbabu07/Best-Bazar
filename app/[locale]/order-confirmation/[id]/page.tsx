@@ -210,13 +210,13 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={`/${locale}/shop`}
-            className="inline-flex h-11 items-center justify-center rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-semibold text-navy shadow-soft transition hover:from-gold-400 hover:to-gold-200"
+            className="inline-flex h-11 items-center justify-center rounded-md bg-neutral-950 px-5 text-sm font-semibold text-white transition hover:bg-neutral-800"
           >
             {dictionary.actions.continueShopping}
           </Link>
           <Link
             href={`/${locale}/account`}
-            className="inline-flex h-11 items-center justify-center rounded-md border border-gold-200 bg-white px-5 text-sm font-bold text-navy hover:bg-gold-50"
+            className="inline-flex h-11 items-center justify-center rounded-md border border-neutral-900 bg-white px-5 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-950 hover:text-white"
           >
             {dictionary.nav.account}
           </Link>

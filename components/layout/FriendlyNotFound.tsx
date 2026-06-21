@@ -28,7 +28,7 @@ export function FriendlyNotFound({ locale = defaultLocale }: FriendlyNotFoundPro
           <NotFoundBackButton label={isArabic ? "رجوع" : "Back"} />
           <Link
             href={homeHref}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-bold text-navy transition hover:from-gold-400 hover:to-gold-200"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-neutral-950 px-5 text-sm font-semibold text-white transition hover:bg-neutral-800"
           >
             <Home size={17} />
             {isArabic ? "الرئيسية" : "Home"}

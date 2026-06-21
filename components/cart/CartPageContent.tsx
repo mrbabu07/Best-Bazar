@@ -141,7 +141,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
           <p className="mt-3 text-neutral-600">{dictionary.cart.emptySubtitle}</p>
           <Link
             href={`/${locale}/shop`}
-            className="mt-6 inline-flex h-11 items-center rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-bold text-navy shadow-soft hover:from-gold-400 hover:to-gold-200"
+            className="mt-6 inline-flex h-11 items-center rounded-md bg-neutral-950 px-5 text-sm font-semibold text-white transition hover:bg-neutral-800"
           >
             {dictionary.actions.continueShopping}
           </Link>
@@ -292,7 +292,7 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
           </div>
           <Link
             href={`/${locale}/checkout`}
-            className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-md bg-gradient-to-r from-gold-500 to-gold-300 px-5 text-sm font-bold text-navy shadow-soft hover:from-gold-400 hover:to-gold-200"
+            className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-md bg-neutral-950 px-5 text-sm font-semibold text-white transition hover:bg-neutral-800"
           >
             {dictionary.actions.checkout}
           </Link>

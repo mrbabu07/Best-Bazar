@@ -9,10 +9,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants = {
   primary:
-    "bg-gradient-to-r from-gold-500 to-gold-300 text-navy shadow-soft hover:from-gold-400 hover:to-gold-200",
+    "bg-[var(--bb-ink,#111111)] text-white shadow-none hover:opacity-90",
   secondary:
-    "border border-gold-200 bg-white text-navy hover:border-gold-400 hover:bg-gold-50",
-  ghost: "text-navy hover:bg-gold-50",
+    "border border-neutral-900 bg-white text-neutral-950 hover:bg-neutral-950 hover:text-white",
+  ghost: "text-neutral-950 hover:bg-neutral-100",
   danger: "bg-sale text-white hover:bg-red-600"
 };
 
