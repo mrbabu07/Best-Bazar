@@ -21,26 +21,27 @@ export function FavouriteButton({ product, compact = false }: ProductActionsProp
   const hydrated = useHydrated();
   const toggle = useFavouriteStore((state) => state.toggle);
   const isFavourite = useFavouriteStore((state) => state.has(product.id));
+  const safeIsFavourite = hydrated && isFavourite;
 
   const handleClick = () => {
     toggle(product);
-    toast.success(isFavourite ? "Removed from favourites" : "Added to favourites");
+    toast.success(safeIsFavourite ? "Removed from favourites" : "Added to favourites");
   };
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      aria-pressed={hydrated && isFavourite}
-      aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
+      aria-pressed={safeIsFavourite}
+      aria-label={safeIsFavourite ? "Remove from favourites" : "Add to favourites"}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-md border border-neutral-200 bg-white font-bold text-navy shadow-sm transition hover:border-gold-300 hover:bg-gold-50",
         compact ? "h-9 w-9" : "h-12 px-4 text-sm",
-        hydrated && isFavourite && "border-red-100 bg-red-50 text-sale"
+        safeIsFavourite && "border-red-100 bg-red-50 text-sale"
       )}
     >
-      <Heart size={compact ? 17 : 18} className={hydrated && isFavourite ? "fill-current" : ""} />
-      {compact ? null : <span>{hydrated && isFavourite ? "Saved" : "Favourite"}</span>}
+      <Heart size={compact ? 17 : 18} className={safeIsFavourite ? "fill-current" : ""} />
+      {compact ? null : <span>{safeIsFavourite ? "Saved" : "Favourite"}</span>}
     </button>
   );
 }
