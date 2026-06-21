@@ -55,6 +55,22 @@ const categories = [
     slug: "beauty",
     image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80",
     sortOrder: 6
+  },
+  {
+    nameEn: "Niqab",
+    nameAr: "\u0646\u0642\u0627\u0628",
+    slug: "niqab",
+    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=900&q=80",
+    productType: "WOMENS_FASHION",
+    sortOrder: 7
+  },
+  {
+    nameEn: "Prayer Dress & Set",
+    nameAr: "\u0641\u0633\u0627\u062a\u064a\u0646 \u0648\u0623\u0637\u0642\u0645\u0629 \u0627\u0644\u0635\u0644\u0627\u0629",
+    slug: "prayer-dress-set",
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=900&q=80",
+    productType: "WOMENS_FASHION",
+    sortOrder: 8
   }
 ];
 
@@ -108,6 +124,108 @@ const products = [
     rating: "4.6",
     reviewCount: 203,
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80"
+  },
+  {
+    slug: "midnight-satin-abaya",
+    nameEn: "Midnight Satin Abaya",
+    nameAr: "\u0639\u0628\u0627\u064a\u0629 \u0633\u0627\u062a\u0627\u0646 \u0644\u064a\u0644\u064a\u0629",
+    descriptionEn: "A flowing satin abaya with a clean silhouette for everyday elegance.",
+    descriptionAr: "\u0639\u0628\u0627\u064a\u0629 \u0633\u0627\u062a\u0627\u0646 \u0627\u0646\u0633\u064a\u0627\u0628\u064a\u0629 \u0628\u062a\u0635\u0645\u064a\u0645 \u0623\u0646\u064a\u0642.",
+    categorySlug: "abaya-collection",
+    price: "299",
+    comparePrice: "359",
+    stock: 22,
+    sku: "BM-ABA-001",
+    brand: "Best Mart Modest",
+    isFeatured: true,
+    rating: "4.8",
+    reviewCount: 41,
+    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85"
+  },
+  {
+    slug: "sand-embroidered-abaya",
+    nameEn: "Sand Embroidered Abaya",
+    nameAr: "\u0639\u0628\u0627\u064a\u0629 \u0631\u0645\u0644\u064a\u0629 \u0645\u0637\u0631\u0632\u0629",
+    descriptionEn: "A soft sand-tone abaya with delicate embroidered sleeve detail.",
+    descriptionAr: "\u0639\u0628\u0627\u064a\u0629 \u0628\u0644\u0648\u0646 \u0631\u0645\u0644\u064a \u0648\u062a\u0641\u0627\u0635\u064a\u0644 \u0645\u0637\u0631\u0632\u0629.",
+    categorySlug: "abaya-collection",
+    price: "329",
+    comparePrice: "399",
+    stock: 18,
+    sku: "BM-ABA-002",
+    brand: "Best Mart Modest",
+    isFeatured: true,
+    rating: "4.7",
+    reviewCount: 29,
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85"
+  },
+  {
+    slug: "midnight-chiffon-niqab",
+    nameEn: "Midnight Chiffon Niqab",
+    nameAr: "\u0646\u0642\u0627\u0628 \u0634\u064a\u0641\u0648\u0646 \u0644\u064a\u0644\u064a",
+    descriptionEn: "Lightweight chiffon niqab designed for soft, breathable coverage.",
+    descriptionAr: "\u0646\u0642\u0627\u0628 \u0634\u064a\u0641\u0648\u0646 \u062e\u0641\u064a\u0641 \u0648\u0645\u0631\u064a\u062d.",
+    categorySlug: "niqab",
+    price: "79",
+    comparePrice: "99",
+    stock: 35,
+    sku: "BM-NIQ-001",
+    brand: "Best Mart Modest",
+    isFeatured: true,
+    rating: "4.9",
+    reviewCount: 64,
+    image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85"
+  },
+  {
+    slug: "pearl-soft-niqab",
+    nameEn: "Pearl Soft Niqab",
+    nameAr: "\u0646\u0642\u0627\u0628 \u0644\u0624\u0644\u0624\u064a \u0646\u0627\u0639\u0645",
+    descriptionEn: "A soft drape niqab with an adjustable fit for daily wear.",
+    descriptionAr: "\u0646\u0642\u0627\u0628 \u0646\u0627\u0639\u0645 \u0628\u0642\u0635\u0629 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u062a\u0639\u062f\u064a\u0644.",
+    categorySlug: "niqab",
+    price: "85",
+    comparePrice: "109",
+    stock: 27,
+    sku: "BM-NIQ-002",
+    brand: "Best Mart Modest",
+    isFeatured: false,
+    rating: "4.7",
+    reviewCount: 36,
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85"
+  },
+  {
+    slug: "moonlight-prayer-dress-set",
+    nameEn: "Moonlight Prayer Dress Set",
+    nameAr: "\u0637\u0642\u0645 \u0641\u0633\u062a\u0627\u0646 \u0635\u0644\u0627\u0629 \u0645\u0648\u0646\u0644\u0627\u064a\u062a",
+    descriptionEn: "A two-piece prayer dress set with a relaxed full-length fit.",
+    descriptionAr: "\u0637\u0642\u0645 \u0635\u0644\u0627\u0629 \u0645\u0646 \u0642\u0637\u0639\u062a\u064a\u0646 \u0628\u0642\u0635\u0629 \u0645\u0631\u064a\u062d\u0629.",
+    categorySlug: "prayer-dress-set",
+    price: "189",
+    comparePrice: "239",
+    stock: 20,
+    sku: "BM-PRY-001",
+    brand: "Best Mart Modest",
+    isFeatured: true,
+    rating: "4.8",
+    reviewCount: 52,
+    image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=85"
+  },
+  {
+    slug: "sage-prayer-dress-set",
+    nameEn: "Sage Prayer Dress Set",
+    nameAr: "\u0637\u0642\u0645 \u0641\u0633\u062a\u0627\u0646 \u0635\u0644\u0627\u0629 \u0633\u064a\u062c",
+    descriptionEn: "A graceful prayer set in a muted sage shade with an easy fit.",
+    descriptionAr: "\u0637\u0642\u0645 \u0635\u0644\u0627\u0629 \u0623\u0646\u064a\u0642 \u0628\u0644\u0648\u0646 \u0633\u064a\u062c \u0647\u0627\u062f\u0626.",
+    categorySlug: "prayer-dress-set",
+    price: "199",
+    comparePrice: "249",
+    stock: 16,
+    sku: "BM-PRY-002",
+    brand: "Best Mart Modest",
+    isFeatured: false,
+    rating: "4.6",
+    reviewCount: 21,
+    image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85"
   }
 ];
 
@@ -257,6 +375,32 @@ const productVariants = {
       sortOrder: 5,
       isActive: true
     }
+  ],
+  "midnight-satin-abaya": [
+    { colorNameEn: "Black", colorNameAr: "\u0623\u0633\u0648\u062f", colorHex: "#161616", sizeKey: "52", sizeNameEn: "52", sizeNameAr: "52", imageUrl: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85", sku: "BM-ABA-001-BLK-52", stock: 7, sortOrder: 0, isActive: true },
+    { colorNameEn: "Black", colorNameAr: "\u0623\u0633\u0648\u062f", colorHex: "#161616", sizeKey: "54", sizeNameEn: "54", sizeNameAr: "54", imageUrl: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85", sku: "BM-ABA-001-BLK-54", stock: 8, sortOrder: 1, isActive: true },
+    { colorNameEn: "Maroon", colorNameAr: "\u0645\u0627\u0631\u0648\u0646", colorHex: "#7f1d1d", sizeKey: "56", sizeNameEn: "56", sizeNameAr: "56", imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85", sku: "BM-ABA-001-MRN-56", stock: 7, sortOrder: 2, isActive: true }
+  ],
+  "sand-embroidered-abaya": [
+    { colorNameEn: "Sand", colorNameAr: "\u0631\u0645\u0644\u064a", colorHex: "#c4a484", sizeKey: "52", sizeNameEn: "52", sizeNameAr: "52", imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85", sku: "BM-ABA-002-SND-52", stock: 6, sortOrder: 0, isActive: true },
+    { colorNameEn: "Sand", colorNameAr: "\u0631\u0645\u0644\u064a", colorHex: "#c4a484", sizeKey: "54", sizeNameEn: "54", sizeNameAr: "54", imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85", sku: "BM-ABA-002-SND-54", stock: 6, sortOrder: 1, isActive: true },
+    { colorNameEn: "Olive", colorNameAr: "\u0632\u064a\u062a\u0648\u0646\u064a", colorHex: "#556b2f", sizeKey: "56", sizeNameEn: "56", sizeNameAr: "56", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85", sku: "BM-ABA-002-OLV-56", stock: 6, sortOrder: 2, isActive: true }
+  ],
+  "midnight-chiffon-niqab": [
+    { colorNameEn: "Black", colorNameAr: "\u0623\u0633\u0648\u062f", colorHex: "#171717", imageUrl: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1000&q=85", sku: "BM-NIQ-001-BLK", stock: 18, sortOrder: 0, isActive: true },
+    { colorNameEn: "Navy", colorNameAr: "\u0643\u062d\u0644\u064a", colorHex: "#1e3a5f", imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85", sku: "BM-NIQ-001-NVY", stock: 17, sortOrder: 1, isActive: true }
+  ],
+  "pearl-soft-niqab": [
+    { colorNameEn: "Pearl", colorNameAr: "\u0644\u0624\u0644\u0624\u064a", colorHex: "#f4f0e8", imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1000&q=85", sku: "BM-NIQ-002-PRL", stock: 14, sortOrder: 0, isActive: true },
+    { colorNameEn: "Taupe", colorNameAr: "\u062a\u0648\u0628", colorHex: "#8b6f61", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85", sku: "BM-NIQ-002-TPE", stock: 13, sortOrder: 1, isActive: true }
+  ],
+  "moonlight-prayer-dress-set": [
+    { colorNameEn: "Dusty Blue", colorNameAr: "\u0623\u0632\u0631\u0642 \u063a\u0628\u0627\u0631\u064a", colorHex: "#718096", sizeKey: "S/M", sizeNameEn: "S/M", sizeNameAr: "S/M", imageUrl: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=85", sku: "BM-PRY-001-BLU-SM", stock: 10, sortOrder: 0, isActive: true },
+    { colorNameEn: "Dusty Blue", colorNameAr: "\u0623\u0632\u0631\u0642 \u063a\u0628\u0627\u0631\u064a", colorHex: "#718096", sizeKey: "L/XL", sizeNameEn: "L/XL", sizeNameAr: "L/XL", imageUrl: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1000&q=85", sku: "BM-PRY-001-BLU-LX", stock: 10, sortOrder: 1, isActive: true }
+  ],
+  "sage-prayer-dress-set": [
+    { colorNameEn: "Sage", colorNameAr: "\u0633\u064a\u062c", colorHex: "#8a9a5b", sizeKey: "S/M", sizeNameEn: "S/M", sizeNameAr: "S/M", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85", sku: "BM-PRY-002-SGE-SM", stock: 8, sortOrder: 0, isActive: true },
+    { colorNameEn: "Sage", colorNameAr: "\u0633\u064a\u062c", colorHex: "#8a9a5b", sizeKey: "L/XL", sizeNameEn: "L/XL", sizeNameAr: "L/XL", imageUrl: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85", sku: "BM-PRY-002-SGE-LX", stock: 8, sortOrder: 1, isActive: true }
   ]
 };
 
