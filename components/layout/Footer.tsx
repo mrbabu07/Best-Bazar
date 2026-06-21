@@ -20,7 +20,7 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             {brandName || dictionary.brand}
           </Link>
           <p className="mt-4 max-w-md text-sm leading-6 text-neutral-600">
-            {dictionary.footer.tagline}
+            {locale === "ar" ? settings.storefrontContent.footerTaglineAr : settings.storefrontContent.footerTaglineEn}
           </p>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">
             {locale === "ar" ? "تابعنا" : "Follow us"}

@@ -170,6 +170,19 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
+  const updateStorefrontContent = <Key extends keyof ThemeSettings["storefrontContent"]>(
+    key: Key,
+    value: ThemeSettings["storefrontContent"][Key]
+  ) => {
+    setForm((current) => ({
+      ...current,
+      themeSettings: {
+        ...current.themeSettings,
+        storefrontContent: { ...current.themeSettings.storefrontContent, [key]: value }
+      }
+    }));
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -248,6 +261,27 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
 
   return (
     <form onSubmit={submit} className="grid gap-6 xl:grid-cols-2">
+      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div><h2 className="text-lg font-bold text-navy">Storefront copy</h2><p className="mt-1 text-sm text-neutral-500">Navigation, footer, and legal-page text shown to customers.</p></div>
+          <SectionSaveButton />
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          {[
+            ["navHomeEn", "Navigation home EN"], ["navHomeAr", "Navigation home AR"],
+            ["navShopEn", "Navigation shop EN"], ["navShopAr", "Navigation shop AR"],
+            ["navAccountEn", "Navigation account EN"], ["navAccountAr", "Navigation account AR"],
+            ["footerTaglineEn", "Footer tagline EN"], ["footerTaglineAr", "Footer tagline AR"],
+            ["privacyTitleEn", "Privacy title EN"], ["privacyTitleAr", "Privacy title AR"],
+            ["termsTitleEn", "Terms title EN"], ["termsTitleAr", "Terms title AR"]
+          ].map(([key, label]) => <label key={key} className="grid gap-2 text-sm font-semibold text-navy">{label}<input value={form.themeSettings.storefrontContent[key as keyof ThemeSettings["storefrontContent"]]} onChange={(event) => updateStorefrontContent(key as keyof ThemeSettings["storefrontContent"], event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" /></label>)}
+          {[
+            ["privacyBodyEn", "Privacy text EN"], ["privacyBodyAr", "Privacy text AR"],
+            ["termsBodyEn", "Terms text EN"], ["termsBodyAr", "Terms text AR"]
+          ].map(([key, label]) => <label key={key} className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">{label}<textarea rows={4} value={form.themeSettings.storefrontContent[key as keyof ThemeSettings["storefrontContent"]]} onChange={(event) => updateStorefrontContent(key as keyof ThemeSettings["storefrontContent"], event.target.value)} className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm" /></label>)}
+        </div>
+      </section>
+
       <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-bold text-navy">Store identity</h2>

@@ -13,6 +13,21 @@ export type ThemeSettings = {
   maintenanceTitleAr: string;
   maintenanceMessageEn: string;
   maintenanceMessageAr: string;
+  storefrontContent: StorefrontContent;
+};
+
+export type StorefrontContent = {
+  navHomeEn: string; navHomeAr: string; navShopEn: string; navShopAr: string; navAccountEn: string; navAccountAr: string;
+  footerTaglineEn: string; footerTaglineAr: string;
+  privacyTitleEn: string; privacyTitleAr: string; privacyBodyEn: string; privacyBodyAr: string;
+  termsTitleEn: string; termsTitleAr: string; termsBodyEn: string; termsBodyAr: string;
+};
+
+export const defaultStorefrontContent: StorefrontContent = {
+  navHomeEn: "Home", navHomeAr: "الرئيسية", navShopEn: "Shop", navShopAr: "المتجر", navAccountEn: "Account", navAccountAr: "الحساب",
+  footerTaglineEn: "Dubai shopping, curated for everyday life.", footerTaglineAr: "تسوق دبي مختار للحياة اليومية.",
+  privacyTitleEn: "Privacy policy", privacyTitleAr: "سياسة الخصوصية", privacyBodyEn: "We collect and use customer details only to process orders, delivery, payments, support, and legal requirements.", privacyBodyAr: "نجمع ونستخدم بيانات العملاء فقط لمعالجة الطلبات والتوصيل والدفع والدعم والمتطلبات القانونية.",
+  termsTitleEn: "Terms and conditions", termsTitleAr: "الشروط والأحكام", termsBodyEn: "Orders are accepted after stock, delivery address, and payment details are validated. Delivery and return terms are managed by the store.", termsBodyAr: "يتم قبول الطلبات بعد التحقق من المخزون وعنوان التوصيل وبيانات الدفع. تتم إدارة شروط التوصيل والإرجاع بواسطة المتجر."
 };
 
 export const defaultThemeSettings: ThemeSettings = {
@@ -27,7 +42,8 @@ export const defaultThemeSettings: ThemeSettings = {
   maintenanceTitleEn: "We are updating Best Mart",
   maintenanceTitleAr: "We are updating Best Mart",
   maintenanceMessageEn: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
-  maintenanceMessageAr: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon."
+  maintenanceMessageAr: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
+  storefrontContent: defaultStorefrontContent
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -40,6 +56,9 @@ function color(value: unknown, fallback: string) {
 
 export function normalizeThemeSettings(value: unknown): ThemeSettings {
   const input = isRecord(value) ? value : {};
+  const content = isRecord(input.storefrontContent) ? input.storefrontContent : {};
+  const contentValue = (key: keyof StorefrontContent) =>
+    typeof content[key] === "string" && content[key].trim() ? (content[key] as string) : defaultStorefrontContent[key];
 
   return {
     primaryColor: color(input.primaryColor, defaultThemeSettings.primaryColor),
@@ -71,7 +90,10 @@ export function normalizeThemeSettings(value: unknown): ThemeSettings {
     maintenanceMessageAr:
       typeof input.maintenanceMessageAr === "string" && input.maintenanceMessageAr.trim()
         ? input.maintenanceMessageAr
-        : defaultThemeSettings.maintenanceMessageAr
+        : defaultThemeSettings.maintenanceMessageAr,
+    storefrontContent: Object.fromEntries(
+      Object.keys(defaultStorefrontContent).map((key) => [key, contentValue(key as keyof StorefrontContent)])
+    ) as StorefrontContent
   };
 }
 

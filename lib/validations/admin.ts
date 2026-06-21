@@ -77,7 +77,17 @@ const themeSettingsSchema = z.object({
   maintenanceTitleEn: z.string().trim().default("We are updating Best Mart"),
   maintenanceTitleAr: z.string().trim().default("We are updating Best Mart"),
   maintenanceMessageEn: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
-  maintenanceMessageAr: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon.")
+  maintenanceMessageAr: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
+  storefrontContent: z.object({
+    navHomeEn: z.string().trim().default(""), navHomeAr: z.string().trim().default(""),
+    navShopEn: z.string().trim().default(""), navShopAr: z.string().trim().default(""),
+    navAccountEn: z.string().trim().default(""), navAccountAr: z.string().trim().default(""),
+    footerTaglineEn: z.string().trim().default(""), footerTaglineAr: z.string().trim().default(""),
+    privacyTitleEn: z.string().trim().default(""), privacyTitleAr: z.string().trim().default(""),
+    privacyBodyEn: z.string().trim().default(""), privacyBodyAr: z.string().trim().default(""),
+    termsTitleEn: z.string().trim().default(""), termsTitleAr: z.string().trim().default(""),
+    termsBodyEn: z.string().trim().default(""), termsBodyAr: z.string().trim().default("")
+  }).default({})
 });
 const shippingRateSchema = z.object({
   emirate: z.string().trim().min(1).optional(),

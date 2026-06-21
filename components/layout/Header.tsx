@@ -76,9 +76,9 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const colorMode = hydrated ? storedColorMode : "light";
 
   const navItems = [
-    { label: dictionary.nav.home, href: `/${locale}` },
-    { label: dictionary.nav.shop, href: `/${locale}/shop` },
-    { label: dictionary.nav.account, href: `/${locale}/account` }
+    { label: locale === "ar" ? settings.storefrontContent.navHomeAr : settings.storefrontContent.navHomeEn, href: `/${locale}` },
+    { label: locale === "ar" ? settings.storefrontContent.navShopAr : settings.storefrontContent.navShopEn, href: `/${locale}/shop` },
+    { label: locale === "ar" ? settings.storefrontContent.navAccountAr : settings.storefrontContent.navAccountEn, href: `/${locale}/account` }
   ];
   const fashionLinks = categories
     .filter((category) => !category.parentCategoryId)

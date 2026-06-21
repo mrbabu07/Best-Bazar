@@ -1,5 +1,6 @@
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { ThemeSettings } from "@/lib/theme-config";
+import type { StorefrontContent } from "@/lib/theme-config";
 import type { CurrencyRates } from "@/utils/currency";
 import type { ShippingSettings } from "@/utils/shipping";
 
@@ -19,6 +20,7 @@ export type StorefrontFrameSettings = {
   currencyRates: CurrencyRates;
   shippingSettings: ShippingSettings;
   themeSettings: ThemeSettings;
+  storefrontContent: StorefrontContent;
 };
 
 export type StorefrontFrameProps = {

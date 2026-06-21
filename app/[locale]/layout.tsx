@@ -73,6 +73,8 @@ async function getFrameSettings() {
     console.error("Public settings unavailable. Rendering storefront defaults.", error);
   }
 
+  const themeSettings = normalizeThemeSettings(settings?.themeSettings);
+
   return {
     storeNameEn: settings?.storeNameEn ?? "Best Mart",
     storeNameAr: settings?.storeNameAr ?? "Best Mart",
@@ -92,7 +94,8 @@ async function getFrameSettings() {
       USD: settings?.aedToUsd
     }),
     shippingSettings: normalizeShippingSettings(settings),
-    themeSettings: normalizeThemeSettings(settings?.themeSettings)
+    themeSettings,
+    storefrontContent: themeSettings.storefrontContent
   };
 }
 
