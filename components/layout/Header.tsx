@@ -143,7 +143,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   ];
   const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
   const iconButtonClass =
-    "grid h-10 w-10 shrink-0 place-items-center rounded-md border border-neutral-200 text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
+    "grid h-9 w-9 shrink-0 place-items-center rounded-md border border-neutral-200 text-navy transition hover:border-neutral-300 hover:bg-neutral-50 sm:h-10 sm:w-10";
   const mobileLinkClass =
     "flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
 
@@ -286,7 +286,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       ) : null}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative flex min-h-16 items-center gap-2 py-3 lg:min-h-[5.75rem] lg:gap-4">
+        <div className="relative flex min-h-14 items-center gap-2 py-2.5 sm:min-h-16 sm:py-3 lg:min-h-[5.75rem] lg:gap-4">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -300,7 +300,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="croissant-one-regular absolute left-1/2 z-10 max-w-[46vw] -translate-x-1/2 truncate text-xl text-neutral-950 sm:max-w-none sm:text-2xl"
+            className="croissant-one-regular pointer-events-none absolute left-1/2 z-10 max-w-[calc(100%-11rem)] -translate-x-1/2 truncate text-base text-neutral-950 sm:max-w-none sm:text-2xl"
           >
             {brandName || dictionary.brand}
           </Link>
@@ -340,7 +340,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <button
               type="button"
               onClick={toggleColorMode}
-              className={iconButtonClass}
+              className={`hidden ${iconButtonClass} sm:grid`}
               aria-label={colorMode === "dark" ? "Use light mode" : "Use dark mode"}
             >
               {colorMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
@@ -363,7 +363,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               <User size={18} />
             </Link>
 
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((value) => !value)}
