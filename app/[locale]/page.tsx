@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { HeroSlide } from "@/components/home/HeroSlider";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -13,12 +13,11 @@ import { getDictionary, getLocalized, isLocale, type Locale } from "@/lib/i18n";
 import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories, getStoreProducts } from "@/lib/storefront";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
+export const dynamic = "force-dynamic";
 
-const HeroSlider = dynamic(() => import("@/components/home/HeroSlider").then((module) => module.HeroSlider), {
+const HeroSlider = nextDynamic(() => import("@/components/home/HeroSlider").then((module) => module.HeroSlider), {
   loading: () => <section className="min-h-[420px] bg-neutral-100" />
 });
-
-export function generateStaticParams() { return [{ locale: "en" }, { locale: "ar" }]; }
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return { title: params.locale === "ar" ? "Best Mart" : "Best Mart", description: "Dubai online shopping." };

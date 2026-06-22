@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductDetail } from "@/components/product/ProductDetail";
@@ -7,11 +7,12 @@ import { BackButton } from "@/components/ui/BackButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
-import { getProductBySlugOrId, getProductReviews, getRelatedProducts, getSitemapProducts } from "@/lib/storefront";
+import { getProductBySlugOrId, getProductReviews, getRelatedProducts } from "@/lib/storefront";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
+export const dynamic = "force-dynamic";
 
-const ProductReviews = dynamic(
+const ProductReviews = nextDynamic(
   () => import("@/components/product/ProductReviews").then((module) => module.ProductReviews),
   {
     loading: () => <div className="mt-16 rounded-lg border border-neutral-200 bg-white p-6 shadow-soft" />
@@ -24,15 +25,6 @@ type ProductPageProps = {
     id: string;
   };
 };
-
-export async function generateStaticParams() {
-  const products = await getSitemapProducts();
-
-  return products.flatMap((product) => [
-    { locale: "en", id: product.slug },
-    { locale: "ar", id: product.slug }
-  ]);
-}
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const product = await getProductBySlugOrId(params.id);

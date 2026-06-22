@@ -14,10 +14,7 @@ import {
 } from "@/lib/storefront";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
-
-export function generateStaticParams() {
-  return [{ locale: "en" }, { locale: "ar" }];
-}
+export const dynamic = "force-dynamic";
 
 type ShopPageProps = {
   params: { locale: string };
