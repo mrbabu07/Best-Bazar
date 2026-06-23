@@ -436,14 +436,21 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                   Choose one fee for every delivery area, or use the individual emirate rates below.
                 </p>
               </div>
-              <label className="inline-flex items-center gap-2 text-sm font-bold text-navy">
-                <input
-                  type="checkbox"
-                  checked={form.customAreaFee.enabled}
-                  onChange={(event) => updateCustomAreaFee("enabled", event.target.checked)}
-                  className="h-4 w-4 accent-black"
-                />
-                Overall area fee
+            </div>
+            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
+              <label className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition ${form.customAreaFee.enabled ? "border-neutral-950 bg-white" : "border-neutral-200 bg-white/60"}`}>
+                <input type="radio" name="shipping-price-mode" checked={form.customAreaFee.enabled} onChange={() => updateCustomAreaFee("enabled", true)} className="mt-1 h-4 w-4 accent-black" />
+                <span>
+                  <span className="block text-sm font-bold text-neutral-950">Overall area fee</span>
+                  <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">Customer types their area. One central fee applies everywhere.</span>
+                </span>
+              </label>
+              <label className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition ${!form.customAreaFee.enabled ? "border-neutral-950 bg-white" : "border-neutral-200 bg-white/60"}`}>
+                <input type="radio" name="shipping-price-mode" checked={!form.customAreaFee.enabled} onChange={() => updateCustomAreaFee("enabled", false)} className="mt-1 h-4 w-4 accent-black" />
+                <span>
+                  <span className="block text-sm font-bold text-neutral-950">Emirate-wise fee</span>
+                  <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">Customer chooses an emirate from a dropdown. Each emirate has its own fee.</span>
+                </span>
               </label>
             </div>
             {form.customAreaFee.enabled ? (

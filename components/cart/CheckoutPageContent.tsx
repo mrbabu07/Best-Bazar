@@ -15,7 +15,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
-import { defaultShippingSettings, getShippingFee } from "@/utils/shipping";
+import { defaultShippingSettings, getShippingFee, normalizeShippingSettings } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { BackButton } from "@/components/ui/BackButton";
@@ -167,6 +167,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const storedCurrencyRates = usePreferencesStore((state) => state.currencyRates);
   const storedShippingSettings = usePreferencesStore((state) => state.shippingSettings);
+  const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
   const items = hydrated ? storedItems : [];
   const subtotal = hydrated ? storedSubtotal : 0;
   const currency = hydrated ? storedCurrency : "AED";
@@ -241,6 +242,42 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     ],
     [dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable, shippingQuote.rate.emirate]
   );
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshShippingSettings = async () => {
+      try {
+        const response = await fetch("/api/settings", { cache: "no-store" });
+
+        if (!response.ok || !active) {
+          return;
+        }
+
+        const data = await safeResponseJson<Record<string, unknown>>(response, {});
+
+        if (!active) {
+          return;
+        }
+
+        setStorefrontSettings({
+          currencyRates: usePreferencesStore.getState().currencyRates,
+          shippingSettings: normalizeShippingSettings({
+            freeShippingThreshold: data.freeShippingThreshold,
+            shippingRates: data.shippingRates
+          })
+        });
+      } catch {
+        // Keep the already loaded settings when the public refresh is unavailable.
+      }
+    };
+
+    void refreshShippingSettings();
+
+    return () => {
+      active = false;
+    };
+  }, [setStorefrontSettings]);
   const visiblePaymentOptions = useMemo(
     () => paymentOptions.filter((option) => option.enabled),
     [paymentOptions]
