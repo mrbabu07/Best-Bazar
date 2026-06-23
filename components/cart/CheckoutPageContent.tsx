@@ -47,6 +47,7 @@ type CheckoutField = {
   type: string;
   autoComplete: string;
   defaultValue?: string;
+  placeholder?: string;
   required?: boolean;
 };
 
@@ -487,7 +488,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         tower: "",
         city: String(formData.get("city") ?? ""),
         emirate: String(formData.get("emirate") ?? ""),
-        country: String(formData.get("country") ?? "UAE")
+        country: "UAE"
       },
       deliverySlot: undefined,
       paymentMethod: paymentMethod(),
@@ -563,10 +564,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       name: "apartment",
       label: "Apartment / villa no.",
       type: "text",
-      autoComplete: "address-line3"
+      autoComplete: "address-line3",
+      placeholder: "Apartment, suite, etc. (optional)"
     },
-    { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", defaultValue: "Dubai" },
-    { name: "country", label: labels.fields.country, type: "text", autoComplete: "country-name", defaultValue: "UAE" }
+    { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: "City" }
   ];
 
   return (
@@ -624,12 +625,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     type={field.type}
                     autoComplete={field.autoComplete}
                     defaultValue={field.defaultValue}
+                    placeholder={field.placeholder}
                     required={field.required !== false}
                     className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                   />
                 </label>
               ))}
-              <div className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+              <div className="grid gap-2 text-sm font-semibold text-navy">
                 {labels.shippingArea}
                 {usesCustomAreaFee ? (
                   <input
@@ -638,7 +640,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     onChange={(event) => setCustomArea(event.target.value)}
                     placeholder={shippingSettings.customAreaFee.areaLabel}
                     required
-                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+                    className="h-11 rounded-md border-2 border-neutral-950 bg-white px-3 text-sm font-medium text-neutral-700"
                   />
                 ) : (
                   <select

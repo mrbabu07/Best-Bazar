@@ -298,7 +298,7 @@ export function ProductFilters({
           </div>
         </div>
 
-        {sizes.length ? (
+        {false && sizes.length ? (
           <div className="grid gap-2 text-sm font-semibold text-navy">
             <div className="flex items-center justify-between gap-3">
               <p>{labels.size}</p>

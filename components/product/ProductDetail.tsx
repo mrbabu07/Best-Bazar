@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Minus, Plus, RefreshCcw, ShieldCheck, ShoppingBag, Star, Truck } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -80,6 +81,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const [activeImage, setActiveImage] = useState(0);
   const [selectedVariantId, setSelectedVariantId] = useState(firstAvailableVariant?.id ?? "");
   const [quantity, setQuantity] = useState(1);
+  const router = useRouter();
   const productName = getDisplayName(product.name, locale);
   const addItem = useCartStore((state) => state.addItem);
   const storedCurrency = usePreferencesStore((state) => state.currency);
@@ -137,6 +139,11 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   const handleAdd = () => {
     addItem(product, quantity, selectedVariant);
     toast.success(labels.addedToCart(quantity, productName));
+  };
+
+  const handleBuyNow = () => {
+    addItem(product, quantity, selectedVariant);
+    router.push(`/${locale}/checkout`);
   };
 
   const selectVariant = (variantId: string) => {
@@ -358,10 +365,15 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             </button>
           </div>
 
-          <Button onClick={handleAdd} size="lg" disabled={availableStock <= 0}>
-            <ShoppingBag size={18} />
-            {dictionary.actions.addToCart}
-          </Button>
+          <div className="grid flex-1 gap-2 sm:grid-cols-2">
+            <Button onClick={handleAdd} size="lg" disabled={availableStock <= 0}>
+              <ShoppingBag size={18} />
+              {dictionary.actions.addToCart}
+            </Button>
+            <Button onClick={handleBuyNow} variant="secondary" size="lg" disabled={availableStock <= 0}>
+              Buy now
+            </Button>
+          </div>
           <FavouriteButton product={product} locale={locale} />
           <ShareProductButton product={product} locale={locale} />
         </div>
