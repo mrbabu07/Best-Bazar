@@ -47,6 +47,13 @@ export default async function AdminSettingsPage({ params }: { params: { locale: 
     aedToBdt: String(settings.aedToBdt),
     aedToUsd: String(settings.aedToUsd),
     freeShippingThreshold: String(settings.freeShippingThreshold),
+    customAreaFee: {
+      enabled: shippingSettings.customAreaFee.enabled,
+      areaLabel: shippingSettings.customAreaFee.areaLabel,
+      fee: String(shippingSettings.customAreaFee.fee),
+      deliveryDays: shippingSettings.customAreaFee.deliveryDays,
+      codAvailable: shippingSettings.customAreaFee.codAvailable
+    },
     courierSettings: normalizeCourierSettings(settings.courierSettings),
     paymentSettings,
     themeSettings: normalizeThemeSettings(settings.themeSettings),

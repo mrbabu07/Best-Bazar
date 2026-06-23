@@ -267,7 +267,7 @@ export const settingsSchema = z.object({
   aedToBdt: money,
   aedToUsd: money,
   freeShippingThreshold: money,
-  shippingRates: z.union([z.array(shippingRateSchema), z.record(shippingRateSchema)]),
+  shippingRates: z.union([z.array(shippingRateSchema), z.record(z.unknown())]),
   courierSettings: courierSettingsSchema,
   paymentSettings: paymentSettingsSchema,
   themeSettings: themeSettingsSchema,

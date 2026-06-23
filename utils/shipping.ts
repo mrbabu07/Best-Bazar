@@ -31,6 +31,15 @@ export type ShippingRateRecord = Record<
 export type ShippingSettings = {
   freeShippingThreshold: number;
   shippingRates: ShippingRate[];
+  customAreaFee: CustomAreaFee;
+};
+
+export type CustomAreaFee = {
+  enabled: boolean;
+  areaLabel: string;
+  fee: number;
+  deliveryDays: string;
+  codAvailable: boolean;
 };
 
 export type ShippingQuote = {
@@ -63,7 +72,14 @@ const defaultRateRecord: ShippingRateRecord = {
 
 export const defaultShippingSettings: ShippingSettings = {
   freeShippingThreshold: 250,
-  shippingRates: normalizeShippingRateRecord(defaultRateRecord, 250)
+  shippingRates: normalizeShippingRateRecord(defaultRateRecord, 250),
+  customAreaFee: {
+    enabled: false,
+    areaLabel: "Delivery area",
+    fee: 0,
+    deliveryDays: "1-2",
+    codAvailable: true
+  }
 };
 
 function normalizeMoney(value: unknown, fallback: number) {
@@ -78,6 +94,18 @@ function normalizeText(value: unknown, fallback: string) {
 
 function normalizeBoolean(value: unknown, fallback: boolean) {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function normalizeCustomAreaFee(value: unknown): CustomAreaFee {
+  const custom = value && typeof value === "object" ? value as Record<string, unknown> : {};
+
+  return {
+    enabled: normalizeBoolean(custom.enabled, defaultShippingSettings.customAreaFee.enabled),
+    areaLabel: normalizeText(custom.areaLabel, defaultShippingSettings.customAreaFee.areaLabel),
+    fee: normalizeMoney(custom.fee ?? custom.cost, defaultShippingSettings.customAreaFee.fee),
+    deliveryDays: normalizeText(custom.deliveryDays ?? custom.days, defaultShippingSettings.customAreaFee.deliveryDays),
+    codAvailable: normalizeBoolean(custom.codAvailable ?? custom.cod, defaultShippingSettings.customAreaFee.codAvailable)
+  };
 }
 
 function emirateByKey(key: string) {
@@ -165,9 +193,14 @@ export function normalizeShippingSettings(settings?: Partial<{
     defaultShippingSettings.freeShippingThreshold
   );
 
+  const customAreaFee = settings?.shippingRates && typeof settings.shippingRates === "object" && !Array.isArray(settings.shippingRates)
+    ? normalizeCustomAreaFee((settings.shippingRates as Record<string, unknown>).customAreaFee)
+    : defaultShippingSettings.customAreaFee;
+
   return {
     freeShippingThreshold,
-    shippingRates: normalizeShippingRates(settings?.shippingRates, freeShippingThreshold)
+    shippingRates: normalizeShippingRates(settings?.shippingRates, freeShippingThreshold),
+    customAreaFee
   };
 }
 
@@ -181,6 +214,28 @@ export function getShippingFee(
     freeShippingThreshold,
     shippingRates
   });
+  if (settings.customAreaFee.enabled) {
+    const custom = settings.customAreaFee;
+    const area = normalizeText(emirate, custom.areaLabel);
+    const rate: ShippingRate = {
+      key: "custom-area",
+      emirate: area,
+      nameEn: custom.areaLabel,
+      nameAr: custom.areaLabel,
+      cost: custom.fee,
+      freeFrom: Number.MAX_SAFE_INTEGER,
+      deliveryDays: custom.deliveryDays,
+      codAvailable: custom.codAvailable
+    };
+
+    return {
+      fee: custom.fee,
+      isFree: false,
+      estimatedDays: custom.deliveryDays,
+      codAvailable: custom.codAvailable,
+      rate
+    };
+  }
   const key = emirateKey(emirate);
   const rate =
     settings.shippingRates.find((item) => item.key === key) ??
@@ -203,8 +258,8 @@ export function getShippingCost(settings: ShippingSettings, emirate: string, sub
   return getShippingFee(emirate, subtotal, settings.shippingRates, settings.freeShippingThreshold).fee;
 }
 
-export function shippingRatesToRecord(rates: ShippingRate[]): ShippingRateRecord {
-  return rates.reduce<ShippingRateRecord>((record, rate) => {
+export function shippingRatesToRecord(rates: ShippingRate[], customAreaFee?: CustomAreaFee): ShippingRateRecord {
+  const record = rates.reduce<ShippingRateRecord>((record, rate) => {
     record[rate.key] = {
       fee: rate.cost,
       freeFrom: rate.freeFrom,
@@ -214,4 +269,10 @@ export function shippingRatesToRecord(rates: ShippingRate[]): ShippingRateRecord
 
     return record;
   }, {});
+
+  if (customAreaFee) {
+    (record as Record<string, unknown>).customAreaFee = customAreaFee;
+  }
+
+  return record;
 }

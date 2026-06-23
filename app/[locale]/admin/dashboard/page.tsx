@@ -285,7 +285,7 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                   className={
                     item.tone === "primary"
                       ? "inline-flex h-11 items-center justify-center gap-2 rounded-md bg-navy px-4 text-sm font-bold text-white hover:bg-neutral-800"
-                      : "inline-flex h-11 items-center justify-center gap-2 rounded-md border border-gold-200 bg-white px-4 text-sm font-bold text-navy hover:bg-gold-50"
+                      : "inline-flex h-11 items-center justify-center gap-2 rounded-md border border-neutral-300 bg-white px-4 text-sm font-bold text-neutral-950 hover:bg-neutral-100"
                   }
                 >
                   <Icon size={17} />
@@ -297,11 +297,11 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
         }
       />
 
-      <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+      <section className="mb-6 rounded-lg border border-neutral-200 bg-white p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">Control summary</p>
-            <h2 className="mt-2 text-xl font-bold text-navy">Quick actions and priority alerts</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Control summary</p>
+            <h2 className="mt-2 text-xl font-bold text-neutral-950">Quick actions and priority alerts</h2>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-neutral-500">
               Use the grouped sidebar for full routing. This panel keeps the most common shortcuts and alerts close.
             </p>
@@ -319,28 +319,28 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex min-h-16 items-center justify-between gap-3 rounded-md border border-neutral-200 bg-paper px-4 py-3 text-sm font-bold text-navy transition hover:border-gold-300 hover:bg-gold-50"
+                  className="flex min-h-16 items-center justify-between gap-3 rounded-md border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-950 transition hover:border-neutral-400 hover:bg-neutral-50"
                 >
                   <span className="inline-flex min-w-0 items-center gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white text-gold-700">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-neutral-950 text-white">
                       <Icon size={17} />
                     </span>
                     <span className="truncate">{item.label}</span>
                   </span>
                   <span className="inline-flex items-center gap-2">
                     {count > 0 ? <Badge tone="red">{count > 99 ? "99+" : count}</Badge> : null}
-                    <span className="text-gold-700">-&gt;</span>
+                    <span className="text-neutral-500">-&gt;</span>
                   </span>
                 </Link>
               );
             })}
           </div>
 
-          <div id="notifications" className="scroll-mt-24 rounded-md border border-gold-100 bg-gold-50 p-4">
+          <div id="notifications" className="scroll-mt-24 rounded-md border border-neutral-200 bg-neutral-50 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Bell size={18} className="text-gold-800" />
-                <h3 className="font-bold text-navy">Notifications</h3>
+                <Bell size={18} className="text-neutral-900" />
+                <h3 className="font-bold text-neutral-950">Notifications</h3>
               </div>
               <Badge tone={notificationCount > 0 ? "red" : "green"}>{notificationCount}</Badge>
             </div>
@@ -352,10 +352,10 @@ export default async function AdminDashboardPage({ params }: { params: { locale:
                   <Link
                     key={item.label}
                     href={item.href}
-                    className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2 text-sm font-bold text-navy transition hover:bg-gold-100"
+                    className="flex items-center justify-between gap-3 rounded-md bg-white px-3 py-2 text-sm font-bold text-neutral-950 transition hover:bg-neutral-100"
                   >
                     <span className="inline-flex min-w-0 items-center gap-2">
-                      <Icon size={16} className="shrink-0 text-gold-700" />
+                      <Icon size={16} className="shrink-0 text-neutral-700" />
                       <span className="truncate">{item.label}</span>
                     </span>
                     <span className="flex items-center gap-2">
