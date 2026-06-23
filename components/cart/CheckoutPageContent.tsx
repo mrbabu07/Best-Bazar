@@ -69,7 +69,7 @@ const checkoutCopy = {
       name: "Full name",
       email: "Email",
       phone: "Phone",
-      street: "Street address",
+      street: "Address",
       city: "City",
       country: "Country"
     }
