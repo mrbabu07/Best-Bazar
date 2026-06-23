@@ -431,9 +431,9 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
           <div className="grid gap-4 rounded-md border border-neutral-300 bg-neutral-50 p-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="font-bold text-navy">Custom delivery area fee</p>
+                <p className="font-bold text-navy">Shipping price mode</p>
                 <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
-                  Enable this when delivery is priced with one central fee. Checkout will ask customers to type their area instead of choosing an emirate.
+                  Choose one fee for every delivery area, or use the individual emirate rates below.
                 </p>
               </div>
               <label className="inline-flex items-center gap-2 text-sm font-bold text-navy">
@@ -443,13 +443,13 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                   onChange={(event) => updateCustomAreaFee("enabled", event.target.checked)}
                   className="h-4 w-4 accent-black"
                 />
-                Use custom area fee
+                Overall area fee
               </label>
             </div>
             {form.customAreaFee.enabled ? (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
                 <label className="grid gap-2 text-sm font-semibold text-navy">
-                  Area field label
+                  Checkout area label
                   <input value={form.customAreaFee.areaLabel} onChange={(event) => updateCustomAreaFee("areaLabel", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
                 </label>
                 <label className="grid gap-2 text-sm font-semibold text-navy">
@@ -465,72 +465,52 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                   COD available
                 </label>
               </div>
-            ) : null}
+            ) : (
+              <p className="border-t border-neutral-200 pt-4 text-xs font-semibold leading-5 text-neutral-500">
+                Emirate-wise shipping is active. Customers will choose an emirate from a dropdown at checkout.
+              </p>
+            )}
           </div>
-          <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
-            <table className="min-w-[760px] divide-y divide-neutral-200 text-sm">
-              <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-                <tr>
-                  <th className="px-3 py-3">Emirate</th>
-                  <th className="px-3 py-3">Shipping Fee (AED)</th>
-                  <th className="px-3 py-3">Free Shipping From (AED)</th>
-                  <th className="px-3 py-3">Est. Days</th>
-                  <th className="px-3 py-3">COD Available</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {form.shippingRates.map((rate, index) => (
-                  <tr key={rate.key} className="align-middle">
-                    <td className="px-3 py-3">
-                      <p className="font-bold text-navy">{locale === "ar" ? rate.nameAr : rate.nameEn}</p>
-                      <p className="mt-1 text-xs font-semibold text-neutral-400">{rate.key}</p>
-                    </td>
-                    <td className="px-3 py-3">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={rate.cost}
-                        onChange={(event) => updateRate(index, "cost", event.target.value)}
-                        required
-                        className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={rate.freeFrom}
-                        onChange={(event) => updateRate(index, "freeFrom", event.target.value)}
-                        required
-                        className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <input
-                        value={rate.deliveryDays}
-                        onChange={(event) => updateRate(index, "deliveryDays", event.target.value)}
-                        required
-                        className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <label className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-3 text-xs font-bold text-navy">
-                        <input
-                          type="checkbox"
-                          checked={rate.codAvailable}
-                          onChange={(event) => updateRate(index, "codAvailable", event.target.checked)}
-                          className="accent-gold-500"
-                        />
-                        COD
-                      </label>
-                    </td>
+          {!form.customAreaFee.enabled ? (
+            <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+              <table className="min-w-[760px] divide-y divide-neutral-200 text-sm">
+                <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
+                  <tr>
+                    <th className="px-3 py-3">Emirate</th>
+                    <th className="px-3 py-3">Shipping Fee (AED)</th>
+                    <th className="px-3 py-3">Free Shipping From (AED)</th>
+                    <th className="px-3 py-3">Est. Days</th>
+                    <th className="px-3 py-3">COD Available</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {form.shippingRates.map((rate, index) => (
+                    <tr key={rate.key} className="align-middle">
+                      <td className="px-3 py-3">
+                        <p className="font-bold text-navy">{locale === "ar" ? rate.nameAr : rate.nameEn}</p>
+                        <p className="mt-1 text-xs font-semibold text-neutral-400">{rate.key}</p>
+                      </td>
+                      <td className="px-3 py-3">
+                        <input type="number" min="0" step="0.01" value={rate.cost} onChange={(event) => updateRate(index, "cost", event.target.value)} required className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+                      </td>
+                      <td className="px-3 py-3">
+                        <input type="number" min="0" step="0.01" value={rate.freeFrom} onChange={(event) => updateRate(index, "freeFrom", event.target.value)} required className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+                      </td>
+                      <td className="px-3 py-3">
+                        <input value={rate.deliveryDays} onChange={(event) => updateRate(index, "deliveryDays", event.target.value)} required className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+                      </td>
+                      <td className="px-3 py-3">
+                        <label className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-3 text-xs font-bold text-navy">
+                          <input type="checkbox" checked={rate.codAvailable} onChange={(event) => updateRate(index, "codAvailable", event.target.checked)} className="accent-gold-500" />
+                          COD
+                        </label>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
           <Button type="submit" variant="secondary" disabled={saving}>
             <Save size={16} />
             {saving ? "Saving..." : "Save Shipping Rates"}
