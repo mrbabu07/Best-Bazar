@@ -355,7 +355,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         .filter(Boolean)
         .join(" ")
         .trim();
-      const tower = address.building ?? address.amenity ?? address.neighbourhood ?? address.suburb;
       const city = address.city ?? address.town ?? address.state;
       const country = address.country;
       const matchedRate = shippingOptions.find((rate) => {
