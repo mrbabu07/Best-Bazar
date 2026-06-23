@@ -842,6 +842,10 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               <option value="elevated">Elevated</option>
             </select>
           </label>
+          <label className="grid gap-2 text-sm font-semibold text-navy">
+            Admin refresh (seconds)
+            <input type="number" min="15" max="300" step="1" value={form.themeSettings.adminRefreshSeconds} onChange={(event) => updateTheme("adminRefreshSeconds", Number(event.target.value))} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+          </label>
           <div className="rounded-md border border-neutral-200 bg-paper p-4 lg:col-span-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <span className="h-11 rounded-md" style={{ backgroundColor: form.themeSettings.primaryColor }} />

@@ -8,6 +8,8 @@ import { AdminRealtimeNotifications } from "@/components/admin/AdminRealtimeNoti
 import { authOptions } from "@/lib/auth";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
+import { getCachedPublicSettings } from "@/lib/settings";
+import { normalizeThemeSettings } from "@/lib/theme-config";
 
 export const dynamic = "force-dynamic";
 
@@ -91,7 +93,8 @@ export default async function AdminLayout({
     redirect(`/${locale}/login?callbackUrl=/${locale}/admin/dashboard`);
   }
 
-  const notifications = await getCachedAdminNotifications();
+  const [notifications, publicSettings] = await Promise.all([getCachedAdminNotifications(), getCachedPublicSettings()]);
+  const refreshSeconds = normalizeThemeSettings(publicSettings?.themeSettings).adminRefreshSeconds;
 
   return (
     <AdminShell
@@ -101,7 +104,7 @@ export default async function AdminLayout({
       notifications={notifications}
     >
       {children}
-      <AdminRealtimeNotifications />
+      <AdminRealtimeNotifications refreshSeconds={refreshSeconds} />
     </AdminShell>
   );
 }

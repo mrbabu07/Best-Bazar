@@ -78,6 +78,7 @@ const themeSettingsSchema = z.object({
   maintenanceTitleAr: z.string().trim().default("We are updating Best Mart"),
   maintenanceMessageEn: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
   maintenanceMessageAr: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
+  adminRefreshSeconds: z.number().int().min(15).max(300).default(60),
   storefrontContent: z.object({
     navHomeEn: z.string().trim().default(""), navHomeAr: z.string().trim().default(""),
     navShopEn: z.string().trim().default(""), navShopAr: z.string().trim().default(""),

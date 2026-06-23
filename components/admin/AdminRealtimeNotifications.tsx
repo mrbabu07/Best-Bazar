@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, ShoppingCart } from "lucide-react";
 import { useAdminSocket } from "@/lib/socket-client";
 import toast from "react-hot-toast";
@@ -9,8 +10,9 @@ import toast from "react-hot-toast";
  * Real-time notifications for admin panel
  * Shows toast notifications for new orders and status updates
  */
-export function AdminRealtimeNotifications() {
+export function AdminRealtimeNotifications({ refreshSeconds = 60 }: { refreshSeconds?: number }) {
   const { socket, isConnected } = useAdminSocket();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isConnected) return;
@@ -65,6 +67,14 @@ export function AdminRealtimeNotifications() {
       socket.off("notification:new", onNotification);
     };
   }, [socket, isConnected]);
+
+  useEffect(() => {
+    if (isConnected) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, Math.max(15, refreshSeconds) * 1000);
+    return () => window.clearInterval(timer);
+  }, [isConnected, refreshSeconds, router]);
 
   // Show connection status indicator
   return (

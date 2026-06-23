@@ -13,6 +13,7 @@ export type ThemeSettings = {
   maintenanceTitleAr: string;
   maintenanceMessageEn: string;
   maintenanceMessageAr: string;
+  adminRefreshSeconds: number;
   storefrontContent: StorefrontContent;
 };
 
@@ -43,6 +44,7 @@ export const defaultThemeSettings: ThemeSettings = {
   maintenanceTitleAr: "We are updating Best Mart",
   maintenanceMessageEn: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
   maintenanceMessageAr: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
+  adminRefreshSeconds: 60,
   storefrontContent: defaultStorefrontContent
 };
 
@@ -91,6 +93,10 @@ export function normalizeThemeSettings(value: unknown): ThemeSettings {
       typeof input.maintenanceMessageAr === "string" && input.maintenanceMessageAr.trim()
         ? input.maintenanceMessageAr
         : defaultThemeSettings.maintenanceMessageAr,
+    adminRefreshSeconds:
+      typeof input.adminRefreshSeconds === "number" && Number.isInteger(input.adminRefreshSeconds)
+        ? Math.min(300, Math.max(15, input.adminRefreshSeconds))
+        : defaultThemeSettings.adminRefreshSeconds,
     storefrontContent: Object.fromEntries(
       Object.keys(defaultStorefrontContent).map((key) => [key, contentValue(key as keyof StorefrontContent)])
     ) as StorefrontContent
