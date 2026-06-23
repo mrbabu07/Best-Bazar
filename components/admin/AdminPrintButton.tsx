@@ -43,7 +43,7 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             * { box-sizing: border-box; }
             body {
               margin: 0;
-              padding: 14px;
+              padding: 8px;
               background: #ffffff;
               color: #1a1a2e;
               font-family: Arial, sans-serif;
@@ -52,7 +52,7 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             .admin-print-block { display: block !important; }
             .admin-print-target {
               width: 100%;
-              max-width: 720px;
+              max-width: 760px;
               margin: 0 auto;
               border: 0 !important;
               box-shadow: none !important;
@@ -107,13 +107,13 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             .invoice-meta-grid {
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 12px;
+              gap: 6px;
             }
             .invoice-card {
               border: 1px solid #e5e5e5;
               border-radius: 8px;
               background: #f8f6f1;
-              padding: 10px;
+              padding: 7px;
             }
             .invoice-card:nth-child(3) { grid-column: 1 / -1; }
             .invoice-products {
@@ -123,16 +123,16 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             }
             .invoice-item {
               display: grid;
-              grid-template-columns: 72px 1fr 120px;
-              gap: 12px;
-              padding: 16px;
+              grid-template-columns: 48px 1fr 90px;
+              gap: 8px;
+              padding: 8px;
               border-bottom: 1px solid #eeeeee;
               page-break-inside: avoid;
             }
             .invoice-item:last-child { border-bottom: 0; }
             .invoice-image {
-              width: 72px;
-              height: 72px;
+              width: 48px;
+              height: 48px;
               border: 1px solid #e5e5e5;
               border-radius: 8px;
               overflow: hidden;
@@ -142,8 +142,8 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             img {
               width: 100% !important;
               height: 100% !important;
-              max-width: 72px;
-              max-height: 72px;
+              max-width: 48px;
+              max-height: 48px;
               object-fit: cover;
               position: static !important;
             }
@@ -157,7 +157,8 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
               }
               .invoice-line-total { text-align: left; }
             }
-            @page { margin: 16mm; }
+            .admin-print-target { zoom: 0.88; }
+            @page { size: A4; margin: 8mm; }
           </style>
         </head>
         <body>

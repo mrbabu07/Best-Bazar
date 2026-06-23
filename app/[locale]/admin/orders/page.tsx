@@ -49,6 +49,32 @@ function formatAddress(order: {
     .join(", ");
 }
 
+function qrContactPayload(order: {
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  street: string;
+  apartment?: string | null;
+  city: string;
+  emirate: string;
+  country: string;
+}) {
+  const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
+  const address = [order.street, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
+
+  return [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    `FN:${clean(order.customerName)}`,
+    `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
+    ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
+    `ADR:;;${address};;;;`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}`,
+    "END:VCARD"
+  ].join("\n");
+}
+
 function formatDubaiDate(value: Date, locale: string) {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE" : "en-AE", {
     dateStyle: "medium",
@@ -434,9 +460,9 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               </div>
 
               <div className="invoice-qr admin-print-block hidden mt-3 flex items-center justify-between border-t border-neutral-200 pt-3">
-                <p className="text-xs font-semibold text-neutral-500">Scan to track order<br /><span className="font-bold text-navy">{selectedOrder.orderNumber}</span></p>
+                <p className="text-xs font-semibold text-neutral-500">Scan for customer contact<br /><span className="font-bold text-navy">{selectedOrder.orderNumber}</span></p>
                 {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated print document */}
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://best-bazar-delta.vercel.app"}/${locale}/track-order?order=${selectedOrder.orderNumber}`)}`} alt={`QR code for ${selectedOrder.orderNumber}`} width="86" height="86" />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer contact QR code for ${selectedOrder.orderNumber}`} width="86" height="86" />
               </div>
 
               <div className="invoice-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2">
