@@ -43,9 +43,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const dictionary = getDictionary(locale);
   const category = readParam(searchParams, "category");
   const brand = readParam(searchParams, "brand");
-  const color = readParam(searchParams, "color");
   const size = readParam(searchParams, "size");
-  const rating = readParam(searchParams, "rating");
   const search = readParam(searchParams, "search");
   const sort = readParam(searchParams, "sort") ?? "featured";
   const tag = readParam(searchParams, "tag");
@@ -57,7 +55,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
     getStoreBrands(),
     getStoreVariantColors(),
     getStoreVariantSizes(),
-    getStoreProducts({ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax, availability })
+    getStoreProducts({ category, brand, size, search, sort, tag, priceMin, priceMax, availability })
   ]);
 
   return (
@@ -88,7 +86,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
           brands={brands}
           colors={colors}
           sizes={sizes}
-          current={{ category, brand, color, size, rating, search, sort, tag, priceMin, priceMax, availability }}
+          current={{ category, brand, size, search, sort, tag, priceMin, priceMax, availability }}
         />
         <section className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-3 xl:grid-cols-4">
           {listing.length > 0 ? (

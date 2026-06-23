@@ -138,9 +138,7 @@ export function ProductFilters({
 
     if (category) params.set("category", category);
     if (brand) params.set("brand", brand);
-    if (selectedColors.length) params.set("color", selectedColors.join(","));
     if (selectedSizes.length) params.set("size", selectedSizes.join(","));
-    if (rating) params.set("rating", rating);
     if (search.trim()) params.set("search", search.trim());
     if (current.tag) params.set("tag", current.tag);
     if (sort && sort !== "featured") params.set("sort", sort);
@@ -149,7 +147,7 @@ export function ProductFilters({
     if (availability) params.set("availability", "in-stock");
 
     return params;
-  }, [availability, brand, category, current.tag, priceMax, priceMin, rating, search, selectedColors, selectedSizes, sort]);
+  }, [availability, brand, category, current.tag, priceMax, priceMin, search, selectedSizes, sort]);
 
   const pushFilters = useCallback(() => {
     const params = buildParams();
@@ -233,7 +231,7 @@ export function ProductFilters({
           </select>
         </label>
 
-        <div className="grid gap-2 text-sm font-semibold text-navy">
+        <div className="hidden gap-2 text-sm font-semibold text-navy">
           <div className="flex items-center justify-between gap-3">
             <p>{labels.color}</p>
             {selectedColors.length ? (
@@ -373,7 +371,7 @@ export function ProductFilters({
           </span>
         </label>
 
-        <label className="grid gap-2 text-sm font-semibold text-navy">
+        <label className="hidden gap-2 text-sm font-semibold text-navy">
           {dictionary.shop.rating}
           <select
             value={rating}

@@ -39,7 +39,7 @@ type CheckoutPageContentProps = {
   paymentAvailability: PublicPaymentAvailability;
 };
 
-type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "tower" | "city" | "country";
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -47,6 +47,7 @@ type CheckoutField = {
   type: string;
   autoComplete: string;
   defaultValue?: string;
+  required?: boolean;
 };
 
 const checkoutCopy = {
@@ -109,7 +110,7 @@ const checkoutCopy = {
     shippingArea: string;
     delivery: string;
     applied: (code: string) => string;
-    fields: Record<Exclude<CheckoutFieldName, "apartment" | "tower">, string>;
+    fields: Record<Exclude<CheckoutFieldName, "apartment">, string>;
   }
 >;
 
@@ -366,7 +367,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
       });
 
       setFieldValue("street", street || result.display_name);
-      setFieldValue("tower", tower);
       setFieldValue("city", city);
       setFieldValue("country", country || "United Arab Emirates");
 
@@ -485,7 +485,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         phone: String(formData.get("phone") ?? ""),
         street: String(formData.get("street") ?? ""),
         apartment: String(formData.get("apartment") ?? ""),
-        tower: String(formData.get("tower") ?? ""),
+        tower: "",
         city: String(formData.get("city") ?? ""),
         emirate: String(formData.get("emirate") ?? ""),
         country: String(formData.get("country") ?? "UAE")
@@ -557,15 +557,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
   const fields: CheckoutField[] = [
     { name: "name", label: labels.fields.name, type: "text", autoComplete: "name" },
-    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email" },
+    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", required: false },
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address" },
-    {
-      name: "tower",
-      label: "Building / tower",
-      type: "text",
-      autoComplete: "address-line2"
-    },
     {
       name: "apartment",
       label: "Apartment / villa no.",
@@ -631,7 +625,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     type={field.type}
                     autoComplete={field.autoComplete}
                     defaultValue={field.defaultValue}
-                    required
+                    required={field.required !== false}
                     className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                   />
                 </label>
