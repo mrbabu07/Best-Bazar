@@ -143,7 +143,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   ];
   const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
   const iconButtonClass =
-    "grid h-9 w-9 shrink-0 place-items-center rounded-md border border-neutral-200 text-navy transition hover:border-neutral-300 hover:bg-neutral-50 sm:h-10 sm:w-10";
+    "grid h-9 w-9 shrink-0 place-items-center text-neutral-950 transition hover:bg-neutral-100 sm:h-11 sm:w-11";
   const mobileLinkClass =
     "flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
 
@@ -276,7 +276,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   };
 
   return (
-    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur-xl">
+    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-white">
       {liveSettings.announcementActive && announcement ? (
         <div className="border-b border-neutral-200 bg-white px-4 py-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-800">
           <span className="mr-8 text-neutral-500" aria-hidden="true">‹</span>
@@ -285,8 +285,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative flex min-h-14 items-center gap-2 py-2.5 sm:min-h-16 sm:py-3 lg:min-h-[5.75rem] lg:gap-4">
+      <div className="mx-auto max-w-none px-4 sm:px-8 lg:px-10">
+        <div className="relative flex min-h-[4.75rem] items-center gap-1 py-2 sm:min-h-[5.5rem] lg:min-h-[6.75rem] lg:gap-2">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -300,7 +300,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="croissant-one-regular pointer-events-none absolute left-1/2 z-10 max-w-[calc(100%-11rem)] -translate-x-1/2 truncate text-base text-neutral-950 sm:max-w-none sm:text-2xl"
+            className="croissant-one-regular absolute left-1/2 z-10 max-w-[calc(100%-10rem)] -translate-x-1/2 truncate text-lg text-neutral-950 sm:max-w-none sm:text-[1.7rem]"
           >
             {brandName || dictionary.brand}
           </Link>
@@ -318,7 +318,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <select
               value={currency}
               onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
-              className="hidden h-10 rounded-md border border-neutral-200 bg-white px-2 text-xs font-bold text-navy sm:block"
+              className="hidden h-10 border-0 bg-transparent px-2 text-sm font-medium text-neutral-950 sm:block"
               aria-label="Currency"
             >
               {currencyOptions.map((option) => (
@@ -331,7 +331,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             <Link
               href={switchLocalePath(locale === "en" ? "ar" : "en")}
               onClick={() => persistLocale(locale === "en" ? "ar" : "en")}
-              className="hidden h-10 shrink-0 items-center gap-2 rounded-md border border-neutral-200 px-3 text-xs font-bold text-navy transition hover:bg-neutral-50 sm:inline-flex"
+              className="hidden h-10 shrink-0 items-center gap-2 px-3 text-sm font-medium text-neutral-950 transition hover:bg-neutral-50 sm:inline-flex"
             >
               <Globe2 size={17} />
               {locale === "en" ? "AR" : "EN"}
@@ -450,7 +450,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
             <Link
               href={`/${locale}/cart`}
-              className="relative grid h-10 w-10 shrink-0 place-items-center rounded-md bg-navy text-white transition hover:bg-neutral-800"
+              className="relative grid h-11 w-11 shrink-0 place-items-center text-neutral-950 transition hover:bg-neutral-100"
               aria-label={dictionary.nav.cart}
             >
               <ShoppingBag size={18} />
