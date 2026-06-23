@@ -187,15 +187,19 @@ function normalizeShippingRates(value: unknown, fallbackFreeFrom: number): Shipp
 export function normalizeShippingSettings(settings?: Partial<{
   freeShippingThreshold: unknown;
   shippingRates: unknown;
+  customAreaFee: unknown;
 }> | null): ShippingSettings {
   const freeShippingThreshold = normalizeMoney(
     settings?.freeShippingThreshold,
     defaultShippingSettings.freeShippingThreshold
   );
 
-  const customAreaFee = settings?.shippingRates && typeof settings.shippingRates === "object" && !Array.isArray(settings.shippingRates)
-    ? normalizeCustomAreaFee((settings.shippingRates as Record<string, unknown>).customAreaFee)
-    : defaultShippingSettings.customAreaFee;
+  const customAreaFeeSource =
+    settings?.customAreaFee ??
+    (settings?.shippingRates && typeof settings.shippingRates === "object" && !Array.isArray(settings.shippingRates)
+      ? (settings.shippingRates as Record<string, unknown>).customAreaFee
+      : undefined);
+  const customAreaFee = normalizeCustomAreaFee(customAreaFeeSource);
 
   return {
     freeShippingThreshold,
@@ -208,11 +212,13 @@ export function getShippingFee(
   emirate: string,
   subtotal: number,
   shippingRates?: unknown,
-  freeShippingThreshold = defaultShippingSettings.freeShippingThreshold
+  freeShippingThreshold = defaultShippingSettings.freeShippingThreshold,
+  customAreaFee?: unknown
 ): ShippingQuote {
   const settings = normalizeShippingSettings({
     freeShippingThreshold,
-    shippingRates
+    shippingRates,
+    customAreaFee
   });
   if (settings.customAreaFee.enabled) {
     const custom = settings.customAreaFee;

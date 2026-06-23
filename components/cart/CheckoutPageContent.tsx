@@ -185,7 +185,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     selectedEmirate,
     subtotal,
     shippingSettings.shippingRates,
-    shippingSettings.freeShippingThreshold
+    shippingSettings.freeShippingThreshold,
+    shippingSettings.customAreaFee
   );
   const shipping = shippingQuote.fee;
   const total = Math.max(subtotal + shipping - discount, 0);
