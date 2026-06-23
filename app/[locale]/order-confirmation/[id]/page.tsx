@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/ui/BackButton";
 import { Badge } from "@/components/ui/Badge";
 import { OrderTracker } from "@/components/order/OrderTracker";
+import { OrderStatusRefresh } from "@/components/order/OrderStatusRefresh";
 import { getOptionalServerSession } from "@/lib/auth-session";
 import { getDictionary, isLocale, type Locale } from "@/lib/i18n";
 import { formatOrderStatus, formatPaymentStatus } from "@/lib/order-labels";
@@ -113,6 +114,7 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <OrderStatusRefresh />
       <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}/shop`} className="mb-5" />
       <div className="rounded-lg border border-neutral-200 bg-white p-6 shadow-soft sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
