@@ -357,77 +357,57 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         </div>
       </section>
 
-      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
+      <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:col-span-2">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-bold text-navy">Currency and shipping</h2>
           <SectionSaveButton />
         </div>
-        <div className="mt-5 grid gap-4">
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            AED to BDT
-            <input
-              type="number"
-              min="0"
-              step="0.0001"
-              value={form.aedToBdt}
-              onChange={(event) => updateForm("aedToBdt", event.target.value)}
-              required
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            AED to USD
-            <input
-              type="number"
-              min="0"
-              step="0.0001"
-              value={form.aedToUsd}
-              onChange={(event) => updateForm("aedToUsd", event.target.value)}
-              required
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-navy">
-            Free shipping threshold
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.freeShippingThreshold}
-              onChange={(event) => updateForm("freeShippingThreshold", event.target.value)}
-              required
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            />
-          </label>
-          <div className="grid gap-4 rounded-md border border-gold-100 bg-gold-50 p-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              VAT rate %
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={form.vatRate}
-                onChange={(event) => updateForm("vatRate", event.target.value)}
-                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              TRN
-              <input
-                value={form.trn}
-                onChange={(event) => updateForm("trn", event.target.value)}
-                placeholder="VAT registration number"
-                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-              />
-            </label>
-            <p className="text-xs font-semibold leading-5 text-neutral-600 sm:col-span-2">
-              VAT is shown as included on invoices when the rate is greater than 0. Set the rate to 0 if the business is not VAT registered.
-            </p>
+        <div className="mt-5 grid gap-5">
+          <div className="grid gap-5 xl:grid-cols-2">
+            <section className="rounded-md border border-neutral-200 bg-neutral-50 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-neutral-950">Currency conversion</h3>
+                  <p className="mt-1 text-xs font-semibold text-neutral-500">Rates used when customers switch currency.</p>
+                </div>
+                <span className="rounded-full bg-white px-2.5 py-1 text-xs font-bold text-neutral-600">Base: AED</span>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  AED to BDT
+                  <input type="number" min="0" step="0.0001" value={form.aedToBdt} onChange={(event) => updateForm("aedToBdt", event.target.value)} required className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  AED to USD
+                  <input type="number" min="0" step="0.0001" value={form.aedToUsd} onChange={(event) => updateForm("aedToUsd", event.target.value)} required className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+                </label>
+              </div>
+              <p className="mt-4 border-t border-neutral-200 pt-3 text-xs font-semibold text-neutral-600">
+                AED 100 preview: {formatCurrency(100, "BDT", locale, previewRates)} / {formatCurrency(100, "USD", locale, previewRates)}
+              </p>
+            </section>
+            <section className="rounded-md border border-neutral-200 bg-white p-4">
+              <div>
+                <h3 className="font-bold text-neutral-950">VAT and business details</h3>
+                <p className="mt-1 text-xs font-semibold text-neutral-500">Included VAT details are shown on invoices.</p>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  VAT rate %
+                  <input type="number" min="0" max="100" step="0.01" value={form.vatRate} onChange={(event) => updateForm("vatRate", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+                </label>
+                <label className="grid gap-2 text-sm font-semibold text-navy">
+                  TRN
+                  <input value={form.trn} onChange={(event) => updateForm("trn", event.target.value)} placeholder="VAT registration number" className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+                </label>
+              </div>
+              <p className="mt-4 border-t border-neutral-100 pt-3 text-xs font-semibold leading-5 text-neutral-500">Set VAT to 0 if the business is not VAT registered.</p>
+            </section>
           </div>
-          <p className="text-sm text-neutral-500">
-            Preview: {formatCurrency(100, "BDT", locale, previewRates)} / {formatCurrency(100, "USD", locale, previewRates)}
-          </p>
+          <label className="grid max-w-md gap-2 text-sm font-semibold text-navy">
+            Free shipping threshold (AED)
+            <input type="number" min="0" step="0.01" value={form.freeShippingThreshold} onChange={(event) => updateForm("freeShippingThreshold", event.target.value)} required className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
+          </label>
           <div className="grid gap-4 rounded-md border border-neutral-300 bg-neutral-50 p-4">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
