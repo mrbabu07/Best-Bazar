@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -132,6 +132,7 @@ export function ProductFilters({
   const [priceMax, setPriceMax] = useState(current.priceMax ?? "");
   const [priceTouched, setPriceTouched] = useState(false);
   const [availability, setAvailability] = useState(current.availability === "in-stock");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const buildParams = useCallback(() => {
     const params = new URLSearchParams();
@@ -171,13 +172,17 @@ export function ProductFilters({
   };
 
   return (
-    <aside className="border-t border-neutral-200 pt-5 lg:sticky lg:top-28 lg:border-t-0 lg:pt-0">
-      <div className="flex items-center gap-2 text-neutral-900">
+    <aside className="border-t border-neutral-200 pt-4 lg:sticky lg:top-28 lg:border-t-0 lg:pt-0">
+      <button type="button" onClick={() => setMobileOpen((value) => !value)} className="flex h-11 w-full items-center justify-between border border-neutral-300 bg-white px-3 text-neutral-900 lg:hidden" aria-expanded={mobileOpen}>
+        <span className="inline-flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> Filters</span>
+        <ChevronDown size={18} className={mobileOpen ? "rotate-180 transition-transform" : "transition-transform"} />
+      </button>
+      <div className="hidden items-center gap-2 text-neutral-900 lg:flex">
         <SlidersHorizontal size={18} />
         <h2 className="text-lg font-medium">Filter:</h2>
       </div>
 
-      <div className="mt-5 grid gap-5">
+      <div className={`${mobileOpen ? "mt-4 grid" : "hidden"} gap-5 rounded-md border border-neutral-200 bg-white p-4 lg:mt-5 lg:grid lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0`}>
         <div className="border-y border-neutral-200 py-5 text-sm text-neutral-800">
           <div className="flex items-center justify-between"><span className="text-base font-medium">Availability</span><span aria-hidden="true">⌃</span></div>
           <label className="mt-5 flex cursor-pointer items-center gap-3 font-normal"><input type="checkbox" checked={availability} onChange={(event) => { setAvailability(event.target.checked); setPriceTouched(true); }} className="h-5 w-5 accent-neutral-950" />In stock</label>
