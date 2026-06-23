@@ -15,7 +15,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
-import { defaultShippingSettings, getShippingFee, normalizeShippingSettings } from "@/utils/shipping";
+import { defaultShippingSettings, getShippingFee, normalizeShippingSettings, UAE_EMIRATES } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { BackButton } from "@/components/ui/BackButton";
@@ -151,7 +151,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         ? "cod"
         : "cod";
   const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
-  const [emirate, setEmirate] = useState("Dubai");
+  const [emirate, setEmirate] = useState("");
   const [customArea, setCustomArea] = useState("");
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
@@ -182,9 +182,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     shippingOptions[0];
   const selectedEmirate = usesCustomAreaFee
     ? customArea.trim() || shippingSettings.customAreaFee.areaLabel
-    : selectedShippingRate?.emirate ?? emirate;
+    : emirate;
   const shippingQuote = getShippingFee(
-    selectedEmirate,
+    selectedEmirate || selectedShippingRate?.emirate || "Dubai",
     subtotal,
     shippingSettings.shippingRates,
     shippingSettings.freeShippingThreshold,
@@ -557,7 +557,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
   const fields: CheckoutField[] = [
     { name: "name", label: labels.fields.name, type: "text", autoComplete: "name" },
-    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", required: false },
+    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: "Email (optional)", required: false },
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address" },
     {
@@ -650,9 +650,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     required
                     className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
                   >
-                    {shippingOptions.map((rate) => (
-                      <option key={rate.emirate} value={rate.emirate}>
-                        {rate.emirate}
+                    <option value="" disabled>Emirate</option>
+                    {UAE_EMIRATES.map((emirateOption) => (
+                      <option key={emirateOption.key} value={emirateOption.nameEn}>
+                        {emirateOption.nameEn}
                       </option>
                     ))}
                   </select>
