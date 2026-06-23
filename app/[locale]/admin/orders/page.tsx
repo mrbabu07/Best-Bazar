@@ -60,6 +60,9 @@ function qrContactPayload(order: {
   emirate: string;
   country: string;
   items: Array<{ nameEn: string; quantity: number }>;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  total?: unknown;
 }) {
   const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
   const address = [order.street, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
@@ -71,7 +74,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}`,
     "END:VCARD"
   ].join("\n");
 }
@@ -459,22 +462,32 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <AdminPrintButton label="Print parcel label" targetSelector=".admin-parcel-label" />
+                  <AdminPrintButton label="Print parcel label" targetSelector=".admin-parcel-label" pageSize="label" />
                   <AdminPrintButton label={dictionary.actions.print} />
                 </div>
               </div>
 
-              <div className="admin-parcel-label invoice-qr admin-print-block hidden mt-3 flex items-start justify-between gap-4 border-t border-neutral-200 pt-3">
-                <div className="text-xs font-semibold text-neutral-600">
-                  <p className="font-bold text-navy">{selectedOrder.customerName}</p>
-                  <p className="mt-1">{selectedOrder.customerPhone}</p>
-                  <p className="mt-1 leading-5">{formatAddress(selectedOrder)}</p>
-                  <p className="mt-2 font-bold text-navy">Due: {formatCurrency(selectedPaymentDue, getCurrency(selectedOrder.currency), locale, currencyRates)}</p>
-                  <p className="mt-1">Order: {selectedOrder.orderNumber}</p>
-                  <p className="mt-2 leading-5">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p>
-                </div>
-                {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated print document */}
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer contact and product QR code for ${selectedOrder.orderNumber}`} width="110" height="110" />
+              <div className="admin-parcel-label hidden">
+                <header className="parcel-header">
+                  <p className="parcel-brand">BEST MART</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
+                  <img className="parcel-barcode" src={`https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(selectedOrder.orderNumber)}&code=Code128&multiplebarcodes=false&translate-esc=true&unit=Fit&dpi=96`} alt={`Tracking barcode for ${selectedOrder.orderNumber}`} />
+                </header>
+                <section className="parcel-section parcel-grid">
+                  <div><p className="parcel-label-title">Order</p><p className="parcel-value">#{selectedOrder.orderNumber}</p><p className="mt-1 text-xs">{formatDubaiDate(selectedOrder.createdAt, locale)}</p></div>
+                  <div><p className="parcel-label-title">Payment</p><p className="parcel-value">{selectedOrder.paymentMethod}</p><p className="mt-1 text-xs">Due: {formatCurrency(selectedPaymentDue, getCurrency(selectedOrder.currency), locale, currencyRates)}</p></div>
+                </section>
+                <section className="parcel-section">
+                  <p className="parcel-label-title">Deliver to</p><p className="parcel-value">{selectedOrder.customerName}</p><p className="mt-1 parcel-value">{selectedOrder.customerPhone}</p><p className="mt-1 text-xs leading-5">{formatAddress(selectedOrder)}</p>
+                </section>
+                <section className="parcel-bottom">
+                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p>{selectedOrder.notes ? <p className="mt-2 text-xs">Note: {selectedOrder.notes}</p> : null}</div>
+                  <div className="invoice-qr">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
+                  </div>
+                </section>
+                <footer className="parcel-footer">Powered by Best Mart Delivery System</footer>
               </div>
 
               <div className="invoice-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2">

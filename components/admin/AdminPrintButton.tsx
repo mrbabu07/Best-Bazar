@@ -5,9 +5,10 @@ import { Printer } from "lucide-react";
 type AdminPrintButtonProps = {
   label: string;
   targetSelector?: string;
+  pageSize?: "a4" | "label";
 };
 
-export function AdminPrintButton({ label, targetSelector = ".admin-print-target" }: AdminPrintButtonProps) {
+export function AdminPrintButton({ label, targetSelector = ".admin-print-target", pageSize = "a4" }: AdminPrintButtonProps) {
   const printTarget = () => {
     const target = document.querySelector<HTMLElement>(targetSelector);
 
@@ -34,6 +35,8 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
       return;
     }
 
+    const printableMarkup = targetSelector === ".admin-print-target" ? target.innerHTML : target.outerHTML;
+    const pageRule = pageSize === "label" ? "size: 4in 6in; margin: 0;" : "size: A4; margin: 8mm;";
     printDocument.open();
     printDocument.write(`
       <!doctype html>
@@ -151,8 +154,18 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
             .invoice-qr img { width: 86px !important; height: 86px !important; max-width: 86px; max-height: 86px; object-fit: contain; }
             .invoice-qr { text-align: right; }
             .invoice-line-total { text-align: right; }
-            .admin-parcel-label { max-width: 430px; margin: 0 auto; border: 1px solid #111827; padding: 14px; }
-            .admin-parcel-label .invoice-qr img { width: 110px !important; height: 110px !important; max-width: 110px; max-height: 110px; }
+            .admin-parcel-label { width: 4in; min-height: 6in; margin: 0; border: 2px solid #000; padding: 0.14in; background: #fff; color: #000; font-size: 11px; }
+            .admin-parcel-label.hidden { display: block !important; }
+            .parcel-header { border-bottom: 2px solid #000; padding-bottom: 8px; }
+            .parcel-brand { font-size: 21px; font-weight: 900; letter-spacing: .04em; }
+            .parcel-barcode { display: block; width: 100%; height: 42px; margin-top: 7px; object-fit: fill; }
+            .parcel-section { border-bottom: 1px solid #000; padding: 9px 0; }
+            .parcel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .parcel-label-title { margin: 0 0 4px; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+            .parcel-value { margin: 0; font-size: 12px; font-weight: 700; line-height: 1.35; }
+            .parcel-bottom { display: grid; grid-template-columns: 1fr 2in; gap: 10px; align-items: end; padding-top: 10px; }
+            .admin-parcel-label .invoice-qr img { width: 2in !important; height: 2in !important; max-width: 2in; max-height: 2in; object-fit: contain; border: 1px solid #000; }
+            .parcel-footer { margin-top: 9px; border-top: 1px solid #000; padding-top: 6px; text-align: center; font-size: 9px; font-weight: 700; }
             @media (max-width: 640px) {
               .invoice-meta-grid,
               .invoice-item {
@@ -161,11 +174,11 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
               .invoice-line-total { text-align: left; }
             }
             .admin-print-target { zoom: 0.88; }
-            @page { size: A4; margin: 8mm; }
+            @page { ${pageRule} }
           </style>
         </head>
         <body>
-          <section class="admin-print-target">${target.innerHTML}</section>
+          <section class="admin-print-target">${printableMarkup}</section>
         </body>
       </html>
     `);
