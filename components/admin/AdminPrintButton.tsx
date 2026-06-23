@@ -4,11 +4,12 @@ import { Printer } from "lucide-react";
 
 type AdminPrintButtonProps = {
   label: string;
+  targetSelector?: string;
 };
 
-export function AdminPrintButton({ label }: AdminPrintButtonProps) {
+export function AdminPrintButton({ label, targetSelector = ".admin-print-target" }: AdminPrintButtonProps) {
   const printTarget = () => {
-    const target = document.querySelector<HTMLElement>(".admin-print-target");
+    const target = document.querySelector<HTMLElement>(targetSelector);
 
     if (!target) {
       window.print();
@@ -150,6 +151,8 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             .invoice-qr img { width: 86px !important; height: 86px !important; max-width: 86px; max-height: 86px; object-fit: contain; }
             .invoice-qr { text-align: right; }
             .invoice-line-total { text-align: right; }
+            .admin-parcel-label { max-width: 430px; margin: 0 auto; border: 1px solid #111827; padding: 14px; }
+            .admin-parcel-label .invoice-qr img { width: 110px !important; height: 110px !important; max-width: 110px; max-height: 110px; }
             @media (max-width: 640px) {
               .invoice-meta-grid,
               .invoice-item {

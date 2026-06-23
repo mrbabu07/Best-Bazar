@@ -59,6 +59,7 @@ function qrContactPayload(order: {
   city: string;
   emirate: string;
   country: string;
+  items: Array<{ nameEn: string; quantity: number }>;
 }) {
   const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
   const address = [order.street, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
@@ -70,7 +71,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}`,
     "END:VCARD"
   ].join("\n");
 }
@@ -262,6 +263,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         { label: dictionary.common.total, value: Number(selectedOrder.total), tone: "strong" }
       ]
     : [];
+  const selectedPaymentDue = selectedOrder?.paymentStatus === "PAID" ? 0 : Number(selectedOrder?.total ?? 0);
   const statusCards = [
     { label: "All", value: allFilteredOrdersCount, href: buildStatusHref(locale, searchParams), active: !status, tone: "neutral" as const },
     { label: "Pending/New", value: pendingOrdersCount + confirmedOrdersCount, href: buildStatusHref(locale, searchParams, "PENDING"), active: status === "PENDING", tone: "gold" as const },
@@ -456,13 +458,23 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                     </Badge>
                   </div>
                 </div>
-                <AdminPrintButton label={dictionary.actions.print} />
+                <div className="flex gap-2">
+                  <AdminPrintButton label="Print parcel label" targetSelector=".admin-parcel-label" />
+                  <AdminPrintButton label={dictionary.actions.print} />
+                </div>
               </div>
 
-              <div className="invoice-qr admin-print-block hidden mt-3 flex items-center justify-between border-t border-neutral-200 pt-3">
-                <p className="text-xs font-semibold text-neutral-500">Scan for customer contact<br /><span className="font-bold text-navy">{selectedOrder.orderNumber}</span></p>
+              <div className="admin-parcel-label invoice-qr admin-print-block hidden mt-3 flex items-start justify-between gap-4 border-t border-neutral-200 pt-3">
+                <div className="text-xs font-semibold text-neutral-600">
+                  <p className="font-bold text-navy">{selectedOrder.customerName}</p>
+                  <p className="mt-1">{selectedOrder.customerPhone}</p>
+                  <p className="mt-1 leading-5">{formatAddress(selectedOrder)}</p>
+                  <p className="mt-2 font-bold text-navy">Due: {formatCurrency(selectedPaymentDue, getCurrency(selectedOrder.currency), locale, currencyRates)}</p>
+                  <p className="mt-1">Order: {selectedOrder.orderNumber}</p>
+                  <p className="mt-2 leading-5">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p>
+                </div>
                 {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated print document */}
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer contact QR code for ${selectedOrder.orderNumber}`} width="86" height="86" />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer contact and product QR code for ${selectedOrder.orderNumber}`} width="110" height="110" />
               </div>
 
               <div className="invoice-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2">
