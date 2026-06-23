@@ -433,12 +433,18 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <AdminPrintButton label={dictionary.actions.print} />
               </div>
 
+              <div className="invoice-qr admin-print-block hidden mt-3 flex items-center justify-between border-t border-neutral-200 pt-3">
+                <p className="text-xs font-semibold text-neutral-500">Scan to track order<br /><span className="font-bold text-navy">{selectedOrder.orderNumber}</span></p>
+                {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated print document */}
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://best-bazar-delta.vercel.app"}/${locale}/track-order?order=${selectedOrder.orderNumber}`)}`} alt={`QR code for ${selectedOrder.orderNumber}`} width="86" height="86" />
+              </div>
+
               <div className="invoice-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2">
                 <div className="invoice-card rounded-md border border-neutral-200 bg-paper p-4">
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Customer</p>
                   <p className="mt-2 font-bold text-navy">{selectedOrder.customerName}</p>
                   <p className="mt-1 text-neutral-600">{selectedOrder.customerPhone}</p>
-                  <p className="mt-1 text-neutral-600">{selectedOrder.customerEmail}</p>
+                  {selectedOrder.customerEmail ? <p className="mt-1 text-neutral-600">{selectedOrder.customerEmail}</p> : null}
                 </div>
                 <div className="invoice-card rounded-md border border-neutral-200 bg-paper p-4">
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-500">Payment</p>
@@ -475,7 +481,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               <div className="invoice-products mt-5 rounded-md border border-neutral-200">
                 <div className="border-b border-neutral-200 bg-paper px-4 py-3">
                   <p className="text-sm font-bold text-navy">Ordered products</p>
-                  <p className="mt-1 text-xs text-neutral-500">Images, variants, SKU, quantity, and line totals.</p>
+                  <p className="mt-1 text-xs text-neutral-500 admin-print-hide">Images, variants, SKU, quantity, and line totals.</p>
                 </div>
                 {selectedOrder.items.map((item) => (
                   <div key={item.id} className="invoice-item grid gap-3 border-b border-neutral-100 p-4 last:border-b-0 sm:grid-cols-[72px_1fr_auto]">
@@ -510,7 +516,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           <span>{locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn}</span>
                         </div>
                       ) : null}
-                      <div className="mt-2 grid gap-1 text-xs font-semibold text-neutral-500 sm:grid-cols-2">
+                      <div className="mt-2 grid gap-1 text-xs font-semibold text-neutral-500 sm:grid-cols-2 admin-print-hide">
                         <p>Admin SKU: {item.product?.sku ?? item.variantSku ?? "Not set"}</p>
                         {item.variantSku ? <p>Variant SKU: {item.variantSku}</p> : null}
                         <p>Qty: {item.quantity}</p>

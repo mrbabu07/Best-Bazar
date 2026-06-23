@@ -43,7 +43,7 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             * { box-sizing: border-box; }
             body {
               margin: 0;
-              padding: 24px;
+              padding: 14px;
               background: #ffffff;
               color: #1a1a2e;
               font-family: Arial, sans-serif;
@@ -52,7 +52,7 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
             .admin-print-block { display: block !important; }
             .admin-print-target {
               width: 100%;
-              max-width: 860px;
+              max-width: 720px;
               margin: 0 auto;
               border: 0 !important;
               box-shadow: none !important;
@@ -113,7 +113,7 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
               border: 1px solid #e5e5e5;
               border-radius: 8px;
               background: #f8f6f1;
-              padding: 16px;
+              padding: 10px;
             }
             .invoice-card:nth-child(3) { grid-column: 1 / -1; }
             .invoice-products {
@@ -147,6 +147,8 @@ export function AdminPrintButton({ label }: AdminPrintButtonProps) {
               object-fit: cover;
               position: static !important;
             }
+            .invoice-qr img { width: 86px !important; height: 86px !important; max-width: 86px; max-height: 86px; object-fit: contain; }
+            .invoice-qr { text-align: right; }
             .invoice-line-total { text-align: right; }
             @media (max-width: 640px) {
               .invoice-meta-grid,
