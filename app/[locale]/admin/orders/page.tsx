@@ -60,7 +60,7 @@ function qrContactPayload(order: {
   city: string;
   emirate: string;
   country: string;
-  items: Array<{ nameEn: string; quantity: number }>;
+  items: Array<{ nameEn: string; variantNameEn?: string | null; quantity: number }>;
   paymentMethod?: string;
   paymentStatus?: string;
   total?: unknown;
@@ -75,7 +75,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)}${item.variantNameEn ? ` (${clean(item.variantNameEn)})` : ""} x${item.quantity}`).join(", ")}`,
     "END:VCARD"
   ].join("\n");
 }
@@ -389,7 +389,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           : undefined
                     }
                   >
-                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), products: order.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", "), payment: order.paymentMethod, due: order.paymentStatus === "PAID" ? "0" : formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "" }))} className="h-4 w-4 accent-black" /></td>
+                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), products: order.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn}${item.variantNameEn ? ` (${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn})` : ""} x${item.quantity}`).join(", "), payment: order.paymentMethod, due: order.paymentStatus === "PAID" ? "0" : formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "" }))} className="h-4 w-4 accent-black" /></td>
                     <td className="px-5 py-4 font-bold text-navy">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
@@ -487,7 +487,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="parcel-label-title">Deliver to</p><p className="parcel-value">{selectedOrder.customerName}</p><p className="mt-1 parcel-value">{selectedOrder.customerPhone}</p><p className="mt-1 text-xs leading-5">{formatAddress(selectedOrder)}</p>
                 </section>
                 <section className="parcel-bottom">
-                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p></div>
+                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn}${item.variantNameEn ? ` (${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn})` : ""} x${item.quantity}`).join(", ")}</p></div>
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=L&margin=8&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
