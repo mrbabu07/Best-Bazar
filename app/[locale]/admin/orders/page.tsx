@@ -64,7 +64,6 @@ function qrContactPayload(order: {
   paymentMethod?: string;
   paymentStatus?: string;
   total?: unknown;
-  notes?: string | null;
 }) {
   const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
   const address = [order.street, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
@@ -76,7 +75,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}. Map and note: ${clean(order.notes)}`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}`,
     "END:VCARD"
   ].join("\n");
 }
@@ -215,7 +214,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     },
     orderStatus: { in: ["PENDING", "CONFIRMED"] }
   } satisfies Prisma.OrderWhereInput;
-  const [orders, settings, allFilteredOrdersCount, pendingOrdersCount, confirmedOrdersCount, processingOrdersCount, shippedOrdersCount, deliveredOrdersCount, newOrdersCount] = await prisma.$transaction([
+  const [orders, settings, allFilteredOrdersCount, pendingOrdersCount, confirmedOrdersCount, processingOrdersCount, shippedOrdersCount, deliveredOrdersCount, cancelledOrdersCount, newOrdersCount] = await prisma.$transaction([
     prisma.order.findMany({
       where,
       include: {
@@ -243,6 +242,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     prisma.order.count({ where: { ...baseWhere, orderStatus: "PROCESSING" } }),
     prisma.order.count({ where: { ...baseWhere, orderStatus: "SHIPPED" } }),
     prisma.order.count({ where: { ...baseWhere, orderStatus: "DELIVERED" } }),
+    prisma.order.count({ where: { ...baseWhere, orderStatus: "CANCELLED" } }),
     prisma.order.count({ where: newOrderWhere })
   ]);
   const selectedOrder = orders.find((order) => order.id === selectedId) ?? orders[0];
@@ -274,7 +274,8 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     { label: "Pending/New", value: pendingOrdersCount + confirmedOrdersCount, href: buildStatusHref(locale, searchParams, "PENDING"), active: status === "PENDING", tone: "gold" as const },
     { label: "Processing", value: processingOrdersCount, href: buildStatusHref(locale, searchParams, "PROCESSING"), active: status === "PROCESSING", tone: "blue" as const },
     { label: "Shipped", value: shippedOrdersCount, href: buildStatusHref(locale, searchParams, "SHIPPED"), active: status === "SHIPPED", tone: "blue" as const },
-    { label: "Delivered", value: deliveredOrdersCount, href: buildStatusHref(locale, searchParams, "DELIVERED"), active: status === "DELIVERED", tone: "green" as const }
+    { label: "Delivered", value: deliveredOrdersCount, href: buildStatusHref(locale, searchParams, "DELIVERED"), active: status === "DELIVERED", tone: "green" as const },
+    { label: "Cancelled", value: cancelledOrdersCount, href: buildStatusHref(locale, searchParams, "CANCELLED"), active: status === "CANCELLED", tone: "red" as const }
   ];
 
   return (
@@ -486,7 +487,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="parcel-label-title">Deliver to</p><p className="parcel-value">{selectedOrder.customerName}</p><p className="mt-1 parcel-value">{selectedOrder.customerPhone}</p><p className="mt-1 text-xs leading-5">{formatAddress(selectedOrder)}</p>
                 </section>
                 <section className="parcel-bottom">
-                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p>{selectedOrder.notes ? <p className="mt-2 text-xs">Note: {selectedOrder.notes}</p> : null}</div>
+                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p></div>
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=L&margin=8&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
