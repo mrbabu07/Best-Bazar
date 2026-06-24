@@ -668,7 +668,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   </p>
                 ) : null}
               </div>
-              <div className="hidden grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
+              <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="flex items-center gap-2 text-sm font-bold text-navy">
