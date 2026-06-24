@@ -613,7 +613,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                   key={field.name}
                   className={cn(
                     "grid gap-2 text-sm font-semibold text-navy",
-                    ["name", "email", "street"].includes(field.name) && "sm:col-span-2"
+                    ["name", "email", "street", "apartment"].includes(field.name) && "sm:col-span-2"
                   )}
                 >
                   {field.label}
