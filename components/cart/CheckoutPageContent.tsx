@@ -556,10 +556,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   };
 
   const fields: CheckoutField[] = [
-    { name: "name", label: labels.fields.name, type: "text", autoComplete: "name" },
+    { name: "name", label: labels.fields.name, type: "text", autoComplete: "name", placeholder: labels.fields.name },
     { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: "Email (optional)", required: false },
-    { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel" },
-    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address" },
+    { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: "Phone number" },
+    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: labels.fields.street },
     {
       name: "apartment",
       label: "Apartment / villa no.",
@@ -616,7 +616,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     ["name", "email", "street", "apartment"].includes(field.name) && "sm:col-span-2"
                   )}
                 >
-                  {field.label}
+                  <span className="sr-only">{field.label}</span>
                   <input
                     ref={(node) => {
                       fieldRefs.current[field.name] = node;
@@ -627,12 +627,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     defaultValue={field.defaultValue}
                     placeholder={field.placeholder}
                     required={field.required !== false}
-                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+                    className="h-12 rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-800 placeholder:font-normal placeholder:text-neutral-400 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
                   />
                 </label>
               ))}
               <div className="grid gap-2 text-sm font-semibold text-navy">
-                {labels.shippingArea}
+                <span className="sr-only">{labels.shippingArea}</span>
                 {usesCustomAreaFee ? (
                   <input
                     name="emirate"
@@ -640,7 +640,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     onChange={(event) => setCustomArea(event.target.value)}
                     placeholder={shippingSettings.customAreaFee.areaLabel}
                     required
-                    className="h-11 rounded-md border-2 border-neutral-950 bg-white px-3 text-sm font-medium text-neutral-700"
+                    className="h-12 rounded-md border-2 border-neutral-950 bg-white px-4 text-sm font-medium text-neutral-800"
                   />
                 ) : (
                   <select
