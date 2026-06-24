@@ -152,7 +152,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         : "cod";
   const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
   const [emirate, setEmirate] = useState("");
-  const [customArea, setCustomArea] = useState("");
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -176,13 +175,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
   const shippingOptions = shippingSettings.shippingRates;
-  const usesCustomAreaFee = shippingSettings.customAreaFee.enabled;
   const selectedShippingRate =
     shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
     shippingOptions[0];
-  const selectedEmirate = usesCustomAreaFee
-    ? customArea.trim() || shippingSettings.customAreaFee.areaLabel
-    : emirate;
+  const selectedEmirate = emirate;
   const shippingQuote = getShippingFee(
     selectedEmirate || selectedShippingRate?.emirate || "Dubai",
     subtotal,
@@ -633,31 +629,20 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
               ))}
               <div className="grid gap-2 text-sm font-semibold text-navy">
                 <span className="sr-only">{labels.shippingArea}</span>
-                {usesCustomAreaFee ? (
-                  <input
-                    name="emirate"
-                    value={customArea}
-                    onChange={(event) => setCustomArea(event.target.value)}
-                    placeholder={shippingSettings.customAreaFee.areaLabel}
-                    required
-                    className="h-12 rounded-md border-2 border-neutral-950 bg-white px-4 text-sm font-medium text-neutral-800"
-                  />
-                ) : (
-                  <select
-                    name="emirate"
-                    value={selectedEmirate}
-                    onChange={(event) => setEmirate(event.target.value)}
-                    required
-                    className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-                  >
-                    <option value="" disabled>Emirate</option>
-                    {UAE_EMIRATES.map((emirateOption) => (
-                      <option key={emirateOption.key} value={emirateOption.nameEn}>
-                        {emirateOption.nameEn}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <select
+                  name="emirate"
+                  value={selectedEmirate}
+                  onChange={(event) => setEmirate(event.target.value)}
+                  required
+                  className="h-12 rounded-md border-2 border-neutral-950 bg-white px-4 text-sm font-medium text-neutral-800"
+                >
+                  <option value="" disabled>Emirate</option>
+                  {UAE_EMIRATES.map((emirateOption) => (
+                    <option key={emirateOption.key} value={emirateOption.nameEn}>
+                      {emirateOption.nameEn}
+                    </option>
+                  ))}
+                </select>
                 <div className="flex flex-col gap-1 rounded-md border border-neutral-200 bg-gold-50 px-3 py-2 text-xs font-semibold text-navy sm:flex-row sm:items-center sm:justify-between">
                   <span>{shippingSummary}</span>
                   <span>{formatCurrency(shipping, currency, locale, currencyRates)}</span>
