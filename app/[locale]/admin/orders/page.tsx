@@ -489,7 +489,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn} x${item.quantity}`).join(", ")}</p>{selectedOrder.notes ? <p className="mt-2 text-xs">Note: {selectedOrder.notes}</p> : null}</div>
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=L&margin=8&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
                   </div>
                 </section>
                 <footer className="parcel-footer">Powered by Best Mart Delivery System</footer>
