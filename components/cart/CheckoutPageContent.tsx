@@ -290,7 +290,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
 
   useEffect(() => {
     setStripePayment(null);
-  }, [appliedCoupon, customArea, discount, emirate, payment, subtotal]);
+  }, [appliedCoupon, discount, emirate, payment, subtotal]);
 
   useEffect(() => {
     if (payment === "cod" && !shippingQuote.codAvailable) {
