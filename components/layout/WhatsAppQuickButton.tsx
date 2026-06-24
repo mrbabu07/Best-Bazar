@@ -32,10 +32,9 @@ export function WhatsAppQuickButton({ locale, phone }: WhatsAppQuickButtonProps)
       target="_blank"
       rel="noreferrer"
       aria-label="WhatsApp quick support"
-      className="fixed bottom-24 right-5 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-emerald-600 px-4 text-sm font-bold text-white shadow-lift transition hover:bg-emerald-700 sm:bottom-5 sm:z-50 rtl:left-5 rtl:right-auto"
+      className="fixed bottom-24 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lift transition hover:bg-[#1fbd59] sm:bottom-5 sm:z-50 rtl:left-5 rtl:right-auto"
     >
-      <MessageCircle size={20} />
-      <span className="hidden sm:inline">{locale === "ar" ? "WhatsApp" : "WhatsApp order"}</span>
+      <MessageCircle size={27} strokeWidth={2.4} />
     </Link>
   );
 }

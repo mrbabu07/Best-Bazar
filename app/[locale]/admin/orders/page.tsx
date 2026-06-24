@@ -64,6 +64,7 @@ function qrContactPayload(order: {
   paymentMethod?: string;
   paymentStatus?: string;
   total?: unknown;
+  notes?: string | null;
 }) {
   const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
   const address = [order.street, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
@@ -75,7 +76,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)} x${item.quantity}`).join(", ")}. Map and note: ${clean(order.notes)}`,
     "END:VCARD"
   ].join("\n");
 }
