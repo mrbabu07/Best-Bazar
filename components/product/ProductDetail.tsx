@@ -335,30 +335,29 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           )}
         </div>
 
-        <div className="mt-7 flex flex-wrap gap-3">
-          <div className="inline-flex h-12 items-center overflow-hidden border border-neutral-300 bg-white">
-            <button
-              type="button"
-              onClick={() => setQuantity((value) => Math.max(1, value - 1))}
-              className="grid h-full w-12 place-items-center text-neutral-950 hover:bg-neutral-100"
-              aria-label={labels.decreaseQuantity}
-            >
-              <Minus size={16} />
-            </button>
-            <span className="grid h-full min-w-12 place-items-center border-x border-neutral-200 px-4 text-sm font-bold text-neutral-950">
-              {quantity}
-            </span>
-            <button
-              type="button"
-              onClick={() => setQuantity((value) => Math.min(availableStock, value + 1))}
-              className="grid h-full w-12 place-items-center text-neutral-950 hover:bg-neutral-100"
-              aria-label={labels.increaseQuantity}
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-
-          <div className="grid flex-1 gap-2 sm:grid-cols-2">
+        <div className="mt-7 grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-[auto_1fr_1fr]">
+            <div className="inline-flex h-12 items-center overflow-hidden border border-neutral-300 bg-white">
+              <button
+                type="button"
+                onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                className="grid h-full w-12 place-items-center text-neutral-950 hover:bg-neutral-100"
+                aria-label={labels.decreaseQuantity}
+              >
+                <Minus size={16} />
+              </button>
+              <span className="grid h-full min-w-12 place-items-center border-x border-neutral-200 px-4 text-sm font-bold text-neutral-950">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity((value) => Math.min(availableStock, value + 1))}
+                className="grid h-full w-12 place-items-center text-neutral-950 hover:bg-neutral-100"
+                aria-label={labels.increaseQuantity}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
             <Button onClick={handleAdd} size="lg" disabled={availableStock <= 0}>
               <ShoppingBag size={18} />
               {dictionary.actions.addToCart}
@@ -367,8 +366,10 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
               Buy now
             </Button>
           </div>
-          <FavouriteButton product={product} locale={locale} />
-          <ShareProductButton product={product} locale={locale} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FavouriteButton product={product} locale={locale} />
+            <ShareProductButton product={product} locale={locale} />
+          </div>
         </div>
 
         <div className="mt-10 border-t border-neutral-200 py-6">

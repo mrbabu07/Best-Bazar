@@ -75,7 +75,7 @@ export function HeroSlider({
               loop
               muted
               playsInline
-              className="absolute inset-0 h-full w-full object-cover sm:hidden"
+              className="absolute inset-0 h-full w-full object-cover object-top sm:hidden"
             />
           ) : null}
           <video
@@ -85,7 +85,7 @@ export function HeroSlider({
             loop
             muted
             playsInline
-            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover sm:block" : "absolute inset-0 h-full w-full object-cover"}
+            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover object-top sm:block" : "absolute inset-0 h-full w-full object-cover object-top"}
           />
         </>
       ) : (
@@ -98,7 +98,7 @@ export function HeroSlider({
               fill
               priority
               sizes="(max-width: 639px) 100vw, 1px"
-              className="object-cover sm:hidden"
+              className="object-cover object-top sm:hidden"
             />
           ) : null}
           <Image
@@ -108,7 +108,7 @@ export function HeroSlider({
             fill
             priority
             sizes={activeSlide.mobileImage ? "(min-width: 640px) 100vw, 1px" : "100vw"}
-            className={activeSlide.mobileImage ? "hidden object-cover sm:block" : "object-cover"}
+            className={activeSlide.mobileImage ? "hidden object-cover object-top sm:block" : "object-cover object-top"}
           />
         </>
       )}

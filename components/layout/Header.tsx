@@ -311,20 +311,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             {brandName || dictionary.brand}
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className={`${iconButtonClass} sm:ml-auto`}
-            aria-label={dictionary.nav.search}
-          >
-            <Search size={20} />
-          </button>
-
           <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:gap-2">
+            <span className="hidden text-sm font-medium text-neutral-950 lg:inline">
+              United Arab Emirates |
+            </span>
             <select
               value={currency}
               onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
-              className="hidden h-10 border-0 bg-transparent px-2 text-sm font-medium text-neutral-950 sm:block"
+              className="hidden h-10 border-0 bg-transparent px-1 text-sm font-medium text-neutral-950 sm:block"
               aria-label="Currency"
             >
               {currencyOptions.map((option) => (
@@ -342,6 +336,15 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               <Globe2 size={17} />
               {locale === "en" ? "AR" : "EN"}
             </Link>
+
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className={iconButtonClass}
+              aria-label={dictionary.nav.search}
+            >
+              <Search size={20} />
+            </button>
 
             <button
               type="button"
@@ -494,7 +497,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             className="absolute inset-0 cursor-default bg-black/45"
             aria-label="Close category navigation"
           />
-          <aside className="relative grid h-full w-[min(100%,430px)] content-start gap-5 overflow-y-auto bg-[#101010] px-5 py-5 text-white shadow-lift sm:w-[32vw] sm:min-w-[340px]">
+          <aside className="relative grid h-full w-[min(100%,430px)] content-start gap-0 overflow-y-auto bg-[#f6f8f1] px-0 py-0 text-neutral-950 shadow-lift sm:w-[32vw] sm:min-w-[340px]">
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
@@ -505,28 +508,28 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={dictionary.nav.search}
-                className="h-12 w-full rounded-none border border-white/20 bg-white pl-10 pr-3 text-base text-neutral-950 placeholder:text-neutral-400 focus:border-white rtl:pl-3 rtl:pr-10"
+                className="h-14 w-full rounded-none border-0 border-b border-neutral-200 bg-white pl-10 pr-3 text-base text-neutral-950 placeholder:text-neutral-400 focus:border-neutral-950 rtl:pl-3 rtl:pr-10"
               />
             </form>
 
-            <div className="grid gap-1">
+            <div className="grid gap-0">
               <div className="grid gap-0">
                 {fashionLinks.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="border-b border-white/10 py-4 text-left text-[1.35rem] font-medium text-white transition hover:pl-2 hover:text-white/80 rtl:text-right rtl:hover:pl-0 rtl:hover:pr-2"
+                    className="border-b border-neutral-200 px-6 py-3.5 text-left text-lg font-medium text-neutral-950 transition hover:bg-white rtl:text-right"
                   >
                     {item.label}
                   </Link>
                 ))}
               </div>
 
-              {!fashionLinks.length ? <p className="py-4 text-sm text-white/60">Add active categories from Admin to show them here.</p> : null}
+              {!fashionLinks.length ? <p className="px-6 py-4 text-sm text-neutral-500">Add active categories from Admin to show them here.</p> : null}
 
-              <div className="mt-4 grid gap-1 border-t border-white/10 pt-4">
-                {navItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="py-2 text-sm font-medium uppercase tracking-[0.14em] text-white/65 hover:text-white">{item.label}</Link>)}
+              <div className="grid gap-0 border-t border-neutral-200">
+                {navItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="border-b border-neutral-200 px-6 py-3.5 text-base font-medium text-neutral-950 hover:bg-white">{item.label}</Link>)}
               </div>
 
               <Link

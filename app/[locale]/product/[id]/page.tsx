@@ -3,7 +3,6 @@ import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductDetail } from "@/components/product/ProductDetail";
-import { BackButton } from "@/components/ui/BackButton";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
 import { getDictionary, getLocalized, isLocale } from "@/lib/i18n";
@@ -97,16 +96,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   };
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-[1600px] px-4 py-8 sm:px-8 lg:px-12">
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
-      <BackButton
-        label={locale === "ar" ? "رجوع" : "Back"}
-        fallbackHref={`/${locale}/shop`}
-        className="mb-6"
       />
       <ProductDetail product={product} locale={locale} dictionary={dictionary} />
 
