@@ -75,7 +75,7 @@ export function HeroSlider({
               loop
               muted
               playsInline
-              className="absolute inset-0 h-full w-full object-cover object-top sm:hidden"
+              className="absolute inset-0 h-full w-full object-cover object-[center_32%] sm:hidden"
             />
           ) : null}
           <video
@@ -85,7 +85,7 @@ export function HeroSlider({
             loop
             muted
             playsInline
-            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover object-top sm:block" : "absolute inset-0 h-full w-full object-cover object-top"}
+            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover object-[center_32%] sm:block" : "absolute inset-0 h-full w-full object-cover object-[center_32%]"}
           />
         </>
       ) : (
@@ -98,7 +98,7 @@ export function HeroSlider({
               fill
               priority
               sizes="(max-width: 639px) 100vw, 1px"
-              className="object-cover object-top sm:hidden"
+              className="object-cover object-[center_32%] sm:hidden"
             />
           ) : null}
           <Image
@@ -108,12 +108,12 @@ export function HeroSlider({
             fill
             priority
             sizes={activeSlide.mobileImage ? "(min-width: 640px) 100vw, 1px" : "100vw"}
-            className={activeSlide.mobileImage ? "hidden object-cover object-top sm:block" : "object-cover object-top"}
+            className={activeSlide.mobileImage ? "hidden object-cover object-[center_32%] sm:block" : "object-cover object-[center_32%]"}
           />
         </>
       )}
       <div className="absolute inset-0 bg-black/15" />
-      <div className="relative mx-auto flex min-h-[300px] max-w-none items-end px-6 py-7 sm:min-h-[520px] sm:px-12 sm:py-12 lg:min-h-[640px]">
+      <div className="relative mx-auto flex min-h-[390px] max-w-none items-end px-6 py-8 sm:min-h-[540px] sm:px-12 sm:py-12 lg:min-h-[620px]">
         <div className="max-w-2xl text-white">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/90">{eyebrow}</p>
           <h1 className="mt-3 text-4xl font-semibold leading-[0.98] tracking-[-0.02em] sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>
@@ -137,7 +137,7 @@ export function HeroSlider({
 
       {showControls ? (
         <>
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 bg-white/80 px-4 py-2 text-neutral-950 backdrop-blur">
+          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-3 text-white">
             {activeSlides.map((slide, index) => (
               <button
                 key={slide.id}
@@ -145,7 +145,7 @@ export function HeroSlider({
                 onClick={() => setActiveIndex(index)}
                 aria-label={`${locale === "ar" ? "انتقل إلى الشريحة" : "Go to slide"} ${index + 1}`}
                 className={`h-2.5 rounded-full transition ${
-                  index === activeIndex ? "w-2.5 bg-neutral-950" : "w-2.5 border border-neutral-400 bg-transparent hover:bg-neutral-300"
+                  index === activeIndex ? "w-2.5 bg-white" : "w-2.5 border border-white/80 bg-white/20 hover:bg-white/60"
                 }`}
               />
             ))}

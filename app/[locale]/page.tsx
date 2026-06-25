@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { HomeFilterControls } from "@/components/home/HomeFilterControls";
-import type { HeroSlide } from "@/components/home/HeroSlider";
+import { HeroSlider, type HeroSlide } from "@/components/home/HeroSlider";
 import { NewsletterSignup } from "@/components/home/NewsletterSignup";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -16,10 +15,6 @@ import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategori
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 export const dynamic = "force-dynamic";
-
-const HeroSlider = nextDynamic(() => import("@/components/home/HeroSlider").then((module) => module.HeroSlider), {
-  loading: () => <section className="min-h-[420px] bg-neutral-100" />
-});
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return { title: params.locale === "ar" ? "Best Mart" : "Best Mart", description: "Dubai online shopping." };
@@ -262,5 +257,5 @@ export default async function HomePage({
     isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage))
   }));
   const fallbackSlide: HeroSlide = { id: "fallback", title: dictionary.home.title, subtitle: dictionary.home.subtitle, buttonText: dictionary.actions.shopNow, href: `/${locale}/shop`, desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 }) };
-  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomeProductExplorer locale={locale} searchParams={searchParams} /><HomepageSectionRenderer locale={locale} sections={sections} /><NewsletterSignup locale={locale} /></main>;
+  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomepageSectionRenderer locale={locale} sections={sections} /><NewsletterSignup locale={locale} /><HomeProductExplorer locale={locale} searchParams={searchParams} /></main>;
 }

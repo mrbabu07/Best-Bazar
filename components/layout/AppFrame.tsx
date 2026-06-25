@@ -1,14 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { MaintenanceScreen } from "@/components/layout/MaintenanceScreen";
 import { NextChunkRecovery } from "@/components/layout/NextChunkRecovery";
+import { StorefrontFrame } from "@/components/layout/StorefrontFrame";
 import type { StorefrontFrameProps } from "@/components/layout/types";
-
-const StorefrontFrame = dynamic(() =>
-  import("@/components/layout/StorefrontFrame").then((module) => module.StorefrontFrame)
-);
 
 export type { StorefrontFrameSettings } from "@/components/layout/types";
 

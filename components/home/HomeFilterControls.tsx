@@ -108,10 +108,11 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
         <div className="flex items-center gap-10">
           <span className="text-[1.35rem] font-medium tracking-[0.02em] text-neutral-700">Filter:</span>
           <form action={action} className="flex items-center gap-10">
-          <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="page" value="1" />
             <input type="hidden" name="priceMin" value={current.priceMin ?? ""} />
             <input type="hidden" name="priceMax" value={current.priceMax ?? ""} />
-            <input type="hidden" name="sort" value={current.sort ?? "new" } />
+            <input type="hidden" name="sort" value={current.sort ?? "new"} />
+            <input type="hidden" name="category" value={current.category ?? ""} />
             <select
               name="availability"
               defaultValue={current.availability ?? ""}
@@ -121,6 +122,27 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
             >
               <option value="">Availability</option>
               <option value="in-stock">In stock</option>
+            </select>
+          </form>
+          <form action={action} className="flex items-center">
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="availability" value={current.availability ?? ""} />
+            <input type="hidden" name="priceMin" value={current.priceMin ?? ""} />
+            <input type="hidden" name="priceMax" value={current.priceMax ?? ""} />
+            <input type="hidden" name="sort" value={current.sort ?? "new"} />
+            <select
+              name="category"
+              defaultValue={current.category ?? ""}
+              onChange={(event) => event.currentTarget.form?.requestSubmit()}
+              className="h-10 min-w-52 border-0 bg-transparent text-[1.35rem] font-medium text-neutral-700 outline-none"
+              aria-label="Category"
+            >
+              <option value="">Category</option>
+              {categories.map((category) => (
+                <option key={category.slug} value={category.slug}>
+                  {category.label}
+                </option>
+              ))}
             </select>
           </form>
           <details className="group relative">

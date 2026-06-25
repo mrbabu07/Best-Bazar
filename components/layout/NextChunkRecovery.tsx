@@ -5,6 +5,22 @@ import { useEffect } from "react";
 const reloadStorageKey = "best-mart-next-chunk-reload-at";
 const reloadCooldownMs = 10_000;
 
+async function clearBrowserBuildCaches() {
+  try {
+    const registrations = await navigator.serviceWorker?.getRegistrations?.();
+    await Promise.all(registrations?.map((registration) => registration.unregister()) ?? []);
+  } catch {
+    // Best-effort cleanup only.
+  }
+
+  try {
+    const cacheNames = await window.caches?.keys?.();
+    await Promise.all(cacheNames?.map((cacheName) => window.caches.delete(cacheName)) ?? []);
+  } catch {
+    // Best-effort cleanup only.
+  }
+}
+
 function isRecoverableNextChunkError(reason: unknown) {
   let serializedReason = "";
 
@@ -42,11 +58,19 @@ function reloadOnceForFreshChunks(reason: unknown) {
   }
 
   window.sessionStorage.setItem(reloadStorageKey, String(now));
-  window.location.reload();
+  void clearBrowserBuildCaches().finally(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("_fresh", String(now));
+    window.location.replace(url.toString());
+  });
 }
 
 export function NextChunkRecovery() {
   useEffect(() => {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      void clearBrowserBuildCaches();
+    }
+
     const clearSuccessfulLoad = window.setTimeout(() => {
       window.sessionStorage.removeItem(reloadStorageKey);
     }, reloadCooldownMs);
