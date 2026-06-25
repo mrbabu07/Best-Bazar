@@ -5,6 +5,7 @@ import { revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations/admin";
 import { created, getPagination, getSearchParam, handleApiError, ok, requireAdmin } from "@/lib/api/admin";
+import { sendNewProductOfferEmail } from "@/lib/email";
 import { titleCaseWords } from "@/lib/text-format";
 
 function buildProductWhere(request: Request): Prisma.ProductWhereInput {
@@ -88,6 +89,16 @@ export async function POST(request: Request) {
     });
 
     revalidateCacheTags(["storefront", "products", "admin-notifications"]);
+    const subscribers = await prisma.newsletterSubscriber.findMany({
+      where: { isActive: true },
+      select: { email: true }
+    });
+    sendNewProductOfferEmail({
+      product,
+      recipients: subscribers.map((subscriber) => subscriber.email)
+    }).catch((error) => {
+      console.error("Newsletter product email failed", error);
+    });
 
     return created(product);
   } catch (error) {

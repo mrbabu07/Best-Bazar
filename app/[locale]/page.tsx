@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { HeroSlide } from "@/components/home/HeroSlider";
+import { NewsletterSignup } from "@/components/home/NewsletterSignup";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { STOREFRONT_REVALIDATE_SECONDS } from "@/lib/cache";
@@ -113,5 +114,5 @@ export default async function HomePage({ params }: { params: { locale: string } 
     isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage))
   }));
   const fallbackSlide: HeroSlide = { id: "fallback", title: dictionary.home.title, subtitle: dictionary.home.subtitle, buttonText: dictionary.actions.shopNow, href: `/${locale}/shop`, desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 }) };
-  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomepageSectionRenderer locale={locale} sections={sections} /></main>;
+  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomepageSectionRenderer locale={locale} sections={sections} /><NewsletterSignup locale={locale} /></main>;
 }

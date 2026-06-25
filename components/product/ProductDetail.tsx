@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, RefreshCcw, ShieldCheck, ShoppingBag, Star, Truck } from "lucide-react";
+import { Minus, Plus, RefreshCcw, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import type { Product, ProductVariant } from "@/lib/types";
@@ -187,9 +187,9 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
   };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1.08fr_0.92fr]">
+    <div className="mx-auto grid max-w-[1500px] gap-10 bg-white lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)]">
       <div>
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-neutral-100 shadow-soft">
+        <div className="relative aspect-[0.78] overflow-hidden bg-[#f5f5f5]">
           <Image
             src={activeGalleryImage.url}
             alt={activeGalleryImage.alt}
@@ -199,14 +199,14 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             priority
           />
         </div>
-        <div className="mt-4 grid grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
           {galleryImages.map((image, index) => (
             <button
               key={`${image.url}-${index}`}
               type="button"
               onClick={() => setActiveImage(index)}
-              className={`relative aspect-square overflow-hidden rounded-md border ${
-                index === safeActiveImage ? "border-gold-500" : "border-neutral-200"
+              className={`relative aspect-square overflow-hidden border ${
+                index === safeActiveImage ? "border-neutral-950" : "border-neutral-200"
               }`}
               aria-label={image.alt}
             >
@@ -215,7 +215,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           ))}
         </div>
         {product.shortVideoUrl ? (
-          <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-black shadow-soft">
+          <div className="mt-4 overflow-hidden border border-neutral-200 bg-black">
             <video
               src={product.shortVideoUrl}
               controls
@@ -229,29 +229,22 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         ) : null}
       </div>
 
-      <div className="lg:pt-4">
+      <div className="lg:sticky lg:top-32 lg:self-start lg:pt-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="gold">{product.brand}</Badge>
           <Badge tone={stockTone}>{stockLabel}</Badge>
-          {product.comparePrice ? <Badge tone="red">{dictionary.common.sale}</Badge> : null}
+          {product.comparePrice ? <span className="rounded-full bg-neutral-950 px-4 py-1.5 text-xs font-semibold text-white">{dictionary.common.sale}</span> : null}
         </div>
 
-        <h1 className="mt-5 text-3xl font-bold text-navy sm:text-4xl">
+        <h1 className="mt-5 text-4xl font-normal leading-tight tracking-[0.01em] text-neutral-950 sm:text-6xl">
           {productName}
         </h1>
 
-        <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-neutral-600">
-          <Star size={17} className="fill-gold-400 text-gold-400" />
-          <span>{product.rating.toFixed(1)}</span>
-          <span>({product.reviewCount} {dictionary.common.reviews})</span>
-        </div>
-
         <div className="mt-6 flex items-end gap-3">
-          <p className="text-3xl font-bold text-navy">
+          <p className="text-2xl font-medium tracking-[0.06em] text-neutral-950">
             {formatCurrency(product.price, currency, locale, currencyRates)}
           </p>
           {product.comparePrice ? (
-            <p className="pb-1 text-lg text-neutral-400 line-through">
+            <p className="pb-1 text-lg tracking-[0.04em] text-neutral-500 line-through">
               {formatCurrency(product.comparePrice, currency, locale, currencyRates)}
             </p>
           ) : null}
@@ -260,7 +253,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         {activeVariants.length ? (
           <div className="mt-6">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-bold text-navy">{labels.color}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-950">{labels.color}</p>
               <p className="text-xs font-semibold text-neutral-500">{labels.stockForColor(availableStock)}</p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -279,8 +272,8 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                     aria-pressed={selected}
                     className={`grid h-8 w-8 place-items-center rounded-full border-2 bg-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                       selected
-                        ? "border-gold-500 ring-2 ring-gold-300 ring-offset-1"
-                        : "border-neutral-200 hover:border-gold-400"
+                        ? "border-neutral-950 ring-2 ring-neutral-300 ring-offset-1"
+                        : "border-neutral-200 hover:border-neutral-950"
                     }`}
                   >
                     <span
@@ -298,7 +291,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
             ) : null}
             {hasSizedVariants ? (
               <div className="mt-4">
-                <p className="text-sm font-bold text-navy">{locale === "ar" ? "المقاس" : "Size"}</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-neutral-950">{locale === "ar" ? "المقاس" : "Size"}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {sizeOptions.map((variant) => {
                     const selected = variantSizeKey(variant) === selectedSizeKey;
@@ -318,8 +311,8 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
                         aria-pressed={selected}
                         className={`inline-flex h-10 items-center rounded-md border px-3 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through ${
                           selected
-                            ? "border-gold-500 bg-gold-50 text-navy"
-                            : "border-neutral-200 bg-white text-neutral-600 hover:border-gold-300"
+                            ? "border-neutral-950 bg-neutral-950 text-white"
+                            : "border-neutral-300 bg-white text-neutral-700 hover:border-neutral-950"
                         }`}
                       >
                         {getVariantSizeLabel(variant, locale)}
@@ -343,22 +336,22 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         </div>
 
         <div className="mt-7 flex flex-wrap gap-3">
-          <div className="inline-flex h-12 items-center overflow-hidden rounded-md border border-neutral-200 bg-white">
+          <div className="inline-flex h-12 items-center overflow-hidden border border-neutral-300 bg-white">
             <button
               type="button"
               onClick={() => setQuantity((value) => Math.max(1, value - 1))}
-              className="grid h-full w-12 place-items-center text-navy hover:bg-gold-50"
+              className="grid h-full w-12 place-items-center text-neutral-950 hover:bg-neutral-100"
               aria-label={labels.decreaseQuantity}
             >
               <Minus size={16} />
             </button>
-            <span className="grid h-full min-w-12 place-items-center border-x border-neutral-200 px-4 text-sm font-bold text-navy">
+            <span className="grid h-full min-w-12 place-items-center border-x border-neutral-200 px-4 text-sm font-bold text-neutral-950">
               {quantity}
             </span>
             <button
               type="button"
               onClick={() => setQuantity((value) => Math.min(availableStock, value + 1))}
-              className="grid h-full w-12 place-items-center text-navy hover:bg-gold-50"
+              className="grid h-full w-12 place-items-center text-neutral-950 hover:bg-neutral-100"
               aria-label={labels.increaseQuantity}
             >
               <Plus size={16} />
@@ -378,14 +371,14 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           <ShareProductButton product={product} locale={locale} />
         </div>
 
-        <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <h2 className="text-lg font-bold text-navy">{locale === "ar" ? "الوصف" : "Description"}</h2>
-          <p className="mt-3 text-base leading-7 text-neutral-600">
+        <div className="mt-10 border-t border-neutral-200 py-6">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-950">{locale === "ar" ? "الوصف" : "Description"}</h2>
+          <p className="mt-4 text-lg leading-9 text-neutral-600">
             {getLocalized(product.description, locale)}
           </p>
         </div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 border-y border-neutral-200 py-5 sm:grid-cols-3">
           {[
             { icon: ShieldCheck, label: dictionary.product.secure },
             { icon: Truck, label: dictionary.product.delivery },
@@ -393,35 +386,35 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
           ].map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-3 rounded-lg border border-gold-100 bg-white p-4 text-sm font-semibold text-navy"
+              className="flex items-center gap-3 border border-neutral-200 bg-white p-4 text-sm font-semibold text-neutral-950"
             >
-              <item.icon size={18} className="text-gold-700" />
+              <item.icon size={18} className="text-neutral-950" />
               {item.label}
             </div>
           ))}
         </div>
 
         {fashionDetailRows.length ? (
-          <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-            <h2 className="text-lg font-bold text-navy">{locale === "ar" ? "تفاصيل الأزياء" : "Fashion details"}</h2>
+          <div className="border-b border-neutral-200 py-6">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-950">{locale === "ar" ? "تفاصيل الأزياء" : "Fashion details"}</h2>
             <div className="mt-4 grid gap-3">
               {fashionDetailRows.map((spec, index) => (
                 <div key={`${getLocalized(spec.key, locale)}-${index}`} className="flex justify-between gap-4 text-sm">
                   <span className="text-neutral-500">{getLocalized(spec.key, locale)}</span>
-                  <span className="font-semibold text-navy">{getLocalized(spec.value, locale)}</span>
+                  <span className="font-semibold text-neutral-950">{getLocalized(spec.value, locale)}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : null}
 
-        <div className="mt-8 rounded-lg border border-neutral-200 bg-white p-5 shadow-soft">
-          <h2 className="text-lg font-bold text-navy">{dictionary.product.specifications}</h2>
+        <div className="border-b border-neutral-200 py-6">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-neutral-950">{dictionary.product.specifications}</h2>
           <div className="mt-4 grid gap-3">
             {product.specifications.map((spec, index) => (
               <div key={`${getLocalized(spec.key, locale)}-${index}`} className="flex justify-between gap-4 text-sm">
                 <span className="text-neutral-500">{getLocalized(spec.key, locale)}</span>
-                <span className="font-semibold text-navy">{getLocalized(spec.value, locale)}</span>
+                <span className="font-semibold text-neutral-950">{getLocalized(spec.value, locale)}</span>
               </div>
             ))}
             {!product.specifications.length ? (
@@ -434,7 +427,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
 
         <Link
           href={`/${locale}/cart`}
-          className="mt-5 inline-flex text-sm font-bold text-gold-700 hover:text-gold-800"
+          className="mt-5 inline-flex text-sm font-bold text-neutral-950 underline underline-offset-4"
         >
           {dictionary.actions.checkout}
         </Link>

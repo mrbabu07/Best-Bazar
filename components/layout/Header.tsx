@@ -278,9 +278,9 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   };
 
   return (
-    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-white">
+    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-[#f6f8f1]">
       {liveSettings.announcementActive && announcement ? (
-        <div className="grid min-h-10 grid-cols-[48px_1fr_48px] items-center border-b border-neutral-200 bg-white px-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-900 sm:grid-cols-[1fr_auto_1fr] sm:px-8 sm:text-sm">
+        <div className="grid min-h-10 grid-cols-[48px_1fr_48px] items-center border-b border-neutral-200 bg-[#ffd99f] px-2 text-center text-[11px] font-semibold tracking-[0.12em] text-neutral-950 sm:grid-cols-[1fr_auto_1fr] sm:bg-[#f6f8f1] sm:px-8 sm:text-sm sm:uppercase">
           <span className="justify-self-start text-neutral-500 sm:justify-self-end" aria-hidden="true">
             <ChevronLeft size={15} />
           </span>
@@ -291,12 +291,12 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-none px-4 sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-[1740px] px-4 sm:px-8 lg:px-10">
         <div className="relative flex min-h-[4.5rem] items-center gap-1 py-2 sm:min-h-[5.25rem] lg:gap-2">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className={iconButtonClass}
+            className={`${iconButtonClass} sm:hidden`}
             aria-label="Toggle navigation"
             aria-expanded={open}
           >
@@ -306,7 +306,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="absolute left-1/2 z-10 max-w-[calc(100%-11rem)] -translate-x-1/2 truncate text-center text-xl font-semibold uppercase tracking-[0.08em] text-neutral-950 sm:max-w-none sm:text-2xl"
+            className="absolute left-1/2 z-10 max-w-[calc(100%-11rem)] -translate-x-1/2 truncate text-center text-xl font-extrabold uppercase tracking-[0.02em] text-neutral-950 sm:static sm:left-auto sm:mr-auto sm:max-w-none sm:translate-x-0 sm:text-3xl"
           >
             {brandName || dictionary.brand}
           </Link>
@@ -314,7 +314,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className={iconButtonClass}
+            className={`${iconButtonClass} sm:ml-auto`}
             aria-label={dictionary.nav.search}
           >
             <Search size={20} />
@@ -469,6 +469,22 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           </div>
         </div>
       </div>
+
+      <nav className="hidden border-t border-neutral-200 bg-[#f6f8f1] sm:block">
+        <div className="mx-auto flex max-w-[1740px] flex-wrap items-center gap-x-9 gap-y-5 px-8 py-6 text-[1.05rem] font-medium text-neutral-950 lg:px-10">
+          {navItems.map((item, index) => (
+            <Link key={item.href} href={item.href} className={index === 0 ? "underline underline-offset-4" : "hover:underline hover:underline-offset-4"}>
+              {item.label}
+            </Link>
+          ))}
+          {fashionLinks.slice(0, 9).map((item, index) => (
+            <Link key={item.href} href={item.href} className="hover:underline hover:underline-offset-4">
+              {index === 0 ? "🔥 " : index === 1 ? "✨ " : index === 2 ? "💎 " : ""}
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
 
       {open ? (
         <div className="absolute inset-x-0 top-full z-50 h-[calc(100dvh-7rem)] overflow-hidden">
