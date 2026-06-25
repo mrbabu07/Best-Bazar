@@ -42,7 +42,7 @@ export function ProductCard({ product, locale, dictionary, priority = false, sho
 
   return (
     <article className="group relative flex min-w-0 flex-col bg-white">
-      <div className="relative aspect-[.88] shrink-0 overflow-hidden bg-neutral-100 sm:aspect-[3/4]">
+      <div className="relative aspect-[0.72] shrink-0 overflow-hidden bg-[#f5f5f5] sm:aspect-[0.74]">
         <Link href={`/${locale}/product/${product.slug}`} className="block h-full">
           <Image
             src={cardImage.url}
@@ -53,17 +53,17 @@ export function ProductCard({ product, locale, dictionary, priority = false, sho
             priority={priority}
           />
           <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 rtl:left-auto rtl:right-2">
-            {hasSale ? <span className="rounded-full bg-neutral-950 px-3 py-1 text-[11px] font-semibold text-white">{dictionary.common.sale}</span> : null}
+            {hasSale ? <span className="rounded-full bg-neutral-950 px-4 py-1.5 text-xs font-semibold text-white">{dictionary.common.sale}</span> : null}
             {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
           </div>
         </Link>
         {showQuickAdd ? <ProductCardAddButton product={cartProduct} variants={product.variants} locale={locale} addToCartLabel={dictionary.actions.addToCart} /> : null}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-0.5 pt-3">
+      <div className="flex min-h-0 flex-1 flex-col px-0.5 pt-4">
         <Link
           href={`/${locale}/product/${product.slug}`}
-          className="line-clamp-2 min-h-[40px] text-[13px] font-medium leading-5 tracking-[0.02em] text-neutral-900 transition hover:underline sm:min-h-[44px] sm:text-[15px] sm:leading-6"
+          className="line-clamp-2 min-h-[42px] text-[13px] font-medium leading-5 tracking-[0.035em] text-neutral-900 transition hover:underline sm:min-h-[48px] sm:text-[15px] sm:leading-6"
         >
           {productName}
         </Link>

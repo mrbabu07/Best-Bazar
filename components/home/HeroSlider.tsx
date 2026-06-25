@@ -63,7 +63,7 @@ export function HeroSlider({
   };
 
   return (
-    <section className="relative min-h-[390px] overflow-hidden sm:min-h-[540px] lg:min-h-[620px]">
+    <section className="relative overflow-hidden bg-white">
       {/* Background Media */}
       {activeSlide.isVideo ? (
         <>
@@ -112,22 +112,22 @@ export function HeroSlider({
           />
         </>
       )}
-      <div className="absolute inset-0 bg-black/20" />
-      <div className="relative mx-auto flex min-h-[390px] max-w-7xl items-end px-4 py-8 sm:min-h-[540px] sm:px-6 sm:py-12 lg:min-h-[620px] lg:px-8">
-        <div className="max-w-xl text-white">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/85">{eyebrow}</p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-5xl lg:text-6xl">{activeSlide.title}</h1>
-          <p className="mt-3 max-w-lg text-sm leading-6 text-white/90 sm:text-base">{activeSlide.subtitle}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
+      <div className="absolute inset-0 bg-black/15" />
+      <div className="relative mx-auto flex min-h-[300px] max-w-none items-end px-6 py-7 sm:min-h-[520px] sm:px-12 sm:py-12 lg:min-h-[640px]">
+        <div className="max-w-2xl text-white">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/90">{eyebrow}</p>
+          <h1 className="mt-3 text-4xl font-semibold leading-[0.98] tracking-[-0.02em] sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{activeSlide.subtitle}</p>
+          <div className="mt-7 flex flex-wrap gap-3">
             <Link
               href={activeSlide.href}
-              className="inline-flex h-11 items-center bg-neutral-950 px-7 text-sm font-semibold text-white transition hover:bg-neutral-800"
+              className="inline-flex h-12 items-center bg-neutral-950 px-8 text-sm font-semibold uppercase tracking-[0.04em] text-white transition hover:bg-neutral-800"
             >
               {activeSlide.buttonText}
             </Link>
             <Link
               href={secondaryHref}
-              className="hidden h-11 items-center border border-white/70 px-6 text-sm font-semibold text-white transition hover:bg-white hover:text-neutral-950 sm:inline-flex"
+              className="hidden h-12 items-center border border-white/70 px-7 text-sm font-semibold uppercase tracking-[0.04em] text-white transition hover:bg-white hover:text-neutral-950 sm:inline-flex"
             >
               {secondaryLabel}
             </Link>
@@ -137,7 +137,7 @@ export function HeroSlider({
 
       {showControls ? (
         <>
-          <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 bg-white/80 px-4 py-2 text-neutral-950 backdrop-blur">
             {activeSlides.map((slide, index) => (
               <button
                 key={slide.id}
@@ -145,17 +145,17 @@ export function HeroSlider({
                 onClick={() => setActiveIndex(index)}
                 aria-label={`${locale === "ar" ? "انتقل إلى الشريحة" : "Go to slide"} ${index + 1}`}
                 className={`h-2.5 rounded-full transition ${
-                  index === activeIndex ? "w-8 bg-gold-300" : "w-2.5 bg-white/55 hover:bg-white"
+                  index === activeIndex ? "w-2.5 bg-neutral-950" : "w-2.5 border border-neutral-400 bg-transparent hover:bg-neutral-300"
                 }`}
               />
             ))}
           </div>
-          <div className="absolute right-4 top-1/2 hidden -translate-y-1/2 gap-2 sm:flex rtl:left-4 rtl:right-auto">
+          <div className="absolute right-5 top-1/2 hidden -translate-y-1/2 gap-3 sm:flex rtl:left-5 rtl:right-auto">
             <button
               type="button"
               onClick={goToPrevious}
               aria-label={locale === "ar" ? "الشريحة السابقة" : "Previous slide"}
-              className="grid h-11 w-11 place-items-center rounded-md border border-white/25 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+              className="grid h-12 w-12 place-items-center rounded-full border border-white/40 bg-white/15 text-white backdrop-blur hover:bg-white/25"
             >
               <ChevronLeft size={22} className="rtl:rotate-180" />
             </button>
@@ -163,7 +163,7 @@ export function HeroSlider({
               type="button"
               onClick={goToNext}
               aria-label={locale === "ar" ? "الشريحة التالية" : "Next slide"}
-              className="grid h-11 w-11 place-items-center rounded-md border border-white/25 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+              className="grid h-12 w-12 place-items-center rounded-full border border-white/40 bg-white/15 text-white backdrop-blur hover:bg-white/25"
             >
               <ChevronRight size={22} className="rtl:rotate-180" />
             </button>

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
+  ChevronLeft,
+  ChevronRight,
   Globe2,
   LayoutDashboard,
   Menu,
@@ -143,7 +145,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   ];
   const visibleNotifications = storefrontNotifications.filter((item) => !dismissedNotifications.includes(item.id));
   const iconButtonClass =
-    "grid h-9 w-9 shrink-0 place-items-center text-neutral-950 transition hover:bg-neutral-100 sm:h-11 sm:w-11";
+    "grid h-10 w-10 shrink-0 place-items-center rounded-none text-neutral-950 transition hover:bg-neutral-100 sm:h-11 sm:w-11";
   const mobileLinkClass =
     "flex items-center justify-between rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy transition hover:border-neutral-300 hover:bg-neutral-50";
 
@@ -278,15 +280,19 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   return (
     <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-white">
       {liveSettings.announcementActive && announcement ? (
-        <div className="border-b border-neutral-200 bg-white px-4 py-2 text-center text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-800">
-          <span className="mr-8 text-neutral-500" aria-hidden="true">‹</span>
-          {announcement}
-          <span className="ml-8 text-neutral-500" aria-hidden="true">›</span>
+        <div className="grid min-h-10 grid-cols-[48px_1fr_48px] items-center border-b border-neutral-200 bg-white px-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-900 sm:grid-cols-[1fr_auto_1fr] sm:px-8 sm:text-sm">
+          <span className="justify-self-start text-neutral-500 sm:justify-self-end" aria-hidden="true">
+            <ChevronLeft size={15} />
+          </span>
+          <span className="line-clamp-1 px-3">{announcement}</span>
+          <span className="justify-self-end text-neutral-500 sm:justify-self-start" aria-hidden="true">
+            <ChevronRight size={15} />
+          </span>
         </div>
       ) : null}
 
       <div className="mx-auto max-w-none px-4 sm:px-8 lg:px-10">
-        <div className="relative flex min-h-[4.75rem] items-center gap-1 py-2 sm:min-h-[5.5rem] lg:min-h-[6.75rem] lg:gap-2">
+        <div className="relative flex min-h-[4.5rem] items-center gap-1 py-2 sm:min-h-[5.25rem] lg:gap-2">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -300,7 +306,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="croissant-one-regular absolute left-1/2 z-10 max-w-[calc(100%-10rem)] -translate-x-1/2 truncate text-lg text-neutral-950 sm:max-w-none sm:text-[1.7rem]"
+            className="absolute left-1/2 z-10 max-w-[calc(100%-11rem)] -translate-x-1/2 truncate text-center text-xl font-semibold uppercase tracking-[0.08em] text-neutral-950 sm:max-w-none sm:text-2xl"
           >
             {brandName || dictionary.brand}
           </Link>
@@ -472,7 +478,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
             className="absolute inset-0 cursor-default bg-black/45"
             aria-label="Close category navigation"
           />
-          <aside className="relative grid h-full w-[min(100%,430px)] gap-3 overflow-y-auto bg-neutral-950 px-5 py-5 text-white shadow-lift sm:w-[34vw] sm:min-w-[320px]">
+          <aside className="relative grid h-full w-[min(100%,430px)] content-start gap-5 overflow-y-auto bg-[#101010] px-5 py-5 text-white shadow-lift sm:w-[32vw] sm:min-w-[340px]">
             <form onSubmit={submitSearch} className="relative">
               <Search
                 size={18}
@@ -483,18 +489,18 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={dictionary.nav.search}
-                className="h-11 w-full rounded-md border border-neutral-200 bg-white pl-10 pr-3 text-sm text-navy placeholder:text-neutral-400 focus:border-neutral-500 rtl:pl-3 rtl:pr-10"
+                className="h-12 w-full rounded-none border border-white/20 bg-white pl-10 pr-3 text-base text-neutral-950 placeholder:text-neutral-400 focus:border-white rtl:pl-3 rtl:pr-10"
               />
             </form>
 
             <div className="grid gap-1">
-              <div className="grid gap-1">
+              <div className="grid gap-0">
                 {fashionLinks.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="border-b border-white/10 py-3 text-left text-lg font-semibold text-white rtl:text-right"
+                    className="border-b border-white/10 py-4 text-left text-[1.35rem] font-medium text-white transition hover:pl-2 hover:text-white/80 rtl:text-right rtl:hover:pl-0 rtl:hover:pr-2"
                   >
                     {item.label}
                   </Link>
@@ -503,8 +509,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
 
               {!fashionLinks.length ? <p className="py-4 text-sm text-white/60">Add active categories from Admin to show them here.</p> : null}
 
-              <div className="mt-4 grid gap-1 border-t border-white/10 pt-3">
-                {navItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="py-2 text-sm font-medium text-white/75 hover:text-white">{item.label}</Link>)}
+              <div className="mt-4 grid gap-1 border-t border-white/10 pt-4">
+                {navItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="py-2 text-sm font-medium uppercase tracking-[0.14em] text-white/65 hover:text-white">{item.label}</Link>)}
               </div>
 
               <Link

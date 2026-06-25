@@ -41,13 +41,13 @@ export function ProductCardPrice({ price, comparePrice, locale }: ProductCardPri
   const hasComparePrice = typeof comparePrice === "number" && comparePrice > price;
 
   return (
-    <div className="mt-1 flex min-h-7 flex-wrap items-center gap-x-3 gap-y-1">
+    <div className="mt-1 flex min-h-8 flex-wrap items-baseline gap-x-3 gap-y-1">
       {hasComparePrice ? (
-        <p className="text-sm font-normal text-neutral-500 line-through">
+        <p className="text-sm font-normal tracking-[0.04em] text-neutral-500 line-through">
           {formatCurrency(comparePrice, currency, locale, currencyRates)}
         </p>
       ) : null}
-      <p className="text-base font-medium text-neutral-950 sm:text-lg">
+      <p className="text-base font-medium tracking-[0.06em] text-neutral-950 sm:text-lg">
         {formatCurrency(price, currency, locale, currencyRates)}
       </p>
     </div>
@@ -81,7 +81,7 @@ export function ProductCardAddButton({
       disabled={availableStock <= 0 || adding}
       aria-label={addToCartLabel}
       title={addToCartLabel}
-      className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-md border border-neutral-200 bg-white/95 text-navy shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-400 hover:bg-white disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 disabled:hover:translate-y-0 sm:right-3 sm:top-3 sm:h-9 sm:w-9 rtl:left-2 rtl:right-auto sm:rtl:left-3"
+      className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-full border border-neutral-200 bg-white/95 text-neutral-950 shadow-sm backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-400 hover:bg-white disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400 disabled:hover:translate-y-0 sm:right-3 sm:top-3 sm:h-9 sm:w-9 rtl:left-2 rtl:right-auto sm:rtl:left-3"
     >
       <ShoppingBag
         size={17}
