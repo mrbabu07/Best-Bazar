@@ -1,6 +1,6 @@
 "use client";
 
-import { SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
 import type { Locale } from "@/lib/i18n";
 
@@ -23,6 +23,10 @@ const sortOptions = [
   { value: "price-asc", label: "Price low to high" },
   { value: "price-desc", label: "Price high to low" }
 ];
+
+function sortLabel(value?: string) {
+  return sortOptions.find((option) => option.value === value)?.label ?? "New arrivals";
+}
 
 function FilterFields({ categories, current }: Pick<HomeFilterControlsProps, "categories" | "current">) {
   return (
@@ -100,52 +104,60 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
 
   return (
     <>
-      <div className="mt-10 hidden items-center justify-between gap-6 lg:flex">
-        <form action={action} className="flex flex-wrap items-end gap-8">
-          <span className="pb-3 text-xl font-medium text-neutral-700">Filter:</span>
+      <div className="mt-16 hidden items-center justify-between gap-8 lg:flex">
+        <div className="flex items-center gap-10">
+          <span className="text-[1.35rem] font-medium tracking-[0.02em] text-neutral-700">Filter:</span>
+          <form action={action} className="flex items-center gap-10">
           <input type="hidden" name="page" value="1" />
-          <label className="grid gap-1 text-base font-medium text-neutral-600">
-            Availability
-            <select name="availability" defaultValue={current.availability ?? ""} className="h-10 min-w-36 border-0 bg-transparent text-lg text-neutral-950">
-              <option value="">All</option>
+            <input type="hidden" name="priceMin" value={current.priceMin ?? ""} />
+            <input type="hidden" name="priceMax" value={current.priceMax ?? ""} />
+            <input type="hidden" name="sort" value={current.sort ?? "new" } />
+            <select
+              name="availability"
+              defaultValue={current.availability ?? ""}
+              onChange={(event) => event.currentTarget.form?.requestSubmit()}
+              className="h-10 min-w-40 border-0 bg-transparent text-[1.35rem] font-medium text-neutral-700 outline-none"
+              aria-label="Availability"
+            >
+              <option value="">Availability</option>
               <option value="in-stock">In stock</option>
             </select>
-          </label>
-          <label className="grid gap-1 text-base font-medium text-neutral-600">
-            Category
-            <select name="category" defaultValue={current.category ?? ""} className="h-10 min-w-44 border-0 bg-transparent text-lg text-neutral-950">
-              <option value="">All collections</option>
-              {categories.map((category) => (
-                <option key={category.slug} value={category.slug}>{category.label}</option>
-              ))}
-            </select>
-          </label>
-          <div className="grid gap-1 text-base font-medium text-neutral-600">
-            Price
-            <div className="flex gap-2">
-              <input name="priceMin" type="number" min="0" defaultValue={current.priceMin ?? ""} placeholder="From" className="h-10 w-24 border-b border-neutral-400 bg-transparent text-lg text-neutral-950 placeholder:text-neutral-400" />
-              <input name="priceMax" type="number" min="0" defaultValue={current.priceMax ?? ""} placeholder="To" className="h-10 w-24 border-b border-neutral-400 bg-transparent text-lg text-neutral-950 placeholder:text-neutral-400" />
-            </div>
-          </div>
-          <button type="submit" className="h-10 bg-neutral-950 px-6 text-sm font-semibold uppercase tracking-[0.08em] text-white">
-            Apply
-          </button>
-        </form>
-        <form action={action} className="flex items-end gap-8">
+          </form>
+          <details className="group relative">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-[1.35rem] font-medium text-neutral-700 [&::-webkit-details-marker]:hidden">
+              Price
+              <ChevronDown size={18} className="transition group-open:rotate-180" />
+            </summary>
+            <form action={action} className="absolute left-0 top-10 z-20 grid w-80 gap-4 border border-neutral-200 bg-[#f6f8f1] p-5 shadow-xl">
+              <input type="hidden" name="availability" value={current.availability ?? ""} />
+              <input type="hidden" name="category" value={current.category ?? ""} />
+              <input type="hidden" name="sort" value={current.sort ?? "new"} />
+              <input type="hidden" name="page" value="1" />
+              <div className="grid grid-cols-2 gap-3">
+                <input name="priceMin" type="number" min="0" defaultValue={current.priceMin ?? ""} placeholder="From" className="h-12 rounded-none border border-neutral-300 bg-white px-3 text-base text-neutral-950 placeholder:text-neutral-400" />
+                <input name="priceMax" type="number" min="0" defaultValue={current.priceMax ?? ""} placeholder="To" className="h-12 rounded-none border border-neutral-300 bg-white px-3 text-base text-neutral-950 placeholder:text-neutral-400" />
+              </div>
+              <button type="submit" className="h-11 bg-neutral-950 px-5 text-sm font-semibold uppercase tracking-[0.08em] text-white">
+                Apply
+              </button>
+            </form>
+          </details>
+        </div>
+        <form action={action} className="flex items-center gap-10">
           <input type="hidden" name="availability" value={current.availability ?? ""} />
           <input type="hidden" name="category" value={current.category ?? ""} />
           <input type="hidden" name="priceMin" value={current.priceMin ?? ""} />
           <input type="hidden" name="priceMax" value={current.priceMax ?? ""} />
           <input type="hidden" name="page" value="1" />
-          <label className="grid gap-1 text-base font-medium text-neutral-600">
-            Sort by
-            <select name="sort" defaultValue={current.sort ?? "new"} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="h-10 min-w-52 border-0 bg-transparent text-lg text-neutral-950">
+          <label className="flex items-center gap-8 text-[1.35rem] font-medium text-neutral-700">
+            <span>Sort by:</span>
+            <select name="sort" defaultValue={current.sort ?? "new"} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="h-10 min-w-56 border-0 bg-transparent text-[1.35rem] font-medium text-neutral-700 outline-none" aria-label={`Sort by ${sortLabel(current.sort)}`}>
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
           </label>
-          <span className="pb-2 text-lg text-neutral-600">{total} products</span>
+          <span className="text-[1.35rem] font-medium text-neutral-600">{total} products</span>
         </form>
       </div>
 
