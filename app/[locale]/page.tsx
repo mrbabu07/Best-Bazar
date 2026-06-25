@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import nextDynamic from "next/dynamic";
 import { notFound } from "next/navigation";
+import { HomeFilterControls } from "@/components/home/HomeFilterControls";
 import type { HeroSlide } from "@/components/home/HeroSlider";
 import { NewsletterSignup } from "@/components/home/NewsletterSignup";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -29,6 +30,34 @@ function pathFor(locale: Locale, href?: string) {
   if (href.startsWith("http")) return href;
   if (href.startsWith("/en/") || href.startsWith("/ar/")) return href.replace(/^\/(en|ar)/, `/${locale}`);
   return href.startsWith("/") ? `/${locale}${href}` : `/${locale}/${href}`;
+}
+
+function readSearchValue(
+  searchParams: Record<string, string | string[] | undefined> | undefined,
+  key: string
+) {
+  const value = searchParams?.[key];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function buildHomePageHref(
+  locale: Locale,
+  current: Record<string, string | undefined>,
+  page: number
+) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(current)) {
+    if (value) {
+      params.set(key, value);
+    }
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  return `/${locale}${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
 async function productsForSection(section: HomepageSection) {
@@ -98,7 +127,126 @@ async function HomepageSectionRenderer({ locale, sections }: { locale: Locale; s
   }))}</>;
 }
 
-export default async function HomePage({ params }: { params: { locale: string } }) {
+async function HomeProductExplorer({
+  locale,
+  searchParams
+}: {
+  locale: Locale;
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const dictionary = getDictionary(locale);
+  const pageSize = 8;
+  const current = {
+    availability: readSearchValue(searchParams, "availability") ?? "",
+    category: readSearchValue(searchParams, "category") ?? "",
+    priceMin: readSearchValue(searchParams, "priceMin") ?? "",
+    priceMax: readSearchValue(searchParams, "priceMax") ?? "",
+    sort: readSearchValue(searchParams, "sort") ?? "new"
+  };
+  const page = Math.max(1, Number(readSearchValue(searchParams, "page") ?? "1") || 1);
+  const [categories, allProducts] = await Promise.all([
+    getStoreCategories(),
+    getStoreProducts({
+      availability: current.availability,
+      category: current.category,
+      priceMin: current.priceMin,
+      priceMax: current.priceMax,
+      sort: current.sort
+    })
+  ]);
+  const totalPages = Math.max(1, Math.ceil(allProducts.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const products = allProducts.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const filterHrefState = {
+    availability: current.availability,
+    category: current.category,
+    priceMin: current.priceMin,
+    priceMax: current.priceMax,
+    sort: current.sort === "new" ? undefined : current.sort
+  };
+
+  return (
+    <section className="bg-[#f6f8f1] px-4 py-12 sm:px-8 sm:py-16 lg:px-12">
+      <div className="mx-auto max-w-[1720px]">
+        <h2 className="font-serif text-[3.1rem] font-normal leading-none text-neutral-950 sm:text-[5rem]">
+          New Arrivals
+        </h2>
+        <HomeFilterControls
+          locale={locale}
+          total={allProducts.length}
+          categories={categories.map((category) => ({
+            slug: category.slug,
+            label: getLocalized(category.name, locale)
+          }))}
+          current={current}
+        />
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:mt-12 lg:grid-cols-4 lg:gap-x-12 lg:gap-y-14">
+          {products.map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              locale={locale}
+              dictionary={dictionary}
+              priority={index < 4}
+            />
+          ))}
+        </div>
+        {!products.length ? (
+          <div className="mt-10 border border-neutral-200 bg-white px-6 py-12 text-center">
+            <p className="text-lg font-medium text-neutral-950">No products matched this filter.</p>
+            <Link href={`/${locale}`} className="mt-4 inline-flex text-sm font-medium text-neutral-600 underline underline-offset-4">
+              Remove filters
+            </Link>
+          </div>
+        ) : null}
+        {totalPages > 1 ? (
+          <nav className="mt-12 flex flex-wrap items-center justify-center gap-2" aria-label="Home product pages">
+            <Link
+              href={buildHomePageHref(locale, filterHrefState, Math.max(1, safePage - 1))}
+              className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
+                safePage === 1 ? "pointer-events-none border-neutral-200 text-neutral-300" : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
+              }`}
+            >
+              Prev
+            </Link>
+            {Array.from({ length: totalPages }).map((_, index) => {
+              const nextPage = index + 1;
+              return (
+                <Link
+                  key={nextPage}
+                  href={buildHomePageHref(locale, filterHrefState, nextPage)}
+                  className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
+                    nextPage === safePage
+                      ? "border-neutral-950 bg-neutral-950 text-white"
+                      : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
+                  }`}
+                >
+                  {nextPage}
+                </Link>
+              );
+            })}
+            <Link
+              href={buildHomePageHref(locale, filterHrefState, Math.min(totalPages, safePage + 1))}
+              className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
+                safePage === totalPages ? "pointer-events-none border-neutral-200 text-neutral-300" : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
+              }`}
+            >
+              Next
+            </Link>
+          </nav>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+export default async function HomePage({
+  params,
+  searchParams
+}: {
+  params: { locale: string };
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   if (!isLocale(params.locale)) notFound();
   const locale = params.locale;
   const dictionary = getDictionary(locale);
@@ -114,5 +262,5 @@ export default async function HomePage({ params }: { params: { locale: string } 
     isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage))
   }));
   const fallbackSlide: HeroSlide = { id: "fallback", title: dictionary.home.title, subtitle: dictionary.home.subtitle, buttonText: dictionary.actions.shopNow, href: `/${locale}/shop`, desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 }) };
-  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomepageSectionRenderer locale={locale} sections={sections} /><NewsletterSignup locale={locale} /></main>;
+  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomeProductExplorer locale={locale} searchParams={searchParams} /><HomepageSectionRenderer locale={locale} sections={sections} /><NewsletterSignup locale={locale} /></main>;
 }
