@@ -22,6 +22,8 @@ type CartPageContentProps = {
   locale: Locale;
   dictionary: Dictionary;
   couponOffersAvailable: boolean;
+  freeShippingThreshold: number;
+  freeDeliveryEnabled: boolean;
 };
 
 const cartCopy = {
@@ -65,7 +67,13 @@ const cartCopy = {
   }
 >;
 
-export function CartPageContent({ locale, dictionary, couponOffersAvailable }: CartPageContentProps) {
+export function CartPageContent({
+  locale,
+  dictionary,
+  couponOffersAvailable,
+  freeShippingThreshold,
+  freeDeliveryEnabled
+}: CartPageContentProps) {
   const labels = cartCopy[locale];
   const hydrated = useHydrated();
   const [coupon, setCoupon] = useState("");
@@ -84,12 +92,12 @@ export function CartPageContent({ locale, dictionary, couponOffersAvailable }: C
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
-  const dubaiFreeFrom =
-    shippingSettings.shippingRates.find((rate) => rate.key === "dubai")?.freeFrom ??
-    shippingSettings.freeShippingThreshold;
-  const freeShippingThreshold = Math.max(dubaiFreeFrom, 1);
-  const freeShippingRemaining = Math.max(0, freeShippingThreshold - subtotal);
-  const freeShippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
+  const resolvedFreeShippingThreshold = Math.max(
+    hydrated ? freeShippingThreshold : shippingSettings.freeShippingThreshold,
+    1
+  );
+  const freeShippingRemaining = freeDeliveryEnabled ? 0 : Math.max(0, resolvedFreeShippingThreshold - subtotal);
+  const freeShippingProgress = freeDeliveryEnabled ? 100 : Math.min(100, (subtotal / resolvedFreeShippingThreshold) * 100);
   const total = Math.max(subtotal - discount, 0);
 
   useEffect(() => {

@@ -26,7 +26,7 @@ export default async function CartPage({ params }: { params: { locale: string } 
     }),
     prisma.setting.findUnique({
       where: { id: "store-settings" },
-      select: { themeSettings: true }
+      select: { themeSettings: true, freeShippingThreshold: true }
     })
   ]);
   const checkoutControls = normalizeThemeSettings(settings?.themeSettings).checkoutControls;
@@ -36,6 +36,8 @@ export default async function CartPage({ params }: { params: { locale: string } 
       locale={params.locale}
       dictionary={getDictionary(params.locale)}
       couponOffersAvailable={checkoutControls.showCouponBox && activeCoupons > 0}
+      freeShippingThreshold={Number(settings?.freeShippingThreshold ?? 250)}
+      freeDeliveryEnabled={checkoutControls.freeDeliveryEnabled}
     />
   );
 }

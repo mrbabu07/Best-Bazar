@@ -407,7 +407,19 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 One delivery fee applies across checkout. Turn free delivery on when you want delivery to be free for every order.
               </p>
             </div>
-            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-5">
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Free delivery from (AED)
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.freeShippingThreshold}
+                  onChange={(event) => updateForm("freeShippingThreshold", event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
               <label className="grid gap-2 text-sm font-semibold text-navy">
                 Delivery label
                 <input value={form.customAreaFee.areaLabel} onChange={(event) => updateCustomAreaFee("areaLabel", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
@@ -428,7 +440,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-3">
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.freeDeliveryEnabled} onChange={(event) => updateCheckoutControl("freeDeliveryEnabled", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
-                <span><span className="block">Free delivery for all orders</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides delivery fee.</span></span>
+                <span><span className="block">Free delivery for all orders</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides fee and threshold.</span></span>
               </label>
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.showCouponBox} onChange={(event) => updateCheckoutControl("showCouponBox", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
