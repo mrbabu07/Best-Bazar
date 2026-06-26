@@ -163,9 +163,6 @@ async function HomeProductExplorer({
   return (
     <section className="bg-[#f6f8f1] px-4 py-12 sm:px-8 sm:py-16 lg:px-12">
       <div className="mx-auto max-w-[1720px]">
-        <h2 className="font-serif text-[3.1rem] font-normal leading-none text-neutral-950 sm:text-[5rem]">
-          New Arrivals
-        </h2>
         <HomeFilterControls
           locale={locale}
           total={allProducts.length}
@@ -175,6 +172,9 @@ async function HomeProductExplorer({
           }))}
           current={current}
         />
+        <h2 className="mt-10 font-serif text-[3.1rem] font-normal leading-none text-neutral-950 sm:mt-14 sm:text-[5rem]">
+          New Arrivals
+        </h2>
         <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:mt-12 lg:grid-cols-4 lg:gap-x-12 lg:gap-y-14">
           {products.map((product, index) => (
             <ProductCard

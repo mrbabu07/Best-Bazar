@@ -9,8 +9,6 @@ import {
   getStoreBrands,
   getStoreCategories,
   getStoreProducts,
-  getStoreVariantColors,
-  getStoreVariantSizes
 } from "@/lib/storefront";
 
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
@@ -43,19 +41,16 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const dictionary = getDictionary(locale);
   const category = readParam(searchParams, "category");
   const brand = readParam(searchParams, "brand");
-  const size = readParam(searchParams, "size");
   const search = readParam(searchParams, "search");
   const sort = readParam(searchParams, "sort") ?? "featured";
   const tag = readParam(searchParams, "tag");
   const priceMin = readParam(searchParams, "priceMin");
   const priceMax = readParam(searchParams, "priceMax");
   const availability = readParam(searchParams, "availability");
-  const [categories, brands, colors, sizes, listing] = await Promise.all([
+  const [categories, brands, listing] = await Promise.all([
     getStoreCategories(),
     getStoreBrands(),
-    getStoreVariantColors(),
-    getStoreVariantSizes(),
-    getStoreProducts({ category, brand, size, search, sort, tag, priceMin, priceMax, availability })
+    getStoreProducts({ category, brand, search, sort, tag, priceMin, priceMax, availability })
   ]);
 
   return (
@@ -78,15 +73,14 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
+      <div className="grid gap-8">
         <ProductFilters
           locale={locale}
           dictionary={dictionary}
           categories={categories}
           brands={brands}
-          colors={colors}
-          sizes={sizes}
-          current={{ category, brand, size, search, sort, tag, priceMin, priceMax, availability }}
+          total={listing.length}
+          current={{ category, brand, search, sort, tag, priceMin, priceMax, availability }}
         />
         <section className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-3 xl:grid-cols-4">
           {listing.length > 0 ? (

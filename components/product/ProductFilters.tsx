@@ -1,27 +1,22 @@
 "use client";
 
-import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLocalized } from "@/lib/i18n";
-import { normalizeSizeFilterValue } from "@/lib/product-size-label";
-import type { Category, ProductColor, ProductSize } from "@/lib/types";
+import type { Category } from "@/lib/types";
 
 type ProductFiltersProps = {
   locale: Locale;
   dictionary: Dictionary;
   categories: Category[];
   brands: string[];
-  colors: ProductColor[];
-  sizes: ProductSize[];
+  total: number;
   current: {
     category?: string;
     brand?: string;
-    color?: string;
-    size?: string;
-    rating?: string;
     search?: string;
     sort?: string;
     tag?: string;
@@ -34,37 +29,36 @@ type ProductFiltersProps = {
 const filterCopy = {
   en: {
     all: "All",
-    clear: "Clear",
-    color: "Color",
-    size: "Size",
+    filterAndSort: "Filter and sort",
+    removeAll: "Remove all",
     minPrice: "Min AED",
     maxPrice: "Max AED",
     sortFeatured: "Featured",
     sortNewest: "Newest",
     sortPriceAsc: "Price low to high",
     sortPriceDesc: "Price high to low",
-    sortRating: "Top rated"
+    sortRating: "Top rated",
+    products: "products"
   },
   ar: {
     all: "All",
-    clear: "Clear",
-    color: "Color",
-    size: "Size",
+    filterAndSort: "Filter and sort",
+    removeAll: "Remove all",
     minPrice: "Min AED",
     maxPrice: "Max AED",
     sortFeatured: "Featured",
     sortNewest: "Newest",
     sortPriceAsc: "Price low to high",
     sortPriceDesc: "Price high to low",
-    sortRating: "Top rated"
+    sortRating: "Top rated",
+    products: "products"
   }
 } satisfies Record<
   Locale,
   {
     all: string;
-    clear: string;
-    color: string;
-    size: string;
+    filterAndSort: string;
+    removeAll: string;
     minPrice: string;
     maxPrice: string;
     sortFeatured: string;
@@ -72,74 +66,35 @@ const filterCopy = {
     sortPriceAsc: string;
     sortPriceDesc: string;
     sortRating: string;
+    products: string;
   }
 >;
-
-function splitFilter(value?: string) {
-  return (value ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function normalizeFilterValue(value: string) {
-  return value.trim().toLowerCase();
-}
-
-function hasFilterValue(values: string[], value: string) {
-  const normalized = normalizeFilterValue(value);
-
-  return values.some((item) => normalizeFilterValue(item) === normalized);
-}
-
-function toggleFilterValue(values: string[], value: string) {
-  return hasFilterValue(values, value)
-    ? values.filter((item) => normalizeFilterValue(item) !== normalizeFilterValue(value))
-    : [...values, value];
-}
-
-function hasSizeFilterValue(values: string[], value: string) {
-  const normalized = normalizeSizeFilterValue(value);
-
-  return values.some((item) => normalizeSizeFilterValue(item) === normalized);
-}
-
-function toggleSizeFilterValue(values: string[], value: string) {
-  return hasSizeFilterValue(values, value)
-    ? values.filter((item) => normalizeSizeFilterValue(item) !== normalizeSizeFilterValue(value))
-    : [...values, value];
-}
 
 export function ProductFilters({
   locale,
   dictionary,
   categories,
   brands,
-  colors,
-  sizes,
+  total,
   current
 }: ProductFiltersProps) {
   const labels = filterCopy[locale];
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [category, setCategory] = useState(current.category ?? "");
   const [brand, setBrand] = useState(current.brand ?? "");
-  const [selectedColors, setSelectedColors] = useState(() => splitFilter(current.color));
-  const [selectedSizes, setSelectedSizes] = useState(() => splitFilter(current.size));
-  const [rating, setRating] = useState(current.rating ?? "");
   const [search, setSearch] = useState(current.search ?? "");
   const [sort, setSort] = useState(current.sort ?? "featured");
   const [priceMin, setPriceMin] = useState(current.priceMin ?? "");
   const [priceMax, setPriceMax] = useState(current.priceMax ?? "");
   const [priceTouched, setPriceTouched] = useState(false);
   const [availability, setAvailability] = useState(current.availability === "in-stock");
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const buildParams = useCallback(() => {
     const params = new URLSearchParams();
 
     if (category) params.set("category", category);
     if (brand) params.set("brand", brand);
-    if (selectedSizes.length) params.set("size", selectedSizes.join(","));
     if (search.trim()) params.set("search", search.trim());
     if (current.tag) params.set("tag", current.tag);
     if (sort && sort !== "featured") params.set("sort", sort);
@@ -148,7 +103,7 @@ export function ProductFilters({
     if (availability) params.set("availability", "in-stock");
 
     return params;
-  }, [availability, brand, category, current.tag, priceMax, priceMin, search, selectedSizes, sort]);
+  }, [availability, brand, category, current.tag, priceMax, priceMin, search, sort]);
 
   const pushFilters = useCallback(() => {
     const params = buildParams();
@@ -169,246 +124,175 @@ export function ProductFilters({
   const applyFilters = () => {
     setPriceTouched(false);
     pushFilters();
+    setOpen(false);
   };
 
+  const clearHref = current.tag ? `/${locale}/shop?tag=${encodeURIComponent(current.tag)}` : `/${locale}/shop`;
+
   return (
-    <aside className="border-t border-neutral-200 pt-4 lg:sticky lg:top-28 lg:border-t-0 lg:pt-0">
-      <button type="button" onClick={() => setMobileOpen((value) => !value)} className="flex h-11 w-full items-center justify-between border border-neutral-300 bg-white px-3 text-neutral-900 lg:hidden" aria-expanded={mobileOpen}>
-        <span className="inline-flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> Filters</span>
-        <ChevronDown size={18} className={mobileOpen ? "rotate-180 transition-transform" : "transition-transform"} />
-      </button>
-      <div className="hidden items-center gap-2 text-neutral-900 lg:flex">
-        <SlidersHorizontal size={18} />
-        <h2 className="text-lg font-medium">Filter:</h2>
+    <>
+      <div className="flex items-center justify-between gap-4">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 lg:text-[1.15rem]"
+          aria-expanded={open}
+        >
+          <SlidersHorizontal size={16} />
+          {labels.filterAndSort}
+        </button>
+        <span className="text-sm text-neutral-500 lg:text-[1.15rem]">
+          {total} {labels.products}
+        </span>
       </div>
 
-      <div className={`${mobileOpen ? "mt-4 grid" : "hidden"} gap-5 rounded-md border border-neutral-200 bg-white p-4 lg:mt-5 lg:grid lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0`}>
-        <div className="border-y border-neutral-200 py-5 text-sm text-neutral-800">
-          <div className="flex items-center justify-between"><span className="text-base font-medium">Availability</span><span aria-hidden="true">⌃</span></div>
-          <label className="mt-5 flex cursor-pointer items-center gap-3 font-normal"><input type="checkbox" checked={availability} onChange={(event) => { setAvailability(event.target.checked); setPriceTouched(true); }} className="h-5 w-5 accent-neutral-950" />In stock</label>
-        </div>
-        <label className="grid gap-2 text-sm font-semibold text-navy">
-          {dictionary.nav.search}
-          <span className="relative">
-            <Search
-              size={17}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={dictionary.nav.search}
-              className="h-11 w-full rounded-md border border-neutral-200 bg-paper pl-10 pr-3 text-sm font-medium text-neutral-700 rtl:pl-3 rtl:pr-10"
-            />
-          </span>
-        </label>
-
-        <label className="grid gap-2 text-sm font-semibold text-navy">
-          {dictionary.shop.category}
-          <select
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-          >
-            <option value="">{labels.all}</option>
-            {categories.map((item) => (
-              <option key={item.slug} value={item.slug}>
-                {getLocalized(item.name, locale)}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="grid gap-2 text-sm font-semibold text-navy">
-          {dictionary.shop.brand}
-          <select
-            value={brand}
-            onChange={(event) => setBrand(event.target.value)}
-            className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-          >
-            <option value="">{labels.all}</option>
-            {brands.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="hidden gap-2 text-sm font-semibold text-navy">
-          <div className="flex items-center justify-between gap-3">
-            <p>{labels.color}</p>
-            {selectedColors.length ? (
+      {open ? (
+        <div className="fixed inset-0 z-[80] bg-black/50" role="dialog" aria-modal="true">
+          <div className="ml-auto grid h-full w-[min(100%,420px)] grid-rows-[auto_1fr_auto] bg-[#f6f8f1] text-neutral-950 shadow-2xl">
+            <div className="relative border-b border-neutral-200 px-5 py-4 text-center">
               <button
                 type="button"
-                onClick={() => setSelectedColors([])}
-                className="text-xs font-bold text-gold-700 hover:text-gold-800"
+                onClick={() => setOpen(false)}
+                className="absolute right-4 top-4 grid h-8 w-8 place-items-center"
+                aria-label="Close filters"
               >
-                {labels.clear}
+                <X size={22} />
               </button>
-            ) : null}
-          </div>
-          <div className="flex max-h-72 flex-wrap gap-3 overflow-y-auto pr-1">
-            <button
-              type="button"
-              onClick={() => setSelectedColors([])}
-              aria-pressed={!selectedColors.length}
-              className={`inline-flex h-10 items-center rounded-md border px-3 text-xs font-bold transition ${
-                !selectedColors.length
-                  ? "border-gold-400 bg-gold-50 text-navy"
-                  : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
-              }`}
-            >
-              {labels.all}
-            </button>
-            {colors.map((item) => {
-              const value = item.name.en;
-              const selected = hasFilterValue(selectedColors, value);
-              const unavailable = item.count <= 0 && !selected;
+              <p className="text-base font-medium">{labels.filterAndSort}</p>
+              <p className="text-xs text-neutral-500">
+                {total} {labels.products}
+              </p>
+            </div>
 
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => {
-                    if (!unavailable) {
-                      setSelectedColors((currentValues) => toggleFilterValue(currentValues, value));
-                    }
-                  }}
-                  aria-pressed={selected}
-                  aria-disabled={unavailable}
-                  disabled={unavailable}
-                  title={`${getLocalized(item.name, locale)} (${item.count})`}
-                  className={`group grid max-w-20 justify-items-center gap-1 text-center text-[11px] font-bold transition ${
-                    unavailable ? "cursor-not-allowed opacity-45" : "text-neutral-600"
-                  }`}
-                >
-                  <span
-                    className={`h-6 w-6 rounded-full border-2 shadow-sm transition group-hover:scale-110 ${
-                      selected
-                        ? "scale-110 border-navy ring-2 ring-gold-200"
-                        : unavailable
-                          ? "border-white ring-1 ring-neutral-100"
-                          : "border-white ring-1 ring-neutral-200"
-                    }`}
-                    style={{ backgroundColor: item.colorHex ?? "#ffffff" }}
+            <div className="grid content-start gap-5 overflow-y-auto px-5 py-7">
+              <div className="border-y border-neutral-200 py-5 text-sm text-neutral-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-medium">Availability</span>
+                  <span aria-hidden="true">+</span>
+                </div>
+                <label className="mt-5 flex cursor-pointer items-center gap-3 font-normal">
+                  <input
+                    type="checkbox"
+                    checked={availability}
+                    onChange={(event) => {
+                      setAvailability(event.target.checked);
+                      setPriceTouched(true);
+                    }}
+                    className="h-5 w-5 accent-neutral-950"
                   />
-                  <span className={selected ? "text-navy" : unavailable ? "text-neutral-300" : "text-neutral-500"}>
-                    {getLocalized(item.name, locale)} ({item.count})
-                  </span>
-                </button>
-              );
-            })}
+                  In stock
+                </label>
+              </div>
+
+              <label className="grid gap-2 text-sm font-semibold text-neutral-800">
+                {dictionary.nav.search}
+                <span className="relative">
+                  <Search
+                    size={17}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 rtl:left-auto rtl:right-3"
+                  />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder={dictionary.nav.search}
+                    className="h-12 w-full border border-neutral-300 bg-white pl-10 pr-3 text-base text-neutral-950 rtl:pl-3 rtl:pr-10"
+                  />
+                </span>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-neutral-800">
+                {dictionary.shop.category}
+                <select
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className="h-12 border border-neutral-300 bg-white px-3 text-base text-neutral-950"
+                >
+                  <option value="">{labels.all}</option>
+                  {categories.map((item) => (
+                    <option key={item.slug} value={item.slug}>
+                      {getLocalized(item.name, locale)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-neutral-800">
+                {dictionary.shop.brand}
+                <select
+                  value={brand}
+                  onChange={(event) => setBrand(event.target.value)}
+                  className="h-12 border border-neutral-300 bg-white px-3 text-base text-neutral-950"
+                >
+                  <option value="">{labels.all}</option>
+                  {brands.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-neutral-800">
+                {dictionary.shop.priceRange}
+                <span className="grid grid-cols-2 gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="10"
+                    value={priceMin}
+                    onChange={(event) => {
+                      setPriceTouched(true);
+                      setPriceMin(event.target.value);
+                    }}
+                    placeholder={labels.minPrice}
+                    className="h-12 border border-neutral-300 bg-white px-3 text-base text-neutral-950"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    step="10"
+                    value={priceMax}
+                    onChange={(event) => {
+                      setPriceTouched(true);
+                      setPriceMax(event.target.value);
+                    }}
+                    placeholder={labels.maxPrice}
+                    className="h-12 border border-neutral-300 bg-white px-3 text-base text-neutral-950"
+                  />
+                </span>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-neutral-800">
+                {dictionary.shop.sort}
+                <select
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value)}
+                  className="h-12 border border-neutral-300 bg-white px-3 text-base text-neutral-950"
+                >
+                  <option value="featured">{labels.sortFeatured}</option>
+                  <option value="new">{labels.sortNewest}</option>
+                  <option value="price-asc">{labels.sortPriceAsc}</option>
+                  <option value="price-desc">{labels.sortPriceDesc}</option>
+                  <option value="rating">{labels.sortRating}</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 border-t border-neutral-200 bg-[#f6f8f1] px-5 py-4">
+              <a
+                href={clearHref}
+                className="inline-flex h-12 items-center justify-center text-sm font-medium text-neutral-600 underline underline-offset-4"
+              >
+                {labels.removeAll}
+              </a>
+              <Button type="button" onClick={applyFilters} className="h-12 bg-[#d1bd76] text-sm font-semibold text-white hover:bg-[#bfa85e]">
+                {dictionary.actions.apply}
+              </Button>
+            </div>
           </div>
         </div>
-
-        {false && sizes.length ? (
-          <div className="grid gap-2 text-sm font-semibold text-navy">
-            <div className="flex items-center justify-between gap-3">
-              <p>{labels.size}</p>
-              {selectedSizes.length ? (
-                <button
-                  type="button"
-                  onClick={() => setSelectedSizes([])}
-                  className="text-xs font-bold text-gold-700 hover:text-gold-800"
-                >
-                  {labels.clear}
-                </button>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((item) => {
-                const selected = hasSizeFilterValue(selectedSizes, item.key);
-
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => setSelectedSizes((currentValues) => toggleSizeFilterValue(currentValues, item.key))}
-                    aria-pressed={selected}
-                    title={`${getLocalized(item.name, locale)} (${item.count})`}
-                    className={`inline-flex h-9 items-center rounded-md border px-3 text-xs font-bold transition ${
-                      selected
-                        ? "border-navy bg-navy text-white"
-                        : "border-neutral-200 bg-paper text-neutral-700 hover:border-gold-300"
-                    }`}
-                  >
-                    {getLocalized(item.name, locale)}
-                    <span className={selected ? "ml-1 text-white/70" : "ml-1 text-neutral-400"}>{item.count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        <label className="grid gap-2 text-sm font-semibold text-navy">
-          {dictionary.shop.priceRange}
-          <span className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              min="0"
-              step="10"
-              value={priceMin}
-              onChange={(event) => {
-                setPriceTouched(true);
-                setPriceMin(event.target.value);
-              }}
-              placeholder={labels.minPrice}
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-            />
-            <input
-              type="number"
-              min="0"
-              step="10"
-              value={priceMax}
-              onChange={(event) => {
-                setPriceTouched(true);
-                setPriceMax(event.target.value);
-              }}
-              placeholder={labels.maxPrice}
-              className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-            />
-          </span>
-          <span className="text-xs text-neutral-500">
-            {priceMin || "0"} AED - {priceMax || "Any"} AED
-          </span>
-        </label>
-
-        <label className="hidden gap-2 text-sm font-semibold text-navy">
-          {dictionary.shop.rating}
-          <select
-            value={rating}
-            onChange={(event) => setRating(event.target.value)}
-            className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-          >
-            <option value="">{labels.all}</option>
-            <option value="4">4.0+</option>
-            <option value="4.5">4.5+</option>
-            <option value="4.8">4.8+</option>
-          </select>
-        </label>
-
-        <label className="grid gap-2 text-sm font-semibold text-navy">
-          {dictionary.shop.sort}
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value)}
-            className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
-          >
-            <option value="featured">{labels.sortFeatured}</option>
-            <option value="new">{labels.sortNewest}</option>
-            <option value="price-asc">{labels.sortPriceAsc}</option>
-            <option value="price-desc">{labels.sortPriceDesc}</option>
-            <option value="rating">{labels.sortRating}</option>
-          </select>
-        </label>
-
-        <Button onClick={applyFilters} className="w-full">
-          {dictionary.actions.apply}
-        </Button>
-      </div>
-    </aside>
+      ) : null}
+    </>
   );
 }

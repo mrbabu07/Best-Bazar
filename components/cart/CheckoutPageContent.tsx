@@ -520,8 +520,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     const orderNotes = [customerNotes, ...mapNotes].filter(Boolean).join("\n");
     const payload = {
       items: items.map((item) => ({
-        productId: item.productId ?? item.id,
-        variantId: item.variantId,
+        productId: String(item.productId ?? item.id ?? "").split(":")[0],
+        variantId: item.variantId || undefined,
         quantity: item.quantity
       })),
       shippingAddress: {

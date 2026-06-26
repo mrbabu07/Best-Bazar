@@ -183,7 +183,7 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
         </form>
       </div>
 
-      <div className="mt-8 flex items-center justify-between lg:mt-12">
+      <div className="flex items-center justify-between">
         <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 lg:text-[1.15rem]">
           <SlidersHorizontal size={16} />
           Filter and sort

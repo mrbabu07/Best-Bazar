@@ -55,6 +55,33 @@ type HeaderCategory = {
   parentCategoryId?: string | null;
 };
 
+type StorefrontNotification = {
+  title: string;
+  id: string;
+  detail: string;
+  href: string;
+  icon?: "product" | "delivery";
+  createdAt?: string;
+};
+
+function formatNotificationTimestamp(value: string | undefined, locale: Locale) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-AE" : "en-AE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Dubai"
+  }).format(date);
+}
+
 export function Header({ locale, dictionary, settings }: HeaderProps) {
   const pathname = usePathname();
   const currentPathname = pathname ?? `/${locale}`;
@@ -95,7 +122,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     liveSettings.shippingSettings.shippingRates[0];
   const freeShippingThreshold = liveSettings.shippingSettings.freeShippingThreshold;
   const dismissedStorageKey = `best-mart-dismissed-notifications:${locale}`;
-  const storefrontNotifications = [
+  const storefrontNotifications: StorefrontNotification[] = [
     ...(liveSettings.announcementActive && announcement
       ? [
           {
@@ -114,7 +141,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         id: product.id,
         detail: productName ?? "A new product is available now",
         href: (locale === "ar" ? product.href?.ar : product.href?.en) ?? `/${locale}/shop`,
-        icon: "product" as const
+        icon: "product" as const,
+        createdAt: product.createdAt
       };
     }),
     {
@@ -432,6 +460,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                               <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-neutral-500">
                                 {item.detail}
                               </p>
+                              {item.createdAt ? (
+                                <time
+                                  dateTime={item.createdAt}
+                                  className="mt-1 block text-[11px] font-semibold text-neutral-400"
+                                >
+                                  {formatNotificationTimestamp(item.createdAt, locale)}
+                                </time>
+                              ) : null}
                             </div>
                           </Link>
                           <button

@@ -48,7 +48,7 @@ function variantNameAr(variant: { colorNameAr: string; sizeNameAr?: string | nul
 
 export async function createStoreOrder(data: OrderCreateInput, userId?: string) {
   const orderItems = mergeOrderItems(data.items);
-  const productIds = orderItems.map((item) => item.productId);
+  const productIds = Array.from(new Set(orderItems.map((item) => item.productId)));
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, isActive: true },
     include: {
