@@ -211,7 +211,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     { ...shippingSettings.customAreaFee, enabled: true, codAvailable: true }
   );
   const hasShippingArea = selectedEmirate.trim().length > 0;
-  const shipping = checkoutControls.freeDeliveryEnabled ? 0 : hasShippingArea ? shippingQuote.fee : 0;
+  const thresholdFreeDelivery =
+    checkoutControls.freeDeliveryThresholdEnabled &&
+    shippingSettings.freeShippingThreshold > 0 &&
+    subtotal >= shippingSettings.freeShippingThreshold;
+  const shipping = checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery ? 0 : hasShippingArea ? shippingQuote.fee : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
@@ -899,7 +903,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
             <div className="flex justify-between">
               <span className="text-neutral-950">{dictionary.common.shipping}</span>
               <span className="font-medium text-neutral-500">
-                {checkoutControls.freeDeliveryEnabled
+                {checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery
                   ? "Free delivery"
                   : hasShippingArea
                     ? formatCurrency(shipping, currency, locale, currencyRates)

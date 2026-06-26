@@ -22,6 +22,7 @@ export type CheckoutControls = {
   showCodDetail: boolean;
   showCouponBox: boolean;
   freeDeliveryEnabled: boolean;
+  freeDeliveryThresholdEnabled: boolean;
 };
 
 export type StorefrontContent = {
@@ -55,7 +56,8 @@ export const defaultThemeSettings: ThemeSettings = {
   checkoutControls: {
     showCodDetail: true,
     showCouponBox: true,
-    freeDeliveryEnabled: false
+    freeDeliveryEnabled: false,
+    freeDeliveryThresholdEnabled: false
   },
   storefrontContent: defaultStorefrontContent
 };
@@ -122,7 +124,11 @@ export function normalizeThemeSettings(value: unknown): ThemeSettings {
       freeDeliveryEnabled:
         typeof checkoutControls.freeDeliveryEnabled === "boolean"
           ? checkoutControls.freeDeliveryEnabled
-          : defaultThemeSettings.checkoutControls.freeDeliveryEnabled
+          : defaultThemeSettings.checkoutControls.freeDeliveryEnabled,
+      freeDeliveryThresholdEnabled:
+        typeof checkoutControls.freeDeliveryThresholdEnabled === "boolean"
+          ? checkoutControls.freeDeliveryThresholdEnabled
+          : defaultThemeSettings.checkoutControls.freeDeliveryThresholdEnabled
     },
     storefrontContent: Object.fromEntries(
       Object.keys(defaultStorefrontContent).map((key) => [key, contentValue(key as keyof StorefrontContent)])

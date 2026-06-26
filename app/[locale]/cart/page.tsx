@@ -38,6 +38,7 @@ export default async function CartPage({ params }: { params: { locale: string } 
       couponOffersAvailable={checkoutControls.showCouponBox && activeCoupons > 0}
       freeShippingThreshold={Number(settings?.freeShippingThreshold ?? 250)}
       freeDeliveryEnabled={checkoutControls.freeDeliveryEnabled}
+      freeDeliveryThresholdEnabled={checkoutControls.freeDeliveryThresholdEnabled}
     />
   );
 }

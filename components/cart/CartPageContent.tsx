@@ -24,6 +24,7 @@ type CartPageContentProps = {
   couponOffersAvailable: boolean;
   freeShippingThreshold: number;
   freeDeliveryEnabled: boolean;
+  freeDeliveryThresholdEnabled: boolean;
 };
 
 const cartCopy = {
@@ -72,7 +73,8 @@ export function CartPageContent({
   dictionary,
   couponOffersAvailable,
   freeShippingThreshold,
-  freeDeliveryEnabled
+  freeDeliveryEnabled,
+  freeDeliveryThresholdEnabled
 }: CartPageContentProps) {
   const labels = cartCopy[locale];
   const hydrated = useHydrated();
@@ -98,6 +100,7 @@ export function CartPageContent({
   );
   const freeShippingRemaining = freeDeliveryEnabled ? 0 : Math.max(0, resolvedFreeShippingThreshold - subtotal);
   const freeShippingProgress = freeDeliveryEnabled ? 100 : Math.min(100, (subtotal / resolvedFreeShippingThreshold) * 100);
+  const showFreeShippingNotice = freeDeliveryEnabled || (freeDeliveryThresholdEnabled && resolvedFreeShippingThreshold > 0);
   const total = Math.max(subtotal - discount, 0);
 
   useEffect(() => {
@@ -169,7 +172,7 @@ export function CartPageContent({
         <h1 className="mt-2 text-3xl font-bold text-navy">{dictionary.cart.title}</h1>
       </div>
 
-      {freeShippingRemaining > 0 ? (
+      {showFreeShippingNotice && freeShippingRemaining > 0 ? (
         <div className="mb-6 rounded-lg border border-gold-200 bg-gold-50 p-4">
           <div className="flex items-center justify-between gap-4 text-sm font-bold text-navy">
             <p>{labels.addForFreeShipping(formatCurrency(freeShippingRemaining, currency, locale, currencyRates))}</p>
@@ -182,11 +185,11 @@ export function CartPageContent({
             />
           </div>
         </div>
-      ) : (
+      ) : showFreeShippingNotice ? (
         <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
           <p className="text-sm font-bold text-emerald-800">{labels.freeShippingQualified}</p>
         </div>
-      )}
+      ) : null}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <section className="grid gap-4">

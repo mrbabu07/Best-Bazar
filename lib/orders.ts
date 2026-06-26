@@ -111,7 +111,11 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
       codAvailable: true
     }
   );
-  const shippingCost = checkoutControls.freeDeliveryEnabled ? 0 : shippingQuote.fee;
+  const thresholdFreeDelivery =
+    checkoutControls.freeDeliveryThresholdEnabled &&
+    Number(settings.freeShippingThreshold) > 0 &&
+    subtotal >= Number(settings.freeShippingThreshold);
+  const shippingCost = checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery ? 0 : shippingQuote.fee;
 
   if (data.paymentMethod === PaymentMethod.COD && !shippingQuote.codAvailable) {
     throw new Error(`Cash on delivery is not available for ${shippingQuote.rate.emirate}.`);

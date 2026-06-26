@@ -416,7 +416,11 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 <input value={form.customAreaFee.deliveryDays} onChange={(event) => updateCustomAreaFee("deliveryDays", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
               </label>
             </div>
-            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
+            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-3">
+              <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
+                <input type="checkbox" checked={form.themeSettings.checkoutControls.freeDeliveryThresholdEnabled} onChange={(event) => updateCheckoutControl("freeDeliveryThresholdEnabled", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
+                <span><span className="block">Enable minimum order free delivery</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Shows cart progress and makes delivery free after the AED amount.</span></span>
+              </label>
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.freeDeliveryEnabled} onChange={(event) => updateCheckoutControl("freeDeliveryEnabled", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
                 <span><span className="block">Free delivery for any order</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides delivery fee and minimum amount.</span></span>

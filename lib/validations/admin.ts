@@ -82,7 +82,8 @@ const themeSettingsSchema = z.object({
   checkoutControls: z.object({
     showCodDetail: z.boolean().default(true),
     showCouponBox: z.boolean().default(true),
-    freeDeliveryEnabled: z.boolean().default(false)
+    freeDeliveryEnabled: z.boolean().default(false),
+    freeDeliveryThresholdEnabled: z.boolean().default(false)
   }).default({}),
   storefrontContent: z.object({
     navHomeEn: z.string().trim().default(""), navHomeAr: z.string().trim().default(""),
