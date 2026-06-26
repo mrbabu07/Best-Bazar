@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 import { revalidateAdminOrderViews, revalidateCacheTags } from "@/lib/cache";
+import { assertPaymentMethodAvailable } from "@/lib/payment-settings";
 import { prisma } from "@/lib/prisma";
 import { normalizeThemeSettings } from "@/lib/theme-config";
 import type { orderCreateSchema } from "@/lib/validations/store";
@@ -92,6 +93,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     };
   });
   const subtotal = items.reduce((total, item) => total + item.lineTotal, 0);
+  await assertPaymentMethodAvailable(data.paymentMethod, subtotal);
   const settings = await prisma.setting.findUniqueOrThrow({ where: { id: "store-settings" } });
   const checkoutControls = normalizeThemeSettings(settings.themeSettings).checkoutControls;
   const shippingQuote = getShippingFee(

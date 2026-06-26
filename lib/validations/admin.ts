@@ -39,6 +39,8 @@ const fashionFieldsSchema = z.object({
 const paymentSettingsSchema = z.object({
   cod: z.object({
     enabled: z.boolean().default(true),
+    availabilityMode: z.enum(["always", "minimum", "disabled"]).default("always"),
+    minOrderAmount: money.default(0),
     displayName: z.string().trim().default("Cash on delivery"),
     instructions: z.string().trim().default("")
   }),

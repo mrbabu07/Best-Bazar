@@ -243,6 +243,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const total = Math.max(subtotal + shipping - discount, 0);
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
+  const codMeetsMinimum =
+    paymentAvailability.codAvailabilityMode !== "minimum" ||
+    subtotal >= paymentAvailability.codMinOrderAmount;
+  const codAvailabilityMessage =
+    paymentAvailability.codAvailabilityMode === "minimum" && !codMeetsMinimum
+      ? `COD is available from ${formatCurrency(paymentAvailability.codMinOrderAmount, currency, locale, currencyRates)}.`
+      : `COD is unavailable for ${shippingQuote.rate.emirate}.`;
   const visibleMapTiles = useMemo(() => {
     const centerX = lngToTileX(mapCenter.lng, mapZoom);
     const centerY = latToTileY(mapCenter.lat, mapZoom);
@@ -309,14 +316,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       {
         key: "cod" as const,
         label: paymentAvailability.codLabel || dictionary.checkout.cod,
-        detail: shippingQuote.codAvailable
+        detail: shippingQuote.codAvailable && codMeetsMinimum
           ? paymentAvailability.codDetail
-          : `COD is unavailable for ${shippingQuote.rate.emirate}.`,
+          : codAvailabilityMessage,
         icon: HandCoins,
-        enabled: paymentAvailability.cod && shippingQuote.codAvailable
+        enabled: paymentAvailability.cod && shippingQuote.codAvailable && codMeetsMinimum
       },
     ],
-    [dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable, shippingQuote.rate.emirate]
+    [codAvailabilityMessage, codMeetsMinimum, dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable]
   );
 
   useEffect(() => {
@@ -371,7 +378,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   }, [appliedCoupon, discount, emirate, payment, subtotal]);
 
   useEffect(() => {
-    if (payment === "cod" && !shippingQuote.codAvailable) {
+    if (payment === "cod" && (!shippingQuote.codAvailable || !codMeetsMinimum)) {
       const nextPayment: PaymentOptionKey = paymentAvailability.stripe
         ? "stripe"
         : "cod";
@@ -381,6 +388,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   }, [
     payment,
     paymentAvailability.stripe,
+    codMeetsMinimum,
     shippingQuote.codAvailable
   ]);
 

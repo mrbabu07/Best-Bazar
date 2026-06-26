@@ -121,7 +121,26 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         ...current.paymentSettings,
         [method]: {
           ...current.paymentSettings[method],
-          enabled: !current.paymentSettings[method].enabled
+          enabled: !current.paymentSettings[method].enabled,
+          ...(method === "cod"
+            ? {
+                availabilityMode: current.paymentSettings.cod.enabled ? "disabled" : "always"
+              }
+            : {})
+        }
+      }
+    }));
+  };
+
+  const updateCodAvailabilityMode = (mode: PaymentSettings["cod"]["availabilityMode"]) => {
+    setForm((current) => ({
+      ...current,
+      paymentSettings: {
+        ...current.paymentSettings,
+        cod: {
+          ...current.paymentSettings.cod,
+          enabled: mode !== "disabled",
+          availabilityMode: mode
         }
       }
     }));
@@ -634,15 +653,33 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
 
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
-                checked={form.paymentSettings.cod.enabled}
-                onChange={(event) => updatePayment("cod", "enabled", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Show Cash on delivery at checkout
+            <label className="grid gap-2 text-sm font-semibold text-navy">
+              COD availability
+              <select
+                value={form.paymentSettings.cod.availabilityMode}
+                onChange={(event) =>
+                  updateCodAvailabilityMode(event.target.value as PaymentSettings["cod"]["availabilityMode"])
+                }
+                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+              >
+                <option value="always">Available for any order</option>
+                <option value="minimum">Available from minimum AED amount</option>
+                <option value="disabled">Hide / disable COD</option>
+              </select>
             </label>
+            {form.paymentSettings.cod.availabilityMode === "minimum" ? (
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Minimum order for COD (AED)
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.paymentSettings.cod.minOrderAmount}
+                  onChange={(event) => updatePayment("cod", "minOrderAmount", Number(event.target.value))}
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
+              </label>
+            ) : null}
             <label className="grid gap-2 text-sm font-semibold text-navy">
               COD display name
               <input
