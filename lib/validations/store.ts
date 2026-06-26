@@ -10,7 +10,10 @@ export const orderCreateSchema = z.object({
   items: z.array(orderItemSchema).min(1),
   shippingAddress: z.object({
     name: z.string().trim().min(1),
-    email: z.union([z.string().email(), z.literal("")]).default(""),
+    email: z.preprocess(
+      (value) => (typeof value === "string" ? value.trim() : value),
+      z.union([z.string().email(), z.literal("")]).default("")
+    ),
     phone: z.string().trim().min(1),
     street: z.string().trim().min(1),
     apartment: z.string().trim().default(""),

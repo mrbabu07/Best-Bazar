@@ -67,9 +67,11 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
       throw new Error("Product not found after validation.");
     }
 
-    const variant = item.variantId
+    const requestedVariant = item.variantId
       ? product.variants.find((candidate) => candidate.id === item.variantId)
       : undefined;
+    const fallbackVariant = product.variants.find((candidate) => candidate.stock > 0) ?? product.variants[0];
+    const variant = requestedVariant ?? (item.variantId ? undefined : fallbackVariant);
 
     if (product.variants.length && !variant) {
       throw new Error(`Choose an available color and size for ${product.nameEn}.`);

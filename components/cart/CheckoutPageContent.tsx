@@ -602,7 +602,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       paymentMethod: paymentMethod(),
       currency,
       locale,
-      couponCode: appliedCoupon || coupon.trim() || undefined,
+      couponCode: couponOffersAvailable ? appliedCoupon || coupon.trim() || undefined : undefined,
       notes: orderNotes || undefined
     };
 
