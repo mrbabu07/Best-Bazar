@@ -93,7 +93,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     };
   });
   const subtotal = items.reduce((total, item) => total + item.lineTotal, 0);
-  await assertPaymentMethodAvailable(data.paymentMethod, subtotal);
+  await assertPaymentMethodAvailable(data.paymentMethod);
   const settings = await prisma.setting.findUniqueOrThrow({ where: { id: "store-settings" } });
   const checkoutControls = normalizeThemeSettings(settings.themeSettings).checkoutControls;
   const shippingQuote = getShippingFee(

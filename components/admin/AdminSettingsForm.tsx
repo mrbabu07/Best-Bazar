@@ -112,20 +112,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
-  const updateCodAvailabilityMode = (mode: PaymentSettings["cod"]["availabilityMode"]) => {
-    setForm((current) => ({
-      ...current,
-      paymentSettings: {
-        ...current.paymentSettings,
-        cod: {
-          ...current.paymentSettings.cod,
-          enabled: true,
-          availabilityMode: mode
-        }
-      }
-    }));
-  };
-
   const updateCourier = <Key extends keyof CourierSettings>(key: Key, value: CourierSettings[Key]) => {
     setForm((current) => ({
       ...current,
@@ -401,12 +387,12 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <div>
               <p className="font-bold text-navy">Checkout delivery controls</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
-                One delivery fee applies across checkout. Turn free delivery on when you want delivery to be free for every order.
+                COD always stays available. Use these controls only for delivery fee and free delivery rules.
               </p>
             </div>
             <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
               <label className="grid gap-2 text-sm font-semibold text-navy">
-                Free delivery from (AED)
+                Free delivery minimum order (AED)
                 <input
                   type="number"
                   min="0"
@@ -433,7 +419,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.freeDeliveryEnabled} onChange={(event) => updateCheckoutControl("freeDeliveryEnabled", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
-                <span><span className="block">Free delivery for all orders</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides fee and threshold.</span></span>
+                <span><span className="block">Free delivery for any order</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides delivery fee and minimum amount.</span></span>
               </label>
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.showCouponBox} onChange={(event) => updateCheckoutControl("showCouponBox", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
@@ -573,7 +559,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
           <div>
             <h2 className="text-lg font-bold text-navy">Payment controls</h2>
             <p className="mt-1 text-sm font-semibold text-neutral-500">
-              Enable methods, edit checkout labels, and add provider/account details from admin.
+              Cash on delivery is always available. Free delivery rules are controlled in Currency and shipping.
             </p>
           </div>
           <SectionSaveButton />
@@ -618,32 +604,9 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
 
         <div className="mt-6 grid gap-5">
           <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              COD availability
-              <select
-                value={form.paymentSettings.cod.availabilityMode}
-                onChange={(event) =>
-                  updateCodAvailabilityMode(event.target.value as PaymentSettings["cod"]["availabilityMode"])
-                }
-                className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-              >
-                <option value="always">Available for any order</option>
-                <option value="minimum">Available from minimum AED amount</option>
-              </select>
-            </label>
-            {form.paymentSettings.cod.availabilityMode === "minimum" ? (
-              <label className="grid gap-2 text-sm font-semibold text-navy">
-                Minimum order for COD (AED)
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.paymentSettings.cod.minOrderAmount}
-                  onChange={(event) => updatePayment("cod", "minOrderAmount", Number(event.target.value))}
-                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                />
-              </label>
-            ) : null}
+            <p className="rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+              COD is always available for checkout orders.
+            </p>
             <label className="grid gap-2 text-sm font-semibold text-navy">
               COD display name
               <input

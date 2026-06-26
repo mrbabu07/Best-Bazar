@@ -1,11 +1,7 @@
 export type StripeMode = "payment_element" | "hosted_checkout";
-export type CodAvailabilityMode = "always" | "minimum";
-
 export type PaymentSettings = {
   cod: {
     enabled: boolean;
-    availabilityMode: CodAvailabilityMode;
-    minOrderAmount: number;
     displayName: string;
     instructions: string;
   };
@@ -26,8 +22,6 @@ export type PublicPaymentAvailability = {
   stripeDetail: string;
   stripePublishableKey: string;
   cod: boolean;
-  codAvailabilityMode: CodAvailabilityMode;
-  codMinOrderAmount: number;
   codLabel: string;
   codDetail: string;
 };
@@ -35,8 +29,6 @@ export type PublicPaymentAvailability = {
 export const defaultPaymentSettings: PaymentSettings = {
   cod: {
     enabled: true,
-    availabilityMode: "always",
-    minOrderAmount: 0,
     displayName: "Cash on delivery",
     instructions: "Pay cash when your Dubai delivery arrives."
   },
@@ -64,27 +56,15 @@ function enabled(value: unknown, fallback: boolean) {
   return typeof value === "boolean" ? value : fallback;
 }
 
-function money(value: unknown, fallback: number) {
-  const number = Number(value);
-
-  return Number.isFinite(number) && number >= 0 ? number : fallback;
-}
-
 export function normalizePaymentSettings(value: unknown): PaymentSettings {
   const input = isRecord(value) ? value : {};
   const cod = isRecord(input.cod) ? input.cod : {};
   const stripe = isRecord(input.stripe) ? input.stripe : {};
   const stripeMode = stripe.mode === "hosted_checkout" ? "hosted_checkout" : "payment_element";
-  const codAvailabilityMode: CodAvailabilityMode =
-    cod.availabilityMode === "minimum"
-      ? cod.availabilityMode
-      : "always";
 
   return {
     cod: {
       enabled: enabled(cod.enabled, defaultPaymentSettings.cod.enabled),
-      availabilityMode: codAvailabilityMode,
-      minOrderAmount: money(cod.minOrderAmount, defaultPaymentSettings.cod.minOrderAmount),
       displayName: text(cod.displayName, defaultPaymentSettings.cod.displayName),
       instructions: text(cod.instructions, defaultPaymentSettings.cod.instructions)
     },

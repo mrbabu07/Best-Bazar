@@ -215,13 +215,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const total = Math.max(subtotal + shipping - discount, 0);
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
-  const codMeetsMinimum =
-    paymentAvailability.codAvailabilityMode !== "minimum" ||
-    subtotal >= paymentAvailability.codMinOrderAmount;
-  const codAvailabilityMessage =
-    paymentAvailability.codAvailabilityMode === "minimum" && !codMeetsMinimum
-      ? `COD is available from ${formatCurrency(paymentAvailability.codMinOrderAmount, currency, locale, currencyRates)}.`
-      : `COD is unavailable for ${shippingQuote.rate.emirate}.`;
   const visibleMapTiles = useMemo(() => {
     const centerX = lngToTileX(mapCenter.lng, mapZoom);
     const centerY = latToTileY(mapCenter.lat, mapZoom);
@@ -269,14 +262,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       {
         key: "cod" as const,
         label: paymentAvailability.codLabel || dictionary.checkout.cod,
-        detail: shippingQuote.codAvailable && codMeetsMinimum
-          ? ""
-          : codAvailabilityMessage,
+        detail: "",
         icon: HandCoins,
-        enabled: paymentAvailability.cod && shippingQuote.codAvailable && codMeetsMinimum
+        enabled: paymentAvailability.cod && shippingQuote.codAvailable
       },
     ],
-    [codAvailabilityMessage, codMeetsMinimum, dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable]
+    [dictionary.checkout.cod, paymentAvailability, shippingQuote.codAvailable]
   );
 
   useEffect(() => {
@@ -325,16 +316,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setAppliedCoupon("");
     setDiscount(0);
   }, [subtotal]);
-
-  useEffect(() => {
-    if (payment === "cod" && (!shippingQuote.codAvailable || !codMeetsMinimum)) {
-      setPayment("cod");
-    }
-  }, [
-    payment,
-    codMeetsMinimum,
-    shippingQuote.codAvailable
-  ]);
 
   useEffect(() => {
     if (selectedPaymentOption?.enabled) {
@@ -668,11 +649,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     </option>
                   ))}
                 </select>
-                {!shippingQuote.codAvailable ? (
-                  <p className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-sale">
-                    COD is unavailable for {shippingQuote.rate.emirate}. Please choose card payment.
-                  </p>
-                ) : null}
               </div>
               <label className="flex items-center gap-3 text-base font-medium text-neutral-950 sm:col-span-2">
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
