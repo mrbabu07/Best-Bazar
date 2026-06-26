@@ -1,9 +1,9 @@
 "use client";
 
-import { CreditCard, HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
+import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -18,7 +18,6 @@ import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
 import { defaultShippingSettings, getShippingFee, normalizeShippingSettings, UAE_EMIRATES } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
-import { BackButton } from "@/components/ui/BackButton";
 import { Button } from "@/components/ui/Button";
 
 const StripePaymentSection = dynamic(
@@ -37,9 +36,10 @@ type CheckoutPageContentProps = {
   locale: Locale;
   dictionary: Dictionary;
   paymentAvailability: PublicPaymentAvailability;
+  couponOffersAvailable: boolean;
 };
 
-type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "city" | "country";
+type CheckoutFieldName = "firstName" | "lastName" | "email" | "phone" | "street" | "apartment" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -66,7 +66,8 @@ const checkoutCopy = {
     delivery: "Delivery",
     applied: (code: string) => `${code} applied`,
     fields: {
-      name: "Full name",
+      firstName: "First name",
+      lastName: "Last name",
       email: "Email",
       phone: "Phone",
       street: "Address",
@@ -88,7 +89,8 @@ const checkoutCopy = {
     delivery: "التوصيل",
     applied: (code: string) => `تم تطبيق ${code}`,
     fields: {
-      name: "الاسم الكامل",
+      firstName: "الاسم الأول",
+      lastName: "اسم العائلة",
       email: "البريد الإلكتروني",
       phone: "الهاتف",
       street: "عنوان الشارع",
@@ -123,24 +125,7 @@ type StripePaymentState = {
   orderConfirmUrl: string;
 };
 
-type ReverseGeocodeResponse = {
-  address?: {
-    road?: string;
-    pedestrian?: string;
-    house_number?: string;
-    building?: string;
-    amenity?: string;
-    neighbourhood?: string;
-    suburb?: string;
-    city?: string;
-    town?: string;
-    state?: string;
-    country?: string;
-  };
-  display_name?: string;
-};
-
-export function CheckoutPageContent({ locale, dictionary, paymentAvailability }: CheckoutPageContentProps) {
+export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
   const hydrated = useHydrated();
@@ -158,9 +143,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stripePayment, setStripePayment] = useState<StripePaymentState | null>(null);
-  const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapLink, setMapLink] = useState("");
-  const [locating, setLocating] = useState(false);
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
@@ -186,19 +168,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     shippingSettings.freeShippingThreshold,
     shippingSettings.customAreaFee
   );
-  const shipping = shippingQuote.fee;
+  const hasShippingArea = selectedEmirate.trim().length > 0;
+  const shipping = hasShippingArea ? shippingQuote.fee : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
-  const shippingSummary = shippingQuote.isFree
-    ? `Shipping to ${shippingQuote.rate.emirate}: FREE shipping!`
-    : `Shipping to ${shippingQuote.rate.emirate}: AED ${shipping.toFixed(0)} (${shippingQuote.estimatedDays} days)`;
-  const mapQuery = mapPin
-    ? `${mapPin.lat},${mapPin.lng}`
-    : `${selectedEmirate || emirate}, UAE`;
-  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=${mapPin ? "16" : "11"}&output=embed`;
-  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
-  const mapBounds = selectedEmirate.trim().toLowerCase() === "dubai"
-    ? { north: 25.35, south: 24.95, west: 54.9, east: 55.6 }
-    : { north: 26.2, south: 22.6, west: 51.5, east: 56.5 };
 
   const paymentMethod = () => {
     if (payment === "cod") {
@@ -263,7 +235,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
           currencyRates: usePreferencesStore.getState().currencyRates,
           shippingSettings: normalizeShippingSettings({
             freeShippingThreshold: data.freeShippingThreshold,
-            shippingRates: data.shippingRates
+            shippingRates: data.shippingRates,
+            customAreaFee: data.customAreaFee
           })
         });
       } catch {
@@ -327,103 +300,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     }
   };
 
-  const setFieldValue = (field: CheckoutFieldName, value?: string) => {
-    const input = fieldRefs.current[field];
-
-    if (input && value) {
-      input.value = value;
-    }
-  };
-
-  const fillAddressFromPin = async (lat: number, lng: number) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
-        { headers: { Accept: "application/json" } }
-      );
-
-      if (!response.ok) {
-        return;
-      }
-
-      const result = await safeResponseJson<ReverseGeocodeResponse>(response, {});
-      const address = result.address ?? {};
-      const street = [address.house_number, address.road ?? address.pedestrian]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-      const city = address.city ?? address.town ?? address.state;
-      const country = address.country;
-      const matchedRate = shippingOptions.find((rate) => {
-        const emirateName = rate.emirate.toLowerCase();
-        const state = (address.state ?? "").toLowerCase();
-        const cityName = (city ?? "").toLowerCase();
-
-        return state.includes(emirateName) || cityName.includes(emirateName) || Boolean(cityName && emirateName.includes(cityName));
-      });
-
-      setFieldValue("street", street || result.display_name);
-      setFieldValue("city", city);
-      setFieldValue("country", country || "United Arab Emirates");
-
-      if (matchedRate) {
-        setEmirate(matchedRate.emirate);
-      }
-    } catch {
-      // The map pin still works even when public reverse geocoding is unavailable.
-    }
-  };
-
-  const setDeliveryPin = (lat: number, lng: number, shouldFillAddress = true) => {
-    const nextPin = {
-      lat: Number(lat.toFixed(6)),
-      lng: Number(lng.toFixed(6))
-    };
-
-    setMapPin(nextPin);
-    setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
-
-    if (shouldFillAddress) {
-      void fillAddressFromPin(nextPin.lat, nextPin.lng);
-    }
-  };
-
-  const handleMapClick = (event: MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const xRatio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const yRatio = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-    const lat = mapBounds.north - (mapBounds.north - mapBounds.south) * yRatio;
-    const lng = mapBounds.west + (mapBounds.east - mapBounds.west) * xRatio;
-
-    setDeliveryPin(lat, lng);
-    toast.success("Delivery map pin updated.");
-  };
-
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("Location is not supported on this device.");
-      return;
-    }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setDeliveryPin(position.coords.latitude, position.coords.longitude);
-        setLocating(false);
-        toast.success("Delivery map pin added.");
-      },
-      () => {
-        setLocating(false);
-        toast.error("Unable to get location. Please allow location permission or paste a map link.");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 60000
-      }
-    );
-  };
-
   const applyCoupon = async () => {
     const code = coupon.trim();
 
@@ -463,12 +339,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
+    const firstName = String(formData.get("firstName") ?? "").trim();
+    const lastName = String(formData.get("lastName") ?? "").trim();
     const customerNotes = String(formData.get("notes") ?? "").trim();
-    const mapNotes = [
-      mapPin ? `Map pin: https://www.google.com/maps?q=${mapPin.lat},${mapPin.lng}` : "",
-      mapLink.trim() ? `Customer map link: ${mapLink.trim()}` : ""
-    ].filter(Boolean);
-    const orderNotes = [customerNotes, ...mapNotes].filter(Boolean).join("\n");
+    const orderNotes = customerNotes;
     const payload = {
       items: items.map((item) => ({
         productId: item.productId ?? item.id,
@@ -476,7 +350,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
         quantity: item.quantity
       })),
       shippingAddress: {
-        name: String(formData.get("name") ?? ""),
+        name: [firstName, lastName].filter(Boolean).join(" "),
         email: String(formData.get("email") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         street: String(formData.get("street") ?? ""),
@@ -552,7 +426,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   };
 
   const fields: CheckoutField[] = [
-    { name: "name", label: labels.fields.name, type: "text", autoComplete: "name", placeholder: labels.fields.name },
+    { name: "firstName", label: labels.fields.firstName, type: "text", autoComplete: "given-name", placeholder: labels.fields.firstName },
+    { name: "lastName", label: labels.fields.lastName, type: "text", autoComplete: "family-name", placeholder: labels.fields.lastName },
     { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: "Email (optional)", required: false },
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: "Phone number" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: labels.fields.street },
@@ -567,49 +442,30 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
   ];
 
   return (
-    <main className="bg-paper/60">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col gap-4 border-b border-neutral-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-        <BackButton label={locale === "ar" ? "رجوع" : "Back"} fallbackHref={`/${locale}/cart`} className="mb-4" />
-        <p className="text-sm font-bold uppercase tracking-[0.18em] text-gold-700">
-          {dictionary.actions.checkout}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-navy sm:text-4xl">{dictionary.checkout.title}</h1>
-        <p className="mt-3 max-w-2xl text-neutral-600">{dictionary.checkout.subtitle}</p>
-          </div>
-          <div className="rounded-md border border-gold-200 bg-white px-4 py-3 text-sm font-bold text-navy shadow-soft">
-            Secure Dubai checkout
-          </div>
-      </div>
-
-      <form onSubmit={submitOrder} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_430px]">
+    <main className="bg-white">
+      <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+      <form onSubmit={submitOrder} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_520px]">
         <section className="grid gap-6">
-          <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex items-start gap-3">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-sm font-bold text-white">
-                  1
-                </span>
-                <div>
-                  <h2 className="text-xl font-bold text-navy">{dictionary.checkout.shippingInfo}</h2>
-                  <p className="mt-1 text-sm font-semibold text-neutral-500">Contact and delivery address</p>
-                </div>
-              </div>
-              <div className="rounded-md bg-gold-50 px-3 py-2 text-xs font-semibold text-navy">
-                <p>Guest checkout</p>
-                <p className="mt-1 text-neutral-500">
-                  No account needed. We will email your order link.
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-[-0.02em] text-neutral-950 sm:text-4xl">Delivery</h1>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-semibold text-neutral-800 sm:col-span-2">
+              <span className="sr-only">Country/Region</span>
+              <select
+                name="country"
+                defaultValue="United Arab Emirates"
+                className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950"
+              >
+                <option value="United Arab Emirates">United Arab Emirates</option>
+              </select>
+            </label>
               {fields.map((field) => (
                 <label
                   key={field.name}
                   className={cn(
-                    "grid gap-2 text-sm font-semibold text-navy",
-                    ["name", "email", "street", "apartment"].includes(field.name) && "sm:col-span-2"
+                    "grid gap-2 text-sm font-semibold text-neutral-800",
+                    ["email", "phone", "street", "apartment"].includes(field.name) && "sm:col-span-2"
                   )}
                 >
                   <span className="sr-only">{field.label}</span>
@@ -623,108 +479,54 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
                     defaultValue={field.defaultValue}
                     placeholder={field.placeholder}
                     required={field.required !== false}
-                    className="h-12 rounded-md border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-800 placeholder:font-normal placeholder:text-neutral-400 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
+                    className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
                   />
                 </label>
               ))}
-              <div className="grid gap-2 text-sm font-semibold text-navy">
-                <span className="sr-only">{labels.shippingArea}</span>
-                <select
-                  name="emirate"
-                  value={selectedEmirate}
-                  onChange={(event) => setEmirate(event.target.value)}
-                  required
-                  className="h-12 rounded-md border-2 border-neutral-950 bg-white px-4 text-sm font-medium text-neutral-800"
-                >
-                  <option value="" disabled>Emirate</option>
-                  {UAE_EMIRATES.map((emirateOption) => (
-                    <option key={emirateOption.key} value={emirateOption.nameEn}>
-                      {emirateOption.nameEn}
-                    </option>
-                  ))}
-                </select>
-                <div className="flex flex-col gap-1 rounded-md border border-neutral-200 bg-gold-50 px-3 py-2 text-xs font-semibold text-navy sm:flex-row sm:items-center sm:justify-between">
-                  <span>{shippingSummary}</span>
-                  <span>{formatCurrency(shipping, currency, locale, currencyRates)}</span>
-                </div>
+              <div className="grid gap-2 text-sm font-semibold text-neutral-800">
+                <span className="sr-only">{shippingSettings.customAreaFee.enabled ? shippingSettings.customAreaFee.areaLabel : labels.shippingArea}</span>
+                {shippingSettings.customAreaFee.enabled ? (
+                  <input
+                    name="emirate"
+                    value={selectedEmirate}
+                    onChange={(event) => setEmirate(event.target.value)}
+                    required
+                    placeholder={shippingSettings.customAreaFee.areaLabel || "Delivery area"}
+                    className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
+                  />
+                ) : (
+                  <select
+                    name="emirate"
+                    value={selectedEmirate}
+                    onChange={(event) => setEmirate(event.target.value)}
+                    required
+                    className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
+                  >
+                    <option value="" disabled>Emirate</option>
+                    {UAE_EMIRATES.map((emirateOption) => (
+                      <option key={emirateOption.key} value={emirateOption.nameEn}>
+                        {emirateOption.nameEn}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {!shippingQuote.codAvailable ? (
-                  <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-sale">
+                  <p className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-sale">
                     COD is unavailable for {shippingQuote.rate.emirate}. Please choose card payment.
                   </p>
                 ) : null}
               </div>
-              <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-3 sm:col-span-2">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="flex items-center gap-2 text-sm font-bold text-navy">
-                      <MapPin size={17} className="text-gold-700" />
-                      Delivery map pin
-                    </p>
-                    <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
-                      Optional. Add an exact pin so the courier can find the address faster.
-                    </p>
-                  </div>
-                  <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
-                    <LocateFixed size={15} />
-                    {locating ? "Locating..." : "Use my location"}
-                  </Button>
-                </div>
-                <div className="relative overflow-hidden rounded-md border border-neutral-200 bg-white">
-                  <iframe
-                    title="Delivery map preview"
-                    src={mapEmbedUrl}
-                    className="h-52 w-full"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleMapClick}
-                    className="absolute inset-0 cursor-crosshair"
-                    aria-label="Tap map to set delivery pin"
-                  >
-                    <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold text-navy shadow-soft">
-                      Tap map to set pin
-                    </span>
-                    {mapPin ? (
-                      <span className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-gold-500 text-navy shadow-soft ring-4 ring-white/90">
-                        <MapPin size={20} />
-                      </span>
-                    ) : null}
-                  </button>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <input
-                    value={mapLink}
-                    onChange={(event) => setMapLink(event.target.value)}
-                    placeholder="Paste Google Maps pin/share link"
-                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-700"
-                  />
-                  <a
-                    href={mapOpenUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-11 items-center justify-center rounded-md border border-gold-200 bg-white px-4 text-sm font-bold text-navy hover:bg-gold-50"
-                  >
-                    Open map
-                  </a>
-                </div>
-                {mapPin ? (
-                  <p className="rounded-md bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
-                    Pin added: {mapPin.lat}, {mapPin.lng}
-                  </p>
-                ) : null}
-              </div>
-              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
-                {labels.notes}
-                <textarea
-                  name="notes"
-                  rows={4}
-                  className="rounded-md border border-neutral-200 bg-paper px-3 py-3 text-sm font-medium text-neutral-700"
-                />
+              <label className="flex items-center gap-3 text-base font-medium text-neutral-950 sm:col-span-2">
+                <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
+                Save this information for next time
               </label>
+              <textarea
+                name="notes"
+                rows={3}
+                placeholder="Order note (optional)"
+                className="rounded-2xl border border-neutral-300 bg-white px-4 py-4 text-base font-medium text-neutral-950 placeholder:text-neutral-500 sm:col-span-2"
+              />
             </div>
-          </div>
 
           <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-soft sm:p-6">
             <div className="flex items-start gap-3">
@@ -815,62 +617,55 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
           </div>
         </section>
 
-        <aside className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft lg:sticky lg:top-28">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-navy">{dictionary.cart.summary}</h2>
-              <p className="mt-1 text-sm font-semibold text-neutral-500">{items.length} item(s) in cart</p>
-            </div>
-            <span className="rounded-md bg-gold-50 px-3 py-2 text-xs font-bold text-gold-800">AED</span>
-          </div>
-          <div className="mt-5 grid max-h-[360px] gap-4 overflow-y-auto pr-1">
+        <aside className="h-fit bg-neutral-50 p-5 lg:sticky lg:top-28 lg:min-h-[calc(100vh-7rem)] lg:p-8">
+          <div className="grid max-h-[360px] gap-5 overflow-y-auto pr-1">
             {items.length === 0 ? (
               <p className="text-sm text-neutral-500">{dictionary.cart.emptySubtitle}</p>
             ) : (
               items.map((item) => (
-                <div key={item.id} className="grid grid-cols-[64px_1fr_auto] gap-3 text-sm">
-                  <div className="relative h-16 w-16 overflow-hidden rounded-md border border-neutral-200 bg-paper">
+                <div key={item.id} className="grid grid-cols-[80px_1fr_auto] gap-4 text-sm">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
                     <Image
                       src={safeRemoteImage(item.image, fallbackProductImage, { width: 160, height: 160, crop: "fill" })}
                       alt={getDisplayName(item.name, locale)}
                       fill
-                      sizes="64px"
+                      sizes="80px"
                       className="object-cover"
                     />
-                    <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-navy px-1 text-[10px] font-bold text-white">
+                    <span className="absolute -right-1 -top-1 grid h-7 min-w-7 place-items-center rounded-full bg-black px-1.5 text-sm font-bold text-white">
                       {item.quantity}
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-navy">{getDisplayName(item.name, locale)}</p>
+                    <p className="text-lg font-medium text-neutral-950">{getDisplayName(item.name, locale)}</p>
                     {item.variantName ? (
-                      <p className="mt-1 text-xs font-semibold text-neutral-500">{getLocalized(item.variantName, locale)}</p>
+                      <p className="mt-1 text-base text-neutral-500">{getLocalized(item.variantName, locale)}</p>
                     ) : null}
-                    <p className="mt-1 text-xs text-neutral-500">{item.brand}</p>
                   </div>
-                  <span className="font-semibold text-navy">
+                  <span className="text-lg font-medium text-neutral-950">
                     {formatCurrency(item.price * item.quantity, currency, locale, currencyRates)}
                   </span>
                 </div>
               ))
             )}
           </div>
-          <div className="mt-5 grid gap-3 border-t border-neutral-200 pt-5 text-sm">
+          <div className="mt-8 grid gap-4 border-t border-neutral-200 pt-6 text-lg">
+            {couponOffersAvailable ? (
             <label className="grid gap-2 text-sm font-semibold text-navy">
-              {dictionary.cart.coupon}
               <div className="flex gap-2">
                 <input
                   name="couponCode"
                   value={coupon}
                   onChange={(event) => updateCoupon(event.target.value)}
-                  placeholder="DUBAI50"
-                  className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-medium text-neutral-700"
+                  placeholder="Discount code"
+                  className="h-[72px] min-w-0 flex-1 rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500"
                 />
-                <Button type="button" variant="secondary" onClick={applyCoupon} disabled={applyingCoupon || subtotal <= 0}>
+                <Button type="button" variant="secondary" onClick={applyCoupon} disabled={applyingCoupon || subtotal <= 0} className="h-[72px] rounded-2xl px-6 text-lg">
                   {applyingCoupon ? labels.checking : dictionary.actions.apply}
                 </Button>
               </div>
             </label>
+            ) : null}
             {appliedCoupon ? (
               <p className="text-xs font-semibold text-emerald-700">
                 {labels.applied(appliedCoupon)}
@@ -881,18 +676,20 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability }:
               <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-neutral-500">
-                {dictionary.common.shipping} ({selectedEmirate})
+              <span className="text-neutral-950">{dictionary.common.shipping}</span>
+              <span className="font-medium text-neutral-500">
+                {hasShippingArea ? formatCurrency(shipping, currency, locale, currencyRates) : "Enter shipping address"}
               </span>
-              <span className="font-semibold text-navy">{formatCurrency(shipping, currency, locale, currencyRates)}</span>
             </div>
+            {discount > 0 ? (
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.discount}</span>
               <span className="font-semibold text-navy">-{formatCurrency(discount, currency, locale, currencyRates)}</span>
             </div>
-            <div className="flex justify-between text-base">
-              <span className="font-bold text-navy">{dictionary.common.total}</span>
-              <span className="font-bold text-navy">{formatCurrency(total, currency, locale, currencyRates)}</span>
+            ) : null}
+            <div className="flex justify-between pt-3 text-2xl">
+              <span className="font-semibold text-neutral-950">{dictionary.common.total}</span>
+              <span className="font-semibold text-neutral-950">{formatCurrency(total, currency, locale, currencyRates)}</span>
             </div>
           </div>
           <Button

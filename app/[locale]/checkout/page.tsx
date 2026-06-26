@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CheckoutPageContent } from "@/components/cart/CheckoutPageContent";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { getPaymentAvailability } from "@/lib/payment-settings";
+import { prisma } from "@/lib/prisma";
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return {
@@ -17,12 +18,19 @@ export default async function CheckoutPage({ params }: { params: { locale: strin
   }
 
   const paymentAvailability = await getPaymentAvailability();
+  const activeCoupons = await prisma.coupon.count({
+    where: {
+      isActive: true,
+      expiryDate: { gte: new Date() }
+    }
+  });
 
   return (
     <CheckoutPageContent
       locale={params.locale}
       dictionary={getDictionary(params.locale)}
       paymentAvailability={paymentAvailability}
+      couponOffersAvailable={activeCoupons > 0}
     />
   );
 }
