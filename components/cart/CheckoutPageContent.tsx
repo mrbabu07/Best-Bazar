@@ -3,7 +3,7 @@
 import { CreditCard, HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -136,6 +136,51 @@ type ReverseGeocodeResponse = {
   display_name?: string;
 };
 
+const defaultMapCenter = { lat: 25.2048, lng: 55.2708 };
+const mapTileSize = 256;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function lngToTileX(lng: number, zoom: number) {
+  return ((lng + 180) / 360) * 2 ** zoom;
+}
+
+function latToTileY(lat: number, zoom: number) {
+  const latRad = (lat * Math.PI) / 180;
+  return ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * 2 ** zoom;
+}
+
+function tileXToLng(x: number, zoom: number) {
+  return (x / 2 ** zoom) * 360 - 180;
+}
+
+function tileYToLat(y: number, zoom: number) {
+  const n = Math.PI - (2 * Math.PI * y) / 2 ** zoom;
+  return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+}
+
+function parseCoordinateLink(value: string) {
+  const match = value.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+
+  if (!match) {
+    return null;
+  }
+
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null;
+  }
+
+  return {
+    lat: clamp(lat, -85, 85),
+    lng: clamp(lng, -180, 180)
+  };
+}
+
 export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
@@ -155,8 +200,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [loading, setLoading] = useState(false);
   const [stripePayment, setStripePayment] = useState<StripePaymentState | null>(null);
   const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState(defaultMapCenter);
+  const [mapZoom, setMapZoom] = useState(13);
   const [mapLink, setMapLink] = useState("");
   const [locating, setLocating] = useState(false);
+  const [dragStart, setDragStart] = useState<{
+    pointerId: number;
+    x: number;
+    y: number;
+    center: { lat: number; lng: number };
+  } | null>(null);
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
@@ -185,12 +238,38 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const hasShippingArea = selectedEmirate.trim().length > 0;
   const shipping = hasShippingArea ? shippingQuote.fee : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
-  const mapQuery = mapPin ? `${mapPin.lat},${mapPin.lng}` : `${selectedEmirate || "Dubai"}, UAE`;
-  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=${mapPin ? "16" : "11"}&output=embed`;
-  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
-  const mapBounds = selectedEmirate.trim().toLowerCase() === "dubai"
-    ? { north: 25.35, south: 24.95, west: 54.9, east: 55.6 }
-    : { north: 26.2, south: 22.6, west: 51.5, east: 56.5 };
+  const selectedMapPoint = mapPin ?? mapCenter;
+  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
+  const visibleMapTiles = useMemo(() => {
+    const centerX = lngToTileX(mapCenter.lng, mapZoom);
+    const centerY = latToTileY(mapCenter.lat, mapZoom);
+    const baseX = Math.floor(centerX);
+    const baseY = Math.floor(centerY);
+    const maxTile = 2 ** mapZoom;
+    const tiles: Array<{ key: string; src: string; left: number; top: number }> = [];
+
+    for (let dx = -2; dx <= 2; dx += 1) {
+      for (let dy = -2; dy <= 2; dy += 1) {
+        const x = baseX + dx;
+        const y = baseY + dy;
+
+        if (y < 0 || y >= maxTile) {
+          continue;
+        }
+
+        const wrappedX = ((x % maxTile) + maxTile) % maxTile;
+
+        tiles.push({
+          key: `${wrappedX}-${y}-${mapZoom}`,
+          src: `https://tile.openstreetmap.org/${mapZoom}/${wrappedX}/${y}.png`,
+          left: 160 + (x - centerX) * mapTileSize,
+          top: 112 + (y - centerY) * mapTileSize
+        });
+      }
+    }
+
+    return tiles;
+  }, [mapCenter.lat, mapCenter.lng, mapZoom]);
 
   const paymentMethod = () => {
     if (payment === "cod") {
@@ -369,6 +448,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     };
 
     setMapPin(nextPin);
+    setMapCenter(nextPin);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
 
     if (shouldFillAddress) {
@@ -376,15 +456,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     }
   };
 
-  const handleMapClick = (event: MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const xRatio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
-    const yRatio = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
-    const lat = mapBounds.north - (mapBounds.north - mapBounds.south) * yRatio;
-    const lng = mapBounds.west + (mapBounds.east - mapBounds.west) * xRatio;
-
-    setDeliveryPin(lat, lng);
-    toast.success("Delivery map pin updated.");
+  const setPinAtMapCenter = () => {
+    setDeliveryPin(mapCenter.lat, mapCenter.lng);
+    toast.success("Delivery pin set.");
   };
 
   const useCurrentLocation = () => {
@@ -410,6 +484,52 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         maximumAge: 60000
       }
     );
+  };
+
+  const startMapDrag = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragStart({
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      center: mapCenter
+    });
+  };
+
+  const moveMapDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!dragStart || dragStart.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const dx = event.clientX - dragStart.x;
+    const dy = event.clientY - dragStart.y;
+    const startX = lngToTileX(dragStart.center.lng, mapZoom);
+    const startY = latToTileY(dragStart.center.lat, mapZoom);
+    const nextX = startX - dx / mapTileSize;
+    const nextY = startY - dy / mapTileSize;
+
+    setMapCenter({
+      lat: clamp(tileYToLat(nextY, mapZoom), -85, 85),
+      lng: clamp(tileXToLng(nextX, mapZoom), -180, 180)
+    });
+  };
+
+  const stopMapDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragStart?.pointerId === event.pointerId) {
+      setDragStart(null);
+    }
+  };
+
+  const applyMapLink = () => {
+    const parsed = parseCoordinateLink(mapLink);
+
+    if (!parsed) {
+      toast.error("Paste a Google Maps link or coordinates like 25.2048, 55.2708.");
+      return;
+    }
+
+    setDeliveryPin(parsed.lat, parsed.lng);
+    toast.success("Map pin added from link.");
   };
 
   const applyCoupon = async () => {
@@ -623,51 +743,84 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
                 Save this information for next time
               </label>
-              <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 sm:col-span-2">
+              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 sm:col-span-2">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="flex items-center gap-2 text-base font-semibold text-neutral-950">
                       <MapPin size={18} />
                       Delivery map pin
                     </p>
-                    <p className="mt-1 text-sm text-neutral-500">Optional. Use your location or tap the map to set a delivery pin.</p>
+                    <p className="mt-1 text-sm leading-5 text-neutral-500">Optional. Drag the map, zoom if needed, then set the pin at the center.</p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
                     <LocateFixed size={15} />
                     {locating ? "Locating..." : "Use my location"}
                   </Button>
                 </div>
-                <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-                  <iframe
-                    title="Delivery map preview"
-                    src={mapEmbedUrl}
-                    className="h-56 w-full"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
+                <div
+                  className="relative h-64 touch-none overflow-hidden rounded-2xl border border-neutral-200 bg-[#dbe8cf] select-none"
+                  onPointerDown={startMapDrag}
+                  onPointerMove={moveMapDrag}
+                  onPointerUp={stopMapDrag}
+                  onPointerCancel={stopMapDrag}
+                  role="application"
+                  aria-label="Interactive delivery map"
+                >
+                  {visibleMapTiles.map((tile) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={tile.key}
+                      src={tile.src}
+                      alt=""
+                      draggable={false}
+                      className="absolute h-64 w-64 max-w-none"
+                      style={{ left: tile.left, top: tile.top }}
+                    />
+                  ))}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,transparent_18px,rgba(0,0,0,0.04)_19px,transparent_20px)]" />
+                  <div className="absolute left-1/2 top-1/2 z-10 grid h-11 w-11 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-black text-white shadow-lg ring-4 ring-white">
+                    <MapPin size={22} />
+                  </div>
+                  <div className="absolute left-3 top-3 z-20 flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow">
+                    <button
+                      type="button"
+                      onClick={() => setMapZoom((zoom) => clamp(zoom + 1, 10, 18))}
+                      className="grid h-10 w-10 place-items-center border-r border-neutral-200 text-lg font-semibold text-neutral-950"
+                      aria-label="Zoom in"
+                    >
+                      +
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMapZoom((zoom) => clamp(zoom - 1, 10, 18))}
+                      className="grid h-10 w-10 place-items-center text-lg font-semibold text-neutral-950"
+                      aria-label="Zoom out"
+                    >
+                      -
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleMapClick}
-                    className="absolute inset-0 cursor-crosshair"
-                    aria-label="Tap map to set delivery pin"
+                    onClick={setPinAtMapCenter}
+                    className="absolute bottom-3 left-1/2 z-20 h-11 -translate-x-1/2 rounded-full bg-black px-5 text-sm font-semibold text-white shadow-lg"
                   >
-                    <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-950 shadow">
-                      Tap map to set pin
-                    </span>
-                    {mapPin ? (
-                      <span className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-black text-white shadow ring-4 ring-white">
-                        <MapPin size={20} />
-                      </span>
-                    ) : null}
+                    Set pin here
                   </button>
                 </div>
-                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <p className="text-xs font-medium text-neutral-500">
+                  Center: {mapCenter.lat.toFixed(6)}, {mapCenter.lng.toFixed(6)}
+                  {mapPin ? ` | Selected: ${mapPin.lat}, ${mapPin.lng}` : ""}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                   <input
                     value={mapLink}
                     onChange={(event) => setMapLink(event.target.value)}
-                    placeholder="Paste Google Maps pin/share link (optional)"
+                    placeholder="Paste Google Maps link or coordinates (optional)"
                     className="h-12 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700"
                   />
+                  <Button type="button" variant="secondary" onClick={applyMapLink} className="h-12 rounded-xl px-4">
+                    Use link
+                  </Button>
                   <a
                     href={mapOpenUrl}
                     target="_blank"
@@ -739,11 +892,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">
                         {option.detail}
                       </span>
-                      <span
-                        className="mt-2 inline-flex h-6 max-w-full items-center rounded-md bg-emerald-50 px-2 text-[11px] font-bold text-emerald-700"
-                      >
-                        <span className="truncate">Available</span>
-                      </span>
                     </span>
                     <span
                       className={cn(
@@ -761,9 +909,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 </div>
               ) : null}
             </div>
-            <p className="mt-3 text-xs font-semibold leading-5 text-neutral-500">
-              Payment visibility is controlled by admin settings. Only cash on delivery and Stripe card payment are supported.
-            </p>
             {payment === "cod" && paymentAvailability.codDetail ? (
               <div className="mt-4 rounded-lg border border-neutral-200 bg-paper p-4 text-sm font-semibold leading-6 text-navy">
                 {paymentAvailability.codDetail}
