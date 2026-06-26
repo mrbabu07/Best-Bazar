@@ -202,6 +202,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState(defaultMapCenter);
   const [mapZoom, setMapZoom] = useState(13);
+  const [mapMode, setMapMode] = useState<"map" | "satellite">("satellite");
+  const [mapSearch, setMapSearch] = useState("");
+  const [mapAddressLabel, setMapAddressLabel] = useState("Dubai, United Arab Emirates");
   const [mapLink, setMapLink] = useState("");
   const [locating, setLocating] = useState(false);
   const [dragStart, setDragStart] = useState<{
@@ -261,7 +264,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
         tiles.push({
           key: `${wrappedX}-${y}-${mapZoom}`,
-          src: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${y}/${wrappedX}`,
+          src:
+            mapMode === "satellite"
+              ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${y}/${wrappedX}`
+              : `https://tile.openstreetmap.org/${mapZoom}/${wrappedX}/${y}.png`,
           left: 160 + (x - centerX) * mapTileSize,
           top: 112 + (y - centerY) * mapTileSize
         });
@@ -269,7 +275,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     }
 
     return tiles;
-  }, [mapCenter.lat, mapCenter.lng, mapZoom]);
+  }, [mapCenter.lat, mapCenter.lng, mapMode, mapZoom]);
 
   const paymentMethod = () => {
     if (payment === "cod") {
@@ -422,6 +428,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       const address = result.address ?? {};
       const street = [address.house_number, address.road ?? address.pedestrian].filter(Boolean).join(" ").trim();
       const city = address.city ?? address.town ?? address.state;
+      const displayLabel = result.display_name ?? [street, city, address.country].filter(Boolean).join(", ");
       const matchedRate = shippingOptions.find((rate) => {
         const emirateName = rate.emirate.toLowerCase();
         const state = (address.state ?? "").toLowerCase();
@@ -432,6 +439,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
       setFieldValue("street", street || result.display_name);
       setFieldValue("city", city);
+      setMapAddressLabel(displayLabel || `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
 
       if (matchedRate) {
         setEmirate(matchedRate.emirate);
@@ -450,6 +458,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setMapPin(nextPin);
     setMapCenter(nextPin);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
+    setMapAddressLabel(`${nextPin.lat}, ${nextPin.lng}`);
 
     if (shouldFillAddress) {
       void fillAddressFromPin(nextPin.lat, nextPin.lng);
@@ -530,6 +539,44 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
     setDeliveryPin(parsed.lat, parsed.lng);
     toast.success("Map pin added from link.");
+  };
+
+  const searchMapLocation = async () => {
+    const query = mapSearch.trim();
+
+    if (!query) {
+      toast.error("Enter an address or location first.");
+      return;
+    }
+
+    const coordinateMatch = parseCoordinateLink(query);
+
+    if (coordinateMatch) {
+      setDeliveryPin(coordinateMatch.lat, coordinateMatch.lng);
+      toast.success("Map pin added.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ae&q=${encodeURIComponent(query)}`,
+        { headers: { Accept: "application/json" } }
+      );
+      const result = await safeResponseJson<Array<{ lat?: string; lon?: string; display_name?: string }>>(response, []);
+      const match = result[0];
+      const lat = Number(match?.lat);
+      const lng = Number(match?.lon);
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        throw new Error("Location not found.");
+      }
+
+      setDeliveryPin(lat, lng, false);
+      setMapAddressLabel(match?.display_name ?? query);
+      toast.success("Location found. Move map if needed, then set pin.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to find location.");
+    }
   };
 
   const applyCoupon = async () => {
@@ -750,7 +797,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       <MapPin size={18} />
                       Delivery map pin
                     </p>
-                    <p className="mt-1 text-sm leading-5 text-neutral-500">Optional. Drag the map, zoom if needed, then set the pin at the center.</p>
+                    <p className="mt-1 text-sm leading-5 text-neutral-500">Optional. Search, drag the map, then set the red pin at the exact delivery point.</p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
                     <LocateFixed size={15} />
@@ -758,7 +805,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   </Button>
                 </div>
                 <div
-                  className="relative h-64 touch-none overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-800 select-none"
+                  className="relative h-80 touch-none overflow-hidden rounded-2xl border border-neutral-300 bg-neutral-800 select-none"
                   onPointerDown={startMapDrag}
                   onPointerMove={moveMapDrag}
                   onPointerUp={stopMapDrag}
@@ -766,6 +813,46 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   role="application"
                   aria-label="Interactive delivery map"
                 >
+                  <div
+                    className="absolute left-3 right-3 top-3 z-30 grid gap-2"
+                    onPointerDown={(event) => event.stopPropagation()}
+                  >
+                    <div className="grid grid-cols-[1fr_auto] gap-2 rounded-md bg-white/95 p-1 shadow">
+                      <input
+                        value={mapSearch}
+                        onChange={(event) => setMapSearch(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void searchMapLocation();
+                          }
+                        }}
+                        placeholder="Search location by address"
+                        className="h-10 rounded border border-neutral-200 bg-white px-3 text-sm text-neutral-950 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={searchMapLocation}
+                        className="h-10 rounded bg-neutral-950 px-4 text-sm font-semibold text-white"
+                      >
+                        Search
+                      </button>
+                    </div>
+                    <div className="inline-flex w-fit overflow-hidden rounded-sm border border-neutral-300 bg-white/95 shadow">
+                      {(["map", "satellite"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setMapMode(mode)}
+                          className={`h-9 px-5 text-sm font-semibold capitalize ${
+                            mapMode === mode ? "bg-white text-neutral-950" : "bg-neutral-100 text-neutral-600"
+                          }`}
+                        >
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   {visibleMapTiles.map((tile) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -778,13 +865,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     />
                   ))}
                   <div className="absolute inset-0 bg-black/5" />
-                  <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full text-red-600 drop-shadow-[0_2px_4px_rgba(255,255,255,0.9)]">
-                    <MapPin size={28} fill="currentColor" strokeWidth={1.5} />
+                  <div className="absolute left-1/2 top-[calc(50%-42px)] z-20 max-w-[260px] -translate-x-1/2 rounded-md bg-white/95 px-3 py-1.5 text-center text-[11px] font-medium leading-4 text-neutral-950 shadow">
+                    {mapAddressLabel}
                   </div>
-                  <div className="absolute left-1/2 top-1/2 z-10 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-red-600" />
-                  <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-8 w-px -translate-x-1/2 -translate-y-1/2 bg-white/60" />
-                  <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-px w-8 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
-                  <div className="absolute left-3 top-3 z-20 flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow">
+                  <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-full text-red-600 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
+                    <MapPin size={20} fill="currentColor" strokeWidth={1.25} />
+                  </div>
+                  <div className="absolute left-1/2 top-1/2 z-20 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-red-600" />
+                  <div
+                    className="absolute bottom-3 right-3 z-20 flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow"
+                    onPointerDown={(event) => event.stopPropagation()}
+                  >
                     <button
                       type="button"
                       onClick={() => setMapZoom((zoom) => clamp(zoom + 1, 10, 18))}
@@ -805,7 +896,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   <button
                     type="button"
                     onClick={setPinAtMapCenter}
-                    className="absolute bottom-3 left-1/2 z-20 h-11 -translate-x-1/2 rounded-full bg-black px-5 text-sm font-semibold text-white shadow-lg"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    className="absolute bottom-3 left-1/2 z-20 h-10 -translate-x-1/2 rounded bg-black px-5 text-sm font-semibold text-white shadow-lg"
                   >
                     Set pin here
                   </button>
