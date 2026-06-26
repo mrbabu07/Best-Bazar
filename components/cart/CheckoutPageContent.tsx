@@ -261,7 +261,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
         tiles.push({
           key: `${wrappedX}-${y}-${mapZoom}`,
-          src: `https://tile.openstreetmap.org/${mapZoom}/${wrappedX}/${y}.png`,
+          src: `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${y}/${wrappedX}`,
           left: 160 + (x - centerX) * mapTileSize,
           top: 112 + (y - centerY) * mapTileSize
         });
@@ -758,7 +758,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   </Button>
                 </div>
                 <div
-                  className="relative h-64 touch-none overflow-hidden rounded-2xl border border-neutral-200 bg-[#dbe8cf] select-none"
+                  className="relative h-64 touch-none overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-800 select-none"
                   onPointerDown={startMapDrag}
                   onPointerMove={moveMapDrag}
                   onPointerUp={stopMapDrag}
@@ -777,10 +777,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       style={{ left: tile.left, top: tile.top }}
                     />
                   ))}
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,transparent_18px,rgba(0,0,0,0.04)_19px,transparent_20px)]" />
-                  <div className="absolute left-1/2 top-1/2 z-10 grid h-11 w-11 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-black text-white shadow-lg ring-4 ring-white">
-                    <MapPin size={22} />
+                  <div className="absolute inset-0 bg-black/5" />
+                  <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full text-red-600 drop-shadow-[0_2px_4px_rgba(255,255,255,0.9)]">
+                    <MapPin size={28} fill="currentColor" strokeWidth={1.5} />
                   </div>
+                  <div className="absolute left-1/2 top-1/2 z-10 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-red-600" />
+                  <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-8 w-px -translate-x-1/2 -translate-y-1/2 bg-white/60" />
+                  <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-px w-8 -translate-x-1/2 -translate-y-1/2 bg-white/60" />
                   <div className="absolute left-3 top-3 z-20 flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow">
                     <button
                       type="button"
