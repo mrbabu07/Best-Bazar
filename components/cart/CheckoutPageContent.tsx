@@ -1,9 +1,9 @@
 "use client";
 
-import { CreditCard, HandCoins, ShieldCheck } from "lucide-react";
+import { CreditCard, HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -39,7 +39,7 @@ type CheckoutPageContentProps = {
   couponOffersAvailable: boolean;
 };
 
-type CheckoutFieldName = "firstName" | "lastName" | "email" | "phone" | "street" | "apartment" | "city" | "country";
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -66,8 +66,7 @@ const checkoutCopy = {
     delivery: "Delivery",
     applied: (code: string) => `${code} applied`,
     fields: {
-      firstName: "First name",
-      lastName: "Last name",
+      name: "Full name",
       email: "Email",
       phone: "Phone",
       street: "Address",
@@ -89,8 +88,7 @@ const checkoutCopy = {
     delivery: "التوصيل",
     applied: (code: string) => `تم تطبيق ${code}`,
     fields: {
-      firstName: "الاسم الأول",
-      lastName: "اسم العائلة",
+      name: "????? ??????",
       email: "البريد الإلكتروني",
       phone: "الهاتف",
       street: "عنوان الشارع",
@@ -125,6 +123,19 @@ type StripePaymentState = {
   orderConfirmUrl: string;
 };
 
+type ReverseGeocodeResponse = {
+  address?: {
+    road?: string;
+    pedestrian?: string;
+    house_number?: string;
+    city?: string;
+    town?: string;
+    state?: string;
+    country?: string;
+  };
+  display_name?: string;
+};
+
 export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
@@ -143,6 +154,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stripePayment, setStripePayment] = useState<StripePaymentState | null>(null);
+  const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapLink, setMapLink] = useState("");
+  const [locating, setLocating] = useState(false);
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
@@ -171,6 +185,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const hasShippingArea = selectedEmirate.trim().length > 0;
   const shipping = hasShippingArea ? shippingQuote.fee : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
+  const mapQuery = mapPin ? `${mapPin.lat},${mapPin.lng}` : `${selectedEmirate || "Dubai"}, UAE`;
+  const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=${mapPin ? "16" : "11"}&output=embed`;
+  const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
+  const mapBounds = selectedEmirate.trim().toLowerCase() === "dubai"
+    ? { north: 25.35, south: 24.95, west: 54.9, east: 55.6 }
+    : { north: 26.2, south: 22.6, west: 51.5, east: 56.5 };
 
   const paymentMethod = () => {
     if (payment === "cod") {
@@ -300,6 +320,98 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     }
   };
 
+  const setFieldValue = (field: CheckoutFieldName, value?: string) => {
+    const input = fieldRefs.current[field];
+
+    if (input && value) {
+      input.value = value;
+    }
+  };
+
+  const fillAddressFromPin = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { Accept: "application/json" } }
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const result = await safeResponseJson<ReverseGeocodeResponse>(response, {});
+      const address = result.address ?? {};
+      const street = [address.house_number, address.road ?? address.pedestrian].filter(Boolean).join(" ").trim();
+      const city = address.city ?? address.town ?? address.state;
+      const matchedRate = shippingOptions.find((rate) => {
+        const emirateName = rate.emirate.toLowerCase();
+        const state = (address.state ?? "").toLowerCase();
+        const cityName = (city ?? "").toLowerCase();
+
+        return state.includes(emirateName) || cityName.includes(emirateName) || Boolean(cityName && emirateName.includes(cityName));
+      });
+
+      setFieldValue("street", street || result.display_name);
+      setFieldValue("city", city);
+
+      if (matchedRate) {
+        setEmirate(matchedRate.emirate);
+      }
+    } catch {
+      // Keep the selected pin even if public reverse geocoding is unavailable.
+    }
+  };
+
+  const setDeliveryPin = (lat: number, lng: number, shouldFillAddress = true) => {
+    const nextPin = {
+      lat: Number(lat.toFixed(6)),
+      lng: Number(lng.toFixed(6))
+    };
+
+    setMapPin(nextPin);
+    setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
+
+    if (shouldFillAddress) {
+      void fillAddressFromPin(nextPin.lat, nextPin.lng);
+    }
+  };
+
+  const handleMapClick = (event: MouseEvent<HTMLButtonElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const xRatio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const yRatio = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1);
+    const lat = mapBounds.north - (mapBounds.north - mapBounds.south) * yRatio;
+    const lng = mapBounds.west + (mapBounds.east - mapBounds.west) * xRatio;
+
+    setDeliveryPin(lat, lng);
+    toast.success("Delivery map pin updated.");
+  };
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Location is not supported on this device.");
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setDeliveryPin(position.coords.latitude, position.coords.longitude);
+        setLocating(false);
+        toast.success("Delivery map pin added.");
+      },
+      () => {
+        setLocating(false);
+        toast.error("Unable to get location. Please allow location permission or tap the map.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 60000
+      }
+    );
+  };
+
   const applyCoupon = async () => {
     const code = coupon.trim();
 
@@ -339,10 +451,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const firstName = String(formData.get("firstName") ?? "").trim();
-    const lastName = String(formData.get("lastName") ?? "").trim();
     const customerNotes = String(formData.get("notes") ?? "").trim();
-    const orderNotes = customerNotes;
+    const mapNotes = [
+      mapPin ? `Map pin: https://www.google.com/maps?q=${mapPin.lat},${mapPin.lng}` : "",
+      mapLink.trim() ? `Customer map link: ${mapLink.trim()}` : ""
+    ].filter(Boolean);
+    const orderNotes = [customerNotes, ...mapNotes].filter(Boolean).join("\n");
     const payload = {
       items: items.map((item) => ({
         productId: item.productId ?? item.id,
@@ -350,7 +464,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         quantity: item.quantity
       })),
       shippingAddress: {
-        name: [firstName, lastName].filter(Boolean).join(" "),
+        name: String(formData.get("name") ?? ""),
         email: String(formData.get("email") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         street: String(formData.get("street") ?? ""),
@@ -426,8 +540,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   };
 
   const fields: CheckoutField[] = [
-    { name: "firstName", label: labels.fields.firstName, type: "text", autoComplete: "given-name", placeholder: labels.fields.firstName },
-    { name: "lastName", label: labels.fields.lastName, type: "text", autoComplete: "family-name", placeholder: labels.fields.lastName },
+    { name: "name", label: labels.fields.name, type: "text", autoComplete: "name", placeholder: labels.fields.name },
     { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: "Email (optional)", required: false },
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: "Phone number" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: labels.fields.street },
@@ -436,7 +549,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       label: "Apartment / villa no.",
       type: "text",
       autoComplete: "address-line3",
-      placeholder: "Apartment, suite, etc. (optional)"
+      placeholder: "Apartment, suite, etc. (optional)",
+      required: false
     },
     { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: "City" }
   ];
@@ -465,7 +579,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   key={field.name}
                   className={cn(
                     "grid gap-2 text-sm font-semibold text-neutral-800",
-                    ["email", "phone", "street", "apartment"].includes(field.name) && "sm:col-span-2"
+                    ["name", "email", "phone", "street", "apartment"].includes(field.name) && "sm:col-span-2"
                   )}
                 >
                   <span className="sr-only">{field.label}</span>
@@ -484,32 +598,21 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 </label>
               ))}
               <div className="grid gap-2 text-sm font-semibold text-neutral-800">
-                <span className="sr-only">{shippingSettings.customAreaFee.enabled ? shippingSettings.customAreaFee.areaLabel : labels.shippingArea}</span>
-                {shippingSettings.customAreaFee.enabled ? (
-                  <input
-                    name="emirate"
-                    value={selectedEmirate}
-                    onChange={(event) => setEmirate(event.target.value)}
-                    required
-                    placeholder={shippingSettings.customAreaFee.areaLabel || "Delivery area"}
-                    className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
-                  />
-                ) : (
-                  <select
-                    name="emirate"
-                    value={selectedEmirate}
-                    onChange={(event) => setEmirate(event.target.value)}
-                    required
-                    className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
-                  >
-                    <option value="" disabled>Emirate</option>
-                    {UAE_EMIRATES.map((emirateOption) => (
-                      <option key={emirateOption.key} value={emirateOption.nameEn}>
-                        {emirateOption.nameEn}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <span className="sr-only">{labels.shippingArea}</span>
+                <select
+                  name="emirate"
+                  value={selectedEmirate}
+                  onChange={(event) => setEmirate(event.target.value)}
+                  required
+                  className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
+                >
+                  <option value="" disabled>Emirate</option>
+                  {UAE_EMIRATES.map((emirateOption) => (
+                    <option key={emirateOption.key} value={emirateOption.nameEn}>
+                      {emirateOption.nameEn}
+                    </option>
+                  ))}
+                </select>
                 {!shippingQuote.codAvailable ? (
                   <p className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold text-sale">
                     COD is unavailable for {shippingQuote.rate.emirate}. Please choose card payment.
@@ -520,6 +623,66 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
                 Save this information for next time
               </label>
+              <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 sm:col-span-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="flex items-center gap-2 text-base font-semibold text-neutral-950">
+                      <MapPin size={18} />
+                      Delivery map pin
+                    </p>
+                    <p className="mt-1 text-sm text-neutral-500">Optional. Use your location or tap the map to set a delivery pin.</p>
+                  </div>
+                  <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
+                    <LocateFixed size={15} />
+                    {locating ? "Locating..." : "Use my location"}
+                  </Button>
+                </div>
+                <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+                  <iframe
+                    title="Delivery map preview"
+                    src={mapEmbedUrl}
+                    className="h-56 w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleMapClick}
+                    className="absolute inset-0 cursor-crosshair"
+                    aria-label="Tap map to set delivery pin"
+                  >
+                    <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-950 shadow">
+                      Tap map to set pin
+                    </span>
+                    {mapPin ? (
+                      <span className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-full place-items-center rounded-full bg-black text-white shadow ring-4 ring-white">
+                        <MapPin size={20} />
+                      </span>
+                    ) : null}
+                  </button>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    value={mapLink}
+                    onChange={(event) => setMapLink(event.target.value)}
+                    placeholder="Paste Google Maps pin/share link (optional)"
+                    className="h-12 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700"
+                  />
+                  <a
+                    href={mapOpenUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-12 items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-950 hover:bg-neutral-100"
+                  >
+                    Open map
+                  </a>
+                </div>
+                {mapPin ? (
+                  <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                    Pin added: {mapPin.lat}, {mapPin.lng}
+                  </p>
+                ) : null}
+              </div>
               <textarea
                 name="notes"
                 rows={3}
@@ -710,3 +873,4 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     </main>
   );
 }
+
