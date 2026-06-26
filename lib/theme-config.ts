@@ -14,7 +14,14 @@ export type ThemeSettings = {
   maintenanceMessageEn: string;
   maintenanceMessageAr: string;
   adminRefreshSeconds: number;
+  checkoutControls: CheckoutControls;
   storefrontContent: StorefrontContent;
+};
+
+export type CheckoutControls = {
+  showCodDetail: boolean;
+  showCouponBox: boolean;
+  freeDeliveryEnabled: boolean;
 };
 
 export type StorefrontContent = {
@@ -45,6 +52,11 @@ export const defaultThemeSettings: ThemeSettings = {
   maintenanceMessageEn: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
   maintenanceMessageAr: "The store is temporarily unavailable while we improve the shopping experience. Please check back soon.",
   adminRefreshSeconds: 60,
+  checkoutControls: {
+    showCodDetail: true,
+    showCouponBox: true,
+    freeDeliveryEnabled: false
+  },
   storefrontContent: defaultStorefrontContent
 };
 
@@ -59,6 +71,7 @@ function color(value: unknown, fallback: string) {
 export function normalizeThemeSettings(value: unknown): ThemeSettings {
   const input = isRecord(value) ? value : {};
   const content = isRecord(input.storefrontContent) ? input.storefrontContent : {};
+  const checkoutControls = isRecord(input.checkoutControls) ? input.checkoutControls : {};
   const contentValue = (key: keyof StorefrontContent) =>
     typeof content[key] === "string" && content[key].trim() ? (content[key] as string) : defaultStorefrontContent[key];
 
@@ -97,6 +110,20 @@ export function normalizeThemeSettings(value: unknown): ThemeSettings {
       typeof input.adminRefreshSeconds === "number" && Number.isInteger(input.adminRefreshSeconds)
         ? Math.min(300, Math.max(15, input.adminRefreshSeconds))
         : defaultThemeSettings.adminRefreshSeconds,
+    checkoutControls: {
+      showCodDetail:
+        typeof checkoutControls.showCodDetail === "boolean"
+          ? checkoutControls.showCodDetail
+          : defaultThemeSettings.checkoutControls.showCodDetail,
+      showCouponBox:
+        typeof checkoutControls.showCouponBox === "boolean"
+          ? checkoutControls.showCouponBox
+          : defaultThemeSettings.checkoutControls.showCouponBox,
+      freeDeliveryEnabled:
+        typeof checkoutControls.freeDeliveryEnabled === "boolean"
+          ? checkoutControls.freeDeliveryEnabled
+          : defaultThemeSettings.checkoutControls.freeDeliveryEnabled
+    },
     storefrontContent: Object.fromEntries(
       Object.keys(defaultStorefrontContent).map((key) => [key, contentValue(key as keyof StorefrontContent)])
     ) as StorefrontContent

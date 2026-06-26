@@ -87,15 +87,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const updateRate = (index: number, key: keyof ShippingRate, value: string | boolean) => {
-    setForm((current) => ({
-      ...current,
-      shippingRates: current.shippingRates.map((rate, rateIndex) =>
-        rateIndex === index ? { ...rate, [key]: value } : rate
-      )
-    }));
-  };
-
   const updateCustomAreaFee = <Key extends keyof CustomAreaFeeForm>(key: Key, value: CustomAreaFeeForm[Key]) => {
     setForm((current) => ({
       ...current,
@@ -180,6 +171,22 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
+  const updateCheckoutControl = <Key extends keyof ThemeSettings["checkoutControls"]>(
+    key: Key,
+    value: ThemeSettings["checkoutControls"][Key]
+  ) => {
+    setForm((current) => ({
+      ...current,
+      themeSettings: {
+        ...current.themeSettings,
+        checkoutControls: {
+          ...current.themeSettings.checkoutControls,
+          [key]: value
+        }
+      }
+    }));
+  };
+
   const updateStorefrontContent = <Key extends keyof ThemeSettings["storefrontContent"]>(
     key: Key,
     value: ThemeSettings["storefrontContent"][Key]
@@ -220,22 +227,11 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       courierSettings: form.courierSettings,
       paymentSettings: form.paymentSettings,
       themeSettings: form.themeSettings,
-      shippingRates: shippingRatesToRecord(
-        form.shippingRates.map((rate) => ({
-          key: rate.key,
-          emirate: rate.nameEn,
-          nameEn: rate.nameEn,
-          nameAr: rate.nameAr,
-          cost: Number(rate.cost),
-          freeFrom: Number(rate.freeFrom),
-          deliveryDays: rate.deliveryDays,
-          codAvailable: rate.codAvailable
-        })),
-        {
-          ...form.customAreaFee,
-          fee: Number(form.customAreaFee.fee)
-        }
-      ),
+      shippingRates: shippingRatesToRecord([], {
+        ...form.customAreaFee,
+        enabled: true,
+        fee: Number(form.customAreaFee.fee)
+      }),
       metaTitleEn: nullable(form.metaTitleEn),
       metaTitleAr: nullable(form.metaTitleAr),
       metaDescriptionEn: nullable(form.metaDescriptionEn),
@@ -404,103 +400,49 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               <p className="mt-4 border-t border-neutral-100 pt-3 text-xs font-semibold leading-5 text-neutral-500">Set VAT to 0 if the business is not VAT registered.</p>
             </section>
           </div>
-          <label className="grid max-w-md gap-2 text-sm font-semibold text-navy">
-            Free shipping threshold (AED)
-            <input type="number" min="0" step="0.01" value={form.freeShippingThreshold} onChange={(event) => updateForm("freeShippingThreshold", event.target.value)} required className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
-          </label>
           <div className="grid gap-4 rounded-md border border-neutral-300 bg-neutral-50 p-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-bold text-navy">Shipping price mode</p>
-                <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
-                  Choose one fee for every delivery area, or use the individual emirate rates below.
-                </p>
-              </div>
-            </div>
-            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
-              <label className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition ${form.customAreaFee.enabled ? "border-neutral-950 bg-white" : "border-neutral-200 bg-white/60"}`}>
-                <input type="radio" name="shipping-price-mode" checked={form.customAreaFee.enabled} onChange={() => updateCustomAreaFee("enabled", true)} className="mt-1 h-4 w-4 accent-black" />
-                <span>
-                  <span className="block text-sm font-bold text-neutral-950">Overall area fee</span>
-                  <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">Customer types their area. One central fee applies everywhere.</span>
-                </span>
-              </label>
-              <label className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition ${!form.customAreaFee.enabled ? "border-neutral-950 bg-white" : "border-neutral-200 bg-white/60"}`}>
-                <input type="radio" name="shipping-price-mode" checked={!form.customAreaFee.enabled} onChange={() => updateCustomAreaFee("enabled", false)} className="mt-1 h-4 w-4 accent-black" />
-                <span>
-                  <span className="block text-sm font-bold text-neutral-950">Emirate-wise fee</span>
-                  <span className="mt-1 block text-xs font-semibold leading-5 text-neutral-500">Customer chooses an emirate from a dropdown. Each emirate has its own fee.</span>
-                </span>
-              </label>
-            </div>
-            {form.customAreaFee.enabled ? (
-              <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
-                <label className="grid gap-2 text-sm font-semibold text-navy">
-                  Checkout area label
-                  <input value={form.customAreaFee.areaLabel} onChange={(event) => updateCustomAreaFee("areaLabel", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-navy">
-                  Central fee (AED)
-                  <input type="number" min="0" step="0.01" value={form.customAreaFee.fee} onChange={(event) => updateCustomAreaFee("fee", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                </label>
-                <label className="grid gap-2 text-sm font-semibold text-navy">
-                  Estimated days
-                  <input value={form.customAreaFee.deliveryDays} onChange={(event) => updateCustomAreaFee("deliveryDays", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
-                </label>
-                <label className="flex h-11 items-center gap-2 self-end rounded-md border border-neutral-200 bg-white px-3 text-sm font-bold text-navy">
-                  <input type="checkbox" checked={form.customAreaFee.codAvailable} onChange={(event) => updateCustomAreaFee("codAvailable", event.target.checked)} className="h-4 w-4 accent-black" />
-                  COD available
-                </label>
-              </div>
-            ) : (
-              <p className="border-t border-neutral-200 pt-4 text-xs font-semibold leading-5 text-neutral-500">
-                Emirate-wise shipping is active. Customers will choose an emirate from a dropdown at checkout.
+            <div>
+              <p className="font-bold text-navy">Checkout delivery controls</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
+                One delivery fee applies across checkout. Turn free delivery on when you want delivery to be free for every order.
               </p>
-            )}
-          </div>
-          {!form.customAreaFee.enabled ? (
-            <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white">
-              <table className="min-w-[760px] divide-y divide-neutral-200 text-sm">
-                <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.08em] text-neutral-500">
-                  <tr>
-                    <th className="px-3 py-3">Emirate</th>
-                    <th className="px-3 py-3">Shipping Fee (AED)</th>
-                    <th className="px-3 py-3">Free Shipping From (AED)</th>
-                    <th className="px-3 py-3">Est. Days</th>
-                    <th className="px-3 py-3">COD Available</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {form.shippingRates.map((rate, index) => (
-                    <tr key={rate.key} className="align-middle">
-                      <td className="px-3 py-3">
-                        <p className="font-bold text-navy">{locale === "ar" ? rate.nameAr : rate.nameEn}</p>
-                        <p className="mt-1 text-xs font-semibold text-neutral-400">{rate.key}</p>
-                      </td>
-                      <td className="px-3 py-3">
-                        <input type="number" min="0" step="0.01" value={rate.cost} onChange={(event) => updateRate(index, "cost", event.target.value)} required className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
-                      </td>
-                      <td className="px-3 py-3">
-                        <input type="number" min="0" step="0.01" value={rate.freeFrom} onChange={(event) => updateRate(index, "freeFrom", event.target.value)} required className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
-                      </td>
-                      <td className="px-3 py-3">
-                        <input value={rate.deliveryDays} onChange={(event) => updateRate(index, "deliveryDays", event.target.value)} required className="h-10 w-full rounded-md border border-neutral-200 bg-paper px-3 text-sm" />
-                      </td>
-                      <td className="px-3 py-3">
-                        <label className="inline-flex h-10 items-center gap-2 rounded-md border border-neutral-200 bg-paper px-3 text-xs font-bold text-navy">
-                          <input type="checkbox" checked={rate.codAvailable} onChange={(event) => updateRate(index, "codAvailable", event.target.checked)} className="accent-gold-500" />
-                          COD
-                        </label>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
-          ) : null}
+            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Delivery label
+                <input value={form.customAreaFee.areaLabel} onChange={(event) => updateCustomAreaFee("areaLabel", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Overall delivery fee (AED)
+                <input type="number" min="0" step="0.01" value={form.customAreaFee.fee} onChange={(event) => updateCustomAreaFee("fee", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Estimated days
+                <input value={form.customAreaFee.deliveryDays} onChange={(event) => updateCustomAreaFee("deliveryDays", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+              </label>
+              <label className="flex h-11 items-center gap-2 self-end rounded-md border border-neutral-200 bg-white px-3 text-sm font-bold text-navy">
+                <input type="checkbox" checked={form.customAreaFee.codAvailable} onChange={(event) => updateCustomAreaFee("codAvailable", event.target.checked)} className="h-4 w-4 accent-black" />
+                COD available
+              </label>
+            </div>
+            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-3">
+              <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
+                <input type="checkbox" checked={form.themeSettings.checkoutControls.freeDeliveryEnabled} onChange={(event) => updateCheckoutControl("freeDeliveryEnabled", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
+                <span><span className="block">Free delivery for all orders</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides delivery fee.</span></span>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
+                <input type="checkbox" checked={form.themeSettings.checkoutControls.showCouponBox} onChange={(event) => updateCheckoutControl("showCouponBox", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
+                <span><span className="block">Show coupon box</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Hide when no offers should show.</span></span>
+              </label>
+              <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
+                <input type="checkbox" checked={form.themeSettings.checkoutControls.showCodDetail} onChange={(event) => updateCheckoutControl("showCodDetail", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
+                <span><span className="block">Show COD note</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Controls COD helper text at checkout.</span></span>
+              </label>
+            </div>
+          </div>
           <Button type="submit" variant="secondary" disabled={saving}>
             <Save size={16} />
-            {saving ? "Saving..." : "Save Shipping Rates"}
+            {saving ? "Saving..." : "Save Delivery Controls"}
           </Button>
         </div>
       </section>

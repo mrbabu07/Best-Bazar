@@ -4,6 +4,7 @@ import { CheckoutPageContent } from "@/components/cart/CheckoutPageContent";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { getPaymentAvailability } from "@/lib/payment-settings";
 import { prisma } from "@/lib/prisma";
+import { normalizeThemeSettings } from "@/lib/theme-config";
 
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return {
@@ -18,19 +19,27 @@ export default async function CheckoutPage({ params }: { params: { locale: strin
   }
 
   const paymentAvailability = await getPaymentAvailability();
-  const activeCoupons = await prisma.coupon.count({
-    where: {
-      isActive: true,
-      expiryDate: { gte: new Date() }
-    }
-  });
+  const [activeCoupons, settings] = await Promise.all([
+    prisma.coupon.count({
+      where: {
+        isActive: true,
+        expiryDate: { gte: new Date() }
+      }
+    }),
+    prisma.setting.findUnique({
+      where: { id: "store-settings" },
+      select: { themeSettings: true }
+    })
+  ]);
+  const checkoutControls = normalizeThemeSettings(settings?.themeSettings).checkoutControls;
 
   return (
     <CheckoutPageContent
       locale={params.locale}
       dictionary={getDictionary(params.locale)}
       paymentAvailability={paymentAvailability}
-      couponOffersAvailable={activeCoupons > 0}
+      couponOffersAvailable={checkoutControls.showCouponBox && activeCoupons > 0}
+      checkoutControls={checkoutControls}
     />
   );
 }

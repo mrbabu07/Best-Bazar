@@ -79,6 +79,11 @@ const themeSettingsSchema = z.object({
   maintenanceMessageEn: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
   maintenanceMessageAr: z.string().trim().default("The store is temporarily unavailable while we improve the shopping experience. Please check back soon."),
   adminRefreshSeconds: z.number().int().min(15).max(300).default(60),
+  checkoutControls: z.object({
+    showCodDetail: z.boolean().default(true),
+    showCouponBox: z.boolean().default(true),
+    freeDeliveryEnabled: z.boolean().default(false)
+  }).default({}),
   storefrontContent: z.object({
     navHomeEn: z.string().trim().default(""), navHomeAr: z.string().trim().default(""),
     navShopEn: z.string().trim().default(""), navShopAr: z.string().trim().default(""),

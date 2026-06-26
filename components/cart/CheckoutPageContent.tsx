@@ -11,6 +11,7 @@ import { getLocalized } from "@/lib/i18n";
 import { getDisplayName } from "@/lib/text-format";
 import type { PublicPaymentAvailability } from "@/lib/payment-config";
 import { safeResponseJson } from "@/lib/safe-json";
+import type { CheckoutControls } from "@/lib/theme-config";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
@@ -37,6 +38,7 @@ type CheckoutPageContentProps = {
   dictionary: Dictionary;
   paymentAvailability: PublicPaymentAvailability;
   couponOffersAvailable: boolean;
+  checkoutControls: CheckoutControls;
 };
 
 type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "city" | "country";
@@ -181,7 +183,7 @@ function parseCoordinateLink(value: string) {
   };
 }
 
-export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable }: CheckoutPageContentProps) {
+export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable, checkoutControls }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
   const hydrated = useHydrated();
@@ -203,8 +205,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [mapCenter, setMapCenter] = useState(defaultMapCenter);
   const [mapZoom, setMapZoom] = useState(13);
   const [mapMode, setMapMode] = useState<"map" | "satellite">("satellite");
-  const [mapSearch, setMapSearch] = useState("");
-  const [mapAddressLabel, setMapAddressLabel] = useState("Dubai, United Arab Emirates");
   const [mapLink, setMapLink] = useState("");
   const [locating, setLocating] = useState(false);
   const [dragStart, setDragStart] = useState<{
@@ -236,10 +236,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     subtotal,
     shippingSettings.shippingRates,
     shippingSettings.freeShippingThreshold,
-    shippingSettings.customAreaFee
+    { ...shippingSettings.customAreaFee, enabled: true }
   );
   const hasShippingArea = selectedEmirate.trim().length > 0;
-  const shipping = hasShippingArea ? shippingQuote.fee : 0;
+  const shipping = checkoutControls.freeDeliveryEnabled ? 0 : hasShippingArea ? shippingQuote.fee : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
@@ -428,7 +428,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       const address = result.address ?? {};
       const street = [address.house_number, address.road ?? address.pedestrian].filter(Boolean).join(" ").trim();
       const city = address.city ?? address.town ?? address.state;
-      const displayLabel = result.display_name ?? [street, city, address.country].filter(Boolean).join(", ");
       const matchedRate = shippingOptions.find((rate) => {
         const emirateName = rate.emirate.toLowerCase();
         const state = (address.state ?? "").toLowerCase();
@@ -439,8 +438,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
       setFieldValue("street", street || result.display_name);
       setFieldValue("city", city);
-      setMapAddressLabel(displayLabel || `${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-
       if (matchedRate) {
         setEmirate(matchedRate.emirate);
       }
@@ -458,8 +455,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setMapPin(nextPin);
     setMapCenter(nextPin);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
-    setMapAddressLabel(`${nextPin.lat}, ${nextPin.lng}`);
-
     if (shouldFillAddress) {
       void fillAddressFromPin(nextPin.lat, nextPin.lng);
     }
@@ -539,44 +534,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
     setDeliveryPin(parsed.lat, parsed.lng);
     toast.success("Map pin added from link.");
-  };
-
-  const searchMapLocation = async () => {
-    const query = mapSearch.trim();
-
-    if (!query) {
-      toast.error("Enter an address or location first.");
-      return;
-    }
-
-    const coordinateMatch = parseCoordinateLink(query);
-
-    if (coordinateMatch) {
-      setDeliveryPin(coordinateMatch.lat, coordinateMatch.lng);
-      toast.success("Map pin added.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ae&q=${encodeURIComponent(query)}`,
-        { headers: { Accept: "application/json" } }
-      );
-      const result = await safeResponseJson<Array<{ lat?: string; lon?: string; display_name?: string }>>(response, []);
-      const match = result[0];
-      const lat = Number(match?.lat);
-      const lng = Number(match?.lon);
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        throw new Error("Location not found.");
-      }
-
-      setDeliveryPin(lat, lng, false);
-      setMapAddressLabel(match?.display_name ?? query);
-      toast.success("Location found. Move map if needed, then set pin.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to find location.");
-    }
   };
 
   const applyCoupon = async () => {
@@ -790,14 +747,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
                 Save this information for next time
               </label>
-              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 sm:col-span-2">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="flex items-center gap-2 text-base font-semibold text-neutral-950">
+                <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3 sm:col-span-2 sm:p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-neutral-950">
                       <MapPin size={18} />
                       Delivery map pin
                     </p>
-                    <p className="mt-1 text-sm leading-5 text-neutral-500">Optional. Search, drag the map, then set the red pin at the exact delivery point.</p>
+                    <p className="mt-1 text-[11px] leading-4 text-neutral-500">Optional. Drag the satellite map, then set the delivery pin.</p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
                     <LocateFixed size={15} />
@@ -805,7 +762,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   </Button>
                 </div>
                 <div
-                  className="relative h-80 touch-none overflow-hidden rounded-2xl border border-neutral-300 bg-neutral-800 select-none"
+                  className="relative h-[360px] touch-none overflow-hidden rounded-2xl border border-neutral-300 bg-neutral-800 select-none"
                   onPointerDown={startMapDrag}
                   onPointerMove={moveMapDrag}
                   onPointerUp={stopMapDrag}
@@ -814,37 +771,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   aria-label="Interactive delivery map"
                 >
                   <div
-                    className="absolute left-3 right-3 top-3 z-30 grid gap-2"
+                    className="absolute left-3 top-3 z-30"
                     onPointerDown={(event) => event.stopPropagation()}
                   >
-                    <div className="grid grid-cols-[1fr_auto] gap-2 rounded-md bg-white/95 p-1 shadow">
-                      <input
-                        value={mapSearch}
-                        onChange={(event) => setMapSearch(event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            void searchMapLocation();
-                          }
-                        }}
-                        placeholder="Search location by address"
-                        className="h-10 rounded border border-neutral-200 bg-white px-3 text-sm text-neutral-950 outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={searchMapLocation}
-                        className="h-10 rounded bg-neutral-950 px-4 text-sm font-semibold text-white"
-                      >
-                        Search
-                      </button>
-                    </div>
-                    <div className="inline-flex w-fit overflow-hidden rounded-sm border border-neutral-300 bg-white/95 shadow">
+                    <div className="inline-flex overflow-hidden rounded-sm border border-neutral-300 bg-white/95 shadow">
                       {(["map", "satellite"] as const).map((mode) => (
                         <button
                           key={mode}
                           type="button"
                           onClick={() => setMapMode(mode)}
-                          className={`h-9 px-5 text-sm font-semibold capitalize ${
+                          className={`h-8 px-4 text-xs font-semibold capitalize ${
                             mapMode === mode ? "bg-white text-neutral-950" : "bg-neutral-100 text-neutral-600"
                           }`}
                         >
@@ -865,11 +801,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     />
                   ))}
                   <div className="absolute inset-0 bg-black/5" />
-                  <div className="absolute left-1/2 top-[calc(50%-42px)] z-20 max-w-[260px] -translate-x-1/2 rounded-md bg-white/95 px-3 py-1.5 text-center text-[11px] font-medium leading-4 text-neutral-950 shadow">
-                    {mapAddressLabel}
-                  </div>
                   <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-full text-red-600 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
-                    <MapPin size={20} fill="currentColor" strokeWidth={1.25} />
+                    <MapPin size={18} fill="currentColor" strokeWidth={1.2} />
                   </div>
                   <div className="absolute left-1/2 top-1/2 z-20 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-red-600" />
                   <div
@@ -902,10 +835,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     Set pin here
                   </button>
                 </div>
-                <p className="text-xs font-medium text-neutral-500">
-                  Center: {mapCenter.lat.toFixed(6)}, {mapCenter.lng.toFixed(6)}
-                  {mapPin ? ` | Selected: ${mapPin.lat}, ${mapPin.lng}` : ""}
-                </p>
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                   <input
                     value={mapLink}
@@ -925,11 +854,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     Open map
                   </a>
                 </div>
-                {mapPin ? (
-                  <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                    Pin added: {mapPin.lat}, {mapPin.lng}
-                  </p>
-                ) : null}
               </div>
               <textarea
                 name="notes"
@@ -1004,7 +928,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 </div>
               ) : null}
             </div>
-            {payment === "cod" && paymentAvailability.codDetail ? (
+            {checkoutControls.showCodDetail && payment === "cod" && paymentAvailability.codDetail ? (
               <div className="mt-4 rounded-lg border border-neutral-200 bg-paper p-4 text-sm font-semibold leading-6 text-navy">
                 {paymentAvailability.codDetail}
               </div>
@@ -1081,7 +1005,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
             <div className="flex justify-between">
               <span className="text-neutral-950">{dictionary.common.shipping}</span>
               <span className="font-medium text-neutral-500">
-                {hasShippingArea ? formatCurrency(shipping, currency, locale, currencyRates) : "Enter shipping address"}
+                {checkoutControls.freeDeliveryEnabled
+                  ? "Free delivery"
+                  : hasShippingArea
+                    ? formatCurrency(shipping, currency, locale, currencyRates)
+                    : "Enter shipping address"}
               </span>
             </div>
             {discount > 0 ? (

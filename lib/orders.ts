@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { DiscountType, OrderStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 import { revalidateAdminOrderViews, revalidateCacheTags } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
+import { normalizeThemeSettings } from "@/lib/theme-config";
 import type { orderCreateSchema } from "@/lib/validations/store";
 import { getShippingFee } from "@/utils/shipping";
 import type { z } from "zod";
@@ -90,13 +91,22 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
   });
   const subtotal = items.reduce((total, item) => total + item.lineTotal, 0);
   const settings = await prisma.setting.findUniqueOrThrow({ where: { id: "store-settings" } });
+  const checkoutControls = normalizeThemeSettings(settings.themeSettings).checkoutControls;
   const shippingQuote = getShippingFee(
     data.shippingAddress.emirate,
     subtotal,
     settings.shippingRates,
-    Number(settings.freeShippingThreshold)
+    Number(settings.freeShippingThreshold),
+    {
+      ...(
+        settings.shippingRates && typeof settings.shippingRates === "object" && !Array.isArray(settings.shippingRates)
+          ? ((settings.shippingRates as Record<string, unknown>).customAreaFee as Record<string, unknown> | undefined)
+          : undefined
+      ),
+      enabled: true
+    }
   );
-  const shippingCost = shippingQuote.fee;
+  const shippingCost = checkoutControls.freeDeliveryEnabled ? 0 : shippingQuote.fee;
 
   if (data.paymentMethod === PaymentMethod.COD && !shippingQuote.codAvailable) {
     throw new Error(`Cash on delivery is not available for ${shippingQuote.rate.emirate}.`);
