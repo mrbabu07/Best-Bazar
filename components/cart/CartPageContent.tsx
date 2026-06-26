@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 type CartPageContentProps = {
   locale: Locale;
   dictionary: Dictionary;
+  couponOffersAvailable: boolean;
 };
 
 const cartCopy = {
@@ -64,7 +65,7 @@ const cartCopy = {
   }
 >;
 
-export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
+export function CartPageContent({ locale, dictionary, couponOffersAvailable }: CartPageContentProps) {
   const labels = cartCopy[locale];
   const hydrated = useHydrated();
   const [coupon, setCoupon] = useState("");
@@ -258,31 +259,37 @@ export function CartPageContent({ locale, dictionary }: CartPageContentProps) {
 
         <aside className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft lg:sticky lg:top-28">
           <h2 className="text-xl font-bold text-navy">{dictionary.cart.summary}</h2>
-          <div className="mt-5 flex gap-2">
-            <input
-              value={coupon}
-              onChange={(event) => setCoupon(event.target.value)}
-              placeholder={dictionary.cart.coupon}
-              className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
-            />
-            <Button onClick={applyCoupon} variant="secondary" disabled={applyingCoupon}>
-              {applyingCoupon ? labels.checking : dictionary.actions.apply}
-            </Button>
-          </div>
-          {appliedCoupon ? (
-            <p className="mt-2 text-xs font-semibold text-emerald-700">
-              {labels.applied(appliedCoupon)}
-            </p>
+          {couponOffersAvailable ? (
+            <>
+              <div className="mt-5 flex gap-2">
+                <input
+                  value={coupon}
+                  onChange={(event) => setCoupon(event.target.value)}
+                  placeholder={dictionary.cart.coupon}
+                  className="h-11 min-w-0 flex-1 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
+                />
+                <Button onClick={applyCoupon} variant="secondary" disabled={applyingCoupon}>
+                  {applyingCoupon ? labels.checking : dictionary.actions.apply}
+                </Button>
+              </div>
+              {appliedCoupon ? (
+                <p className="mt-2 text-xs font-semibold text-emerald-700">
+                  {labels.applied(appliedCoupon)}
+                </p>
+              ) : null}
+            </>
           ) : null}
           <div className="mt-5 grid gap-3 text-sm">
             <div className="flex justify-between">
               <span className="text-neutral-500">{dictionary.common.subtotal}</span>
               <span className="font-semibold text-navy">{formatCurrency(subtotal, currency, locale, currencyRates)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">{dictionary.common.discount}</span>
-              <span className="font-semibold text-navy">-{formatCurrency(discount, currency, locale, currencyRates)}</span>
-            </div>
+            {discount > 0 ? (
+              <div className="flex justify-between">
+                <span className="text-neutral-500">{dictionary.common.discount}</span>
+                <span className="font-semibold text-navy">-{formatCurrency(discount, currency, locale, currencyRates)}</span>
+              </div>
+            ) : null}
             <div className="border-t border-neutral-200 pt-4 text-base">
               <div className="flex justify-between">
                 <span className="font-bold text-navy">{dictionary.common.total}</span>
