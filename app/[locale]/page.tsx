@@ -257,5 +257,20 @@ export default async function HomePage({
     isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage))
   }));
   const fallbackSlide: HeroSlide = { id: "fallback", title: dictionary.home.title, subtitle: dictionary.home.subtitle, buttonText: dictionary.actions.shopNow, href: `/${locale}/shop`, desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 }) };
-  return <main><HeroSlider locale={locale} eyebrow={dictionary.home.eyebrow} slides={slides} fallbackSlide={fallbackSlide} secondaryHref={`/${locale}/shop`} secondaryLabel={dictionary.actions.viewCollection} metrics={[]} /><HomepageSectionRenderer locale={locale} sections={sections} /><NewsletterSignup locale={locale} /><HomeProductExplorer locale={locale} searchParams={searchParams} /></main>;
+  return (
+    <main>
+      <HeroSlider
+        locale={locale}
+        eyebrow={dictionary.home.eyebrow}
+        slides={slides}
+        fallbackSlide={fallbackSlide}
+        secondaryHref={`/${locale}/shop`}
+        secondaryLabel={dictionary.actions.viewCollection}
+        metrics={[]}
+      />
+      <HomepageSectionRenderer locale={locale} sections={sections} />
+      <HomeProductExplorer locale={locale} searchParams={searchParams} />
+      <NewsletterSignup locale={locale} />
+    </main>
+  );
 }

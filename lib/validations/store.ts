@@ -13,7 +13,7 @@ export const orderCreateSchema = z.object({
     email: z.union([z.string().email(), z.literal("")]).default(""),
     phone: z.string().trim().min(1),
     street: z.string().trim().min(1),
-    apartment: z.string().trim().min(1),
+    apartment: z.string().trim().default(""),
     tower: z.string().trim().default(""),
     city: z.string().trim().min(1),
     emirate: z.string().trim().min(1),
