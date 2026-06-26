@@ -104,7 +104,7 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
 
   return (
     <>
-      <div className="mt-16 hidden items-center justify-between gap-8 lg:flex">
+      <div className="hidden">
         <div className="flex items-center gap-10">
           <span className="text-[1.35rem] font-medium tracking-[0.02em] text-neutral-700">Filter:</span>
           <form action={action} className="flex items-center gap-10">
@@ -183,17 +183,17 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
         </form>
       </div>
 
-      <div className="mt-8 flex items-center justify-between lg:hidden">
-        <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600">
+      <div className="mt-8 flex items-center justify-between lg:mt-12">
+        <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 lg:text-[1.15rem]">
           <SlidersHorizontal size={16} />
           Filter and sort
         </button>
-        <span className="text-sm text-neutral-500">{total} products</span>
+        <span className="text-sm text-neutral-500 lg:text-[1.15rem]">{total} products</span>
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-[80] bg-black/50 lg:hidden">
-          <form action={action} className="ml-auto grid h-full w-[min(100%,352px)] grid-rows-[auto_1fr_auto] bg-[#f6f8f1] text-neutral-950">
+        <div className="fixed inset-0 z-[80] bg-black/50">
+          <form action={action} className="ml-auto grid h-full w-[min(100%,420px)] grid-rows-[auto_1fr_auto] bg-[#f6f8f1] text-neutral-950 shadow-2xl">
             <div className="border-b border-neutral-200 px-5 py-4 text-center">
               <button type="button" onClick={() => setOpen(false)} className="absolute right-4 top-4 grid h-8 w-8 place-items-center" aria-label="Close filters">
                 <X size={22} />

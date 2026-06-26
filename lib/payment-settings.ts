@@ -40,12 +40,8 @@ export async function getPaymentRuntimeConfig(): Promise<PaymentRuntimeConfig> {
 export async function getPaymentAvailability(): Promise<PublicPaymentAvailability> {
   const runtime = await getPaymentRuntimeConfig();
   const { settings } = runtime;
-  const stripeMode = settings.stripe.mode;
-  const stripeConfigured =
-    Boolean(runtime.stripe.secretKey) && (stripeMode === "hosted_checkout" || Boolean(runtime.stripe.publishableKey));
-
   return {
-    stripe: settings.stripe.enabled && stripeConfigured,
+    stripe: false,
     stripeLabel: settings.stripe.displayName,
     stripeDetail: settings.stripe.instructions,
     stripePublishableKey: runtime.stripe.publishableKey,

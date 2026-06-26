@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, HandCoins, Save, Truck } from "lucide-react";
+import { HandCoins, Save, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import toast from "react-hot-toast";
@@ -66,8 +66,6 @@ type AdminSettingsFormProps = {
   saveLabel: string;
 };
 
-type PaymentMethodKey = "cod" | "stripe";
-
 function nullable(value: string) {
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
@@ -114,24 +112,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
-  const togglePaymentVisibility = (method: PaymentMethodKey) => {
-    setForm((current) => ({
-      ...current,
-      paymentSettings: {
-        ...current.paymentSettings,
-        [method]: {
-          ...current.paymentSettings[method],
-          enabled: !current.paymentSettings[method].enabled,
-          ...(method === "cod"
-            ? {
-                availabilityMode: current.paymentSettings.cod.enabled ? "disabled" : "always"
-              }
-            : {})
-        }
-      }
-    }));
-  };
-
   const updateCodAvailabilityMode = (mode: PaymentSettings["cod"]["availabilityMode"]) => {
     setForm((current) => ({
       ...current,
@@ -139,7 +119,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         ...current.paymentSettings,
         cod: {
           ...current.paymentSettings.cod,
-          enabled: mode !== "disabled",
+          enabled: true,
           availabilityMode: mode
         }
       }
@@ -156,25 +136,11 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
-  const stripeReady =
-    Boolean(form.paymentSettings.stripe.secretKey.trim()) &&
-    (form.paymentSettings.stripe.mode === "hosted_checkout" ||
-      Boolean(form.paymentSettings.stripe.publishableKey.trim()));
   const paymentStatusCards = [
-    {
-      key: "stripe" as const,
-      label: "Stripe / card",
-      detail:
-        form.paymentSettings.stripe.mode === "payment_element"
-          ? "Inline card form needs publishable + secret key"
-          : "Hosted checkout needs secret key",
-      icon: CreditCard,
-      configured: stripeReady
-    },
     {
       key: "cod" as const,
       label: "Cash on delivery",
-      detail: "Manual payment at delivery",
+      detail: "Default checkout payment method",
       icon: HandCoins,
       configured: true
     }
@@ -244,11 +210,23 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
       aedToUsd: Number(form.aedToUsd),
       freeShippingThreshold: Number(form.freeShippingThreshold),
       courierSettings: form.courierSettings,
-      paymentSettings: form.paymentSettings,
+      paymentSettings: {
+        ...form.paymentSettings,
+        cod: {
+          ...form.paymentSettings.cod,
+          enabled: true,
+          instructions: ""
+        },
+        stripe: {
+          ...form.paymentSettings.stripe,
+          enabled: false
+        }
+      },
       themeSettings: form.themeSettings,
       shippingRates: shippingRatesToRecord([], {
         ...form.customAreaFee,
         enabled: true,
+        codAvailable: true,
         fee: Number(form.customAreaFee.fee)
       }),
       metaTitleEn: nullable(form.metaTitleEn),
@@ -426,7 +404,7 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 One delivery fee applies across checkout. Turn free delivery on when you want delivery to be free for every order.
               </p>
             </div>
-            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
               <label className="grid gap-2 text-sm font-semibold text-navy">
                 Free delivery from (AED)
                 <input
@@ -451,12 +429,8 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 Estimated days
                 <input value={form.customAreaFee.deliveryDays} onChange={(event) => updateCustomAreaFee("deliveryDays", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
               </label>
-              <label className="flex h-11 items-center gap-2 self-end rounded-md border border-neutral-200 bg-white px-3 text-sm font-bold text-navy">
-                <input type="checkbox" checked={form.customAreaFee.codAvailable} onChange={(event) => updateCustomAreaFee("codAvailable", event.target.checked)} className="h-4 w-4 accent-black" />
-                COD available
-              </label>
             </div>
-            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-3">
+            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.freeDeliveryEnabled} onChange={(event) => updateCheckoutControl("freeDeliveryEnabled", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
                 <span><span className="block">Free delivery for all orders</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Overrides fee and threshold.</span></span>
@@ -464,10 +438,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
                 <input type="checkbox" checked={form.themeSettings.checkoutControls.showCouponBox} onChange={(event) => updateCheckoutControl("showCouponBox", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
                 <span><span className="block">Show coupon box</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Hide when no offers should show.</span></span>
-              </label>
-              <label className="flex items-start gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-bold text-navy">
-                <input type="checkbox" checked={form.themeSettings.checkoutControls.showCodDetail} onChange={(event) => updateCheckoutControl("showCodDetail", event.target.checked)} className="mt-1 h-4 w-4 accent-black" />
-                <span><span className="block">Show COD note</span><span className="mt-1 block text-xs font-semibold text-neutral-500">Controls COD helper text at checkout.</span></span>
               </label>
             </div>
           </div>
@@ -614,11 +584,9 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             const enabled = form.paymentSettings[item.key].enabled;
 
             return (
-              <button
+              <div
                 key={item.key}
-                type="button"
-                onClick={() => togglePaymentVisibility(item.key)}
-                className="flex min-h-[116px] items-start gap-3 rounded-lg border border-neutral-200 bg-paper p-4 text-left transition hover:border-gold-300 hover:bg-gold-50"
+                className="flex min-h-[116px] items-start gap-3 rounded-lg border border-neutral-200 bg-paper p-4 text-left"
               >
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-white text-gold-700 shadow-sm">
                   <Icon size={20} />
@@ -642,16 +610,13 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                     </span>
                   </span>
                   <span className="mt-2 block text-xs font-semibold leading-5 text-neutral-500">{item.detail}</span>
-                  <span className="mt-3 block text-xs font-bold text-gold-800">
-                    Click to {enabled ? "hide from checkout" : "show at checkout"}
-                  </span>
                 </span>
-              </button>
+              </div>
             );
           })}
         </div>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-6 grid gap-5">
           <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
             <label className="grid gap-2 text-sm font-semibold text-navy">
               COD availability
@@ -664,7 +629,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               >
                 <option value="always">Available for any order</option>
                 <option value="minimum">Available from minimum AED amount</option>
-                <option value="disabled">Hide / disable COD</option>
               </select>
             </label>
             {form.paymentSettings.cod.availabilityMode === "minimum" ? (
@@ -686,77 +650,6 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
                 value={form.paymentSettings.cod.displayName}
                 onChange={(event) => updatePayment("cod", "displayName", event.target.value)}
                 className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              COD instructions
-              <textarea
-                rows={3}
-                value={form.paymentSettings.cod.instructions}
-                onChange={(event) => updatePayment("cod", "instructions", event.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
-              />
-            </label>
-          </div>
-
-          <div className="grid gap-4 rounded-md border border-neutral-200 bg-paper p-4">
-            <label className="flex items-center gap-2 text-sm font-bold text-navy">
-              <input
-                type="checkbox"
-                checked={form.paymentSettings.stripe.enabled}
-                onChange={(event) => updatePayment("stripe", "enabled", event.target.checked)}
-                className="accent-gold-500"
-              />
-              Show Stripe / card at checkout
-            </label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-semibold text-navy">
-                Display name
-                <input
-                  value={form.paymentSettings.stripe.displayName}
-                  onChange={(event) => updatePayment("stripe", "displayName", event.target.value)}
-                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-semibold text-navy">
-                Stripe mode
-                <select
-                  value={form.paymentSettings.stripe.mode}
-                  onChange={(event) => updatePayment("stripe", "mode", event.target.value as PaymentSettings["stripe"]["mode"])}
-                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                >
-                  <option value="payment_element">Inline card form</option>
-                  <option value="hosted_checkout">Hosted checkout</option>
-                </select>
-              </label>
-              {[
-                ["publishableKey", "Publishable key"],
-                ["secretKey", "Secret key"],
-                ["webhookSecret", "Webhook secret"]
-              ].map(([key, label]) => (
-                <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
-                  {label}
-                  <input
-                    type={key === "publishableKey" ? "text" : "password"}
-                    value={form.paymentSettings.stripe[key as keyof PaymentSettings["stripe"]] as string}
-                    placeholder={
-                      key === "publishableKey" ? "pk_live_..." : key === "secretKey" ? "sk_live_..." : "whsec_..."
-                    }
-                    onChange={(event) =>
-                      updatePayment("stripe", key as keyof PaymentSettings["stripe"], event.target.value as never)
-                    }
-                    className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                  />
-                </label>
-              ))}
-            </div>
-            <label className="grid gap-2 text-sm font-semibold text-navy">
-              Stripe checkout text
-              <textarea
-                rows={3}
-                value={form.paymentSettings.stripe.instructions}
-                onChange={(event) => updatePayment("stripe", "instructions", event.target.value)}
-                className="rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm"
               />
             </label>
           </div>

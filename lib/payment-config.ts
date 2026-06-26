@@ -1,5 +1,5 @@
 export type StripeMode = "payment_element" | "hosted_checkout";
-export type CodAvailabilityMode = "always" | "minimum" | "disabled";
+export type CodAvailabilityMode = "always" | "minimum";
 
 export type PaymentSettings = {
   cod: {
@@ -41,7 +41,7 @@ export const defaultPaymentSettings: PaymentSettings = {
     instructions: "Pay cash when your Dubai delivery arrives."
   },
   stripe: {
-    enabled: true,
+    enabled: false,
     displayName: "Card payment",
     publishableKey: "",
     secretKey: "",
@@ -76,15 +76,13 @@ export function normalizePaymentSettings(value: unknown): PaymentSettings {
   const stripe = isRecord(input.stripe) ? input.stripe : {};
   const stripeMode = stripe.mode === "hosted_checkout" ? "hosted_checkout" : "payment_element";
   const codAvailabilityMode: CodAvailabilityMode =
-    cod.availabilityMode === "minimum" || cod.availabilityMode === "disabled"
+    cod.availabilityMode === "minimum"
       ? cod.availabilityMode
-      : cod.enabled === false
-        ? "disabled"
-        : "always";
+      : "always";
 
   return {
     cod: {
-      enabled: enabled(cod.enabled, defaultPaymentSettings.cod.enabled) && codAvailabilityMode !== "disabled",
+      enabled: enabled(cod.enabled, defaultPaymentSettings.cod.enabled),
       availabilityMode: codAvailabilityMode,
       minOrderAmount: money(cod.minOrderAmount, defaultPaymentSettings.cod.minOrderAmount),
       displayName: text(cod.displayName, defaultPaymentSettings.cod.displayName),

@@ -1,7 +1,6 @@
 "use client";
 
-import { CreditCard, HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
-import dynamic from "next/dynamic";
+import { HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { FormEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -20,18 +19,6 @@ import { defaultShippingSettings, getShippingFee, normalizeShippingSettings, UAE
 import { cn } from "@/utils/cn";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { Button } from "@/components/ui/Button";
-
-const StripePaymentSection = dynamic(
-  () => import("@/components/cart/StripePaymentSection").then((module) => module.StripePaymentSection),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="mt-5 rounded-lg border border-gold-200 bg-gold-50 p-4 text-sm font-bold text-navy">
-        Loading secure card form...
-      </div>
-    )
-  }
-);
 
 type CheckoutPageContentProps = {
   locale: Locale;
@@ -62,7 +49,6 @@ const checkoutCopy = {
     processing: "Processing...",
     orderPlaced: "Order placed",
     checkoutFailed: "Checkout failed",
-    stripeUrlMissing: "Payment checkout URL was not returned.",
     notes: "Notes",
     shippingArea: "Shipping area",
     delivery: "Delivery",
@@ -84,7 +70,6 @@ const checkoutCopy = {
     processing: "جار المعالجة...",
     orderPlaced: "تم إنشاء الطلب",
     checkoutFailed: "فشل إتمام الطلب",
-    stripeUrlMissing: "لم يتم إنشاء رابط الدفع عبر سترايب.",
     notes: "ملاحظات",
     shippingArea: "منطقة الشحن",
     delivery: "التوصيل",
@@ -108,7 +93,6 @@ const checkoutCopy = {
     processing: string;
     orderPlaced: string;
     checkoutFailed: string;
-    stripeUrlMissing: string;
     notes: string;
     shippingArea: string;
     delivery: string;
@@ -117,13 +101,7 @@ const checkoutCopy = {
   }
 >;
 
-type PaymentOptionKey = "stripe" | "cod";
-
-type StripePaymentState = {
-  clientSecret: string;
-  orderNumber: string;
-  orderConfirmUrl: string;
-};
+type PaymentOptionKey = "cod";
 
 type ReverseGeocodeResponse = {
   address?: {
@@ -187,12 +165,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const labels = checkoutCopy[locale];
   const router = useRouter();
   const hydrated = useHydrated();
-  const initialPayment: PaymentOptionKey =
-    paymentAvailability.stripe
-      ? "stripe"
-      : paymentAvailability.cod
-        ? "cod"
-        : "cod";
+  const initialPayment: PaymentOptionKey = "cod";
   const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
   const [emirate, setEmirate] = useState("");
   const [coupon, setCoupon] = useState("");
@@ -200,7 +173,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [discount, setDiscount] = useState(0);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [stripePayment, setStripePayment] = useState<StripePaymentState | null>(null);
   const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState(defaultMapCenter);
   const [mapZoom, setMapZoom] = useState(13);
@@ -236,7 +208,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     subtotal,
     shippingSettings.shippingRates,
     shippingSettings.freeShippingThreshold,
-    { ...shippingSettings.customAreaFee, enabled: true }
+    { ...shippingSettings.customAreaFee, enabled: true, codAvailable: true }
   );
   const hasShippingArea = selectedEmirate.trim().length > 0;
   const shipping = checkoutControls.freeDeliveryEnabled ? 0 : hasShippingArea ? shippingQuote.fee : 0;
@@ -285,39 +257,20 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   }, [mapCenter.lat, mapCenter.lng, mapMode, mapZoom]);
 
   const paymentMethod = () => {
-    if (payment === "cod") {
-      return "COD";
-    }
-
-    return "STRIPE";
+    return "COD";
   };
 
   const paymentButtonLabel = () => {
-    if (payment === "stripe") {
-      return paymentAvailability.stripeLabel;
-    }
-
-    if (payment === "cod") {
-      return paymentAvailability.codLabel;
-    }
-
-    return paymentAvailability.stripeLabel;
+    return paymentAvailability.codLabel || dictionary.checkout.cod;
   };
 
   const paymentOptions = useMemo(
     () => [
       {
-        key: "stripe" as const,
-        label: paymentAvailability.stripeLabel,
-        detail: paymentAvailability.stripeDetail,
-        icon: CreditCard,
-        enabled: paymentAvailability.stripe
-      },
-      {
         key: "cod" as const,
         label: paymentAvailability.codLabel || dictionary.checkout.cod,
         detail: shippingQuote.codAvailable && codMeetsMinimum
-          ? paymentAvailability.codDetail
+          ? ""
           : codAvailabilityMessage,
         icon: HandCoins,
         enabled: paymentAvailability.cod && shippingQuote.codAvailable && codMeetsMinimum
@@ -374,20 +327,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   }, [subtotal]);
 
   useEffect(() => {
-    setStripePayment(null);
-  }, [appliedCoupon, discount, emirate, payment, subtotal]);
-
-  useEffect(() => {
     if (payment === "cod" && (!shippingQuote.codAvailable || !codMeetsMinimum)) {
-      const nextPayment: PaymentOptionKey = paymentAvailability.stripe
-        ? "stripe"
-        : "cod";
-
-      setPayment(nextPayment);
+      setPayment("cod");
     }
   }, [
     payment,
-    paymentAvailability.stripe,
     codMeetsMinimum,
     shippingQuote.codAvailable
   ]);
@@ -615,9 +559,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     };
 
     try {
-      const usesPaymentEndpoint = payment === "stripe";
-      const endpoint = usesPaymentEndpoint ? "/api/payment/checkout" : "/api/orders";
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -635,25 +577,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
       if (!response.ok) {
         throw new Error(result?.error ?? labels.checkoutFailed);
-      }
-
-      if (payment === "stripe") {
-        if (result.clientSecret && result.orderConfirmUrl) {
-          setStripePayment({
-            clientSecret: result.clientSecret,
-            orderNumber: result.orderNumber ?? result.orderId ?? "order",
-            orderConfirmUrl: result.orderConfirmUrl
-          });
-          toast.success("Enter your card details below.");
-          return;
-        }
-
-        if (result.checkoutUrl) {
-          window.location.href = result.checkoutUrl;
-          return;
-        }
-
-        throw new Error(labels.stripeUrlMissing);
       }
 
       if (!result?.id) {
@@ -936,19 +859,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                 </div>
               ) : null}
             </div>
-            {checkoutControls.showCodDetail && payment === "cod" && paymentAvailability.codDetail ? (
-              <div className="mt-4 rounded-lg border border-neutral-200 bg-paper p-4 text-sm font-semibold leading-6 text-navy">
-                {paymentAvailability.codDetail}
-              </div>
-            ) : null}
-            {stripePayment ? (
-              <StripePaymentSection
-                clientSecret={stripePayment.clientSecret}
-                orderNumber={stripePayment.orderNumber}
-                returnUrl={stripePayment.orderConfirmUrl}
-                publishableKey={paymentAvailability.stripePublishableKey}
-              />
-            ) : null}
           </div>
         </section>
 
@@ -1034,14 +944,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
           <Button
             type="submit"
             className="mt-6 w-full"
-            disabled={items.length === 0 || loading || !selectedPaymentOption?.enabled || Boolean(stripePayment && payment === "stripe")}
+            disabled={items.length === 0 || loading || !selectedPaymentOption?.enabled}
           >
             <ShieldCheck size={18} />
-            {stripePayment && payment === "stripe"
-              ? "Payment form ready"
-              : loading
-                ? labels.processing
-                : paymentButtonLabel()}
+            {loading ? labels.processing : paymentButtonLabel()}
           </Button>
         </aside>
       </form>

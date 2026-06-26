@@ -107,7 +107,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
           ? ((settings.shippingRates as Record<string, unknown>).customAreaFee as Record<string, unknown> | undefined)
           : undefined
       ),
-      enabled: true
+      enabled: true,
+      codAvailable: true
     }
   );
   const shippingCost = checkoutControls.freeDeliveryEnabled ? 0 : shippingQuote.fee;
