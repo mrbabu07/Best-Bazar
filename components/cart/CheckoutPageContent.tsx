@@ -104,6 +104,10 @@ const checkoutCopy = {
 type PaymentOptionKey = "cod";
 
 type ReverseGeocodeResponse = {
+  name?: string;
+  category?: string;
+  type?: string;
+  extratags?: Record<string, string | undefined>;
   address?: {
     road?: string;
     pedestrian?: string;
@@ -438,13 +442,22 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         address.flat ??
         address.apartment ??
         address.apartments ??
+        result.extratags?.["addr:unit"] ??
+        result.extratags?.["addr:flats"] ??
+        result.extratags?.["addr:housenumber"] ??
+        result.extratags?.["addr:housename"] ??
         address.house_number ??
         address.house_name ??
-        address.building;
+        address.building ??
+        (result.category === "building" || ["apartments", "house", "residential", "villa"].includes(result.type ?? "")
+          ? result.name
+          : undefined);
       const matchedEmirate = findUaeEmirate(address, result.display_name);
 
       setFieldValue("street", street || result.display_name || "");
-      setFieldValue("apartment", apartmentOrVilla);
+      if (apartmentOrVilla) {
+        setFieldValue("apartment", apartmentOrVilla);
+      }
       setFieldValue("city", city);
       if (matchedEmirate) {
         setEmirate(matchedEmirate.nameEn);
@@ -660,7 +673,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       label: "Apartment / villa no.",
       type: "text",
       autoComplete: "address-line3",
-      placeholder: "Apartment / villa no. (optional)",
+      placeholder: "Apartment / villa no. (auto-filled when available)",
       required: false
     },
     { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: "City" }

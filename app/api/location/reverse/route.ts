@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
     url.searchParams.set("lon", String(lng));
     url.searchParams.set("zoom", "18");
     url.searchParams.set("addressdetails", "1");
+    url.searchParams.set("extratags", "1");
+    url.searchParams.set("namedetails", "1");
     url.searchParams.set("accept-language", "en");
 
     const response = await fetch(url, {
