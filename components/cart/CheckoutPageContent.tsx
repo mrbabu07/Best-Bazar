@@ -459,15 +459,27 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       );
 
       if (!response.ok || requestId !== reverseGeocodeRequestRef.current) {
-        return;
+        return false;
       }
 
       const result = await safeResponseJson<ReverseGeocodeResponse>(response, {});
       if (requestId !== reverseGeocodeRequestRef.current) {
-        return;
+        return false;
       }
 
       const address = result.address ?? {};
+      const countryCode = address.country_code?.trim().toLowerCase();
+
+      if (countryCode && countryCode !== "ae") {
+        setMapPin(null);
+        setMapCenter(defaultMapCenter);
+        setMapZoom(13);
+        setMapLink("");
+        setEmirate("");
+        toast.error("Delivery is available inside the UAE only. Please select a UAE location.");
+        return false;
+      }
+
       const streetName = address.road ?? address.pedestrian ?? address.footway ?? address.path;
       const areaName = address.neighbourhood ?? address.suburb;
       const street = [streetName, areaName].filter((value, index, values) => value && values.indexOf(value) === index).join(", ");
@@ -490,12 +502,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       if (matchedEmirate) {
         setEmirate(matchedEmirate.nameEn);
       }
+      return true;
     } catch {
       // Keep the selected pin even if address lookup is temporarily unavailable.
+      return false;
     }
   };
 
-  const setDeliveryPin = (lat: number, lng: number, shouldFillAddress = true) => {
+  const setDeliveryPin = async (lat: number, lng: number, shouldFillAddress = true) => {
     const nextPin = {
       lat: Number(lat.toFixed(6)),
       lng: Number(lng.toFixed(6))
@@ -506,13 +520,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setMapZoom(18);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
     if (shouldFillAddress) {
-      void fillAddressFromPin(nextPin.lat, nextPin.lng);
+      return fillAddressFromPin(nextPin.lat, nextPin.lng);
     }
+    return true;
   };
 
   const setPinAtMapCenter = () => {
-    setDeliveryPin(mapCenter.lat, mapCenter.lng);
-    toast.success("Delivery pin set.");
+    void setDeliveryPin(mapCenter.lat, mapCenter.lng).then((validLocation) => {
+      if (validLocation) {
+        toast.success("Delivery pin set.");
+      }
+    });
   };
 
   const useCurrentLocation = () => {
@@ -524,9 +542,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setDeliveryPin(position.coords.latitude, position.coords.longitude);
-        setLocating(false);
-        toast.success("Delivery map pin added.");
+        void setDeliveryPin(position.coords.latitude, position.coords.longitude).then((validLocation) => {
+          setLocating(false);
+          if (validLocation) {
+            toast.success("Delivery map pin added.");
+          }
+        });
       },
       () => {
         setLocating(false);
@@ -582,8 +603,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       return;
     }
 
-    setDeliveryPin(parsed.lat, parsed.lng);
-    toast.success("Map pin added from link.");
+    void setDeliveryPin(parsed.lat, parsed.lng).then((validLocation) => {
+      if (validLocation) {
+        toast.success("Map pin added from link.");
+      }
+    });
   };
 
   const applyCoupon = async () => {
