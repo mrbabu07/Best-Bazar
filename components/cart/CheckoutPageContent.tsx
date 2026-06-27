@@ -107,7 +107,9 @@ type ReverseGeocodeResponse = {
   name?: string;
   category?: string;
   type?: string;
+  addresstype?: string;
   extratags?: Record<string, string | undefined>;
+  namedetails?: Record<string, string | undefined>;
   address?: {
     road?: string;
     pedestrian?: string;
@@ -184,6 +186,45 @@ function normalizeLocationName(value?: string) {
   return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+function apartmentOrVillaFromMap(result: ReverseGeocodeResponse) {
+  const address = result.address ?? {};
+  const explicitUnit = [
+    address.unit,
+    address.flat,
+    address.apartment,
+    address.apartments,
+    result.extratags?.["addr:unit"],
+    result.extratags?.["addr:flats"],
+    result.extratags?.["addr:housenumber"],
+    result.extratags?.["addr:housename"],
+    address.house_number,
+    address.house_name,
+    address.building
+  ].find((value) => value?.trim());
+
+  if (explicitUnit) {
+    return explicitUnit.trim();
+  }
+
+  const isBuilding =
+    result.category === "building" ||
+    ["apartments", "building", "house", "residential", "villa"].includes(result.type ?? "") ||
+    ["building", "house"].includes(result.addresstype ?? "");
+  const buildingName = (result.namedetails?.["name:en"] ?? result.name)?.trim();
+
+  if (isBuilding && buildingName) {
+    return buildingName;
+  }
+
+  const firstDisplayPart = result.display_name?.split(",")[0]?.trim();
+  const roadName = address.road ?? address.pedestrian ?? address.footway ?? address.path;
+  const looksLikeUnit = firstDisplayPart && /\b(?:apartment|building|flat|house|residence|tower|unit|villa)\b|\d/i.test(firstDisplayPart);
+
+  return looksLikeUnit && normalizeLocationName(firstDisplayPart) !== normalizeLocationName(roadName)
+    ? firstDisplayPart
+    : "";
+}
+
 function findUaeEmirate(address: ReverseGeocodeResponse["address"], displayName?: string) {
   const locationText = [
     address?.state,
@@ -242,6 +283,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   } | null>(null);
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const reverseGeocodeRequestRef = useRef(0);
+  const apartmentManuallyEditedRef = useRef(false);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -437,25 +479,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         address.county ??
         address.state_district ??
         address.state;
-      const apartmentOrVilla =
-        address.unit ??
-        address.flat ??
-        address.apartment ??
-        address.apartments ??
-        result.extratags?.["addr:unit"] ??
-        result.extratags?.["addr:flats"] ??
-        result.extratags?.["addr:housenumber"] ??
-        result.extratags?.["addr:housename"] ??
-        address.house_number ??
-        address.house_name ??
-        address.building ??
-        (result.category === "building" || ["apartments", "house", "residential", "villa"].includes(result.type ?? "")
-          ? result.name
-          : undefined);
+      const apartmentOrVilla = apartmentOrVillaFromMap(result);
       const matchedEmirate = findUaeEmirate(address, result.display_name);
 
       setFieldValue("street", street || result.display_name || "");
-      if (apartmentOrVilla) {
+      if (apartmentOrVilla && !apartmentManuallyEditedRef.current) {
         setFieldValue("apartment", apartmentOrVilla);
       }
       setFieldValue("city", city);
@@ -475,6 +503,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
     setMapPin(nextPin);
     setMapCenter(nextPin);
+    setMapZoom(18);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
     if (shouldFillAddress) {
       void fillAddressFromPin(nextPin.lat, nextPin.lng);
@@ -673,7 +702,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       label: "Apartment / villa no.",
       type: "text",
       autoComplete: "address-line3",
-      placeholder: "Apartment / villa no. (auto-filled when available)",
+      placeholder: "Apartment / villa no. (optional)",
       required: false
     },
     { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: "City" }
@@ -717,6 +746,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     defaultValue={field.defaultValue}
                     placeholder={field.placeholder}
                     required={field.required !== false}
+                    onChange={field.name === "apartment" ? (event) => {
+                      apartmentManuallyEditedRef.current = event.currentTarget.value.trim().length > 0;
+                    } : undefined}
                     className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
                   />
                 </label>

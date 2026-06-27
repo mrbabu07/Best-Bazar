@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     url.searchParams.set("lat", String(lat));
     url.searchParams.set("lon", String(lng));
     url.searchParams.set("zoom", "18");
+    url.searchParams.set("layer", "address");
     url.searchParams.set("addressdetails", "1");
     url.searchParams.set("extratags", "1");
     url.searchParams.set("namedetails", "1");
