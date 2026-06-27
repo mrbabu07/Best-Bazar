@@ -468,18 +468,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       }
 
       const address = result.address ?? {};
-      const countryCode = address.country_code?.trim().toLowerCase();
-
-      if (countryCode && countryCode !== "ae") {
-        setMapPin(null);
-        setMapCenter(defaultMapCenter);
-        setMapZoom(13);
-        setMapLink("");
-        setEmirate("");
-        toast.error("Delivery is available inside the UAE only. Please select a UAE location.");
-        return false;
-      }
-
       const streetName = address.road ?? address.pedestrian ?? address.footway ?? address.path;
       const areaName = address.neighbourhood ?? address.suburb;
       const street = [streetName, areaName].filter((value, index, values) => value && values.indexOf(value) === index).join(", ");
@@ -501,6 +489,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       setFieldValue("city", city);
       if (matchedEmirate) {
         setEmirate(matchedEmirate.nameEn);
+      } else {
+        setEmirate("");
       }
       return true;
     } catch {
