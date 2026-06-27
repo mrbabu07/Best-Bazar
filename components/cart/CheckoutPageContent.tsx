@@ -107,11 +107,26 @@ type ReverseGeocodeResponse = {
   address?: {
     road?: string;
     pedestrian?: string;
+    footway?: string;
+    path?: string;
     house_number?: string;
+    house_name?: string;
+    building?: string;
+    apartments?: string;
+    apartment?: string;
+    flat?: string;
+    unit?: string;
     city?: string;
     town?: string;
+    village?: string;
+    municipality?: string;
+    county?: string;
+    state_district?: string;
     state?: string;
+    suburb?: string;
+    neighbourhood?: string;
     country?: string;
+    country_code?: string;
   };
   display_name?: string;
 };
@@ -161,6 +176,42 @@ function parseCoordinateLink(value: string) {
   };
 }
 
+function normalizeLocationName(value?: string) {
+  return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function findUaeEmirate(address: ReverseGeocodeResponse["address"], displayName?: string) {
+  const locationText = [
+    address?.state,
+    address?.state_district,
+    address?.city,
+    address?.town,
+    address?.village,
+    address?.municipality,
+    address?.county,
+    displayName
+  ]
+    .filter(Boolean)
+    .map((value) => normalizeLocationName(value))
+    .join(" ");
+
+  const aliases: Record<string, string[]> = {
+    Dubai: ["dubai"],
+    "Abu Dhabi": ["abudhabi", "abuzaby"],
+    Sharjah: ["sharjah", "ashshariqah"],
+    Ajman: ["ajman"],
+    "Ras Al Khaimah": ["rasalkhaimah", "rasalkhaymah"],
+    Fujairah: ["fujairah", "alfujayrah"],
+    "Umm Al Quwain": ["ummalquwain", "ummalqaywayn"]
+  };
+
+  return UAE_EMIRATES.find((emirateOption) =>
+    (aliases[emirateOption.nameEn] ?? [normalizeLocationName(emirateOption.nameEn)]).some((alias) =>
+      locationText.includes(alias)
+    )
+  );
+}
+
 export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable, checkoutControls }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
   const router = useRouter();
@@ -186,6 +237,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     center: { lat: number; lng: number };
   } | null>(null);
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
+  const reverseGeocodeRequestRef = useRef(0);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -225,7 +277,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     const baseX = Math.floor(centerX);
     const baseY = Math.floor(centerY);
     const maxTile = 2 ** mapZoom;
-    const tiles: Array<{ key: string; src: string; left: number; top: number }> = [];
+    const tiles: Array<{ key: string; src: string; left: string; top: string }> = [];
 
     for (let dx = -2; dx <= 2; dx += 1) {
       for (let dy = -2; dy <= 2; dy += 1) {
@@ -244,8 +296,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
             mapMode === "satellite"
               ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${y}/${wrappedX}`
               : `https://tile.openstreetmap.org/${mapZoom}/${wrappedX}/${y}.png`,
-          left: 160 + (x - centerX) * mapTileSize,
-          top: 112 + (y - centerY) * mapTileSize
+          left: `calc(50% + ${(x - centerX) * mapTileSize}px)`,
+          top: `calc(50% + ${(y - centerY) * mapTileSize}px)`
         });
       }
     }
@@ -345,41 +397,60 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const setFieldValue = (field: CheckoutFieldName, value?: string) => {
     const input = fieldRefs.current[field];
 
-    if (input && value) {
-      input.value = value;
+    if (input) {
+      input.value = value ?? "";
     }
   };
 
   const fillAddressFromPin = async (lat: number, lng: number) => {
+    const requestId = reverseGeocodeRequestRef.current + 1;
+    reverseGeocodeRequestRef.current = requestId;
+
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
-        { headers: { Accept: "application/json" } }
+        `/api/location/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,
+        { cache: "no-store" }
       );
 
-      if (!response.ok) {
+      if (!response.ok || requestId !== reverseGeocodeRequestRef.current) {
         return;
       }
 
       const result = await safeResponseJson<ReverseGeocodeResponse>(response, {});
+      if (requestId !== reverseGeocodeRequestRef.current) {
+        return;
+      }
+
       const address = result.address ?? {};
-      const street = [address.house_number, address.road ?? address.pedestrian].filter(Boolean).join(" ").trim();
-      const city = address.city ?? address.town ?? address.state;
-      const matchedRate = shippingOptions.find((rate) => {
-        const emirateName = rate.emirate.toLowerCase();
-        const state = (address.state ?? "").toLowerCase();
-        const cityName = (city ?? "").toLowerCase();
+      const streetName = address.road ?? address.pedestrian ?? address.footway ?? address.path;
+      const areaName = address.neighbourhood ?? address.suburb;
+      const street = [streetName, areaName].filter((value, index, values) => value && values.indexOf(value) === index).join(", ");
+      const city =
+        address.city ??
+        address.town ??
+        address.village ??
+        address.municipality ??
+        address.county ??
+        address.state_district ??
+        address.state;
+      const apartmentOrVilla =
+        address.unit ??
+        address.flat ??
+        address.apartment ??
+        address.apartments ??
+        address.house_number ??
+        address.house_name ??
+        address.building;
+      const matchedEmirate = findUaeEmirate(address, result.display_name);
 
-        return state.includes(emirateName) || cityName.includes(emirateName) || Boolean(cityName && emirateName.includes(cityName));
-      });
-
-      setFieldValue("street", street || result.display_name);
+      setFieldValue("street", street || result.display_name || "");
+      setFieldValue("apartment", apartmentOrVilla);
       setFieldValue("city", city);
-      if (matchedRate) {
-        setEmirate(matchedRate.emirate);
+      if (matchedEmirate) {
+        setEmirate(matchedEmirate.nameEn);
       }
     } catch {
-      // Keep the selected pin even if public reverse geocoding is unavailable.
+      // Keep the selected pin even if address lookup is temporarily unavailable.
     }
   };
 
@@ -589,7 +660,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       label: "Apartment / villa no.",
       type: "text",
       autoComplete: "address-line3",
-      placeholder: "Apartment, suite, etc. (optional)",
+      placeholder: "Apartment / villa no. (optional)",
       required: false
     },
     { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: "City" }

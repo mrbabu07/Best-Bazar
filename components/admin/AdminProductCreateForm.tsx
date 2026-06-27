@@ -398,13 +398,15 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
   };
 
   const updateNameEn = (value: string) => {
-    const formattedValue = titleCaseWords(value);
-
     setForm((current) => ({
       ...current,
-      nameEn: formattedValue,
-      slug: slugEdited ? current.slug : slugify(formattedValue)
+      nameEn: value,
+      slug: slugEdited ? current.slug : slugify(value)
     }));
+  };
+
+  const formatNameEn = (value: string) => {
+    updateNameEn(titleCaseWords(value));
   };
 
   const resetForm = () => {
@@ -833,6 +835,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 <input
                   value={form.nameEn}
                   onChange={(event) => updateNameEn(event.target.value)}
+                  onBlur={(event) => formatNameEn(event.currentTarget.value)}
                   placeholder="Premium abaya / handbag / perfume"
                   required
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
@@ -1549,6 +1552,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <input
                 value={form.nameEn}
                 onChange={(event) => updateNameEn(event.target.value)}
+                onBlur={(event) => formatNameEn(event.currentTarget.value)}
                 placeholder="Premium travel trolley"
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
