@@ -146,7 +146,7 @@ async function HomepageSectionRenderer({
   }))}</>;
 }
 
-async function HomeProductExplorer({
+async function buildHomeProductExplorer({
   locale,
   searchParams,
   categories
@@ -183,7 +183,7 @@ async function HomeProductExplorer({
     sort: current.sort === "new" ? undefined : current.sort
   };
 
-  return (
+  const content = (
     <section className="bg-[#f3efe5] px-4 py-14 sm:px-7 sm:py-20 lg:px-8">
       <div className="mx-auto max-w-[1210px]">
         <h2 className="font-editorial text-[2.7rem] font-semibold leading-none text-neutral-950 sm:text-6xl">
@@ -223,45 +223,49 @@ async function HomeProductExplorer({
             </Link>
           </div>
         ) : null}
-        {totalPages > 1 ? (
-          <nav className="mt-12 flex flex-wrap items-center justify-center gap-2" aria-label="Home product pages">
-            <Link
-              href={buildHomePageHref(locale, filterHrefState, Math.max(1, safePage - 1))}
-              className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
-                safePage === 1 ? "pointer-events-none border-neutral-200 text-neutral-300" : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
-              }`}
-            >
-              Prev
-            </Link>
-            {Array.from({ length: totalPages }).map((_, index) => {
-              const nextPage = index + 1;
-              return (
-                <Link
-                  key={nextPage}
-                  href={buildHomePageHref(locale, filterHrefState, nextPage)}
-                  className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
-                    nextPage === safePage
-                      ? "border-neutral-950 bg-neutral-950 text-white"
-                      : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
-                  }`}
-                >
-                  {nextPage}
-                </Link>
-              );
-            })}
-            <Link
-              href={buildHomePageHref(locale, filterHrefState, Math.min(totalPages, safePage + 1))}
-              className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
-                safePage === totalPages ? "pointer-events-none border-neutral-200 text-neutral-300" : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
-              }`}
-            >
-              Next
-            </Link>
-          </nav>
-        ) : null}
       </div>
     </section>
   );
+  const pagination = totalPages > 1 ? (
+    <section className="bg-[#f3efe5] px-4 pb-14 sm:px-7 sm:pb-20 lg:px-8">
+      <nav className="mx-auto flex max-w-[1210px] flex-wrap items-center justify-center gap-2" aria-label="Home product pages">
+        <Link
+          href={buildHomePageHref(locale, filterHrefState, Math.max(1, safePage - 1))}
+          className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
+            safePage === 1 ? "pointer-events-none border-neutral-200 text-neutral-300" : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
+          }`}
+        >
+          Prev
+        </Link>
+        {Array.from({ length: totalPages }).map((_, index) => {
+          const nextPage = index + 1;
+          return (
+            <Link
+              key={nextPage}
+              href={buildHomePageHref(locale, filterHrefState, nextPage)}
+              className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
+                nextPage === safePage
+                  ? "border-neutral-950 bg-neutral-950 text-white"
+                  : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
+              }`}
+            >
+              {nextPage}
+            </Link>
+          );
+        })}
+        <Link
+          href={buildHomePageHref(locale, filterHrefState, Math.min(totalPages, safePage + 1))}
+          className={`inline-flex h-11 min-w-11 items-center justify-center border px-4 text-sm font-semibold ${
+            safePage === totalPages ? "pointer-events-none border-neutral-200 text-neutral-300" : "border-neutral-300 text-neutral-950 hover:border-neutral-950"
+          }`}
+        >
+          Next
+        </Link>
+      </nav>
+    </section>
+  ) : null;
+
+  return { content, pagination };
 }
 
 export default async function HomePage({
@@ -279,6 +283,7 @@ export default async function HomePage({
     getHomepageSections(),
     getStoreCategories()
   ]);
+  const homeProductExplorer = await buildHomeProductExplorer({ locale, searchParams, categories });
   const slides: HeroSlide[] = banners.map((banner) => ({
     id: banner.id,
     title: locale === "ar" ? banner.titleAr : banner.titleEn,
@@ -308,7 +313,7 @@ export default async function HomePage({
         sectionTypes={["CATEGORY_GRID"]}
         categories={categories}
       />
-      <HomeProductExplorer locale={locale} searchParams={searchParams} categories={categories} />
+      {homeProductExplorer.content}
       <HomepageSectionRenderer
         locale={locale}
         sections={sections}
@@ -316,6 +321,7 @@ export default async function HomePage({
         categories={categories}
         excludeNewProductSection
       />
+      {homeProductExplorer.pagination}
       <NewsletterSignup locale={locale} />
     </main>
   );

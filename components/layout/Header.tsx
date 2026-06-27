@@ -9,11 +9,9 @@ import {
   Globe2,
   LayoutDashboard,
   Menu,
-  Moon,
   PackagePlus,
   Search,
   ShoppingBag,
-  Sun,
   Truck,
   User,
   X
@@ -96,13 +94,10 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [categories, setCategories] = useState<HeaderCategory[]>(settings.navigationCategories);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
-  const storedColorMode = usePreferencesStore((state) => state.colorMode);
   const setCurrency = usePreferencesStore((state) => state.setCurrency);
-  const toggleColorMode = usePreferencesStore((state) => state.toggleColorMode);
   const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
   const cartCount = hydrated ? storedCartCount : 0;
   const currency = hydrated ? storedCurrency : "AED";
-  const colorMode = hydrated ? storedColorMode : "light";
 
   const navItems = [
     { label: locale === "ar" ? settings.storefrontContent.navHomeAr : settings.storefrontContent.navHomeEn, href: `/${locale}` },
@@ -384,15 +379,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
               <Search size={20} />
             </button>
 
-            <button
-              type="button"
-              onClick={toggleColorMode}
-              className={`hidden ${iconButtonClass} sm:grid`}
-              aria-label={colorMode === "dark" ? "Use light mode" : "Use dark mode"}
-            >
-              {colorMode === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
             <Link
               href={`/${locale}/admin/dashboard`}
               prefetch={false}
@@ -599,11 +585,6 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 <span>{locale === "en" ? "Arabic" : "English"}</span>
                 <Globe2 size={17} />
               </Link>
-
-              <button type="button" onClick={toggleColorMode} className={mobileLinkClass}>
-                <span>{colorMode === "dark" ? "Light mode" : "Dark mode"}</span>
-                {colorMode === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-              </button>
 
               <label className="grid gap-2 rounded-md border border-neutral-200 bg-white px-3 py-3 text-sm font-bold text-navy sm:col-span-2">
                 Currency
