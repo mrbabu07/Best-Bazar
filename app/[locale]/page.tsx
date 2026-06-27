@@ -70,12 +70,14 @@ async function HomepageSectionRenderer({
   locale,
   sections,
   sectionTypes,
-  categories
+  categories,
+  excludeNewProductSection = false
 }: {
   locale: Locale;
   sections: HomepageSection[];
   sectionTypes: HomepageSection["type"][];
   categories: StoreCategory[];
+  excludeNewProductSection?: boolean;
 }) {
   const dictionary = getDictionary(locale);
   const fallbackSections: HomepageSection[] = [
@@ -109,7 +111,14 @@ async function HomepageSectionRenderer({
         ]
     : fallbackSections;
 
-  const selectedSections = visibleSections.filter((section) => sectionTypes.includes(section.type));
+  const selectedSections = visibleSections.filter((section) => {
+    if (!sectionTypes.includes(section.type)) return false;
+    return !(
+      excludeNewProductSection &&
+      section.type === "PRODUCT_GRID" &&
+      section.config.source === "NEW"
+    );
+  });
 
   return <>{await Promise.all(selectedSections.map(async (section) => {
     const title = getLocalized(section.title, locale) || (section.type === "CATEGORY_GRID" ? dictionary.home.categoryTitle : dictionary.home.featuredTitle);
@@ -177,27 +186,33 @@ async function HomeProductExplorer({
   return (
     <section className="bg-[#f3efe5] px-4 py-14 sm:px-7 sm:py-20 lg:px-8">
       <div className="mx-auto max-w-[1210px]">
-        <HomeFilterControls
-          locale={locale}
-          total={allProducts.length}
-          categories={categories.map((category) => ({
-            slug: category.slug,
-            label: getLocalized(category.name, locale)
-          }))}
-          current={current}
-        />
-        <h2 className="font-editorial mt-10 text-[2.7rem] font-semibold leading-none text-neutral-950 sm:mt-14 sm:text-6xl">
+        <h2 className="font-editorial text-[2.7rem] font-semibold leading-none text-neutral-950 sm:text-6xl">
           New Arrivals
         </h2>
-        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-5 lg:mt-10 lg:grid-cols-4 lg:gap-y-12">
+        <div className="mt-8 sm:mt-12">
+          <HomeFilterControls
+            locale={locale}
+            total={allProducts.length}
+            categories={categories.map((category) => ({
+              slug: category.slug,
+              label: getLocalized(category.name, locale)
+            }))}
+            current={current}
+          />
+        </div>
+        <div className="-mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:mx-0 sm:gap-5 sm:px-0 lg:mt-10 [&::-webkit-scrollbar]:hidden">
           {products.map((product, index) => (
-            <ProductCard
+            <div
               key={product.id}
-              product={product}
-              locale={locale}
-              dictionary={dictionary}
-              priority={index < 4}
-            />
+              className="w-[calc((100vw-44px)/2)] shrink-0 snap-start sm:w-[calc((100%-60px)/4)]"
+            >
+              <ProductCard
+                product={product}
+                locale={locale}
+                dictionary={dictionary}
+                priority={index < 4}
+              />
+            </div>
           ))}
         </div>
         {!products.length ? (
@@ -299,6 +314,7 @@ export default async function HomePage({
         sections={sections}
         sectionTypes={["PRODUCT_GRID", "CATEGORY_PRODUCT_ROWS"]}
         categories={categories}
+        excludeNewProductSection
       />
       <NewsletterSignup locale={locale} />
     </main>
