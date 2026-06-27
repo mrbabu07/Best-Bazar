@@ -21,6 +21,13 @@ export type StorefrontFrameSettings = {
   shippingSettings: ShippingSettings;
   themeSettings: ThemeSettings;
   storefrontContent: StorefrontContent;
+  navigationCategories: Array<{
+    id: string;
+    slug: string;
+    nameEn: string;
+    nameAr: string;
+    parentCategoryId?: string | null;
+  }>;
 };
 
 export type StorefrontFrameProps = {

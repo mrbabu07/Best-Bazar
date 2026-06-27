@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 
 export type HeroSlide = {
@@ -15,6 +15,7 @@ export type HeroSlide = {
   desktopImage: string;
   mobileImage?: string;
   isVideo?: boolean;
+  isPortrait?: boolean;
 };
 
 type HeroSliderProps = {
@@ -37,10 +38,21 @@ export function HeroSlider({
   metrics
 }: HeroSliderProps) {
   void metrics;
-  const activeSlides = slides.length ? slides : [fallbackSlide];
+  const activeSlides = useMemo(() => (slides.length ? slides : [fallbackSlide]), [fallbackSlide, slides]);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeSlide = activeSlides[activeIndex] ?? activeSlides[0];
   const showControls = activeSlides.length > 1;
+
+  useEffect(() => {
+    for (const slide of activeSlides) {
+      for (const source of [slide.desktopImage, slide.mobileImage]) {
+        if (source) {
+          const image = new window.Image();
+          image.src = source;
+        }
+      }
+    }
+  }, [activeSlides]);
 
   useEffect(() => {
     if (!showControls) {
@@ -49,7 +61,7 @@ export function HeroSlider({
 
     const timer = window.setInterval(() => {
       setActiveIndex((index) => (index + 1) % activeSlides.length);
-    }, 5500);
+    }, 7000);
 
     return () => window.clearInterval(timer);
   }, [activeSlides.length, showControls]);
@@ -63,7 +75,7 @@ export function HeroSlider({
   };
 
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section className="relative overflow-hidden bg-[#f3f1e8]">
       {/* Background Media */}
       {activeSlide.isVideo ? (
         <>
@@ -75,7 +87,7 @@ export function HeroSlider({
               loop
               muted
               playsInline
-              className="absolute inset-0 h-full w-full object-cover object-[center_32%] sm:hidden"
+              className="absolute inset-0 h-full w-full object-cover object-center sm:hidden"
             />
           ) : null}
           <video
@@ -85,8 +97,45 @@ export function HeroSlider({
             loop
             muted
             playsInline
-            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover object-[center_32%] sm:block" : "absolute inset-0 h-full w-full object-cover object-[center_32%]"}
+            className={activeSlide.mobileImage ? "absolute inset-0 hidden h-full w-full object-cover object-center sm:block" : "absolute inset-0 h-full w-full object-cover object-center"}
           />
+        </>
+      ) : activeSlide.isPortrait ? (
+        <>
+          {activeSlide.mobileImage ? (
+            <Image
+              key={`${activeSlide.id}-mobile`}
+              src={activeSlide.mobileImage}
+              alt={activeSlide.title}
+              fill
+              priority
+              unoptimized={activeSlide.mobileImage.includes("res.cloudinary.com")}
+              sizes="(max-width: 639px) 100vw, 1px"
+              className="object-cover object-center sm:hidden"
+            />
+          ) : null}
+          <div className="absolute inset-0 hidden overflow-hidden bg-[#8f674f] sm:block">
+            <Image
+              key={`${activeSlide.id}-desktop-background`}
+              src={activeSlide.desktopImage}
+              alt=""
+              fill
+              unoptimized={activeSlide.desktopImage.includes("res.cloudinary.com")}
+              aria-hidden="true"
+              sizes="100vw"
+              className="scale-110 object-cover blur-2xl"
+            />
+            <div className="absolute inset-0 bg-black/15" />
+            <Image
+              key={`${activeSlide.id}-desktop`}
+              src={activeSlide.desktopImage}
+              alt={activeSlide.title}
+              fill
+              unoptimized={activeSlide.desktopImage.includes("res.cloudinary.com")}
+              sizes="100vw"
+              className="object-contain object-center"
+            />
+          </div>
         </>
       ) : (
         <>
@@ -97,8 +146,9 @@ export function HeroSlider({
               alt={activeSlide.title}
               fill
               priority
+              unoptimized={activeSlide.mobileImage.includes("res.cloudinary.com")}
               sizes="(max-width: 639px) 100vw, 1px"
-              className="object-cover object-[center_32%] sm:hidden"
+              className="object-cover object-center sm:hidden"
             />
           ) : null}
           <Image
@@ -107,27 +157,28 @@ export function HeroSlider({
             alt={activeSlide.title}
             fill
             priority
+            unoptimized={activeSlide.desktopImage.includes("res.cloudinary.com")}
             sizes={activeSlide.mobileImage ? "(min-width: 640px) 100vw, 1px" : "100vw"}
-            className={activeSlide.mobileImage ? "hidden object-cover object-[center_32%] sm:block" : "object-cover object-[center_32%]"}
+            className={activeSlide.mobileImage ? "hidden object-cover object-center sm:block" : "object-cover object-center"}
           />
         </>
       )}
-      <div className="absolute inset-0 bg-black/15" />
-      <div className="relative mx-auto flex min-h-[390px] max-w-none items-end px-6 py-8 sm:min-h-[540px] sm:px-12 sm:py-12 lg:min-h-[620px]">
-        <div className="max-w-2xl text-white">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/90">{eyebrow}</p>
-          <h1 className="mt-3 text-4xl font-semibold leading-[0.98] tracking-[-0.02em] sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-white/90 sm:text-base">{activeSlide.subtitle}</p>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+      <div className="relative mx-auto flex min-h-[620px] max-w-[1440px] items-end px-5 py-10 sm:min-h-[600px] sm:px-10 sm:py-12 lg:min-h-[680px] lg:px-14">
+        <div className="max-w-xl text-white">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/90">{eyebrow}</p>
+          <h1 className="font-editorial mt-3 max-w-[calc(100vw-2.5rem)] break-words text-[2.25rem] font-semibold leading-none sm:max-w-xl sm:text-6xl lg:text-7xl">{activeSlide.title}</h1>
+          <p className="mt-4 max-w-lg text-sm leading-6 text-white/90 sm:text-base">{activeSlide.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link
               href={activeSlide.href}
-              className="inline-flex h-12 items-center bg-neutral-950 px-8 text-sm font-semibold uppercase tracking-[0.04em] text-white transition hover:bg-neutral-800"
+              className="inline-flex h-12 items-center rounded-md bg-[#d1bd76] px-8 text-sm font-semibold text-white transition hover:bg-[#bba55d]"
             >
               {activeSlide.buttonText}
             </Link>
             <Link
               href={secondaryHref}
-              className="hidden h-12 items-center border border-white/70 px-7 text-sm font-semibold uppercase tracking-[0.04em] text-white transition hover:bg-white hover:text-neutral-950 sm:inline-flex"
+              className="hidden h-12 items-center rounded-md border border-white/80 px-7 text-sm font-semibold text-white transition hover:bg-white hover:text-neutral-950 sm:inline-flex"
             >
               {secondaryLabel}
             </Link>
@@ -137,7 +188,7 @@ export function HeroSlider({
 
       {showControls ? (
         <>
-          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-3 text-white">
+          <div className="absolute bottom-5 right-5 flex items-center gap-3 text-white sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
             {activeSlides.map((slide, index) => (
               <button
                 key={slide.id}

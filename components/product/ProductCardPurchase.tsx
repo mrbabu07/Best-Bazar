@@ -41,13 +41,13 @@ export function ProductCardPrice({ price, comparePrice, locale }: ProductCardPri
   const hasComparePrice = typeof comparePrice === "number" && comparePrice > price;
 
   return (
-    <div className="mt-1 flex min-h-8 flex-wrap items-baseline gap-x-3 gap-y-1">
+    <div className="mt-1 flex min-h-8 flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
       {hasComparePrice ? (
-        <p className="text-sm font-normal tracking-[0.04em] text-neutral-500 line-through">
+        <p className="text-xs font-normal text-neutral-500 line-through sm:text-sm">
           {formatCurrency(comparePrice, currency, locale, currencyRates)}
         </p>
       ) : null}
-      <p className="text-base font-medium tracking-[0.06em] text-neutral-950 sm:text-lg">
+      <p className="text-sm font-medium text-neutral-950 sm:text-base">
         {formatCurrency(price, currency, locale, currencyRates)}
       </p>
     </div>

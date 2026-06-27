@@ -27,6 +27,10 @@ body {
   font-style: normal;
 }
 
+.font-editorial {
+  font-family: var(--font-editorial), Georgia, serif;
+}
+
 .storefront-theme {
   background: #ffffff;
   color: var(--bb-ink);

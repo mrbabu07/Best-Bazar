@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Cairo, Croissant_One, Inter } from "next/font/google";
+import { Cairo, Cormorant_Garamond, Croissant_One, Inter } from "next/font/google";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AppFrame } from "@/components/layout/AppFrame";
 import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { getDictionary, isLocale, isRTL } from "@/lib/i18n";
 import { getCachedPublicSettings } from "@/lib/settings";
+import { getStoreCategories } from "@/lib/storefront";
 import { normalizeThemeSettings } from "@/lib/theme-config";
 import { normalizeCurrencyRates } from "@/utils/currency";
 import { normalizeShippingSettings } from "@/utils/shipping";
@@ -30,6 +31,13 @@ const croissantOne = Croissant_One({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-croissant-one",
+  display: "swap"
+});
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-editorial",
   display: "swap"
 });
 
@@ -65,12 +73,15 @@ export const metadata: Metadata = {
 };
 
 async function getFrameSettings() {
-  let settings: Awaited<ReturnType<typeof getCachedPublicSettings>> = null;
+  const [settingsResult, categoriesResult] = await Promise.allSettled([
+    getCachedPublicSettings(),
+    getStoreCategories()
+  ]);
+  const settings = settingsResult.status === "fulfilled" ? settingsResult.value : null;
+  const navigationCategories = categoriesResult.status === "fulfilled" ? categoriesResult.value : [];
 
-  try {
-    settings = await getCachedPublicSettings();
-  } catch (error) {
-    console.error("Public settings unavailable. Rendering storefront defaults.", error);
+  if (settingsResult.status === "rejected") {
+    console.error("Public settings unavailable. Rendering storefront defaults.", settingsResult.reason);
   }
 
   const themeSettings = normalizeThemeSettings(settings?.themeSettings);
@@ -95,7 +106,14 @@ async function getFrameSettings() {
     }),
     shippingSettings: normalizeShippingSettings(settings),
     themeSettings,
-    storefrontContent: themeSettings.storefrontContent
+    storefrontContent: themeSettings.storefrontContent,
+    navigationCategories: navigationCategories.map((category) => ({
+      id: category.id,
+      slug: category.slug,
+      nameEn: category.name.en,
+      nameAr: category.name.ar,
+      parentCategoryId: category.parentCategory ?? null
+    }))
   };
 }
 
@@ -118,7 +136,7 @@ export default async function LocaleLayout({
     <html
       lang={params.locale}
       dir={isArabic ? "rtl" : "ltr"}
-      className={`${inter.variable} ${cairo.variable} ${croissantOne.variable}`}
+      className={`${inter.variable} ${cairo.variable} ${croissantOne.variable} ${cormorant.variable}`}
     >
       <body className={isArabic ? "font-[var(--font-cairo)]" : "font-[var(--font-inter)]"}>
         <Suspense fallback={null}>

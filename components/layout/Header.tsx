@@ -93,7 +93,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   const [liveSettings, setLiveSettings] = useState(settings);
   const [productNotifications, setProductNotifications] = useState<ProductNotification[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
-  const [categories, setCategories] = useState<HeaderCategory[]>([]);
+  const [categories, setCategories] = useState<HeaderCategory[]>(settings.navigationCategories);
   const storedCartCount = useCartStore((state) => state.totalItems());
   const storedCurrency = usePreferencesStore((state) => state.currency);
   const storedColorMode = usePreferencesStore((state) => state.colorMode);
@@ -121,6 +121,11 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     liveSettings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
     liveSettings.shippingSettings.shippingRates[0];
   const freeShippingThreshold = liveSettings.shippingSettings.freeShippingThreshold;
+  const freeDeliveryMessage = liveSettings.themeSettings.checkoutControls.freeDeliveryEnabled
+    ? "Free UAE delivery on every order"
+    : liveSettings.themeSettings.checkoutControls.freeDeliveryThresholdEnabled && freeShippingThreshold > 0
+      ? `Free UAE delivery on orders over AED ${freeShippingThreshold}`
+      : "";
   const dismissedStorageKey = `best-mart-dismissed-notifications:${locale}`;
   const storefrontNotifications: StorefrontNotification[] = [
     ...(liveSettings.announcementActive && announcement
@@ -306,9 +311,14 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
   };
 
   return (
-    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-neutral-200 bg-[#f6f8f1]">
+    <header suppressHydrationWarning className="sticky top-0 z-50 border-b border-[#dfe2d8] bg-[#f4f6ee]">
+      {freeDeliveryMessage ? (
+        <div className="flex min-h-8 items-center justify-center bg-[#190d04] px-4 text-center text-[10px] font-semibold text-[#ffe0a8] sm:min-h-9 sm:text-xs">
+          {freeDeliveryMessage}
+        </div>
+      ) : null}
       {liveSettings.announcementActive && announcement ? (
-        <div className="grid min-h-10 grid-cols-[48px_1fr_48px] items-center border-b border-neutral-200 bg-[#ffd99f] px-2 text-center text-[11px] font-semibold tracking-[0.12em] text-neutral-950 sm:grid-cols-[1fr_auto_1fr] sm:bg-[#f6f8f1] sm:px-8 sm:text-sm sm:uppercase">
+        <div className="font-editorial grid min-h-10 grid-cols-[40px_1fr_40px] items-center border-b border-[#e8c786] bg-[#ffdda5] px-2 text-center text-sm font-semibold text-neutral-950 sm:min-h-11 sm:grid-cols-[1fr_auto_1fr] sm:px-8 sm:text-base">
           <span className="justify-self-start text-neutral-500 sm:justify-self-end" aria-hidden="true">
             <ChevronLeft size={15} />
           </span>
@@ -319,8 +329,8 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-[1740px] px-4 sm:px-8 lg:px-10">
-        <div className="relative flex min-h-[4.5rem] items-center gap-1 py-2 sm:min-h-[5.25rem] lg:gap-2">
+      <div className="mx-auto max-w-[1210px] px-4 sm:px-7 lg:px-8">
+        <div className="relative flex min-h-[4.75rem] items-center gap-1 py-2 sm:min-h-[6.25rem] lg:gap-2">
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
@@ -334,7 +344,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="absolute left-1/2 z-10 max-w-[calc(100%-11rem)] -translate-x-1/2 truncate text-center text-xl font-extrabold uppercase tracking-[0.02em] text-neutral-950 sm:static sm:left-auto sm:mr-auto sm:max-w-none sm:translate-x-0 sm:text-3xl"
+            className="absolute left-1/2 z-10 max-w-[calc(100%-10rem)] -translate-x-1/2 truncate text-center text-xl font-black uppercase text-neutral-950 sm:static sm:left-auto sm:mr-auto sm:max-w-none sm:translate-x-0 sm:text-2xl"
           >
             {brandName || dictionary.brand}
           </Link>
@@ -509,16 +519,16 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
         </div>
       </div>
 
-      <nav className="hidden border-t border-neutral-200 bg-[#f6f8f1] sm:block">
-        <div className="mx-auto flex max-w-[1740px] flex-wrap items-center gap-x-9 gap-y-5 px-8 py-6 text-[1.05rem] font-medium text-neutral-950 lg:px-10">
+      <nav className="hidden border-t border-[#e3e5dd] bg-[#f4f6ee] sm:block">
+        <div className="mx-auto flex max-w-[1210px] flex-wrap items-center gap-x-7 gap-y-3 px-7 py-4 text-sm font-medium text-neutral-950 lg:px-8">
           {navItems.map((item, index) => (
             <Link key={item.href} href={item.href} className={index === 0 ? "underline underline-offset-4" : "hover:underline hover:underline-offset-4"}>
               {item.label}
             </Link>
           ))}
-          {fashionLinks.slice(0, 9).map((item, index) => (
+          {fashionLinks.slice(0, 9).map((item) => (
             <Link key={item.href} href={item.href} className="hover:underline hover:underline-offset-4">
-              {index === 0 ? "🔥 " : index === 1 ? "✨ " : index === 2 ? "💎 " : ""}
+              <span className="sr-only">Collection: </span>
               {item.label}
             </Link>
           ))}

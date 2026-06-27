@@ -38,18 +38,18 @@ export function NewsletterSignup({ locale }: NewsletterSignupProps) {
   };
 
   return (
-    <section className="border-y border-neutral-200 bg-[#f4f7ef] px-4 py-12 sm:px-8 sm:py-16 lg:px-12">
-      <div className="mx-auto grid max-w-[1120px] gap-6 text-center">
+    <section className="border-y border-[#dfd9cb] bg-[#f4f6ee] px-4 py-14 sm:px-8 sm:py-20 lg:px-12">
+      <div className="mx-auto grid max-w-[760px] gap-5 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-500">
           {locale === "ar" ? "Best Mart updates" : "Best Mart updates"}
         </p>
-        <h2 className="text-3xl font-semibold text-neutral-950 sm:text-5xl">
-          {locale === "ar" ? "Get new arrivals and offers" : "Get new arrivals and offers"}
+        <h2 className="font-editorial text-4xl font-semibold text-neutral-950 sm:text-5xl">
+          {locale === "ar" ? "Subscribe to our emails" : "Subscribe to our emails"}
         </h2>
         <p className="mx-auto max-w-2xl text-sm leading-6 text-neutral-600 sm:text-base">
           {locale === "ar"
             ? "Subscribe for new products, offers, and Dubai delivery updates."
-            : "Subscribe for new products, offers, and Dubai delivery updates."}
+            : "Join our email list for exclusive offers, new collections, and Dubai delivery updates."}
         </p>
         <form onSubmit={submit} className="mx-auto grid w-full max-w-xl gap-3 sm:grid-cols-[1fr_auto]">
           <input
@@ -57,13 +57,13 @@ export function NewsletterSignup({ locale }: NewsletterSignupProps) {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder={locale === "ar" ? "Email address" : "Email address"}
-            className="h-14 rounded-none border border-neutral-300 bg-white px-4 text-base text-neutral-950 placeholder:text-neutral-400 focus:border-neutral-950"
+            className="h-14 rounded-md border border-neutral-300 bg-white px-4 text-base text-neutral-950 placeholder:text-neutral-400 focus:border-neutral-950"
             required
           />
           <button
             type="submit"
             disabled={submitting}
-            className="h-14 bg-neutral-950 px-8 text-sm font-semibold uppercase tracking-[0.08em] text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
+            className="h-14 rounded-md bg-[#d1bd76] px-8 text-sm font-semibold text-white transition hover:bg-[#bba55d] disabled:cursor-not-allowed disabled:bg-neutral-400"
           >
             {submitting ? "Sending..." : "Subscribe"}
           </button>

@@ -13,6 +13,8 @@ import { fallbackHeroImage, safeRemoteImage } from "@/lib/images";
 import { getDictionary, getLocalized, isLocale, type Locale } from "@/lib/i18n";
 import { getActiveBanners, getFeaturedProducts, getNewArrivals, getStoreCategories, getStoreProducts } from "@/lib/storefront";
 
+type StoreCategory = Awaited<ReturnType<typeof getStoreCategories>>[number];
+
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 export const dynamic = "force-dynamic";
 
@@ -64,9 +66,18 @@ async function productsForSection(section: HomepageSection) {
   return (await getFeaturedProducts(limit)).slice(0, limit);
 }
 
-async function HomepageSectionRenderer({ locale, sections }: { locale: Locale; sections: HomepageSection[] }) {
+async function HomepageSectionRenderer({
+  locale,
+  sections,
+  sectionTypes,
+  categories
+}: {
+  locale: Locale;
+  sections: HomepageSection[];
+  sectionTypes: HomepageSection["type"][];
+  categories: StoreCategory[];
+}) {
   const dictionary = getDictionary(locale);
-  const categories = await getStoreCategories();
   const fallbackSections: HomepageSection[] = [
     { id: "fallback-categories", type: "CATEGORY_GRID", title: { en: "Shop by category", ar: "تسوق حسب الفئة" }, subtitle: { en: "", ar: "" }, config: { categoryLimit: 6, actionLink: "/shop" }, sortOrder: 1, isActive: true },
     { id: "fallback-featured", type: "PRODUCT_GRID", title: { en: "Exclusive Sale", ar: "عروض حصرية" }, subtitle: { en: "", ar: "" }, config: { source: "FEATURED", limit: 4, actionLink: "/shop" }, sortOrder: 2, isActive: true },
@@ -98,36 +109,42 @@ async function HomepageSectionRenderer({ locale, sections }: { locale: Locale; s
         ]
     : fallbackSections;
 
-  return <>{await Promise.all(visibleSections.map(async (section) => {
+  const selectedSections = visibleSections.filter((section) => sectionTypes.includes(section.type));
+
+  return <>{await Promise.all(selectedSections.map(async (section) => {
     const title = getLocalized(section.title, locale) || (section.type === "CATEGORY_GRID" ? dictionary.home.categoryTitle : dictionary.home.featuredTitle);
     const subtitle = getLocalized(section.subtitle, locale);
     const actionHref = pathFor(locale, section.config.actionLink);
     if (section.type === "CATEGORY_PRODUCT_ROWS") {
-      const rows = await Promise.all(
-        categories
-          .filter((category) => category.productCount > 0)
-          .map(async (category) => ({
-            category,
-            products: (await getStoreProducts({ category: category.slug, sort: "featured" })).slice(0, section.config.limit ?? 5)
-          }))
-      );
+      const allCategoryProducts = await getStoreProducts({ sort: "featured" });
+      const rows = categories
+        .filter((category) => category.productCount > 0)
+        .map((category) => ({
+          category,
+          products: allCategoryProducts
+            .filter((product) => product.category === category.slug)
+            .slice(0, section.config.limit ?? 5)
+        }));
 
-      return <section key={section.id} className="bg-white py-12 sm:py-20"><div className="mx-auto max-w-[1540px] px-4 sm:px-8 lg:px-12">{rows.map(({ category, products }) => products.length ? <div key={category.id} className="mb-16 last:mb-0"><SectionHeader title={getLocalized(category.name, locale)} action={<Link href={`/${locale}/shop?category=${category.slug}`} className="text-sm font-medium text-neutral-900 underline underline-offset-4">{section.config.actionLabelEn || "View all"}</Link>} /><div className="-mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:gap-4 sm:px-0 [&::-webkit-scrollbar]:hidden">{products.map((product, index) => <div key={product.id} className="w-[calc((100vw-44px)/2)] shrink-0 snap-start sm:w-[250px] lg:w-[300px] xl:w-[330px]"><ProductCard product={product} locale={locale} dictionary={dictionary} priority={index < 2} showQuickAdd={false} /></div>)}</div></div> : null)}</div></section>;
+      return <section key={section.id} className="bg-[#f3efe5] py-14 sm:py-20"><div className="mx-auto max-w-[1210px] px-4 sm:px-7 lg:px-8">{rows.map(({ category, products }) => products.length ? <div key={category.id} className="mb-20 last:mb-0"><SectionHeader title={getLocalized(category.name, locale)} /><div className="-mx-4 mt-7 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:gap-5 sm:px-0 [&::-webkit-scrollbar]:hidden">{products.map((product, index) => <div key={product.id} className="w-[calc((100vw-44px)/2)] shrink-0 snap-start sm:w-[calc((100%-60px)/4)]"><ProductCard product={product} locale={locale} dictionary={dictionary} priority={index < 2} showQuickAdd={false} /></div>)}</div><div className="mt-9 flex justify-center"><Link href={`/${locale}/shop?category=${category.slug}`} className="inline-flex h-11 items-center justify-center rounded-md bg-[#d1bd76] px-8 text-sm font-semibold text-white transition hover:bg-[#bba55d]">{section.config.actionLabelEn || "View all"}</Link></div></div> : null)}</div></section>;
     }
     if (section.type === "CATEGORY_GRID") {
-      return <section key={section.id} className="border-b border-neutral-100 bg-white py-12 sm:py-16"><div className="mx-auto max-w-[1540px] px-4 sm:px-8 lg:px-12"><SectionHeader eyebrow={dictionary.common.categories} title={title} subtitle={subtitle} action={<Link href={actionHref} className="text-sm font-bold text-neutral-800 underline underline-offset-4">{section.config.actionLabelEn || "View all"}</Link>} /><div className="-mx-4 mt-8 grid auto-cols-[minmax(150px,43vw)] grid-flow-col gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid-flow-row sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-6 [&::-webkit-scrollbar]:hidden">{categories.slice(0, section.config.categoryLimit ?? 6).map((category) => <Link key={category.id} href={`/${locale}/shop?category=${category.slug}`} className="group min-w-0"><div className="relative aspect-[3/4] overflow-hidden bg-neutral-100"><Image src={category.image} alt={getLocalized(category.name, locale)} fill sizes="(min-width: 1024px) 16vw, (min-width: 640px) 30vw, 43vw" className="object-cover transition duration-300 group-hover:scale-[1.03]" /></div><h3 className="mt-3 text-sm font-semibold tracking-wide text-neutral-900">{getLocalized(category.name, locale)}</h3></Link>)}</div></div></section>;
+      const visibleCategories = categories.filter((category) => category.productCount > 0).slice(0, section.config.categoryLimit ?? 4);
+      return <section key={section.id} className="border-b border-[#e4dfd3] bg-[#f4f6ee] py-12 sm:py-16"><div className="mx-auto max-w-[1210px] px-4 sm:px-7 lg:px-8"><SectionHeader title={title} subtitle={subtitle} action={<Link href={actionHref} className="text-sm font-medium text-neutral-700 underline underline-offset-4">{section.config.actionLabelEn || "View all"}</Link>} /><div className="mt-7 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{visibleCategories.map((category, index) => <Link key={category.id} href={`/${locale}/shop?category=${category.slug}`} className="group min-w-0"><div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#e8e5dd]"><Image src={category.image} alt={getLocalized(category.name, locale)} fill priority={index < 2} unoptimized={category.image.includes("res.cloudinary.com")} sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover transition duration-300 group-hover:scale-[1.025]" /></div><h3 className="font-editorial mt-3 text-center text-lg font-semibold text-neutral-950 sm:text-xl">{getLocalized(category.name, locale)} <span aria-hidden="true">→</span></h3></Link>)}</div></div></section>;
     }
     const products = await productsForSection(section);
-    return <section key={section.id} className="mx-auto max-w-[1540px] px-4 py-12 sm:px-8 sm:py-16 lg:px-12"><SectionHeader eyebrow={section.config.source === "NEW" ? dictionary.common.newArrivals : dictionary.common.featured} title={title} subtitle={subtitle} action={<Link href={actionHref} className="text-sm font-bold text-neutral-800 underline underline-offset-4">{section.config.actionLabelEn || "View all"}</Link>} /><div className="-mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:gap-4 sm:px-0 [&::-webkit-scrollbar]:hidden">{products.map((product, index) => <div key={product.id} className="w-[calc((100vw-44px)/2)] shrink-0 snap-start sm:w-[250px] lg:w-[300px] xl:w-[330px]"><ProductCard product={product} locale={locale} dictionary={dictionary} priority={index < 2} /></div>)}</div></section>;
+    return <section key={section.id} className="bg-[#f3efe5] py-14 sm:py-20"><div className="mx-auto max-w-[1210px] px-4 sm:px-7 lg:px-8"><SectionHeader title={title} subtitle={subtitle} /><div className="-mx-4 mt-7 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:none] sm:mx-0 sm:gap-5 sm:px-0 [&::-webkit-scrollbar]:hidden">{products.map((product, index) => <div key={product.id} className="w-[calc((100vw-44px)/2)] shrink-0 snap-start sm:w-[calc((100%-60px)/4)]"><ProductCard product={product} locale={locale} dictionary={dictionary} priority={index < 2} /></div>)}</div><div className="mt-9 flex justify-center"><Link href={actionHref} className="inline-flex h-11 items-center justify-center rounded-md bg-[#d1bd76] px-8 text-sm font-semibold text-white transition hover:bg-[#bba55d]">{section.config.actionLabelEn || "View all"}</Link></div></div></section>;
   }))}</>;
 }
 
 async function HomeProductExplorer({
   locale,
-  searchParams
+  searchParams,
+  categories
 }: {
   locale: Locale;
   searchParams?: Record<string, string | string[] | undefined>;
+  categories: StoreCategory[];
 }) {
   const dictionary = getDictionary(locale);
   const pageSize = 8;
@@ -139,16 +156,13 @@ async function HomeProductExplorer({
     sort: readSearchValue(searchParams, "sort") ?? "new"
   };
   const page = Math.max(1, Number(readSearchValue(searchParams, "page") ?? "1") || 1);
-  const [categories, allProducts] = await Promise.all([
-    getStoreCategories(),
-    getStoreProducts({
-      availability: current.availability,
-      category: current.category,
-      priceMin: current.priceMin,
-      priceMax: current.priceMax,
-      sort: current.sort
-    })
-  ]);
+  const allProducts = await getStoreProducts({
+    availability: current.availability,
+    category: current.category,
+    priceMin: current.priceMin,
+    priceMax: current.priceMax,
+    sort: current.sort
+  });
   const totalPages = Math.max(1, Math.ceil(allProducts.length / pageSize));
   const safePage = Math.min(page, totalPages);
   const products = allProducts.slice((safePage - 1) * pageSize, safePage * pageSize);
@@ -161,8 +175,8 @@ async function HomeProductExplorer({
   };
 
   return (
-    <section className="bg-[#f6f8f1] px-4 py-12 sm:px-8 sm:py-16 lg:px-12">
-      <div className="mx-auto max-w-[1720px]">
+    <section className="bg-[#f3efe5] px-4 py-14 sm:px-7 sm:py-20 lg:px-8">
+      <div className="mx-auto max-w-[1210px]">
         <HomeFilterControls
           locale={locale}
           total={allProducts.length}
@@ -172,10 +186,10 @@ async function HomeProductExplorer({
           }))}
           current={current}
         />
-        <h2 className="mt-10 font-serif text-[3.1rem] font-normal leading-none text-neutral-950 sm:mt-14 sm:text-[5rem]">
+        <h2 className="font-editorial mt-10 text-[2.7rem] font-semibold leading-none text-neutral-950 sm:mt-14 sm:text-6xl">
           New Arrivals
         </h2>
-        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:mt-12 lg:grid-cols-4 lg:gap-x-12 lg:gap-y-14">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-5 lg:mt-10 lg:grid-cols-4 lg:gap-y-12">
           {products.map((product, index) => (
             <ProductCard
               key={product.id}
@@ -245,7 +259,11 @@ export default async function HomePage({
   if (!isLocale(params.locale)) notFound();
   const locale = params.locale;
   const dictionary = getDictionary(locale);
-  const [banners, sections] = await Promise.all([getActiveBanners(3), getHomepageSections()]);
+  const [banners, sections, categories] = await Promise.all([
+    getActiveBanners(3),
+    getHomepageSections(),
+    getStoreCategories()
+  ]);
   const slides: HeroSlide[] = banners.map((banner) => ({
     id: banner.id,
     title: locale === "ar" ? banner.titleAr : banner.titleEn,
@@ -254,7 +272,8 @@ export default async function HomePage({
     href: pathFor(locale, banner.buttonLink),
     desktopImage: safeRemoteImage(banner.desktopImage, fallbackHeroImage, { width: 1800 }),
     mobileImage: safeRemoteImage(banner.mobileImage, "", { width: 900 }) || undefined,
-    isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage))
+    isVideo: Boolean(banner.desktopImage.includes("/video/") || /\.(mp4|webm|mov)(\?|$)/i.test(banner.desktopImage)),
+    isPortrait: banner.desktopImage.includes("ar_4:5")
   }));
   const fallbackSlide: HeroSlide = { id: "fallback", title: dictionary.home.title, subtitle: dictionary.home.subtitle, buttonText: dictionary.actions.shopNow, href: `/${locale}/shop`, desktopImage: safeRemoteImage(fallbackHeroImage, fallbackHeroImage, { width: 1800 }) };
   return (
@@ -268,8 +287,19 @@ export default async function HomePage({
         secondaryLabel={dictionary.actions.viewCollection}
         metrics={[]}
       />
-      <HomepageSectionRenderer locale={locale} sections={sections} />
-      <HomeProductExplorer locale={locale} searchParams={searchParams} />
+      <HomepageSectionRenderer
+        locale={locale}
+        sections={sections}
+        sectionTypes={["CATEGORY_GRID"]}
+        categories={categories}
+      />
+      <HomeProductExplorer locale={locale} searchParams={searchParams} categories={categories} />
+      <HomepageSectionRenderer
+        locale={locale}
+        sections={sections}
+        sectionTypes={["PRODUCT_GRID", "CATEGORY_PRODUCT_ROWS"]}
+        categories={categories}
+      />
       <NewsletterSignup locale={locale} />
     </main>
   );

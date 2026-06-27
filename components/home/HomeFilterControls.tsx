@@ -104,10 +104,10 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
 
   return (
     <>
-      <div className="hidden">
+      <div className="hidden items-center justify-between gap-8 border-b border-[#ded8ca] pb-5 lg:flex">
         <div className="flex items-center gap-10">
-          <span className="text-[1.35rem] font-medium tracking-[0.02em] text-neutral-700">Filter:</span>
-          <form action={action} className="flex items-center gap-10">
+          <span className="text-base font-medium text-neutral-700">Filter:</span>
+          <form action={action} className="flex items-center gap-7">
             <input type="hidden" name="page" value="1" />
             <input type="hidden" name="priceMin" value={current.priceMin ?? ""} />
             <input type="hidden" name="priceMax" value={current.priceMax ?? ""} />
@@ -117,7 +117,7 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
               name="availability"
               defaultValue={current.availability ?? ""}
               onChange={(event) => event.currentTarget.form?.requestSubmit()}
-              className="h-10 min-w-40 border-0 bg-transparent text-[1.35rem] font-medium text-neutral-700 outline-none"
+              className="h-10 min-w-36 border-0 bg-transparent text-base font-medium text-neutral-700 outline-none"
               aria-label="Availability"
             >
               <option value="">Availability</option>
@@ -134,7 +134,7 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
               name="category"
               defaultValue={current.category ?? ""}
               onChange={(event) => event.currentTarget.form?.requestSubmit()}
-              className="h-10 min-w-52 border-0 bg-transparent text-[1.35rem] font-medium text-neutral-700 outline-none"
+              className="h-10 min-w-44 border-0 bg-transparent text-base font-medium text-neutral-700 outline-none"
               aria-label="Category"
             >
               <option value="">Category</option>
@@ -146,7 +146,7 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
             </select>
           </form>
           <details className="group relative">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-[1.35rem] font-medium text-neutral-700 [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-base font-medium text-neutral-700 [&::-webkit-details-marker]:hidden">
               Price
               <ChevronDown size={18} className="transition group-open:rotate-180" />
             </summary>
@@ -165,25 +165,25 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
             </form>
           </details>
         </div>
-        <form action={action} className="flex items-center gap-10">
+        <form action={action} className="flex items-center gap-7">
           <input type="hidden" name="availability" value={current.availability ?? ""} />
           <input type="hidden" name="category" value={current.category ?? ""} />
           <input type="hidden" name="priceMin" value={current.priceMin ?? ""} />
           <input type="hidden" name="priceMax" value={current.priceMax ?? ""} />
           <input type="hidden" name="page" value="1" />
-          <label className="flex items-center gap-8 text-[1.35rem] font-medium text-neutral-700">
+          <label className="flex items-center gap-3 text-base font-medium text-neutral-700">
             <span>Sort by:</span>
-            <select name="sort" defaultValue={current.sort ?? "new"} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="h-10 min-w-56 border-0 bg-transparent text-[1.35rem] font-medium text-neutral-700 outline-none" aria-label={`Sort by ${sortLabel(current.sort)}`}>
+            <select name="sort" defaultValue={current.sort ?? "new"} onChange={(event) => event.currentTarget.form?.requestSubmit()} className="h-10 min-w-44 border-0 bg-transparent text-base font-medium text-neutral-700 outline-none" aria-label={`Sort by ${sortLabel(current.sort)}`}>
               {sortOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
           </label>
-          <span className="text-[1.35rem] font-medium text-neutral-600">{total} products</span>
+          <span className="text-base font-medium text-neutral-600">{total} products</span>
         </form>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between lg:hidden">
         <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 lg:text-[1.15rem]">
           <SlidersHorizontal size={16} />
           Filter and sort
@@ -193,7 +193,7 @@ export function HomeFilterControls({ locale, total, categories, current }: HomeF
 
       {open ? (
         <div className="fixed inset-0 z-[80] bg-black/50">
-          <form action={action} className="ml-auto grid h-full w-[min(100%,420px)] grid-rows-[auto_1fr_auto] bg-[#f6f8f1] text-neutral-950 shadow-2xl">
+          <form action={action} className="ml-auto grid h-full w-[min(100%,420px)] grid-rows-[auto_1fr_auto] bg-[#f4f1e8] text-neutral-950 shadow-2xl">
             <div className="border-b border-neutral-200 px-5 py-4 text-center">
               <button type="button" onClick={() => setOpen(false)} className="absolute right-4 top-4 grid h-8 w-8 place-items-center" aria-label="Close filters">
                 <X size={22} />
