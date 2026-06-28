@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
     arcGisUrl.searchParams.set("location", `${lng},${lat}`);
     arcGisUrl.searchParams.set("f", "json");
     arcGisUrl.searchParams.set("langCode", "EN");
+    arcGisUrl.searchParams.set("featureTypes", "Subaddress,PointAddress");
     const arcGisRequest = fetch(arcGisUrl, {
       headers: { Accept: "application/json" },
       cache: "no-store",
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
         const isCloseMatch =
           Number.isFinite(resultX) &&
           Number.isFinite(resultY) &&
-          distanceInMeters(lat, lng, resultY, resultX) <= 75;
+          distanceInMeters(lat, lng, resultY, resultX) <= 50;
         const addressNumber = text(arcAddress?.AddNum);
         const placeName = text(arcAddress?.PlaceName);
         const addressType = text(arcAddress?.Addr_type);

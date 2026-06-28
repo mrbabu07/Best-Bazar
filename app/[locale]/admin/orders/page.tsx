@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
+import { cleanLengthSizeLabel } from "@/lib/product-size-label";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
@@ -50,6 +51,42 @@ function formatAddress(order: {
     .join(", ");
 }
 
+type PrintableOrderItem = {
+  nameEn: string;
+  nameAr?: string | null;
+  variantNameEn?: string | null;
+  variantNameAr?: string | null;
+  quantity: number;
+  variant?: {
+    colorNameEn: string;
+    colorNameAr: string;
+    sizeNameEn?: string | null;
+    sizeNameAr?: string | null;
+  } | null;
+};
+
+function formatOrderItemDetails(item: PrintableOrderItem, locale: string) {
+  const variantParts = (locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn)
+    ?.split("/")
+    .map((part) => part.trim())
+    .filter(Boolean) ?? [];
+  const color = locale === "ar"
+    ? item.variant?.colorNameAr || item.variant?.colorNameEn || variantParts[0]
+    : item.variant?.colorNameEn || variantParts[0];
+  const rawSize = locale === "ar"
+    ? item.variant?.sizeNameAr || item.variant?.sizeNameEn || variantParts[1]
+    : item.variant?.sizeNameEn || variantParts[1];
+  const size = rawSize ? cleanLengthSizeLabel(rawSize) : "";
+  const name = locale === "ar" ? item.nameAr || item.nameEn : item.nameEn;
+
+  return [
+    name,
+    color ? `Color: ${color}` : "",
+    size ? `Size: ${size}` : "",
+    `Qty: ${item.quantity}`
+  ].filter(Boolean).join(" | ");
+}
+
 function qrContactPayload(order: {
   orderNumber: string;
   customerName: string;
@@ -60,7 +97,7 @@ function qrContactPayload(order: {
   city: string;
   emirate: string;
   country: string;
-  items: Array<{ nameEn: string; variantNameEn?: string | null; quantity: number }>;
+  items: PrintableOrderItem[];
   paymentMethod?: string;
   paymentStatus?: string;
   total?: unknown;
@@ -75,7 +112,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => `${clean(item.nameEn)}${item.variantNameEn ? ` (${clean(item.variantNameEn)})` : ""} x${item.quantity}`).join(", ")}`,
+    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => clean(formatOrderItemDetails(item, "en"))).join(", ")}`,
     "END:VCARD"
   ].join("\n");
 }
@@ -224,6 +261,14 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               select: {
                 sku: true,
                 brand: true
+              }
+            },
+            variant: {
+              select: {
+                colorNameEn: true,
+                colorNameAr: true,
+                sizeNameEn: true,
+                sizeNameAr: true
               }
             }
           }
@@ -389,7 +434,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           : undefined
                     }
                   >
-                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), products: order.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn}${item.variantNameEn ? ` (${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn})` : ""} x${item.quantity}`).join(", "), payment: order.paymentMethod, due: order.paymentStatus === "PAID" ? "0" : formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "" }))} className="h-4 w-4 accent-black" /></td>
+                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), products: order.items.map((item) => formatOrderItemDetails(item, locale)).join(", "), payment: order.paymentMethod, due: order.paymentStatus === "PAID" ? "0" : formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "" }))} className="h-4 w-4 accent-black" /></td>
                     <td className="px-5 py-4 font-bold text-navy">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
@@ -487,7 +532,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="parcel-label-title">Deliver to</p><p className="parcel-value">{selectedOrder.customerName}</p><p className="mt-1 parcel-value">{selectedOrder.customerPhone}</p><p className="mt-1 text-xs leading-5">{formatAddress(selectedOrder)}</p>
                 </section>
                 <section className="parcel-bottom">
-                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => `${locale === "ar" ? item.nameAr : item.nameEn}${item.variantNameEn ? ` (${locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn})` : ""} x${item.quantity}`).join(", ")}</p></div>
+                  <div><p className="parcel-label-title">Products</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale)).join(", ")}</p></div>
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=L&margin=8&data=${encodeURIComponent(qrContactPayload(selectedOrder))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
