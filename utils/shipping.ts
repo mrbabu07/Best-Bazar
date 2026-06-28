@@ -248,8 +248,7 @@ export function getShippingFee(
     settings.shippingRates.find((item) => item.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
     settings.shippingRates[0] ??
     defaultShippingSettings.shippingRates[0];
-  const freeFrom = rate.freeFrom || settings.freeShippingThreshold;
-  const isFree = subtotal <= 0 || subtotal >= freeFrom;
+  const isFree = subtotal <= 0;
 
   return {
     fee: isFree ? 0 : rate.cost,

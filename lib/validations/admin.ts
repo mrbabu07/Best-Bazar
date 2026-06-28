@@ -186,6 +186,7 @@ export const productSchema = z.object({
   customFieldValues: z.record(jsonPrimitive).default({}),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
+  freeDelivery: z.boolean().default(false),
   images: z.array(productImageSchema).default([]),
   variants: z.array(productVariantSchema).default([]),
   specifications: z.array(productSpecificationSchema).default([])

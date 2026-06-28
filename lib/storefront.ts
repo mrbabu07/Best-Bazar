@@ -136,6 +136,7 @@ export function mapStoreProduct(product: ProductRecord | ProductListRecord): Pro
     tags: product.tags,
     isActive: product.isActive,
     isFeatured: product.isFeatured,
+    freeDelivery: product.freeDelivery,
     rating: Number(product.rating),
     reviewCount: product.reviewCount,
     createdAt: product.createdAt.toISOString()

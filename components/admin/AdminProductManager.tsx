@@ -108,6 +108,7 @@ export type AdminProductRow = {
   customFieldValues: Record<string, string | boolean>;
   isActive: boolean;
   isFeatured: boolean;
+  freeDelivery: boolean;
   images: ProductImageForm[];
   variants: ProductVariantForm[];
   specifications: ProductSpecificationForm[];
@@ -137,6 +138,7 @@ type ProductForm = {
   customFieldValues: Record<string, string>;
   isActive: boolean;
   isFeatured: boolean;
+  freeDelivery: boolean;
   images: ProductImageForm[];
   variants: ProductVariantForm[];
   specifications: ProductSpecificationForm[];
@@ -176,6 +178,7 @@ function createEmptyForm(categoryId = ""): ProductForm {
     customFieldValues: {},
     isActive: true,
     isFeatured: false,
+    freeDelivery: false,
     images: [{ url: "", alt: "", sortOrder: "0" }],
     variants: [],
     specifications: []
@@ -209,6 +212,7 @@ function fromProduct(product: AdminProductRow): ProductForm {
     ),
     isActive: product.isActive,
     isFeatured: product.isFeatured,
+    freeDelivery: product.freeDelivery,
     images: product.images.length ? product.images : [{ url: "", alt: "", sortOrder: "0" }],
     variants: product.variants,
     specifications: product.specifications
@@ -535,6 +539,7 @@ export function AdminProductManager({
       ),
       isActive: form.isActive,
       isFeatured: form.isFeatured,
+      freeDelivery: form.freeDelivery,
       images: form.images
         .filter((image) => image.url.trim())
         .map((image, index) => ({
@@ -1376,7 +1381,7 @@ export function AdminProductManager({
 
               <details open className="rounded-lg border border-neutral-200 bg-white p-3">
                 <summary className="cursor-pointer text-sm font-bold text-navy">7. Storefront publishing</summary>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm font-semibold text-navy">
+              <div className="mt-4 grid gap-3 text-sm font-semibold text-navy sm:grid-cols-3">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -1394,6 +1399,15 @@ export function AdminProductManager({
                     className="accent-gold-500"
                   />
                   Featured
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.freeDelivery}
+                    onChange={(event) => updateForm("freeDelivery", event.target.checked)}
+                    className="accent-gold-500"
+                  />
+                  Free delivery
                 </label>
               </div>
               </details>

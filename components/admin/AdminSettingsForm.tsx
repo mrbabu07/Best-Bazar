@@ -92,6 +92,19 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
     }));
   };
 
+  const updateShippingRate = <Key extends keyof ShippingRate>(
+    index: number,
+    key: Key,
+    value: ShippingRate[Key]
+  ) => {
+    setForm((current) => ({
+      ...current,
+      shippingRates: current.shippingRates.map((rate, rateIndex) =>
+        rateIndex === index ? { ...rate, [key]: value } : rate
+      )
+    }));
+  };
+
   const updatePayment = <
     Method extends keyof PaymentSettings,
     Key extends keyof PaymentSettings[Method]
@@ -209,9 +222,17 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
         }
       },
       themeSettings: form.themeSettings,
-      shippingRates: shippingRatesToRecord([], {
+      shippingRates: shippingRatesToRecord(form.shippingRates.map((rate) => ({
+        key: rate.key,
+        emirate: rate.nameEn,
+        nameEn: rate.nameEn,
+        nameAr: rate.nameAr,
+        cost: Number(rate.cost),
+        freeFrom: Number(form.freeShippingThreshold),
+        deliveryDays: rate.deliveryDays,
+        codAvailable: true
+      })), {
         ...form.customAreaFee,
-        enabled: true,
         codAvailable: true,
         fee: Number(form.customAreaFee.fee)
       }),
@@ -387,22 +408,29 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
             <div>
               <p className="font-bold text-navy">Checkout delivery controls</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-neutral-500">
-                COD always stays available. Use these controls only for delivery fee and free delivery rules.
+                Choose one delivery pricing mode. COD always stays available.
               </p>
             </div>
-            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-4">
-              <label className="grid gap-2 text-sm font-semibold text-navy">
-                Free delivery minimum order (AED)
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.freeShippingThreshold}
-                  onChange={(event) => updateForm("freeShippingThreshold", event.target.value)}
-                  required
-                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
-                />
-              </label>
+            <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => updateCustomAreaFee("enabled", true)}
+                className={`rounded-md border p-4 text-left transition ${form.customAreaFee.enabled ? "border-neutral-950 bg-neutral-950 text-white" : "border-neutral-200 bg-white text-navy hover:border-neutral-400"}`}
+              >
+                <span className="block text-sm font-bold">Overall UAE fee</span>
+                <span className={`mt-1 block text-xs font-semibold ${form.customAreaFee.enabled ? "text-neutral-300" : "text-neutral-500"}`}>One delivery fee for every emirate.</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => updateCustomAreaFee("enabled", false)}
+                className={`rounded-md border p-4 text-left transition ${!form.customAreaFee.enabled ? "border-neutral-950 bg-neutral-950 text-white" : "border-neutral-200 bg-white text-navy hover:border-neutral-400"}`}
+              >
+                <span className="block text-sm font-bold">Emirate-wise fees</span>
+                <span className={`mt-1 block text-xs font-semibold ${!form.customAreaFee.enabled ? "text-neutral-300" : "text-neutral-500"}`}>Set a separate fee and ETA for all 7 emirates.</span>
+              </button>
+            </div>
+            {form.customAreaFee.enabled ? (
+            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-3">
               <label className="grid gap-2 text-sm font-semibold text-navy">
                 Delivery label
                 <input value={form.customAreaFee.areaLabel} onChange={(event) => updateCustomAreaFee("areaLabel", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
@@ -414,6 +442,39 @@ export function AdminSettingsForm({ locale, settings, saveLabel }: AdminSettings
               <label className="grid gap-2 text-sm font-semibold text-navy">
                 Estimated days
                 <input value={form.customAreaFee.deliveryDays} onChange={(event) => updateCustomAreaFee("deliveryDays", event.target.value)} className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm" />
+              </label>
+            </div>
+            ) : (
+              <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-2 xl:grid-cols-3">
+                {form.shippingRates.map((rate, index) => (
+                  <div key={rate.key} className="rounded-md border border-neutral-200 bg-white p-3">
+                    <p className="text-sm font-bold text-navy">{rate.nameEn}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <label className="grid gap-1.5 text-xs font-bold text-neutral-600">
+                        Fee (AED)
+                        <input type="number" min="0" step="0.01" value={rate.cost} onChange={(event) => updateShippingRate(index, "cost", event.target.value)} className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm text-navy" />
+                      </label>
+                      <label className="grid gap-1.5 text-xs font-bold text-neutral-600">
+                        Delivery days
+                        <input value={rate.deliveryDays} onChange={(event) => updateShippingRate(index, "deliveryDays", event.target.value)} placeholder="1-2" className="h-10 rounded-md border border-neutral-200 bg-paper px-3 text-sm text-navy" />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="grid gap-4 border-t border-neutral-200 pt-4 sm:grid-cols-2">
+              <label className="grid gap-2 text-sm font-semibold text-navy">
+                Free delivery minimum order (AED)
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.freeShippingThreshold}
+                  onChange={(event) => updateForm("freeShippingThreshold", event.target.value)}
+                  required
+                  className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
+                />
               </label>
             </div>
             <div className="grid gap-3 border-t border-neutral-200 pt-4 sm:grid-cols-3">

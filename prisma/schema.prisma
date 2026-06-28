@@ -140,6 +140,7 @@ model Product {
   customFieldValues Json                 @default("{}")
   isActive       Boolean                @default(true)
   isFeatured     Boolean                @default(false)
+  freeDelivery   Boolean                @default(false)
   rating         Decimal                @default(0) @db.Decimal(3, 2)
   reviewCount    Int                    @default(0)
   category       Category               @relation(fields: [categoryId], references: [id])

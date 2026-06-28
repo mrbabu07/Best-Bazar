@@ -91,6 +91,7 @@ export type Product = {
   tags: string[];
   isActive: boolean;
   isFeatured: boolean;
+  freeDelivery?: boolean;
   rating: number;
   reviewCount: number;
   createdAt: string;

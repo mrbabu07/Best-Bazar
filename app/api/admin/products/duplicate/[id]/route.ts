@@ -51,6 +51,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
         customFieldValues: cloneJson(original.customFieldValues),
         isActive: false,
         isFeatured: false,
+        freeDelivery: original.freeDelivery,
         images: {
           create: original.images.map(({ url, alt, sortOrder }) => ({ url, alt, sortOrder }))
         },

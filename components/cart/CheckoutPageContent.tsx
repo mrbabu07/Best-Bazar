@@ -277,6 +277,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const setStorefrontSettings = usePreferencesStore((state) => state.setStorefrontSettings);
   const items = hydrated ? storedItems : [];
   const subtotal = hydrated ? storedSubtotal : 0;
+  const hasProductFreeDelivery = items.some((item) => item.freeDelivery === true);
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
@@ -290,14 +291,18 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     subtotal,
     shippingSettings.shippingRates,
     shippingSettings.freeShippingThreshold,
-    { ...shippingSettings.customAreaFee, enabled: true, codAvailable: true }
+    shippingSettings.customAreaFee
   );
   const hasShippingArea = selectedEmirate.trim().length > 0;
   const thresholdFreeDelivery =
     checkoutControls.freeDeliveryThresholdEnabled &&
     shippingSettings.freeShippingThreshold > 0 &&
     subtotal >= shippingSettings.freeShippingThreshold;
-  const shipping = checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery ? 0 : hasShippingArea ? shippingQuote.fee : 0;
+  const shipping = checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery || hasProductFreeDelivery
+    ? 0
+    : hasShippingArea
+      ? shippingQuote.fee
+      : 0;
   const total = Math.max(subtotal + shipping - discount, 0);
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
@@ -1049,7 +1054,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
             <div className="flex justify-between">
               <span className="text-neutral-950">{dictionary.common.shipping}</span>
               <span className="font-medium text-neutral-500">
-                {checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery
+                {checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery || hasProductFreeDelivery
                   ? "Free delivery"
                   : hasShippingArea
                     ? formatCurrency(shipping, currency, locale, currencyRates)

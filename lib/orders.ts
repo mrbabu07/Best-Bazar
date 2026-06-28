@@ -101,21 +101,16 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     subtotal,
     settings.shippingRates,
     Number(settings.freeShippingThreshold),
-    {
-      ...(
-        settings.shippingRates && typeof settings.shippingRates === "object" && !Array.isArray(settings.shippingRates)
-          ? ((settings.shippingRates as Record<string, unknown>).customAreaFee as Record<string, unknown> | undefined)
-          : undefined
-      ),
-      enabled: true,
-      codAvailable: true
-    }
+    settings.shippingRates && typeof settings.shippingRates === "object" && !Array.isArray(settings.shippingRates)
+      ? ((settings.shippingRates as Record<string, unknown>).customAreaFee as Record<string, unknown> | undefined)
+      : undefined
   );
   const thresholdFreeDelivery =
     checkoutControls.freeDeliveryThresholdEnabled &&
     Number(settings.freeShippingThreshold) > 0 &&
     subtotal >= Number(settings.freeShippingThreshold);
-  const shippingCost = checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery ? 0 : shippingQuote.fee;
+  const productFreeDelivery = items.some(({ product }) => product.freeDelivery);
+  const shippingCost = checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery || productFreeDelivery ? 0 : shippingQuote.fee;
 
   if (data.paymentMethod === PaymentMethod.COD && !shippingQuote.codAvailable) {
     throw new Error(`Cash on delivery is not available for ${shippingQuote.rate.emirate}.`);

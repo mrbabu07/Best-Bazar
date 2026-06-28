@@ -100,6 +100,7 @@ type ProductForm = {
   customFieldValues: Record<string, string>;
   isActive: boolean;
   isFeatured: boolean;
+  freeDelivery: boolean;
   images: ProductImageForm[];
   variants: ProductVariantForm[];
   specifications: ProductSpecificationForm[];
@@ -145,6 +146,7 @@ function createEmptyForm(categoryId = ""): ProductForm {
     customFieldValues: {},
     isActive: true,
     isFeatured: false,
+    freeDelivery: false,
     images: [{ url: "", alt: "", sortOrder: "0" }],
     variants: [],
     specifications: []
@@ -749,6 +751,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       ),
       isActive: form.isActive,
       isFeatured: form.isFeatured,
+      freeDelivery: form.freeDelivery,
       images: form.images
         .filter((image) => image.url.trim())
         .map((image, index) => ({
@@ -1499,7 +1502,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 )}
                 </div>
               </details>
-              <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-semibold text-navy sm:col-span-2 sm:grid-cols-2">
+              <div className="grid gap-3 rounded-md border border-neutral-200 bg-white p-3 text-sm font-semibold text-navy sm:col-span-2 sm:grid-cols-3">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -1517,6 +1520,15 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                     className="accent-gold-500"
                   />
                   Featured product
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.freeDelivery}
+                    onChange={(event) => updateForm("freeDelivery", event.target.checked)}
+                    className="accent-gold-500"
+                  />
+                  Free delivery for this product
                 </label>
               </div>
             </div>
@@ -2424,7 +2436,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 )}
               </div>
             </details>
-            <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-4 text-sm font-semibold text-navy sm:grid-cols-2">
+            <div className="grid gap-3 rounded-md border border-neutral-200 bg-paper p-4 text-sm font-semibold text-navy sm:grid-cols-3">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -2442,6 +2454,15 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   className="accent-gold-500"
                 />
                 Featured product
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.freeDelivery}
+                  onChange={(event) => updateForm("freeDelivery", event.target.checked)}
+                  className="accent-gold-500"
+                />
+                Free delivery for this product
               </label>
             </div>
           </div>

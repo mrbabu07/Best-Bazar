@@ -91,6 +91,7 @@ export function CartPageContent({
   const storedShippingSettings = usePreferencesStore((state) => state.shippingSettings);
   const items = hydrated ? storedItems : [];
   const subtotal = hydrated ? storedSubtotal : 0;
+  const hasProductFreeDelivery = items.some((item) => item.freeDelivery === true);
   const currency = hydrated ? storedCurrency : "AED";
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
@@ -98,9 +99,9 @@ export function CartPageContent({
     hydrated ? freeShippingThreshold : shippingSettings.freeShippingThreshold,
     1
   );
-  const freeShippingRemaining = freeDeliveryEnabled ? 0 : Math.max(0, resolvedFreeShippingThreshold - subtotal);
-  const freeShippingProgress = freeDeliveryEnabled ? 100 : Math.min(100, (subtotal / resolvedFreeShippingThreshold) * 100);
-  const showFreeShippingNotice = freeDeliveryEnabled || (freeDeliveryThresholdEnabled && resolvedFreeShippingThreshold > 0);
+  const freeShippingRemaining = freeDeliveryEnabled || hasProductFreeDelivery ? 0 : Math.max(0, resolvedFreeShippingThreshold - subtotal);
+  const freeShippingProgress = freeDeliveryEnabled || hasProductFreeDelivery ? 100 : Math.min(100, (subtotal / resolvedFreeShippingThreshold) * 100);
+  const showFreeShippingNotice = freeDeliveryEnabled || hasProductFreeDelivery || (freeDeliveryThresholdEnabled && resolvedFreeShippingThreshold > 0);
   const total = Math.max(subtotal - discount, 0);
 
   useEffect(() => {

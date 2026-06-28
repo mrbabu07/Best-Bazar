@@ -5,7 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { fallbackProductImage } from "@/lib/images";
 import type { LocalizedText, Product, ProductVariant } from "@/lib/types";
 
-export type CartProductInput = Pick<Product, "id" | "slug" | "name" | "images" | "stock" | "price" | "brand">;
+export type CartProductInput = Pick<Product, "id" | "slug" | "name" | "images" | "stock" | "price" | "brand" | "freeDelivery">;
 
 export type CartVariantInput = Pick<
   ProductVariant,
@@ -25,6 +25,7 @@ export type CartItem = {
   price: number;
   brand: string;
   stock: number;
+  freeDelivery?: boolean;
   quantity: number;
 };
 
@@ -79,6 +80,7 @@ export const useCartStore = create<CartState>()(
                 price: product.price,
                 brand: product.brand,
                 stock: availableStock,
+                freeDelivery: product.freeDelivery,
                 quantity: Math.min(quantity, availableStock)
               }
             ]

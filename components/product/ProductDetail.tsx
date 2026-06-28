@@ -233,6 +233,7 @@ export function ProductDetail({ product, locale, dictionary }: ProductDetailProp
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={stockTone}>{stockLabel}</Badge>
           {product.comparePrice ? <span className="rounded-full bg-neutral-950 px-4 py-1.5 text-xs font-semibold text-white">{dictionary.common.sale}</span> : null}
+          {product.freeDelivery ? <Badge tone="green">Free delivery</Badge> : null}
         </div>
 
         <h1 className="mt-5 text-4xl font-normal leading-tight tracking-[0.01em] text-neutral-950 sm:text-6xl">

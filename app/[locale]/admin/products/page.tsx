@@ -70,6 +70,7 @@ export default async function AdminProductsPage({ params }: { params: { locale: 
     customFieldValues: normalizeCustomFieldValues(product.customFieldValues),
     isActive: product.isActive,
     isFeatured: product.isFeatured,
+    freeDelivery: product.freeDelivery,
     images: product.images.map((image) => ({
       url: image.url,
       alt: image.alt ?? "",
