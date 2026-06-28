@@ -211,9 +211,10 @@ function buildOrderWhere(searchParams: AdminOrdersPageProps["searchParams"], opt
 
 function orderStatusTone(status: string): "gold" | "green" | "red" | "blue" | "neutral" {
   if (status === "DELIVERED") return "green";
+  if (status === "CONFIRMED") return "green";
   if (status === "SHIPPED" || status === "PROCESSING") return "blue";
   if (status === "CANCELLED") return "red";
-  if (status === "PENDING" || status === "CONFIRMED") return "gold";
+  if (status === "PENDING") return "gold";
   return "neutral";
 }
 
@@ -316,7 +317,8 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
     : [];
   const statusCards = [
     { label: "All", value: allFilteredOrdersCount, href: buildStatusHref(locale, searchParams), active: !status, tone: "neutral" as const },
-    { label: "Pending/New", value: pendingOrdersCount + confirmedOrdersCount, href: buildStatusHref(locale, searchParams, "PENDING"), active: status === "PENDING", tone: "gold" as const },
+    { label: "Pending/New", value: pendingOrdersCount, href: buildStatusHref(locale, searchParams, "PENDING"), active: status === "PENDING", tone: "gold" as const },
+    { label: "Confirmed", value: confirmedOrdersCount, href: buildStatusHref(locale, searchParams, "CONFIRMED"), active: status === "CONFIRMED", tone: "green" as const },
     { label: "Processing", value: processingOrdersCount, href: buildStatusHref(locale, searchParams, "PROCESSING"), active: status === "PROCESSING", tone: "blue" as const },
     { label: "Shipped", value: shippedOrdersCount, href: buildStatusHref(locale, searchParams, "SHIPPED"), active: status === "SHIPPED", tone: "blue" as const },
     { label: "Delivered", value: deliveredOrdersCount, href: buildStatusHref(locale, searchParams, "DELIVERED"), active: status === "DELIVERED", tone: "green" as const },
@@ -340,7 +342,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         }
       />
 
-      <section className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">
         {statusCards.map((item) => (
           <Link
             key={item.label}

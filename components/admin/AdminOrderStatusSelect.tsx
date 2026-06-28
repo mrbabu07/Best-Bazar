@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -47,15 +48,29 @@ export function AdminOrderStatusSelect({ orderId, initialStatus }: AdminOrderSta
   };
 
   return (
-    <select
-      value={status}
-      onChange={(event) => updateStatus(event.target.value as OrderStatus)}
-      disabled={saving}
-      className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm disabled:opacity-60"
-    >
-      {statuses.map((item) => (
-        <option key={item}>{item}</option>
-      ))}
-    </select>
+    <div className="flex flex-wrap items-center gap-2">
+      {status === "PENDING" ? (
+        <button
+          type="button"
+          onClick={() => updateStatus("CONFIRMED")}
+          disabled={saving}
+          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-emerald-700 px-3 text-xs font-bold text-white transition hover:bg-emerald-800 disabled:opacity-60"
+        >
+          <CheckCircle2 size={15} />
+          Confirm
+        </button>
+      ) : null}
+      <select
+        value={status}
+        onChange={(event) => updateStatus(event.target.value as OrderStatus)}
+        disabled={saving}
+        aria-label="Order status"
+        className="h-9 rounded-md border border-neutral-200 bg-paper px-2 text-sm disabled:opacity-60"
+      >
+        {statuses.map((item) => (
+          <option key={item}>{item}</option>
+        ))}
+      </select>
+    </div>
   );
 }
