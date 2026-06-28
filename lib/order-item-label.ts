@@ -36,12 +36,17 @@ export function getOrderItemDetails(item: PrintableOrderItem, locale: string) {
   };
 }
 
-export function formatOrderItemDetails(item: PrintableOrderItem, locale: string) {
+export function formatOrderItemDetails(
+  item: PrintableOrderItem,
+  locale: string,
+  options: { includeCode?: boolean } = {}
+) {
   const details = getOrderItemDetails(item, locale);
+  const includeCode = options.includeCode ?? true;
 
   return [
     details.name,
-    details.code ? `Code: ${details.code}` : "",
+    includeCode && details.code ? `Code: ${details.code}` : "",
     details.color ? `Color: ${details.color}` : "",
     details.size ? `Size: ${details.size}` : "",
     `Qty: ${details.quantity}`

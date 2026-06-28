@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getDictionary, isLocale } from "@/lib/i18n";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
-import { formatOrderItemDetails, type PrintableOrderItem } from "@/lib/order-item-label";
+import { formatOrderItemDetails, getOrderItemDetails, type PrintableOrderItem } from "@/lib/order-item-label";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
@@ -70,10 +70,16 @@ function qrContactPayload(order: {
   items: PrintableOrderItem[];
   paymentMethod?: string;
   paymentStatus?: string;
+  currency?: string;
   total?: unknown;
 }) {
   const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
   const address = [order.street, order.tower, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
+  const productCodes = orderProductCodes(order.items);
+  const itemSummary = order.items.map((item) => {
+    const details = getOrderItemDetails(item, "en");
+    return [details.color, details.size, `x${details.quantity}`].filter(Boolean).join("/");
+  }).join(", ");
 
   return [
     "BEGIN:VCARD",
@@ -82,7 +88,7 @@ function qrContactPayload(order: {
     `TEL;TYPE=CELL:${clean(order.customerPhone)}`,
     ...(clean(order.customerEmail) ? [`EMAIL:${clean(order.customerEmail)}`] : []),
     `ADR:;;${address};;;;`,
-    `NOTE:Best Mart order ${clean(order.orderNumber)}. Payment: ${clean(order.paymentMethod)} ${clean(order.paymentStatus)}. Due: ${order.paymentStatus === "PAID" ? "0" : String(order.total ?? "")}. Products: ${order.items.map((item) => clean(formatOrderItemDetails(item, "en"))).join(", ")}`,
+    `NOTE:Order ${clean(order.orderNumber)} | Product code ${clean(productCodes)} | Items ${clean(itemSummary)} | Total ${clean(order.currency)} ${String(order.total ?? "")}`,
     "END:VCARD"
   ].join("\n");
 }
@@ -421,7 +427,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           : undefined
                     }
                   >
-                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: orderProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale)).join(", "), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
+                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: orderProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", "), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
                     <td className="px-5 py-4 font-bold text-navy">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
@@ -516,7 +522,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="parcel-route">ORDER {selectedOrder.orderNumber}</p>
                 </section>
                 <p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p>
-                <section className="parcel-products"><p className="parcel-label-title">Product details</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale)).join(", ")}</p></section>
+                <section className="parcel-products"><p className="parcel-label-title">Product details</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", ")}</p></section>
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
                     <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{orderProductCodes(selectedOrder.items)}</strong></div>
