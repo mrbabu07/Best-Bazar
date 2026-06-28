@@ -56,6 +56,13 @@ function orderProductCodes(items: Array<{ product?: { sku?: string | null } | nu
   return Array.from(new Set(items.map((item) => item.product?.sku || item.variantSku).filter(Boolean))).join(" / ") || "NOT SET";
 }
 
+function orderVariantSummary(items: PrintableOrderItem[], locale: string) {
+  return items.map((item) => {
+    const details = getOrderItemDetails(item, locale);
+    return [details.color, details.size, `x${details.quantity}`].filter(Boolean).join(" / ");
+  }).join(", ");
+}
+
 function qrContactPayload(order: {
   orderNumber: string;
   customerName: string;
@@ -427,7 +434,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           : undefined
                     }
                   >
-                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: orderProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", "), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
+                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: orderProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", "), variantSummary: orderVariantSummary(order.items, locale), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
                     <td className="px-5 py-4 font-bold text-navy">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
@@ -513,19 +520,19 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
 
               <div className="admin-parcel-label hidden">
                 <header className="parcel-header">
-                  <div className="flex items-end justify-between"><p className="parcel-brand">BEST MART</p><p className="parcel-service">DELIVERY</p></div>
+                  <p className="parcel-brand">BEST MART</p>
                 </header>
                 <section className="parcel-recipient">
                   <p className="parcel-recipient-name">{selectedOrder.customerName}</p>
                   <p className="parcel-address">{formatAddress(selectedOrder)}</p>
                   <p className="parcel-phone">{selectedOrder.customerPhone}</p>
-                  <p className="parcel-route">ORDER {selectedOrder.orderNumber}</p>
+                  <p className="parcel-route">BM AE-{selectedOrder.emirate.toUpperCase().replace(/\s+/g, "-")}-{selectedOrder.orderNumber.slice(-6)}</p>
                 </section>
-                <p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p>
-                <section className="parcel-products"><p className="parcel-label-title">Product details</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", ")}</p></section>
+                <section className="parcel-date-row"><p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p><div className="parcel-mark">BM</div></section>
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
                     <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{orderProductCodes(selectedOrder.items)}</strong></div>
+                    <div className="parcel-variant"><span>COLOR / SIZE / QTY</span><strong>{orderVariantSummary(selectedOrder.items, locale) || "DEFAULT / x1"}</strong></div>
                     <div><span>PRODUCT</span><strong>{formatCurrency(Number(selectedOrder.subtotal), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div><span>DELIVERY</span><strong>{formatCurrency(Number(selectedOrder.shippingCost), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div className="parcel-total"><span>TOTAL</span><strong>{formatCurrency(Number(selectedOrder.total), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
@@ -533,9 +540,10 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
                     <img src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&ecc=L&margin=8&data=${encodeURIComponent(parcelQrPayload(selectedOrder, locale, siteUrl))}`} alt={`Customer and order QR code for ${selectedOrder.orderNumber}`} width="192" height="192" />
+                    <p>{selectedOrder.orderNumber}</p>
                   </div>
                 </section>
-                <footer className="parcel-footer">Scan QR for customer, order and WhatsApp contact</footer>
+                <footer className="parcel-footer">SCAN FOR CUSTOMER &amp; ORDER DETAILS</footer>
               </div>
 
               <div className="invoice-meta-grid mt-5 grid gap-3 text-sm sm:grid-cols-2">
