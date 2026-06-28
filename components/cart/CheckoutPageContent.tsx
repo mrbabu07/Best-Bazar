@@ -268,6 +268,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const reverseGeocodeRequestRef = useRef(0);
   const apartmentManuallyEditedRef = useRef(false);
+  const activeMapPointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchDistanceRef = useRef<number | null>(null);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -282,6 +284,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const currencyRates = hydrated ? storedCurrencyRates : defaultCurrencyRates;
   const shippingSettings = hydrated ? storedShippingSettings : defaultShippingSettings;
   const shippingOptions = shippingSettings.shippingRates;
+  const showEmirateFees = !shippingSettings.customAreaFee.enabled;
   const selectedShippingRate =
     shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
     shippingOptions[0];
@@ -559,6 +562,15 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
   const startMapDrag = (event: PointerEvent<HTMLDivElement>) => {
     event.currentTarget.setPointerCapture(event.pointerId);
+    activeMapPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activeMapPointersRef.current.size > 1) {
+      const [first, second] = Array.from(activeMapPointersRef.current.values());
+      pinchDistanceRef.current = Math.hypot(second.x - first.x, second.y - first.y);
+      setDragStart(null);
+      return;
+    }
+
     setDragStart({
       pointerId: event.pointerId,
       x: event.clientX,
@@ -568,6 +580,30 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   };
 
   const moveMapDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!activeMapPointersRef.current.has(event.pointerId)) {
+      return;
+    }
+
+    activeMapPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activeMapPointersRef.current.size > 1) {
+      event.preventDefault();
+      const [first, second] = Array.from(activeMapPointersRef.current.values());
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      const previousDistance = pinchDistanceRef.current;
+
+      if (previousDistance && distance >= previousDistance * 1.14) {
+        zoomMap(1);
+        pinchDistanceRef.current = distance;
+      } else if (previousDistance && distance <= previousDistance * 0.86) {
+        zoomMap(-1);
+        pinchDistanceRef.current = distance;
+      } else if (!previousDistance) {
+        pinchDistanceRef.current = distance;
+      }
+      return;
+    }
+
     if (!dragStart || dragStart.pointerId !== event.pointerId) {
       return;
     }
@@ -586,7 +622,18 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   };
 
   const stopMapDrag = (event: PointerEvent<HTMLDivElement>) => {
-    if (dragStart?.pointerId === event.pointerId) {
+    activeMapPointersRef.current.delete(event.pointerId);
+    pinchDistanceRef.current = null;
+
+    const remainingPointer = Array.from(activeMapPointersRef.current.entries())[0];
+    if (remainingPointer) {
+      setDragStart({
+        pointerId: remainingPointer[0],
+        x: remainingPointer[1].x,
+        y: remainingPointer[1].y,
+        center: mapCenter
+      });
+    } else {
       setDragStart(null);
     }
   };
@@ -794,11 +841,18 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
                 >
                   <option value="" disabled>Emirate</option>
-                  {UAE_EMIRATES.map((emirateOption) => (
-                    <option key={emirateOption.key} value={emirateOption.nameEn}>
-                      {emirateOption.nameEn}
-                    </option>
-                  ))}
+                  {UAE_EMIRATES.map((emirateOption) => {
+                    const rate = shippingOptions.find((item) => item.key === emirateOption.key);
+                    const feeLabel = showEmirateFees && rate
+                      ? ` - ${formatCurrency(rate.cost, currency, locale, currencyRates)}`
+                      : "";
+
+                    return (
+                      <option key={emirateOption.key} value={emirateOption.nameEn}>
+                        {emirateOption.nameEn}{feeLabel}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <label className="flex items-center gap-3 text-base font-medium text-neutral-950 sm:col-span-2">
@@ -812,7 +866,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       <MapPin size={18} />
                       Delivery map pin
                     </p>
-                    <p className="mt-1 text-[11px] leading-4 text-neutral-500">Optional. Drag the satellite map, then set the delivery pin.</p>
+                    <p className="mt-1 text-[11px] leading-4 text-neutral-500">Optional. Drag to move, pinch with two fingers to zoom, then set the delivery pin.</p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
                     <LocateFixed size={15} />
@@ -823,9 +877,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   className="relative h-[360px] touch-none overflow-hidden rounded-2xl border border-neutral-300 bg-neutral-800 select-none"
                   onPointerDown={startMapDrag}
                   onPointerMove={moveMapDrag}
-                   onPointerUp={stopMapDrag}
-                   onPointerCancel={stopMapDrag}
-                   onWheel={handleMapWheel}
+                  onPointerUp={stopMapDrag}
+                  onPointerCancel={stopMapDrag}
+                  onWheel={handleMapWheel}
                   role="application"
                   aria-label="Interactive delivery map"
                 >
@@ -864,30 +918,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     <MapPin size={18} fill="currentColor" strokeWidth={1.2} />
                   </div>
                   <div className="absolute left-1/2 top-1/2 z-20 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-red-600" />
-                  <div
-                    className="absolute bottom-3 right-3 z-20 flex overflow-hidden rounded-xl border border-neutral-200 bg-white shadow"
-                    onPointerDown={(event) => event.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => zoomMap(1)}
-                      className="grid h-10 w-10 place-items-center border-r border-neutral-200 text-lg font-semibold text-neutral-950"
-                      aria-label="Zoom in"
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => zoomMap(-1)}
-                      className="grid h-10 w-10 place-items-center text-lg font-semibold text-neutral-950"
-                      aria-label="Zoom out"
-                    >
-                      -
-                   </button>
-                   <span className="grid h-10 min-w-10 place-items-center border-l border-neutral-200 px-2 text-xs font-bold text-neutral-600">
-                     {mapZoom}x
-                   </span>
-                 </div>
                   <button
                     type="button"
                     onClick={setPinAtMapCenter}

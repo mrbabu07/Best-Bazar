@@ -838,7 +838,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 <input
                   value={form.sku}
                   onChange={(event) => updateForm("sku", event.target.value)}
-                  placeholder="Example: BM-Abaya-1001"
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />
                 <span className="text-xs font-semibold text-neutral-500">
@@ -852,7 +851,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   value={form.nameEn}
                   onChange={(event) => updateNameEn(event.target.value)}
                   onBlur={(event) => formatNameEn(event.currentTarget.value)}
-                  placeholder="Premium abaya / handbag / perfume"
                   required
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />
@@ -1578,7 +1576,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 value={form.nameEn}
                 onChange={(event) => updateNameEn(event.target.value)}
                 onBlur={(event) => formatNameEn(event.currentTarget.value)}
-                placeholder="Premium travel trolley"
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -1587,7 +1584,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <input
                 value={form.nameAr}
                 onChange={(event) => updateForm("nameAr", event.target.value)}
-                placeholder="Arabic product name"
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -1609,7 +1605,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <input
                 value={form.sku}
                 onChange={(event) => updateForm("sku", event.target.value)}
-                placeholder="BB-DXB-1001"
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -1658,7 +1653,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   <input
                     value={form.nameAr}
                     onChange={(event) => updateForm("nameAr", event.target.value)}
-                    placeholder="Arabic product name"
                     className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
                   />
                 </label>
@@ -1680,7 +1674,6 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   <input
                     value={form.sku}
                     onChange={(event) => updateForm("sku", event.target.value)}
-                    placeholder="Auto-generated if empty"
                     className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
                   />
                 </label>

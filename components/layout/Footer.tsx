@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Mail, MapPin, MessageCircle, Music2, Phone } from "lucide-react";
+import { Facebook, Instagram, Mail, MessageCircle, Music2, Phone } from "lucide-react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
 
@@ -16,13 +16,12 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
     <footer className="border-t border-gold-100 bg-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_0.8fr_0.8fr] lg:px-8">
         <div>
-          <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
-            {brandName || dictionary.brand}
-          </Link>
-          <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-neutral-700">
-            <span role="img" aria-label="United Arab Emirates flag" className="text-xl">🇦🇪</span>
-            {locale === "ar" ? "United Arab Emirates" : "United Arab Emirates"}
-          </p>
+          <div className="flex items-center gap-3">
+            <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
+              {brandName || dictionary.brand}
+            </Link>
+            <span role="img" aria-label="UAE flag" title="UAE" className="text-2xl leading-none">🇦🇪</span>
+          </div>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">
             {locale === "ar" ? "تابعنا" : "Follow us"}
           </p>
@@ -83,12 +82,6 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             <Link href={`/${locale}/track-order`} className="hover:text-navy">
               {locale === "ar" ? "تتبع الطلب" : "Track order"}
             </Link>
-            <Link href={`/${locale}/privacy`} className="hover:text-navy">
-              {locale === "ar" ? "سياسة الخصوصية" : "Privacy policy"}
-            </Link>
-            <Link href={`/${locale}/terms`} className="hover:text-navy">
-              {locale === "ar" ? "الشروط" : "Terms"}
-            </Link>
           </div>
         </div>
 
@@ -97,12 +90,6 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
             {dictionary.footer.contact}
           </h3>
           <div className="mt-4 grid gap-3 text-sm text-neutral-600">
-            {settings.address ? (
-              <p className="flex items-center gap-2">
-                <MapPin size={16} />
-                {settings.address}
-              </p>
-            ) : null}
             <p className="flex items-center gap-2">
               <Phone size={16} />
               {settings.phone}
@@ -122,6 +109,19 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
                 {locale === "ar" ? "دعم واتساب" : "WhatsApp support"}
               </Link>
             ) : null}
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-neutral-200">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs font-semibold text-neutral-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <p>&copy; {new Date().getFullYear()} {brandName || dictionary.brand}. All rights reserved.</p>
+          <div className="flex gap-5">
+            <Link href={`/${locale}/privacy`} className="transition hover:text-navy">
+              {locale === "ar" ? "سياسة الخصوصية" : "Privacy policy"}
+            </Link>
+            <Link href={`/${locale}/terms`} className="transition hover:text-navy">
+              {locale === "ar" ? "الشروط" : "Terms"}
+            </Link>
           </div>
         </div>
       </div>
