@@ -34,7 +34,7 @@ export type StorefrontContent = {
 
 export const defaultStorefrontContent: StorefrontContent = {
   navHomeEn: "Home", navHomeAr: "الرئيسية", navShopEn: "Shop", navShopAr: "المتجر", navAccountEn: "Account", navAccountAr: "الحساب",
-  footerTaglineEn: "Dubai shopping, curated for everyday life.", footerTaglineAr: "تسوق دبي مختار للحياة اليومية.",
+  footerTaglineEn: "Curated for everyday life.", footerTaglineAr: "مختار للحياة اليومية.",
   privacyTitleEn: "Privacy policy", privacyTitleAr: "سياسة الخصوصية", privacyBodyEn: "We collect and use customer details only to process orders, delivery, payments, support, and legal requirements.", privacyBodyAr: "نجمع ونستخدم بيانات العملاء فقط لمعالجة الطلبات والتوصيل والدفع والدعم والمتطلبات القانونية.",
   termsTitleEn: "Terms and conditions", termsTitleAr: "الشروط والأحكام", termsBodyEn: "Orders are accepted after stock, delivery address, and payment details are validated. Delivery and return terms are managed by the store.", termsBodyAr: "يتم قبول الطلبات بعد التحقق من المخزون وعنوان التوصيل وبيانات الدفع. تتم إدارة شروط التوصيل والإرجاع بواسطة المتجر."
 };

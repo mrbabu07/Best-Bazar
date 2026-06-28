@@ -48,8 +48,8 @@ export function NewsletterSignup({ locale }: NewsletterSignupProps) {
         </h2>
         <p className="mx-auto max-w-2xl text-sm leading-6 text-neutral-600 sm:text-base">
           {locale === "ar"
-            ? "Subscribe for new products, offers, and Dubai delivery updates."
-            : "Join our email list for exclusive offers, new collections, and Dubai delivery updates."}
+            ? "Subscribe for new products, offers, and delivery updates."
+            : "Join our email list for exclusive offers, new collections, and delivery updates."}
         </p>
         <form onSubmit={submit} className="mx-auto grid w-full max-w-xl gap-3 sm:grid-cols-[1fr_auto]">
           <input
