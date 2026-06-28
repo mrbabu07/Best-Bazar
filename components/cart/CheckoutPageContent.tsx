@@ -2,7 +2,7 @@
 
 import { HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
 import Image from "next/image";
-import { FormEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, PointerEvent, WheelEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -145,6 +145,8 @@ type ReverseGeocodeResponse = {
 
 const defaultMapCenter = { lat: 25.2048, lng: 55.2708 };
 const mapTileSize = 256;
+const minMapZoom = 10;
+const maxMapZoom = 21;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -506,7 +508,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
     setMapPin(nextPin);
     setMapCenter(nextPin);
-    setMapZoom(18);
+    setMapZoom(maxMapZoom);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
     if (shouldFillAddress) {
       return fillAddressFromPin(nextPin.lat, nextPin.lng);
@@ -582,6 +584,15 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     if (dragStart?.pointerId === event.pointerId) {
       setDragStart(null);
     }
+  };
+
+  const zoomMap = (direction: 1 | -1) => {
+    setMapZoom((zoom) => clamp(zoom + direction, minMapZoom, maxMapZoom));
+  };
+
+  const handleMapWheel = (event: WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    zoomMap(event.deltaY < 0 ? 1 : -1);
   };
 
   const applyMapLink = () => {
@@ -807,8 +818,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   className="relative h-[360px] touch-none overflow-hidden rounded-2xl border border-neutral-300 bg-neutral-800 select-none"
                   onPointerDown={startMapDrag}
                   onPointerMove={moveMapDrag}
-                  onPointerUp={stopMapDrag}
-                  onPointerCancel={stopMapDrag}
+                   onPointerUp={stopMapDrag}
+                   onPointerCancel={stopMapDrag}
+                   onWheel={handleMapWheel}
                   role="application"
                   aria-label="Interactive delivery map"
                 >
@@ -853,7 +865,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   >
                     <button
                       type="button"
-                      onClick={() => setMapZoom((zoom) => clamp(zoom + 1, 10, 18))}
+                      onClick={() => zoomMap(1)}
                       className="grid h-10 w-10 place-items-center border-r border-neutral-200 text-lg font-semibold text-neutral-950"
                       aria-label="Zoom in"
                     >
@@ -861,13 +873,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     </button>
                     <button
                       type="button"
-                      onClick={() => setMapZoom((zoom) => clamp(zoom - 1, 10, 18))}
+                      onClick={() => zoomMap(-1)}
                       className="grid h-10 w-10 place-items-center text-lg font-semibold text-neutral-950"
                       aria-label="Zoom out"
                     >
                       -
-                    </button>
-                  </div>
+                   </button>
+                   <span className="grid h-10 min-w-10 place-items-center border-l border-neutral-200 px-2 text-xs font-bold text-neutral-600">
+                     {mapZoom}x
+                   </span>
+                 </div>
                   <button
                     type="button"
                     onClick={setPinAtMapCenter}

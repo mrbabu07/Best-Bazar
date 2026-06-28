@@ -19,8 +19,9 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
           <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
             {brandName || dictionary.brand}
           </Link>
-          <p className="mt-4 max-w-md text-sm leading-6 text-neutral-600">
-            {locale === "ar" ? settings.storefrontContent.footerTaglineAr : settings.storefrontContent.footerTaglineEn}
+          <p className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-neutral-700">
+            <span role="img" aria-label="United Arab Emirates flag" className="text-xl">🇦🇪</span>
+            {locale === "ar" ? "United Arab Emirates" : "United Arab Emirates"}
           </p>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">
             {locale === "ar" ? "تابعنا" : "Follow us"}
