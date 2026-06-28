@@ -53,8 +53,6 @@ export default async function ParcelPage({ params, searchParams }: ParcelPagePro
   const phoneNumber = whatsappNumber(order.customerPhone, order.country);
   const whatsappText = encodeURIComponent(`Best Mart order ${order.orderNumber}`);
   const whatsappHref = `https://wa.me/${phoneNumber}?text=${whatsappText}`;
-  const paymentDue = order.paymentStatus === "PAID" ? 0 : Number(order.total);
-
   return (
     <main className="min-h-screen bg-[#f4f4f0] px-4 py-8 text-neutral-950 sm:px-6">
       <article className="mx-auto max-w-3xl border-2 border-neutral-950 bg-white p-5 shadow-[8px_8px_0_#111] sm:p-8">
@@ -77,11 +75,10 @@ export default async function ParcelPage({ params, searchParams }: ParcelPagePro
         </section>
 
         <section className="border-b-2 border-dashed border-neutral-950 py-5">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div><p className="text-[10px] font-black uppercase tracking-wider">Payment</p><p className="mt-1 font-black">{order.paymentMethod}</p></div>
-            <div><p className="text-[10px] font-black uppercase tracking-wider">Due</p><p className="mt-1 font-black">{order.currency} {paymentDue.toFixed(2)}</p></div>
-            <div><p className="text-[10px] font-black uppercase tracking-wider">Order</p><p className="mt-1 font-black">{order.orderStatus}</p></div>
-            <div><p className="text-[10px] font-black uppercase tracking-wider">Payment status</p><p className="mt-1 font-black">{order.paymentStatus}</p></div>
+          <div className="grid grid-cols-3 gap-3">
+            <div><p className="text-[10px] font-black uppercase tracking-wider">Product</p><p className="mt-1 font-black">{order.currency} {Number(order.subtotal).toFixed(2)}</p></div>
+            <div><p className="text-[10px] font-black uppercase tracking-wider">Delivery</p><p className="mt-1 font-black">{order.currency} {Number(order.shippingCost).toFixed(2)}</p></div>
+            <div><p className="text-[10px] font-black uppercase tracking-wider">Total</p><p className="mt-1 text-lg font-black">{order.currency} {Number(order.total).toFixed(2)}</p></div>
           </div>
         </section>
 
@@ -94,9 +91,8 @@ export default async function ParcelPage({ params, searchParams }: ParcelPagePro
                 <div key={item.id} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto]">
                   <div>
                     <p className="text-lg font-black">{details.name}</p>
-                    <p className="mt-1 text-sm font-semibold">
-                      {[details.code ? `Code: ${details.code}` : "", details.color ? `Color: ${details.color}` : "", details.size ? `Size: ${details.size}` : ""].filter(Boolean).join(" | ")}
-                    </p>
+                    {details.code ? <p className="mt-2 text-2xl font-black tracking-[0.04em]">CODE: {details.code}</p> : null}
+                    <p className="mt-1 text-sm font-semibold">{[details.color ? `Color: ${details.color}` : "", details.size ? `Size: ${details.size}` : ""].filter(Boolean).join(" | ")}</p>
                   </div>
                   <p className="font-black">Qty: {details.quantity}</p>
                 </div>

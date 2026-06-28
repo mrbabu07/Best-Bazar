@@ -52,6 +52,10 @@ function formatAddress(order: {
     .join(", ");
 }
 
+function orderProductCodes(items: Array<{ product?: { sku?: string | null } | null; variantSku?: string | null }>) {
+  return Array.from(new Set(items.map((item) => item.product?.sku || item.variantSku).filter(Boolean))).join(" / ") || "NOT SET";
+}
+
 function qrContactPayload(order: {
   orderNumber: string;
   customerName: string;
@@ -295,7 +299,6 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
         { label: dictionary.common.total, value: Number(selectedOrder.total), tone: "strong" }
       ]
     : [];
-  const selectedPaymentDue = selectedOrder?.paymentStatus === "PAID" ? 0 : Number(selectedOrder?.total ?? 0);
   const statusCards = [
     { label: "All", value: allFilteredOrdersCount, href: buildStatusHref(locale, searchParams), active: !status, tone: "neutral" as const },
     { label: "Pending/New", value: pendingOrdersCount + confirmedOrdersCount, href: buildStatusHref(locale, searchParams, "PENDING"), active: status === "PENDING", tone: "gold" as const },
@@ -416,7 +419,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           : undefined
                     }
                   >
-                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), products: order.items.map((item) => formatOrderItemDetails(item, locale)).join(", "), payment: order.paymentMethod, due: order.paymentStatus === "PAID" ? "0" : formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
+                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: orderProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale)).join(", "), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
                     <td className="px-5 py-4 font-bold text-navy">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
@@ -503,8 +506,6 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
               <div className="admin-parcel-label hidden">
                 <header className="parcel-header">
                   <div className="flex items-end justify-between"><p className="parcel-brand">BEST MART</p><p className="parcel-service">DELIVERY</p></div>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
-                  <img className="parcel-barcode" src={`https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(selectedOrder.orderNumber)}&code=Code128&multiplebarcodes=false&translate-esc=true&unit=Fit&dpi=96`} alt={`Tracking barcode for ${selectedOrder.orderNumber}`} />
                 </header>
                 <section className="parcel-recipient">
                   <p className="parcel-recipient-name">{selectedOrder.customerName}</p>
@@ -513,13 +514,13 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="parcel-route">ORDER {selectedOrder.orderNumber}</p>
                 </section>
                 <p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p>
-                <section className="parcel-products"><p className="parcel-label-title">Product details</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale)).join(", ")}</p></section>
+                <section className="parcel-products"><p className="parcel-label-title">Rack product code</p><p className="parcel-pick-code">{orderProductCodes(selectedOrder.items)}</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale)).join(", ")}</p></section>
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
-                    <div><span>ORDER</span><strong>{selectedOrder.orderNumber.slice(-6)}</strong></div>
+                    <div><span>PRODUCT</span><strong>{formatCurrency(Number(selectedOrder.subtotal), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
+                    <div><span>DELIVERY</span><strong>{formatCurrency(Number(selectedOrder.shippingCost), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
+                    <div className="parcel-total"><span>TOTAL</span><strong>{formatCurrency(Number(selectedOrder.total), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div><span>PAYMENT</span><strong>{selectedOrder.paymentMethod}</strong></div>
-                    <div><span>DUE</span><strong>{formatCurrency(selectedPaymentDue, getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
-                    <div><span>STATUS</span><strong>{selectedOrder.orderStatus}</strong></div>
                   </div>
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
