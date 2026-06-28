@@ -22,7 +22,7 @@ function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function hasApartmentOrBuilding(result: Record<string, unknown>) {
+function hasUnitNumber(result: Record<string, unknown>) {
   const address = record(result.address);
   const extratags = record(result.extratags);
 
@@ -32,12 +32,9 @@ function hasApartmentOrBuilding(result: Record<string, unknown>) {
     address.apartment,
     address.apartments,
     address.house_number,
-    address.house_name,
-    address.building,
     extratags["addr:unit"],
     extratags["addr:flats"],
-    extratags["addr:housenumber"],
-    extratags["addr:housename"]
+    extratags["addr:housenumber"]
   ].some((value) => text(value));
 }
 
@@ -103,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     const result = await safeResponseJson<Record<string, unknown>>(response, {});
 
-    if (!hasApartmentOrBuilding(result)) {
+    if (!hasUnitNumber(result)) {
       const arcGisResponse = await arcGisRequest;
 
       if (arcGisResponse?.ok) {
@@ -119,16 +116,13 @@ export async function GET(request: NextRequest) {
         const placeName = text(arcAddress?.PlaceName);
         const addressType = text(arcAddress?.Addr_type);
         const canUsePlaceName = ["POI", "PointAddress", "Subaddress"].includes(addressType);
-        const apartmentOrBuilding = isCloseMatch
-          ? addressNumber || (canUsePlaceName ? placeName : "")
-          : "";
+        const apartmentOrBuilding = isCloseMatch ? addressNumber || (canUsePlaceName ? placeName : "") : "";
 
         if (apartmentOrBuilding) {
           result.address = {
             ...record(result.address),
-            ...(addressNumber
-              ? { house_number: addressNumber }
-              : { building: apartmentOrBuilding })
+            ...(addressNumber ? { house_number: addressNumber } : {}),
+            ...(canUsePlaceName && placeName ? { building: placeName } : {})
           };
         }
       }

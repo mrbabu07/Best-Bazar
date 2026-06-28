@@ -831,6 +831,18 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
           <div className="mt-5 grid gap-4">
             <div className="grid min-w-0 gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
+                Product code
+                <input
+                  value={form.sku}
+                  onChange={(event) => updateForm("sku", event.target.value.toUpperCase())}
+                  placeholder="BM-ABAYA-1001"
+                  className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm uppercase"
+                />
+                <span className="text-xs font-semibold text-neutral-500">
+                  Admin reference shown on orders, parcel labels, and QR details. Leave blank to generate automatically.
+                </span>
+              </label>
+              <label className="grid gap-2 text-sm font-semibold text-navy sm:col-span-2">
                 Product name
                 <input
                   value={form.nameEn}

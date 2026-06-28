@@ -28,7 +28,7 @@ type CheckoutPageContentProps = {
   checkoutControls: CheckoutControls;
 };
 
-type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "city" | "country";
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "tower" | "apartment" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -97,7 +97,7 @@ const checkoutCopy = {
     shippingArea: string;
     delivery: string;
     applied: (code: string) => string;
-    fields: Record<Exclude<CheckoutFieldName, "apartment">, string>;
+    fields: Record<Exclude<CheckoutFieldName, "tower" | "apartment">, string>;
   }
 >;
 
@@ -118,6 +118,12 @@ type ReverseGeocodeResponse = {
     house_number?: string;
     house_name?: string;
     building?: string;
+    tourism?: string;
+    amenity?: string;
+    shop?: string;
+    office?: string;
+    commercial?: string;
+    residential?: string;
     apartments?: string;
     apartment?: string;
     flat?: string;
@@ -188,7 +194,7 @@ function normalizeLocationName(value?: string) {
 
 function apartmentOrVillaFromMap(result: ReverseGeocodeResponse) {
   const address = result.address ?? {};
-  const explicitUnit = [
+  const unitNumber = [
     address.unit,
     address.flat,
     address.apartment,
@@ -196,15 +202,20 @@ function apartmentOrVillaFromMap(result: ReverseGeocodeResponse) {
     result.extratags?.["addr:unit"],
     result.extratags?.["addr:flats"],
     result.extratags?.["addr:housenumber"],
-    result.extratags?.["addr:housename"],
-    address.house_number,
+    address.house_number
+  ].find((value) => value?.trim())?.trim() ?? "";
+  const explicitBuildingName = [
     address.house_name,
-    address.building
-  ].find((value) => value?.trim());
-
-  if (explicitUnit) {
-    return explicitUnit.trim();
-  }
+    address.building,
+    address.tourism,
+    address.amenity,
+    address.shop,
+    address.office,
+    address.commercial,
+    address.residential,
+    result.extratags?.["addr:housename"],
+    result.extratags?.building
+  ].find((value) => value?.trim())?.trim() ?? "";
 
   const isBuilding =
     result.category === "building" ||
@@ -212,17 +223,18 @@ function apartmentOrVillaFromMap(result: ReverseGeocodeResponse) {
     ["building", "house"].includes(result.addresstype ?? "");
   const buildingName = (result.namedetails?.["name:en"] ?? result.name)?.trim();
 
-  if (isBuilding && buildingName) {
-    return buildingName;
-  }
+  if (explicitBuildingName) return { unitNumber, buildingName: explicitBuildingName };
+  if (isBuilding && buildingName) return { unitNumber, buildingName };
 
   const firstDisplayPart = result.display_name?.split(",")[0]?.trim();
   const roadName = address.road ?? address.pedestrian ?? address.footway ?? address.path;
   const looksLikeUnit = firstDisplayPart && /\b(?:apartment|building|flat|house|residence|tower|unit|villa)\b|\d/i.test(firstDisplayPart);
 
-  return looksLikeUnit && normalizeLocationName(firstDisplayPart) !== normalizeLocationName(roadName)
+  const fallbackBuildingName = looksLikeUnit && normalizeLocationName(firstDisplayPart) !== normalizeLocationName(roadName)
     ? firstDisplayPart
     : "";
+
+  return { unitNumber, buildingName: fallbackBuildingName };
 }
 
 function findUaeEmirate(address: ReverseGeocodeResponse["address"], displayName?: string) {
@@ -284,6 +296,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const fieldRefs = useRef<Partial<Record<CheckoutFieldName, HTMLInputElement | null>>>({});
   const reverseGeocodeRequestRef = useRef(0);
   const apartmentManuallyEditedRef = useRef(false);
+  const buildingManuallyEditedRef = useRef(false);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -483,8 +496,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       const matchedEmirate = findUaeEmirate(address, result.display_name);
 
       setFieldValue("street", street || result.display_name || "");
-      if (apartmentOrVilla && !apartmentManuallyEditedRef.current) {
-        setFieldValue("apartment", apartmentOrVilla);
+      if (apartmentOrVilla.buildingName && !buildingManuallyEditedRef.current) {
+        setFieldValue("tower", apartmentOrVilla.buildingName);
+      }
+      if (apartmentOrVilla.unitNumber && !apartmentManuallyEditedRef.current) {
+        setFieldValue("apartment", apartmentOrVilla.unitNumber);
       }
       setFieldValue("city", city);
       if (matchedEmirate) {
@@ -657,7 +673,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         phone: String(formData.get("phone") ?? ""),
         street: String(formData.get("street") ?? ""),
         apartment: String(formData.get("apartment") ?? ""),
-        tower: "",
+        tower: String(formData.get("tower") ?? ""),
         city: String(formData.get("city") ?? ""),
         emirate: String(formData.get("emirate") ?? ""),
         country: "UAE"
@@ -712,6 +728,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: "Phone number" },
     { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: labels.fields.street },
     {
+      name: "tower",
+      label: "Apartment / building name",
+      type: "text",
+      autoComplete: "address-line2",
+      placeholder: "Apartment / building name (optional)",
+      required: false
+    },
+    {
       name: "apartment",
       label: "Apartment / villa no.",
       type: "text",
@@ -746,7 +770,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   key={field.name}
                   className={cn(
                     "grid gap-2 text-sm font-semibold text-neutral-800",
-                    ["name", "email", "phone", "street", "apartment"].includes(field.name) && "sm:col-span-2"
+                    ["name", "email", "phone", "street", "tower", "apartment"].includes(field.name) && "sm:col-span-2"
                   )}
                 >
                   <span className="sr-only">{field.label}</span>
@@ -760,9 +784,15 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     defaultValue={field.defaultValue}
                     placeholder={field.placeholder}
                     required={field.required !== false}
-                    onChange={field.name === "apartment" ? (event) => {
-                      apartmentManuallyEditedRef.current = event.currentTarget.value.trim().length > 0;
-                    } : undefined}
+                    onChange={field.name === "apartment"
+                      ? (event) => {
+                          apartmentManuallyEditedRef.current = event.currentTarget.value.trim().length > 0;
+                        }
+                      : field.name === "tower"
+                        ? (event) => {
+                            buildingManuallyEditedRef.current = event.currentTarget.value.trim().length > 0;
+                          }
+                        : undefined}
                     className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
                   />
                 </label>

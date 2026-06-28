@@ -837,12 +837,12 @@ export function AdminProductManager({
             <form onSubmit={submit} className="mt-5 grid gap-4">
               <details open className="rounded-lg border border-neutral-200 bg-white p-3">
                 <summary className="cursor-pointer text-sm font-bold text-navy">1. Catalog identity</summary>
-                <div className="mt-4 grid gap-4">
+              <div className="mt-4 grid gap-4">
               {[
+                ["sku", "Product code", "BM-ABAYA-1001"],
                 ["nameEn", "Product name EN", "Premium travel trolley"],
                 ["nameAr", "Product name AR", "Arabic product name"],
                 ["slug", "Product URL slug", "premium-travel-trolley"],
-                ["sku", "Main SKU", "BB-DXB-1001"],
                 ["brand", "Brand", "Best Mart"]
               ].map(([key, label, placeholder]) => (
                 <label key={key} className="grid gap-2 text-sm font-semibold text-navy">

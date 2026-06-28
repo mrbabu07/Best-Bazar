@@ -12,9 +12,10 @@ export function AppFrame({ children, locale, dictionary, settings }: StorefrontF
   const pathname = usePathname();
   const currentPathname = pathname ?? `/${locale}`;
   const isAdmin = currentPathname.includes(`/${locale}/admin`);
+  const isParcelDetails = currentPathname.includes(`/${locale}/parcel/`);
   const maintenanceMode = settings.themeSettings.maintenanceMode;
 
-  if (isAdmin) {
+  if (isAdmin || isParcelDetails) {
     return (
       <div className="min-h-screen">
         <NextChunkRecovery />
