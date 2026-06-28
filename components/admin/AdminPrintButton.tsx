@@ -168,7 +168,6 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
             .parcel-date { height: .42in; margin: 0; padding: 9px 0; border-bottom: 2px dashed #000; font-size: 12px; font-weight: 800; }
             .parcel-products { min-height: 1in; border-bottom: 2px dashed #000; padding: 8px 0; }
             .parcel-label-title { margin: 0 0 4px; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-            .parcel-pick-code { margin: 0 0 5px; font-size: 21px; font-weight: 900; letter-spacing: .04em; }
             .parcel-value { margin: 0; font-size: 11px; font-weight: 700; line-height: 1.4; }
             .parcel-bottom { display: grid; grid-template-columns: 1fr 1.72in; min-height: 1.78in; }
             .parcel-codes { display: grid; grid-template-columns: 1fr 1fr; border-right: 2px dashed #000; }
@@ -176,6 +175,8 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
             .parcel-codes span { display: block; margin-bottom: 3px; font-size: 8px; font-weight: 800; letter-spacing: 1px; }
             .parcel-codes strong { display: block; font-size: 12px; line-height: 1.2; }
             .parcel-codes .parcel-total strong { font-size: 15px; }
+            .parcel-codes .parcel-product-code { grid-column: 1 / -1; min-height: .62in; }
+            .parcel-codes .parcel-product-code strong { font-size: 19px; letter-spacing: .04em; }
             .admin-parcel-label .invoice-qr { display: grid; place-items: center; }
             .admin-parcel-label .invoice-qr img { width: 1.62in !important; height: 1.62in !important; max-width: 1.62in; max-height: 1.62in; object-fit: contain; border: 1px solid #000; }
             .parcel-footer { border-top: 1px solid #000; padding-top: 5px; text-align: center; font-size: 8px; font-weight: 700; }

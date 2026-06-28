@@ -250,6 +250,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [discount, setDiscount] = useState(0);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [apartment, setApartment] = useState("");
   const [mapPin, setMapPin] = useState<{ lat: number; lng: number } | null>(null);
   const [mapCenter, setMapCenter] = useState(defaultMapCenter);
   const [mapZoom, setMapZoom] = useState(13);
@@ -422,6 +423,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   };
 
   const setFieldValue = (field: CheckoutFieldName, value?: string) => {
+    if (field === "apartment") {
+      setApartment(value ?? "");
+      return;
+    }
+
     const input = fieldRefs.current[field];
 
     if (input) {
@@ -750,10 +756,12 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     name={field.name}
                     type={field.type}
                     autoComplete={field.autoComplete}
-                    defaultValue={field.defaultValue}
+                    value={field.name === "apartment" ? apartment : undefined}
+                    defaultValue={field.name === "apartment" ? undefined : field.defaultValue}
                     placeholder={field.placeholder}
                     required={field.required !== false}
                     onChange={field.name === "apartment" ? (event) => {
+                      setApartment(event.currentTarget.value);
                       apartmentManuallyEditedRef.current = event.currentTarget.value.trim().length > 0;
                     } : undefined}
                     className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"

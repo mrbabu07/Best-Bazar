@@ -92,7 +92,9 @@ function parcelQrPayload(
   locale: string,
   siteUrl: string
 ) {
-  return order.accessToken
+  const isLocalSite = /https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?/i.test(siteUrl);
+
+  return order.accessToken && !isLocalSite
     ? `${siteUrl}/${locale}/parcel/${order.id}?token=${encodeURIComponent(order.accessToken)}`
     : qrContactPayload(order);
 }
@@ -514,13 +516,13 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="parcel-route">ORDER {selectedOrder.orderNumber}</p>
                 </section>
                 <p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p>
-                <section className="parcel-products"><p className="parcel-label-title">Rack product code</p><p className="parcel-pick-code">{orderProductCodes(selectedOrder.items)}</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale)).join(", ")}</p></section>
+                <section className="parcel-products"><p className="parcel-label-title">Product details</p><p className="parcel-value">{selectedOrder.items.map((item) => formatOrderItemDetails(item, locale)).join(", ")}</p></section>
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
+                    <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{orderProductCodes(selectedOrder.items)}</strong></div>
                     <div><span>PRODUCT</span><strong>{formatCurrency(Number(selectedOrder.subtotal), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div><span>DELIVERY</span><strong>{formatCurrency(Number(selectedOrder.shippingCost), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div className="parcel-total"><span>TOTAL</span><strong>{formatCurrency(Number(selectedOrder.total), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
-                    <div><span>PAYMENT</span><strong>{selectedOrder.paymentMethod}</strong></div>
                   </div>
                   <div className="invoice-qr">
                     {/* eslint-disable-next-line @next/next/no-img-element -- copied into the isolated thermal-label document */}
