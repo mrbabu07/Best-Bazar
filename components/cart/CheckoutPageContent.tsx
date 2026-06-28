@@ -1,6 +1,6 @@
 "use client";
 
-import { HandCoins, LocateFixed, MapPin, ShieldCheck } from "lucide-react";
+import { HandCoins, LocateFixed, MapPin, ShieldCheck, Truck } from "lucide-react";
 import Image from "next/image";
 import { FormEvent, PointerEvent, WheelEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { defaultCurrencyRates, formatCurrency } from "@/utils/currency";
-import { defaultShippingSettings, getShippingFee, normalizeShippingSettings, UAE_EMIRATES } from "@/utils/shipping";
+import { defaultShippingSettings, formatDeliveryDays, getShippingFee, normalizeShippingSettings, UAE_EMIRATES } from "@/utils/shipping";
 import { cn } from "@/utils/cn";
 import { fallbackProductImage, safeRemoteImage } from "@/lib/images";
 import { Button } from "@/components/ui/Button";
@@ -855,6 +855,24 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   })}
                 </select>
               </div>
+              {hasShippingArea ? (
+                <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-emerald-700 shadow-sm">
+                      <Truck size={19} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-neutral-950">Delivery to {selectedEmirate}</p>
+                      <p className="mt-1 text-xs font-semibold text-emerald-800">
+                        Delivery in {formatDeliveryDays(shippingQuote.estimatedDays)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-neutral-950">
+                    {shipping === 0 ? "Free delivery" : formatCurrency(shipping, currency, locale, currencyRates)}
+                  </p>
+                </div>
+              ) : null}
               <label className="flex items-center gap-3 text-base font-medium text-neutral-950 sm:col-span-2">
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
                 Save this information for next time
@@ -1083,12 +1101,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-950">{dictionary.common.shipping}</span>
-              <span className="font-medium text-neutral-500">
+              <span className="text-right font-medium text-neutral-500">
                 {checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery || hasProductFreeDelivery
                   ? "Free delivery"
                   : hasShippingArea
                     ? formatCurrency(shipping, currency, locale, currencyRates)
                     : "Enter shipping address"}
+                {hasShippingArea ? (
+                  <span className="mt-1 block text-xs font-semibold text-neutral-500">
+                    Delivery in {formatDeliveryDays(shippingQuote.estimatedDays)}
+                  </span>
+                ) : null}
               </span>
             </div>
             {discount > 0 ? (

@@ -5,7 +5,7 @@ import { assertPaymentMethodAvailable } from "@/lib/payment-settings";
 import { prisma } from "@/lib/prisma";
 import { normalizeThemeSettings } from "@/lib/theme-config";
 import type { orderCreateSchema } from "@/lib/validations/store";
-import { getShippingFee } from "@/utils/shipping";
+import { formatDeliveryDays, getShippingFee } from "@/utils/shipping";
 import type { z } from "zod";
 
 export type OrderCreateInput = z.infer<typeof orderCreateSchema>;
@@ -158,7 +158,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         city: data.shippingAddress.city,
         emirate: data.shippingAddress.emirate,
         country: data.shippingAddress.country,
-        deliverySlot: data.deliverySlot,
+        deliverySlot: `Delivery in ${formatDeliveryDays(shippingQuote.estimatedDays)}`,
         paymentMethod: data.paymentMethod,
         paymentStatus: PaymentStatus.PENDING,
         orderStatus: OrderStatus.PENDING,

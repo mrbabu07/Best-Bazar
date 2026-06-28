@@ -24,7 +24,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { useCartStore } from "@/store/cart-store";
 import { usePreferencesStore } from "@/store/preferences-store";
 import { currencyOptions, type CurrencyCode } from "@/utils/currency";
-import { normalizeShippingSettings } from "@/utils/shipping";
+import { formatDeliveryDays, normalizeShippingSettings } from "@/utils/shipping";
 
 type HeaderProps = {
   locale: Locale;
@@ -112,9 +112,15 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
     }));
   const brandName = locale === "ar" ? liveSettings.storeNameAr : liveSettings.storeNameEn;
   const announcement = locale === "ar" ? liveSettings.announcementAr : liveSettings.announcementEn;
-  const dubaiRate =
+  const defaultDeliveryRate =
     liveSettings.shippingSettings.shippingRates.find((rate) => rate.emirate.toLowerCase() === "dubai") ??
     liveSettings.shippingSettings.shippingRates[0];
+  const deliveryArea = liveSettings.shippingSettings.customAreaFee.enabled
+    ? liveSettings.shippingSettings.customAreaFee.areaLabel
+    : "UAE";
+  const deliveryDays = liveSettings.shippingSettings.customAreaFee.enabled
+    ? liveSettings.shippingSettings.customAreaFee.deliveryDays
+    : defaultDeliveryRate?.deliveryDays;
   const freeShippingThreshold = liveSettings.shippingSettings.freeShippingThreshold;
   const freeDeliveryMessage = liveSettings.themeSettings.checkoutControls.freeDeliveryEnabled
     ? "Free UAE delivery on every order"
@@ -146,9 +152,9 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
       };
     }),
     {
-      title: locale === "ar" ? "Dubai delivery" : "Dubai delivery",
-      id: `delivery:${dubaiRate?.emirate ?? "uae"}:${dubaiRate?.deliveryDays ?? "available"}`,
-      detail: dubaiRate?.deliveryDays ? `${dubaiRate.emirate}: ${dubaiRate.deliveryDays} days` : "UAE delivery available",
+      title: locale === "ar" ? "Delivery time" : "Delivery time",
+      id: `delivery:${deliveryArea}:${deliveryDays ?? "available"}`,
+      detail: deliveryDays ? `${deliveryArea}: ${formatDeliveryDays(deliveryDays)}` : "UAE delivery available",
       href: `/${locale}/checkout`,
       icon: "delivery" as const
     },

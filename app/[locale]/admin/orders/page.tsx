@@ -577,7 +577,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                     <p>City: {selectedOrder.city}</p>
                     {selectedOrder.tower ? <p>Apartment/building: {selectedOrder.tower}</p> : null}
                     {selectedOrder.apartment ? <p>Unit/villa no.: {selectedOrder.apartment}</p> : null}
-                    {selectedOrder.deliverySlot ? <p className="font-bold text-gold-700">Slot: {selectedOrder.deliverySlot}</p> : null}
+                    {selectedOrder.deliverySlot ? <p className="font-bold text-gold-700">Delivery estimate: {selectedOrder.deliverySlot}</p> : null}
                   </div>
                   {selectedOrder.notes ? (
                     <p className="mt-3 rounded-md bg-white p-3 text-xs font-semibold text-neutral-600">

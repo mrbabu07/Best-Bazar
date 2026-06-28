@@ -92,6 +92,16 @@ function normalizeText(value: unknown, fallback: string) {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
+export function formatDeliveryDays(value: string) {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "Delivery time unavailable";
+  }
+
+  return /\bday(?:s)?\b/i.test(normalized) ? normalized : `${normalized} days`;
+}
+
 function normalizeBoolean(value: unknown, fallback: boolean) {
   return typeof value === "boolean" ? value : fallback;
 }

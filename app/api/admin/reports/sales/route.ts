@@ -79,7 +79,7 @@ export async function GET(request: Request) {
       "Total",
       "Currency",
       "Emirate",
-      "Delivery slot",
+      "Delivery estimate",
       "Items"
     ];
     const rows = orders.map((order) => [
