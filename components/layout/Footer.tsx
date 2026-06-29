@@ -16,12 +16,9 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
     <footer className="border-t border-gold-100 bg-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_0.8fr_0.8fr] lg:px-8">
         <div>
-          <div className="flex items-center gap-3">
-            <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
-              {brandName || dictionary.brand}
-            </Link>
-            <span role="img" aria-label="UAE flag" title="UAE" className="text-2xl leading-none">🇦🇪</span>
-          </div>
+          <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
+            {brandName || dictionary.brand}
+          </Link>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">
             {locale === "ar" ? "تابعنا" : "Follow us"}
           </p>
@@ -115,7 +112,8 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
       <div className="border-t border-neutral-200">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs font-semibold text-neutral-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>&copy; {new Date().getFullYear()} {brandName || dictionary.brand}. All rights reserved.</p>
-          <div className="flex gap-5">
+          <div className="flex items-center gap-5">
+            <span role="img" aria-label="United Arab Emirates flag" className="text-xl leading-none">🇦🇪</span>
             <Link href={`/${locale}/privacy`} className="transition hover:text-navy">
               {locale === "ar" ? "سياسة الخصوصية" : "Privacy policy"}
             </Link>
