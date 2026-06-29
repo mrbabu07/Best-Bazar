@@ -166,8 +166,11 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
           <p className="mt-2 text-sm font-semibold text-neutral-700">{order.customerName}</p>
           <p className="mt-1 text-sm text-neutral-600">{order.customerPhone}</p>
           <p className="mt-1 text-sm text-neutral-600">{addressLines.join(", ")}</p>
+          {order.deliveryEstimate ? (
+            <p className="mt-2 text-sm font-bold text-gold-700">Delivery estimate: {order.deliveryEstimate}</p>
+          ) : null}
           {order.deliverySlot ? (
-            <p className="mt-2 text-sm font-bold text-gold-700">Delivery estimate: {order.deliverySlot}</p>
+            <p className="mt-1 text-sm font-semibold text-neutral-600">Preferred time: {order.deliverySlot}</p>
           ) : null}
           {settings?.trn ? (
             <p className="mt-2 text-sm font-semibold text-neutral-600">Seller TRN: {settings.trn}</p>

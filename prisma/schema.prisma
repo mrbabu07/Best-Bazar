@@ -214,6 +214,7 @@ model Order {
   emirate         String
   country         String        @default("UAE")
   deliverySlot    String?
+  deliveryEstimate String?
   paymentMethod   PaymentMethod
   paymentStatus   PaymentStatus @default(PENDING)
   orderStatus     OrderStatus   @default(PENDING)

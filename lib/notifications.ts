@@ -97,7 +97,8 @@ function customerMessage(order: OrderWithItems, purpose: NotificationPurpose) {
   return [
     lead,
     `Total: AED ${Number(order.total).toFixed(2)}.`,
-    order.deliverySlot ? `Delivery estimate: ${order.deliverySlot}.` : "",
+    order.deliveryEstimate ? `Delivery estimate: ${order.deliveryEstimate}.` : "",
+    order.deliverySlot ? `Preferred time: ${order.deliverySlot}.` : "",
     url ? `Track: ${url}` : ""
   ]
     .filter(Boolean)
@@ -114,7 +115,8 @@ function adminMessage(order: OrderWithItems, purpose: NotificationPurpose) {
     lead,
     `${order.customerName} (${order.customerPhone})`,
     `AED ${Number(order.total).toFixed(2)}`,
-    order.deliverySlot ? `Delivery estimate: ${order.deliverySlot}` : ""
+    order.deliveryEstimate ? `Delivery estimate: ${order.deliveryEstimate}` : "",
+    order.deliverySlot ? `Preferred time: ${order.deliverySlot}` : ""
   ]
     .filter(Boolean)
     .join(" | ");

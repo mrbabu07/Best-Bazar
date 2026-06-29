@@ -60,6 +60,7 @@ export async function POST(request: Request) {
         country: order.country
       },
       deliverySlot: order.deliverySlot,
+      deliveryEstimate: order.deliveryEstimate,
       items: order.items.map((item) => ({
         id: item.id,
         nameEn: item.nameEn,

@@ -147,6 +147,13 @@ const defaultMapCenter = { lat: 25.2048, lng: 55.2708 };
 const mapTileSize = 256;
 const minMapZoom = 10;
 const maxMapZoom = 21;
+const dubaiDeliverySlots = [
+  "Today 6 PM - 10 PM",
+  "Tomorrow 9 AM - 1 PM",
+  "Tomorrow 1 PM - 5 PM",
+  "Tomorrow 5 PM - 9 PM"
+];
+const uaeDeliverySlots = ["Standard delivery 10 AM - 6 PM", "Evening delivery 5 PM - 9 PM"];
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -247,6 +254,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const initialPayment: PaymentOptionKey = "cod";
   const [payment, setPayment] = useState<PaymentOptionKey>(initialPayment);
   const [emirate, setEmirate] = useState("");
+  const [deliverySlot, setDeliverySlot] = useState("");
   const [coupon, setCoupon] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -289,6 +297,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
     shippingOptions[0];
   const selectedEmirate = emirate;
+  const deliverySlotOptions = selectedEmirate.trim().toLowerCase() === "dubai"
+    ? dubaiDeliverySlots
+    : uaeDeliverySlots;
   const shippingQuote = getShippingFee(
     selectedEmirate || selectedShippingRate?.emirate || "Dubai",
     subtotal,
@@ -410,6 +421,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setAppliedCoupon("");
     setDiscount(0);
   }, [subtotal]);
+
+  useEffect(() => {
+    setDeliverySlot("");
+  }, [selectedEmirate]);
 
   useEffect(() => {
     if (selectedPaymentOption?.enabled) {
@@ -724,7 +739,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         emirate: String(formData.get("emirate") ?? ""),
         country: "UAE"
       },
-      deliverySlot: undefined,
+      deliverySlot: deliverySlot || undefined,
       paymentMethod: paymentMethod(),
       currency,
       locale,
@@ -873,6 +888,24 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   </p>
                 </div>
               ) : null}
+              <label className="grid gap-2 text-sm font-semibold text-neutral-800 sm:col-span-2">
+                <span>Preferred delivery time</span>
+                <select
+                  name="deliverySlot"
+                  value={deliverySlot}
+                  onChange={(event) => setDeliverySlot(event.target.value)}
+                  required
+                  disabled={!hasShippingArea}
+                  className="h-[64px] rounded-2xl border border-neutral-300 bg-white px-4 text-base font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400"
+                >
+                  <option value="" disabled>
+                    {hasShippingArea ? "Select delivery time" : "Select emirate first"}
+                  </option>
+                  {deliverySlotOptions.map((slot) => (
+                    <option key={slot} value={slot}>{slot}</option>
+                  ))}
+                </select>
+              </label>
               <label className="flex items-center gap-3 text-base font-medium text-neutral-950 sm:col-span-2">
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
                 Save this information for next time

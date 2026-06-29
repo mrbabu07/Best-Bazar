@@ -85,7 +85,8 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
       <div style="border:1px solid #eee;border-radius:8px;padding:16px;margin-bottom:18px;">
         <p style="margin:0;font-weight:700;">${escapeHtml(order.orderNumber)}</p>
         <p style="margin:6px 0 0;color:#4b5563;">Status: ${escapeHtml(order.orderStatus)} | Payment: ${escapeHtml(order.paymentMethod)} / ${escapeHtml(order.paymentStatus)}</p>
-        ${order.deliverySlot ? `<p style="margin:6px 0 0;color:#92400e;font-weight:700;">Delivery estimate: ${escapeHtml(order.deliverySlot)}</p>` : ""}
+        ${order.deliveryEstimate ? `<p style="margin:6px 0 0;color:#92400e;font-weight:700;">Delivery estimate: ${escapeHtml(order.deliveryEstimate)}</p>` : ""}
+        ${order.deliverySlot ? `<p style="margin:4px 0 0;color:#4b5563;font-weight:700;">Preferred time: ${escapeHtml(order.deliverySlot)}</p>` : ""}
       </div>
       <h2 style="font-size:16px;margin:0 0 8px;">Delivery address</h2>
       <p style="margin:0 0 18px;color:#4b5563;line-height:1.6;">${addressLines.map(escapeHtml).join("<br />")}</p>
@@ -106,7 +107,8 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
       `Order number: ${order.orderNumber}`,
       `Status: ${order.orderStatus}`,
       `Payment: ${order.paymentMethod} / ${order.paymentStatus}`,
-      ...(order.deliverySlot ? [`Delivery estimate: ${order.deliverySlot}`] : []),
+      ...(order.deliveryEstimate ? [`Delivery estimate: ${order.deliveryEstimate}`] : []),
+      ...(order.deliverySlot ? [`Preferred time: ${order.deliverySlot}`] : []),
       "",
       "Delivery address:",
       ...addressLines,
@@ -137,7 +139,8 @@ export async function sendOrderStatusEmail(order: OrderWithItems) {
     "",
     `Your order ${order.orderNumber} is now ${order.orderStatus}.`,
     `Payment: ${order.paymentMethod} / ${order.paymentStatus}`,
-    ...(order.deliverySlot ? [`Delivery estimate: ${order.deliverySlot}`] : []),
+    ...(order.deliveryEstimate ? [`Delivery estimate: ${order.deliveryEstimate}`] : []),
+    ...(order.deliverySlot ? [`Preferred time: ${order.deliverySlot}`] : []),
     ...(confirmationUrl ? ["", `Order link: ${confirmationUrl}`] : [])
   ].join("\n");
   const html = `
@@ -148,7 +151,8 @@ export async function sendOrderStatusEmail(order: OrderWithItems) {
         <p style="margin:0;font-weight:700;">${escapeHtml(order.orderNumber)}</p>
         <p style="margin:6px 0 0;color:#4b5563;">Status: <strong>${escapeHtml(order.orderStatus)}</strong></p>
         <p style="margin:6px 0 0;color:#4b5563;">Payment: ${escapeHtml(order.paymentMethod)} / ${escapeHtml(order.paymentStatus)}</p>
-        ${order.deliverySlot ? `<p style="margin:6px 0 0;color:#92400e;font-weight:700;">Delivery estimate: ${escapeHtml(order.deliverySlot)}</p>` : ""}
+        ${order.deliveryEstimate ? `<p style="margin:6px 0 0;color:#92400e;font-weight:700;">Delivery estimate: ${escapeHtml(order.deliveryEstimate)}</p>` : ""}
+        ${order.deliverySlot ? `<p style="margin:4px 0 0;color:#4b5563;font-weight:700;">Preferred time: ${escapeHtml(order.deliverySlot)}</p>` : ""}
       </div>
       ${confirmationUrl ? `<p><a href="${escapeHtml(confirmationUrl)}" style="display:inline-block;background:#172033;color:#fff;text-decoration:none;border-radius:6px;padding:12px 16px;font-weight:700;">View order</a></p>` : ""}
     </div>

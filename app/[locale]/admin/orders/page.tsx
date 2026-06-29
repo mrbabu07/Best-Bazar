@@ -460,7 +460,8 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                     <td className="px-5 py-4 text-xs font-semibold text-neutral-500">
                       <p className="text-sm font-bold text-navy">{order.emirate}</p>
                       <p className="mt-1">{order.city}</p>
-                      {order.deliverySlot ? <p className="mt-1 text-gold-700">{order.deliverySlot}</p> : null}
+                      {order.deliveryEstimate ? <p className="mt-1 font-semibold text-gold-700">{order.deliveryEstimate}</p> : null}
+                      {order.deliverySlot ? <p className="mt-1 text-neutral-500">{order.deliverySlot}</p> : null}
                     </td>
                     <td className="px-5 py-4">
                       <Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>
@@ -577,7 +578,8 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                     <p>City: {selectedOrder.city}</p>
                     {selectedOrder.tower ? <p>Apartment/building: {selectedOrder.tower}</p> : null}
                     {selectedOrder.apartment ? <p>Unit/villa no.: {selectedOrder.apartment}</p> : null}
-                    {selectedOrder.deliverySlot ? <p className="font-bold text-gold-700">Delivery estimate: {selectedOrder.deliverySlot}</p> : null}
+                    {selectedOrder.deliveryEstimate ? <p className="font-bold text-gold-700">Delivery estimate: {selectedOrder.deliveryEstimate}</p> : null}
+                    {selectedOrder.deliverySlot ? <p>Preferred time: {selectedOrder.deliverySlot}</p> : null}
                   </div>
                   {selectedOrder.notes ? (
                     <p className="mt-3 rounded-md bg-white p-3 text-xs font-semibold text-neutral-600">

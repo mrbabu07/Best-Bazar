@@ -146,6 +146,7 @@ export type Order = {
     country: string;
   };
   deliverySlot?: string;
+  deliveryEstimate?: string;
   paymentMethod: "stripe" | "cod";
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;

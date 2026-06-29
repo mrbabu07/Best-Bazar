@@ -45,6 +45,7 @@ type TrackOrderResult = {
     country: string;
   };
   deliverySlot?: string | null;
+  deliveryEstimate?: string | null;
   items: TrackOrderItem[];
 };
 
@@ -172,8 +173,11 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
                     .filter(Boolean)
                     .join(", ")}
                 </p>
+                {order.deliveryEstimate ? (
+                  <p className="mt-2 text-xs font-bold text-gold-700">Delivery estimate: {order.deliveryEstimate}</p>
+                ) : null}
                 {order.deliverySlot ? (
-                  <p className="mt-2 text-xs font-bold text-gold-700">{order.deliverySlot}</p>
+                  <p className="mt-1 text-xs font-semibold text-neutral-600">Preferred time: {order.deliverySlot}</p>
                 ) : null}
               </div>
             </div>

@@ -80,6 +80,7 @@ export async function GET(request: Request) {
       "Currency",
       "Emirate",
       "Delivery estimate",
+      "Preferred delivery time",
       "Items"
     ];
     const rows = orders.map((order) => [
@@ -98,6 +99,7 @@ export async function GET(request: Request) {
       Number(order.total).toFixed(2),
       order.currency,
       order.emirate,
+      order.deliveryEstimate ?? "",
       order.deliverySlot ?? "",
       order.items
         .map((item) => `${item.quantity} x ${item.nameEn}${item.variantNameEn ? ` / ${item.variantNameEn}` : ""}`)
