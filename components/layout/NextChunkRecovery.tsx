@@ -4,6 +4,8 @@ import { useEffect } from "react";
 
 const reloadStorageKey = "best-mart-next-chunk-reload-at";
 const reloadCooldownMs = 10_000;
+const browserCacheVersionKey = "best-mart-browser-cache-version";
+const browserCacheVersion = "2026-06-30-footer-uae-v1";
 
 async function clearBrowserBuildCaches() {
   try {
@@ -67,7 +69,29 @@ function reloadOnceForFreshChunks(reason: unknown) {
 
 export function NextChunkRecovery() {
   useEffect(() => {
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    let storedCacheVersion = "";
+
+    try {
+      storedCacheVersion = window.localStorage.getItem(browserCacheVersionKey) ?? "";
+    } catch {
+      // Continue without persistent version tracking when storage is unavailable.
+    }
+
+    if (storedCacheVersion !== browserCacheVersion) {
+      try {
+        window.localStorage.setItem(browserCacheVersionKey, browserCacheVersion);
+      } catch {
+        // Cache cleanup and the one-time URL marker still prevent a reload loop.
+      }
+      void clearBrowserBuildCaches().finally(() => {
+        const url = new URL(window.location.href);
+
+        if (url.searchParams.get("_cache") !== browserCacheVersion) {
+          url.searchParams.set("_cache", browserCacheVersion);
+          window.location.replace(url.toString());
+        }
+      });
+    } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       void clearBrowserBuildCaches();
     }
 
