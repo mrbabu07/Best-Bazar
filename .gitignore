@@ -43,3 +43,7 @@ next-env.d.ts
 # Runtime local media fallback
 /uploads/*
 !/uploads/.gitkeep
+
+# Local Codex dev-server logs
+/.codex-dev.stdout.log
+/.codex-dev.stderr.log
