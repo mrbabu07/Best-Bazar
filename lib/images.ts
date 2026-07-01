@@ -23,6 +23,10 @@ export function isAllowedRemoteImage(value?: string | null): value is string {
     return false;
   }
 
+  if (/^\/uploads\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:jpe?g|png|webp|gif|avif)$/i.test(value)) {
+    return true;
+  }
+
   try {
     const url = new URL(value);
     return url.protocol === "https:" && allowedRemoteImageHosts.has(url.hostname);

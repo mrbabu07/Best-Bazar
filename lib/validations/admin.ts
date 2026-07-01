@@ -3,7 +3,7 @@ import { PRODUCT_TYPE_GENERAL, PRODUCT_TYPE_WOMENS_FASHION } from "@/lib/categor
 import { imageUrlValidationMessage, isAllowedRemoteImage } from "@/lib/images";
 
 const nullableString = z.string().trim().optional().nullable();
-const imageUrl = z.string().trim().url().refine(isAllowedRemoteImage, imageUrlValidationMessage);
+const imageUrl = z.string().trim().min(1).refine(isAllowedRemoteImage, imageUrlValidationMessage);
 const nullableImageUrl = z
   .string()
   .trim()
