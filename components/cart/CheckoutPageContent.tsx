@@ -548,7 +548,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
     setMapPin(nextPin);
     setMapCenter(nextPin);
-    setMapZoom(maxMapZoom);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
     if (shouldFillAddress) {
       return fillAddressFromPin(nextPin.lat, nextPin.lng);

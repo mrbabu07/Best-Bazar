@@ -838,6 +838,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 <input
                   value={form.sku}
                   onChange={(event) => updateForm("sku", event.target.value)}
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />
                 <span className="text-xs font-semibold text-neutral-500">
@@ -851,6 +854,9 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   value={form.nameEn}
                   onChange={(event) => updateNameEn(event.target.value)}
                   onBlur={(event) => formatNameEn(event.currentTarget.value)}
+                  autoCapitalize="words"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
                 />

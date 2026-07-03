@@ -102,7 +102,7 @@ export function AdminMediaUploadField({
       </label>
       {acceptVideo && (
         <p className="text-xs text-neutral-500">
-          Supported: Images (JPG, PNG, WebP) and Videos (MP4, WebM, MOV)
+          Supported: Images (JPG, PNG, WebP, HEIC/HEIF) and Videos (MP4, WebM, MOV)
         </p>
       )}
     </div>

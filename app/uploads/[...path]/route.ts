@@ -13,6 +13,8 @@ const mimeTypes: Record<string, string> = {
   ".webp": "image/webp",
   ".gif": "image/gif",
   ".avif": "image/avif",
+  ".heic": "image/heic",
+  ".heif": "image/heif",
   ".mp4": "video/mp4",
   ".webm": "video/webm",
   ".mov": "video/quicktime"
