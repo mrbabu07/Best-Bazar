@@ -249,6 +249,9 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
     }
 
     return order;
+  }, {
+    maxWait: 15_000,
+    timeout: 60_000
   });
 
   revalidateCacheTags(["storefront", "products", "admin-orders", "admin-notifications"]);

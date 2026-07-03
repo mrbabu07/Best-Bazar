@@ -28,7 +28,7 @@ type CheckoutPageContentProps = {
   checkoutControls: CheckoutControls;
 };
 
-type CheckoutFieldName = "name" | "email" | "phone" | "street" | "district" | "area" | "apartment" | "city" | "country";
+type CheckoutFieldName = "name" | "email" | "phone" | "street" | "apartment" | "city" | "country";
 
 type CheckoutField = {
   name: CheckoutFieldName;
@@ -58,8 +58,6 @@ const checkoutCopy = {
       email: "Email",
       phone: "Phone",
       street: "Address",
-      district: "District",
-      area: "Community / area",
       city: "City",
       country: "Country"
     }
@@ -81,8 +79,6 @@ const checkoutCopy = {
       email: "البريد الإلكتروني",
       phone: "الهاتف",
       street: "عنوان الشارع",
-      district: "المنطقة",
-      area: "المجتمع / الحي",
       city: "المدينة",
       country: "الدولة"
     }
@@ -529,9 +525,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       const apartmentOrVilla = apartmentOrVillaFromMap(result);
       const matchedEmirate = findUaeEmirate(address, result.display_name);
 
-      setFieldValue("street", street || result.display_name || "");
-      setFieldValue("district", district);
-      setFieldValue("area", area);
+      const fullAddress = Array.from(new Set([street, area, district].filter(Boolean))).join(", ");
+      setFieldValue("street", fullAddress || result.display_name || "");
       if (apartmentOrVilla && !apartmentManuallyEditedRef.current) {
         setFieldValue("apartment", apartmentOrVilla);
       }
@@ -764,8 +759,6 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         email: String(formData.get("email") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         street: String(formData.get("street") ?? ""),
-        district: String(formData.get("district") ?? ""),
-        area: String(formData.get("area") ?? ""),
         apartment: String(formData.get("apartment") ?? ""),
         tower: "",
         city: String(formData.get("city") ?? ""),
@@ -820,9 +813,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     { name: "name", label: labels.fields.name, type: "text", autoComplete: "name", placeholder: labels.fields.name },
     { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: "Email (optional)", required: false },
     { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: "Phone number" },
-    { name: "district", label: labels.fields.district, type: "text", autoComplete: "address-level3", placeholder: "District (optional, e.g. Deira)", required: false },
-    { name: "area", label: labels.fields.area, type: "text", autoComplete: "address-line2", placeholder: "Community / area (optional, e.g. Al Rigga)", required: false },
-    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: "Street / full address" },
+    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: "Full address: street, community and district" },
     {
       name: "apartment",
       label: "Apartment / villa no.",
