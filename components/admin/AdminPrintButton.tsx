@@ -17,20 +17,10 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
       return;
     }
 
-    const iframe = document.createElement("iframe");
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    document.body.appendChild(iframe);
+    const printWindow = window.open("", "_blank", "width=900,height=900");
+    const printDocument = printWindow?.document;
 
-    const printDocument = iframe.contentDocument;
-
-    if (!printDocument) {
-      iframe.remove();
+    if (!printWindow || !printDocument) {
       window.print();
       return;
     }
@@ -198,11 +188,31 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
     `);
     printDocument.close();
 
-    window.setTimeout(() => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      window.setTimeout(() => iframe.remove(), 500);
-    }, 50);
+    let printed = false;
+    const triggerPrint = () => {
+      if (printed || printWindow.closed) return;
+      printed = true;
+      printWindow.focus();
+      printWindow.print();
+    };
+    const images = Array.from(printDocument.images);
+    const pendingImages = images.filter((image) => !image.complete);
+
+    if (pendingImages.length === 0) {
+      window.setTimeout(triggerPrint, 100);
+    } else {
+      let remaining = pendingImages.length;
+      const imageSettled = () => {
+        remaining -= 1;
+        if (remaining === 0) window.setTimeout(triggerPrint, 50);
+      };
+
+      pendingImages.forEach((image) => {
+        image.addEventListener("load", imageSettled, { once: true });
+        image.addEventListener("error", imageSettled, { once: true });
+      });
+      window.setTimeout(triggerPrint, 3000);
+    }
   };
 
   return (
