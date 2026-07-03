@@ -147,6 +147,7 @@ const defaultMapCenter = { lat: 25.2048, lng: 55.2708 };
 const mapTileSize = 256;
 const minMapZoom = 10;
 const maxMapZoom = 21;
+const maxNativeTileZoom = 19;
 const dubaiDeliverySlots = [
   "Today 6 PM - 10 PM",
   "Tomorrow 9 AM - 1 PM",
@@ -203,7 +204,7 @@ function normalizeLocationName(value?: string) {
 
 function apartmentOrVillaFromMap(result: ReverseGeocodeResponse) {
   const address = result.address ?? {};
-  return [
+  const unitOrNumber = [
     address.unit,
     address.flat,
     address.apartment,
@@ -213,6 +214,18 @@ function apartmentOrVillaFromMap(result: ReverseGeocodeResponse) {
     result.extratags?.["addr:housenumber"],
     address.house_number
   ].find((value) => value?.trim())?.trim() ?? "";
+  const buildingName = [
+    address.house_name,
+    address.building,
+    address.residential,
+    address.commercial,
+    address.office,
+    address.amenity,
+    address.shop,
+    address.tourism
+  ].find((value) => value?.trim())?.trim() ?? "";
+
+  return Array.from(new Set([buildingName, unitOrNumber].filter(Boolean))).join(" - ");
 }
 
 function findUaeEmirate(address: ReverseGeocodeResponse["address"], displayName?: string) {
@@ -321,12 +334,15 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
   const visibleMapTiles = useMemo(() => {
-    const centerX = lngToTileX(mapCenter.lng, mapZoom);
-    const centerY = latToTileY(mapCenter.lat, mapZoom);
+    const nativeZoom = Math.min(mapZoom, maxNativeTileZoom);
+    const overzoomScale = 2 ** (mapZoom - nativeZoom);
+    const renderedTileSize = mapTileSize * overzoomScale;
+    const centerX = lngToTileX(mapCenter.lng, nativeZoom);
+    const centerY = latToTileY(mapCenter.lat, nativeZoom);
     const baseX = Math.floor(centerX);
     const baseY = Math.floor(centerY);
-    const maxTile = 2 ** mapZoom;
-    const tiles: Array<{ key: string; src: string; left: string; top: string }> = [];
+    const maxTile = 2 ** nativeZoom;
+    const tiles: Array<{ key: string; src: string; left: string; top: string; size: number }> = [];
 
     for (let dx = -2; dx <= 2; dx += 1) {
       for (let dy = -2; dy <= 2; dy += 1) {
@@ -340,13 +356,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         const wrappedX = ((x % maxTile) + maxTile) % maxTile;
 
         tiles.push({
-          key: `${wrappedX}-${y}-${mapZoom}`,
+          key: `${wrappedX}-${y}-${nativeZoom}-${mapMode}`,
           src:
             mapMode === "satellite"
-              ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${mapZoom}/${y}/${wrappedX}`
-              : `https://tile.openstreetmap.org/${mapZoom}/${wrappedX}/${y}.png`,
-          left: `calc(50% + ${(x - centerX) * mapTileSize}px)`,
-          top: `calc(50% + ${(y - centerY) * mapTileSize}px)`
+              ? `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${nativeZoom}/${y}/${wrappedX}`
+              : `https://tile.openstreetmap.org/${nativeZoom}/${wrappedX}/${y}.png`,
+          left: `calc(50% + ${(x - centerX) * renderedTileSize}px)`,
+          top: `calc(50% + ${(y - centerY) * renderedTileSize}px)`,
+          size: renderedTileSize
         });
       }
     }
@@ -969,8 +986,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       src={tile.src}
                       alt=""
                       draggable={false}
-                      className="absolute h-64 w-64 max-w-none"
-                      style={{ left: tile.left, top: tile.top }}
+                      className="absolute max-w-none transition-[left,top,width,height] duration-150 ease-out"
+                      style={{ left: tile.left, top: tile.top, width: tile.size, height: tile.size }}
                     />
                   ))}
                   <div className="absolute inset-0 bg-black/5" />
