@@ -61,7 +61,10 @@ function orderProductCodes(items: Array<{ productSku?: string | null; product?: 
 function orderVariantSummary(items: PrintableOrderItem[], locale: string) {
   return items.map((item) => {
     const details = getOrderItemDetails(item, locale);
-    return [details.color, details.size, `x${details.quantity}`].filter(Boolean).join(" / ");
+    const code = details.code || details.variantCode || "NO CODE";
+    return [details.name, details.color || "Default", details.size || "One size", `x${details.quantity}`, code]
+      .filter(Boolean)
+      .join(" / ");
   }).join(", ");
 }
 
@@ -539,7 +542,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
                     <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{orderProductCodes(selectedOrder.items)}</strong></div>
-                    <div className="parcel-variant"><span>COLOR / SIZE / QTY</span><strong>{orderVariantSummary(selectedOrder.items, locale) || "DEFAULT / x1"}</strong></div>
+                    <div className="parcel-variant"><span>PRODUCT / COLOR / SIZE / QTY / CODE</span><strong>{orderVariantSummary(selectedOrder.items, locale) || "DEFAULT / x1 / NO CODE"}</strong></div>
                     <div><span>PRODUCT</span><strong>{formatCurrency(Number(selectedOrder.subtotal), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div><span>DELIVERY</span><strong>{formatCurrency(Number(selectedOrder.shippingCost), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div className="parcel-total"><span>TOTAL</span><strong>{formatCurrency(Number(selectedOrder.total), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
