@@ -2,7 +2,7 @@
 
 import { HandCoins, LocateFixed, MapPin, ShieldCheck, Truck } from "lucide-react";
 import Image from "next/image";
-import { FormEvent, PointerEvent, WheelEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, PointerEvent, TouchEvent, WheelEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -277,7 +277,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const reverseGeocodeRequestRef = useRef(0);
   const apartmentManuallyEditedRef = useRef(false);
   const activeMapPointersRef = useRef(new Map<number, { x: number; y: number }>());
-  const pinchDistanceRef = useRef<number | null>(null);
+  const pinchGestureRef = useRef<{ distance: number; zoom: number } | null>(null);
   const storedItems = useCartStore((state) => state.items);
   const storedSubtotal = useCartStore((state) => state.subtotal());
   const clearCart = useCartStore((state) => state.clearCart);
@@ -576,12 +576,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   };
 
   const startMapDrag = (event: PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     activeMapPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
     if (activeMapPointersRef.current.size > 1) {
       const [first, second] = Array.from(activeMapPointersRef.current.values());
-      pinchDistanceRef.current = Math.hypot(second.x - first.x, second.y - first.y);
+      pinchGestureRef.current = {
+        distance: Math.max(Math.hypot(second.x - first.x, second.y - first.y), 1),
+        zoom: mapZoom
+      };
       setDragStart(null);
       return;
     }
@@ -605,16 +609,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       event.preventDefault();
       const [first, second] = Array.from(activeMapPointersRef.current.values());
       const distance = Math.hypot(second.x - first.x, second.y - first.y);
-      const previousDistance = pinchDistanceRef.current;
+      const gesture = pinchGestureRef.current;
 
-      if (previousDistance && distance >= previousDistance * 1.14) {
-        zoomMap(1);
-        pinchDistanceRef.current = distance;
-      } else if (previousDistance && distance <= previousDistance * 0.86) {
-        zoomMap(-1);
-        pinchDistanceRef.current = distance;
-      } else if (!previousDistance) {
-        pinchDistanceRef.current = distance;
+      if (gesture) {
+        const zoomDelta = Math.log2(Math.max(distance, 1) / gesture.distance) * 2;
+        setMapZoom(clamp(Math.round(gesture.zoom + zoomDelta), minMapZoom, maxMapZoom));
       }
       return;
     }
@@ -638,10 +637,10 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
   const stopMapDrag = (event: PointerEvent<HTMLDivElement>) => {
     activeMapPointersRef.current.delete(event.pointerId);
-    pinchDistanceRef.current = null;
 
     const remainingPointer = Array.from(activeMapPointersRef.current.entries())[0];
     if (remainingPointer) {
+      pinchGestureRef.current = null;
       setDragStart({
         pointerId: remainingPointer[0],
         x: remainingPointer[1].x,
@@ -649,6 +648,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         center: mapCenter
       });
     } else {
+      pinchGestureRef.current = null;
       setDragStart(null);
     }
   };
@@ -659,7 +659,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
   const handleMapWheel = (event: WheelEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation();
     zoomMap(event.deltaY < 0 ? 1 : -1);
+  };
+
+  const containMapTouch = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length > 1) {
+      event.preventDefault();
+    }
   };
 
   const applyMapLink = () => {
@@ -931,6 +938,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   onPointerUp={stopMapDrag}
                   onPointerCancel={stopMapDrag}
                   onWheel={handleMapWheel}
+                  onTouchMove={containMapTouch}
+                  style={{ touchAction: "none", overscrollBehavior: "contain" }}
                   role="application"
                   aria-label="Interactive delivery map"
                 >

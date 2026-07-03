@@ -38,6 +38,19 @@ function stockFromVariants(stock: number, variants: Array<{ stock: number; isAct
   return variants.length ? activeVariantStock : stock;
 }
 
+async function getAvailableProductSlug(requestedSlug: string) {
+  const baseSlug = requestedSlug.trim().toLowerCase();
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (await prisma.product.findUnique({ where: { slug: candidate }, select: { id: true } })) {
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
+}
+
 export async function GET(request: Request) {
   try {
     await requireAdmin();
@@ -70,9 +83,11 @@ export async function POST(request: Request) {
     await requireAdmin();
     const { images, variants, specifications, stock, ...data } = productSchema.parse(await request.json());
     const normalizedNameEn = titleCaseWords(data.nameEn);
+    const availableSlug = await getAvailableProductSlug(data.slug);
     const product = await prisma.product.create({
       data: {
         ...data,
+        slug: availableSlug,
         nameEn: normalizedNameEn,
         nameAr: data.nameAr || normalizedNameEn,
         stock: stockFromVariants(stock, variants),
