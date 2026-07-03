@@ -42,11 +42,13 @@ function getCurrency(currency: string): CurrencyCode {
 
 function formatOrderAddress(order: {
   street: string;
+  district?: string | null;
+  area?: string | null;
   apartment?: string | null;
   tower?: string | null;
   city: string;
 }) {
-  return [order.street, order.tower, order.apartment, order.city].filter(Boolean).join(", ");
+  return [order.apartment, order.tower, order.street, order.area, order.district, order.city].filter(Boolean).join(", ");
 }
 
 function getOrderTone(status: string) {

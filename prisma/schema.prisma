@@ -208,6 +208,8 @@ model Order {
   customerEmail   String
   customerPhone   String
   street          String
+  district        String?
+  area            String?
   apartment       String?
   tower           String?
   city            String
@@ -249,6 +251,7 @@ model OrderItem {
   variantNameAr   String?
   variantColorHex String?
   variantSku      String?
+  productSku      String?
   price           Decimal         @db.Decimal(10, 2)
   quantity        Int
   image           String?

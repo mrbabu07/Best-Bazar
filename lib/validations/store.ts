@@ -16,6 +16,8 @@ export const orderCreateSchema = z.object({
     ),
     phone: z.string().trim().min(1),
     street: z.string().trim().min(1),
+    district: z.string().trim().default(""),
+    area: z.string().trim().default(""),
     apartment: z.string().trim().default(""),
     tower: z.string().trim().default(""),
     city: z.string().trim().min(1),

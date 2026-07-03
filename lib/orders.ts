@@ -153,6 +153,8 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
         customerEmail: data.shippingAddress.email,
         customerPhone: data.shippingAddress.phone,
         street: data.shippingAddress.street,
+        district: data.shippingAddress.district,
+        area: data.shippingAddress.area,
         apartment: data.shippingAddress.apartment,
         tower: data.shippingAddress.tower,
         city: data.shippingAddress.city,
@@ -182,6 +184,7 @@ export async function createStoreOrder(data: OrderCreateInput, userId?: string) 
             variantNameAr: variant ? variantNameAr(variant) : undefined,
             variantColorHex: variant?.colorHex,
             variantSku: variant?.sku,
+            productSku: product.sku,
             price: product.price,
             quantity,
             image: variant?.imageUrl ?? product.images[0]?.url

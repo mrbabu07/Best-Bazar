@@ -47,7 +47,7 @@ export default async function ParcelPage({ params, searchParams }: ParcelPagePro
 
   if (!order?.accessToken || searchParams?.token !== order.accessToken) notFound();
 
-  const address = [order.street, order.tower, order.apartment, order.city, order.emirate, order.country]
+  const address = [order.apartment, order.tower, order.street, order.area, order.district, order.city, order.emirate, order.country]
     .filter(Boolean)
     .join(", ");
   const phoneNumber = whatsappNumber(order.customerPhone, order.country);

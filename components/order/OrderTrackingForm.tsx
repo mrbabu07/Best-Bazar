@@ -38,6 +38,8 @@ type TrackOrderResult = {
   createdAt: string;
   shippingAddress: {
     street: string;
+    district?: string | null;
+    area?: string | null;
     apartment?: string | null;
     tower?: string | null;
     city: string;
@@ -166,6 +168,8 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
                     order.shippingAddress.street,
                     order.shippingAddress.tower,
                     order.shippingAddress.apartment,
+                    order.shippingAddress.area,
+                    order.shippingAddress.district,
                     order.shippingAddress.city,
                     order.shippingAddress.emirate,
                     order.shippingAddress.country

@@ -41,19 +41,21 @@ function getCurrency(currency: string): CurrencyCode {
 
 function formatAddress(order: {
   street: string;
+  district?: string | null;
+  area?: string | null;
   tower?: string | null;
   apartment?: string | null;
   city: string;
   emirate: string;
   country: string;
 }) {
-  return [order.street, order.tower, order.apartment, order.city, order.emirate, order.country]
+  return [order.apartment, order.tower, order.street, order.area, order.district, order.city, order.emirate, order.country]
     .filter(Boolean)
     .join(", ");
 }
 
-function orderProductCodes(items: Array<{ product?: { sku?: string | null } | null; variantSku?: string | null }>) {
-  return Array.from(new Set(items.map((item) => item.product?.sku || item.variantSku).filter(Boolean))).join(" / ") || "NOT SET";
+function orderProductCodes(items: Array<{ productSku?: string | null; product?: { sku?: string | null } | null; variantSku?: string | null }>) {
+  return Array.from(new Set(items.map((item) => item.productSku || item.product?.sku || item.variantSku).filter(Boolean))).join(" / ") || "NOT SET";
 }
 
 function orderVariantSummary(items: PrintableOrderItem[], locale: string) {
@@ -69,6 +71,8 @@ function qrContactPayload(order: {
   customerPhone: string;
   customerEmail: string;
   street: string;
+  district?: string | null;
+  area?: string | null;
   tower?: string | null;
   apartment?: string | null;
   city: string;
@@ -81,11 +85,11 @@ function qrContactPayload(order: {
   total?: unknown;
 }) {
   const clean = (value: string | null | undefined) => String(value ?? "").replace(/[;\n\r]/g, " ").trim();
-  const address = [order.street, order.tower, order.apartment, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
+  const address = [order.apartment, order.tower, order.street, order.area, order.district, order.city, order.emirate, order.country].map(clean).filter(Boolean).join(", ");
   const productCodes = orderProductCodes(order.items);
   const itemSummary = order.items.map((item) => {
     const details = getOrderItemDetails(item, "en");
-    return [details.color, details.size, `x${details.quantity}`].filter(Boolean).join("/");
+    return [details.code ? `Code ${details.code}` : "", details.variantCode ? `Variant ${details.variantCode}` : "", details.color, details.size, `x${details.quantity}`].filter(Boolean).join("/");
   }).join(", ");
 
   return [
@@ -576,6 +580,9 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <div className="mt-2 grid gap-1 text-xs text-neutral-600 sm:grid-cols-2">
                     <p>Emirate: {selectedOrder.emirate}</p>
                     <p>City: {selectedOrder.city}</p>
+                    {selectedOrder.district ? <p>District: {selectedOrder.district}</p> : null}
+                    {selectedOrder.area ? <p>Community / area: {selectedOrder.area}</p> : null}
+                    <p>Street / address: {selectedOrder.street}</p>
                     {selectedOrder.tower ? <p>Apartment/building: {selectedOrder.tower}</p> : null}
                     {selectedOrder.apartment ? <p>Unit/villa no.: {selectedOrder.apartment}</p> : null}
                     {selectedOrder.deliveryEstimate ? <p className="font-bold text-gold-700">Delivery estimate: {selectedOrder.deliveryEstimate}</p> : null}
@@ -594,7 +601,10 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                   <p className="text-sm font-bold text-navy">Ordered products</p>
                   <p className="mt-1 text-xs text-neutral-500 admin-print-hide">Images, variants, SKU, quantity, and line totals.</p>
                 </div>
-                {selectedOrder.items.map((item) => (
+                {selectedOrder.items.map((item) => {
+                  const details = getOrderItemDetails(item, locale);
+
+                  return (
                   <div key={item.id} className="invoice-item grid gap-3 border-b border-neutral-100 p-4 last:border-b-0 sm:grid-cols-[72px_1fr_auto]">
                     <div className="invoice-image relative h-[72px] w-[72px] overflow-hidden rounded-md border border-neutral-200 bg-white">
                       <Image
@@ -627,10 +637,14 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           <span>{locale === "ar" ? item.variantNameAr ?? item.variantNameEn : item.variantNameEn}</span>
                         </div>
                       ) : null}
+                      <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-neutral-200 bg-neutral-200 text-xs sm:grid-cols-5">
+                        <div className="bg-white p-2"><span className="block text-[10px] font-bold uppercase text-neutral-400">Product code</span><strong className="mt-0.5 block break-all text-navy">{details.code || "Not set"}</strong></div>
+                        <div className="bg-white p-2"><span className="block text-[10px] font-bold uppercase text-neutral-400">Variant code</span><strong className="mt-0.5 block break-all text-navy">{details.variantCode || "—"}</strong></div>
+                        <div className="bg-white p-2"><span className="block text-[10px] font-bold uppercase text-neutral-400">Color</span><strong className="mt-0.5 block text-navy">{details.color || "—"}</strong></div>
+                        <div className="bg-white p-2"><span className="block text-[10px] font-bold uppercase text-neutral-400">Size</span><strong className="mt-0.5 block text-navy">{details.size || "—"}</strong></div>
+                        <div className="bg-white p-2"><span className="block text-[10px] font-bold uppercase text-neutral-400">Quantity</span><strong className="mt-0.5 block text-navy">{details.quantity}</strong></div>
+                      </div>
                       <div className="mt-2 grid gap-1 text-xs font-semibold text-neutral-500 sm:grid-cols-2 admin-print-hide">
-                        <p>Admin SKU: {item.product?.sku ?? item.variantSku ?? "Not set"}</p>
-                        {item.variantSku ? <p>Variant SKU: {item.variantSku}</p> : null}
-                        <p>Qty: {item.quantity}</p>
                         <p>
                           Unit:{" "}
                           {formatCurrency(
@@ -654,7 +668,8 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                       </p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-5 grid gap-2 border-t border-neutral-200 pt-5 text-sm">

@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       createdAt: order.createdAt.toISOString(),
       shippingAddress: {
         street: order.street,
+        district: order.district,
+        area: order.area,
         apartment: order.apartment,
         tower: order.tower,
         city: order.city,

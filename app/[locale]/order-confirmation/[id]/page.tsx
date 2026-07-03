@@ -107,6 +107,8 @@ export default async function OrderConfirmationPage({ params, searchParams }: Or
     order.street,
     order.tower,
     order.apartment,
+    order.area,
+    order.district,
     order.city,
     order.emirate,
     order.country

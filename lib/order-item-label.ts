@@ -6,6 +6,8 @@ export type PrintableOrderItem = {
   variantNameEn?: string | null;
   variantNameAr?: string | null;
   quantity: number;
+  variantSku?: string | null;
+  productSku?: string | null;
   product?: { sku?: string | null } | null;
   variant?: {
     colorNameEn: string;
@@ -29,7 +31,8 @@ export function getOrderItemDetails(item: PrintableOrderItem, locale: string) {
 
   return {
     name: locale === "ar" ? item.nameAr || item.nameEn : item.nameEn,
-    code: item.product?.sku?.trim() ?? "",
+    code: item.productSku?.trim() || item.product?.sku?.trim() || "",
+    variantCode: item.variantSku?.trim() ?? "",
     color: color ?? "",
     size: rawSize ? cleanLengthSizeLabel(rawSize) : "",
     quantity: item.quantity
@@ -47,6 +50,7 @@ export function formatOrderItemDetails(
   return [
     details.name,
     includeCode && details.code ? `Code: ${details.code}` : "",
+    includeCode && details.variantCode && details.variantCode !== details.code ? `Variant: ${details.variantCode}` : "",
     details.color ? `Color: ${details.color}` : "",
     details.size ? `Size: ${details.size}` : "",
     `Qty: ${details.quantity}`

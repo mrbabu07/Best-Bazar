@@ -58,6 +58,8 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
     order.street,
     order.tower ? `Building/Tower: ${order.tower}` : "",
     order.apartment ? `Apartment/Unit: ${order.apartment}` : "",
+    order.area ? `Community/Area: ${order.area}` : "",
+    order.district ? `District: ${order.district}` : "",
     `${order.city}, ${order.emirate}, ${order.country}`
   ].filter(Boolean);
   const totals = [
