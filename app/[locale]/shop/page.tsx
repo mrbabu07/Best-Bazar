@@ -27,7 +27,7 @@ function readParam(searchParams: ShopPageProps["searchParams"], key: string) {
 export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
   return {
     title: params.locale === "ar" ? "المتجر" : "Shop",
-    description: "Browse Best Mart products with storefront filters."
+    description: "Browse AyVella products with storefront filters."
   };
 }
 

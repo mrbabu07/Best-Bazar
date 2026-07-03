@@ -79,7 +79,7 @@ export function PWAInstallPrompt() {
           </div>
           
           <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-navy">Install Best Bazar</h3>
+            <h3 className="font-bold text-navy">Install AyVella</h3>
             <p className="mt-1 text-sm text-neutral-600">
               Get faster access, work offline, and enjoy native app experience
             </p>

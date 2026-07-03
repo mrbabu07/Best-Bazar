@@ -11,7 +11,7 @@ import { normalizeThemeSettings } from "@/lib/theme-config";
 import { normalizeShippingSettings } from "@/utils/shipping";
 
 export const metadata: Metadata = {
-  title: "Store Settings | Best Mart"
+  title: "Store Settings | AyVella"
 };
 
 export default async function AdminSettingsPage({ params }: { params: { locale: string } }) {

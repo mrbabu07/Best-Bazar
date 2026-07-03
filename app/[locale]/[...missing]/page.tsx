@@ -4,7 +4,7 @@ import { FriendlyNotFound } from "@/components/layout/FriendlyNotFound";
 import { isLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "404 | Best Mart"
+  title: "404 | AyVella"
 };
 
 export default function MissingLocalizedRoute({ params }: { params: { locale: string } }) {

@@ -18,8 +18,8 @@ type StoreCategory = Awaited<ReturnType<typeof getStoreCategories>>[number];
 export const revalidate = STOREFRONT_REVALIDATE_SECONDS;
 export const dynamic = "force-dynamic";
 
-export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
-  return { title: params.locale === "ar" ? "Best Mart" : "Best Mart", description: "Dubai online shopping." };
+export function generateMetadata(): Metadata {
+  return { title: "AyVella", description: "Modest fashion and lifestyle shopping across the UAE." };
 }
 
 function pathFor(locale: Locale, href?: string) {

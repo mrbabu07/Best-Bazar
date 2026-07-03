@@ -14,7 +14,7 @@ export function serializeStoreReview(review: ReviewWithUser): ProductReview {
     comment: review.comment,
     createdAt: review.createdAt.toISOString(),
     user: {
-      name: review.user.name ?? "Best Mart customer",
+      name: review.user.name ?? "AyVella customer",
       image: review.user.image ?? undefined
     }
   };

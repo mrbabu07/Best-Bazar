@@ -844,11 +844,11 @@ export function AdminProductManager({
                 <summary className="cursor-pointer text-sm font-bold text-navy">1. Catalog identity</summary>
               <div className="mt-4 grid gap-4">
               {[
-                ["sku", "Product code", "BM-ABAYA-1001"],
+                ["sku", "Product code", "AY-ABAYA-1001"],
                 ["nameEn", "Product name EN", "Premium travel trolley"],
                 ["nameAr", "Product name AR", "Arabic product name"],
                 ["slug", "Product URL slug", "premium-travel-trolley"],
-                ["brand", "Brand", "Best Mart"]
+                ["brand", "Brand", "AyVella"]
               ].map(([key, label, placeholder]) => (
                 <label key={key} className="grid gap-2 text-sm font-semibold text-navy">
                   {label}

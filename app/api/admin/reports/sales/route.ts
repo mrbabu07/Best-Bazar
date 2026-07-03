@@ -106,7 +106,7 @@ export async function GET(request: Request) {
         .join("; ")
     ]);
     const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
-    const filename = `best-mart-sales-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `ayvella-sales-${new Date().toISOString().slice(0, 10)}.csv`;
 
     return new Response(csv, {
       headers: {

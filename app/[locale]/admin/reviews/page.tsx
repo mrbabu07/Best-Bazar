@@ -11,7 +11,7 @@ import { getDictionary, isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Review Moderation | Best Mart"
+  title: "Review Moderation | AyVella"
 };
 
 type AdminReviewsPageProps = {

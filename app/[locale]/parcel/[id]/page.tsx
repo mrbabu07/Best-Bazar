@@ -12,7 +12,7 @@ type ParcelPageProps = {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Parcel details | Best Mart",
+  title: "Parcel details | AyVella",
   robots: { index: false, follow: false }
 };
 
@@ -51,14 +51,14 @@ export default async function ParcelPage({ params, searchParams }: ParcelPagePro
     .filter(Boolean)
     .join(", ");
   const phoneNumber = whatsappNumber(order.customerPhone, order.country);
-  const whatsappText = encodeURIComponent(`Best Mart order ${order.orderNumber}`);
+  const whatsappText = encodeURIComponent(`AyVella order ${order.orderNumber}`);
   const whatsappHref = `https://wa.me/${phoneNumber}?text=${whatsappText}`;
   return (
     <main className="min-h-screen bg-[#f4f4f0] px-4 py-8 text-neutral-950 sm:px-6">
       <article className="mx-auto max-w-3xl border-2 border-neutral-950 bg-white p-5 shadow-[8px_8px_0_#111] sm:p-8">
         <header className="flex items-end justify-between border-b-4 border-neutral-950 pb-4">
           <div>
-            <p className="text-4xl font-black tracking-[-0.04em] sm:text-6xl">BEST MART</p>
+            <p className="text-4xl font-black tracking-[-0.04em] sm:text-6xl">AYVELLA</p>
             <p className="mt-1 text-xs font-black uppercase tracking-[0.24em]">Parcel details</p>
           </div>
           <p className="text-right text-xs font-bold">{order.orderNumber}</p>

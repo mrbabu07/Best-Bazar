@@ -43,15 +43,20 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: {
-    default: "Best Mart",
-    template: "%s | Best Mart"
+    default: "AyVella",
+    template: "%s | AyVella"
   },
-  description: "Luxury Dubai-based online shopping experience.",
+  description: "AyVella modest fashion and lifestyle shopping across the UAE.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/brand/ayvella-mark.svg",
+    shortcut: "/brand/ayvella-mark.svg",
+    apple: "/brand/ayvella-mark.svg"
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Best Mart",
+    title: "AyVella",
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -61,14 +66,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Best Mart",
-    title: "Best Mart - Dubai Online Shopping",
-    description: "Luxury Dubai-based online shopping experience",
+    siteName: "AyVella",
+    title: "AyVella - UAE Online Fashion",
+    description: "AyVella modest fashion and lifestyle shopping across the UAE",
   },
   twitter: {
     card: "summary",
-    title: "Best Mart - Dubai Online Shopping",
-    description: "Luxury Dubai-based online shopping experience",
+    title: "AyVella - UAE Online Fashion",
+    description: "AyVella modest fashion and lifestyle shopping across the UAE",
   },
 };
 
@@ -87,8 +92,9 @@ async function getFrameSettings() {
   const themeSettings = normalizeThemeSettings(settings?.themeSettings);
 
   return {
-    storeNameEn: settings?.storeNameEn ?? "Best Mart",
-    storeNameAr: settings?.storeNameAr ?? "Best Mart",
+    storeNameEn: settings?.storeNameEn ?? "AyVella",
+    storeNameAr: settings?.storeNameAr ?? "آي فيلا",
+    logo: settings?.logo ?? "/brand/ayvella-logo.svg",
     announcementEn: settings?.announcementEn ?? "",
     announcementAr: settings?.announcementAr ?? "",
     announcementActive: settings?.announcementActive ?? false,

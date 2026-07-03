@@ -19,7 +19,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency, normalizeCurrencyRates, type CurrencyCode } from "@/utils/currency";
 
 export const metadata: Metadata = {
-  title: "Order Management | Best Mart"
+  title: "Order Management | AyVella"
 };
 
 export const dynamic = "force-dynamic";
@@ -490,7 +490,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Tax invoice</p>
-                    <h1 className="mt-1 text-2xl font-bold text-navy">Best Mart</h1>
+                    <h1 className="mt-1 text-2xl font-bold text-navy">AyVella</h1>
                     {settings?.trn ? (
                       <p className="mt-1 text-sm font-semibold text-neutral-600">TRN: {settings.trn}</p>
                     ) : null}
@@ -523,15 +523,15 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
 
               <div className="admin-parcel-label hidden">
                 <header className="parcel-header">
-                  <p className="parcel-brand">BEST MART</p>
+                  <p className="parcel-brand">AYVELLA</p>
                 </header>
                 <section className="parcel-recipient">
                   <p className="parcel-recipient-name">{selectedOrder.customerName}</p>
                   <p className="parcel-address">{formatAddress(selectedOrder)}</p>
                   <p className="parcel-phone">{selectedOrder.customerPhone}</p>
-                  <p className="parcel-route">BM AE-{selectedOrder.emirate.toUpperCase().replace(/\s+/g, "-")}-{selectedOrder.orderNumber.slice(-6)}</p>
+                  <p className="parcel-route">AY AE-{selectedOrder.emirate.toUpperCase().replace(/\s+/g, "-")}-{selectedOrder.orderNumber.slice(-6)}</p>
                 </section>
-                <section className="parcel-date-row"><p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p><div className="parcel-mark">BM</div></section>
+                <section className="parcel-date-row"><p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p><div className="parcel-mark">AY</div></section>
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
                     <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{orderProductCodes(selectedOrder.items)}</strong></div>

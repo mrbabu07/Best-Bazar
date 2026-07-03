@@ -41,7 +41,7 @@ export function NewsletterSignup({ locale }: NewsletterSignupProps) {
     <section className="border-y border-[#dfd9cb] bg-[#f4f6ee] px-4 py-14 sm:px-8 sm:py-20 lg:px-12">
       <div className="mx-auto grid max-w-[760px] gap-5 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-neutral-500">
-          {locale === "ar" ? "Best Mart updates" : "Best Mart updates"}
+          {locale === "ar" ? "AyVella updates" : "AyVella updates"}
         </p>
         <h2 className="font-editorial text-4xl font-semibold text-neutral-950 sm:text-5xl">
           {locale === "ar" ? "Subscribe to our emails" : "Subscribe to our emails"}

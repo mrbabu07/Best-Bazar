@@ -27,7 +27,7 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
 }
 
 function getInitials(name?: string | null, email?: string | null) {
-  const source = name || email || "Best Mart";
+  const source = name || email || "AyVella";
   return source
     .split(/[ @._-]+/)
     .filter(Boolean)
@@ -71,7 +71,7 @@ function canCancelOrder(status: string) {
 
 const accountCopy = {
   en: {
-    defaultName: "Best Mart customer",
+    defaultName: "AyVella customer",
     noAddresses: "No saved addresses yet.",
     noOrders: "No orders yet.",
     order: "Order",
@@ -82,7 +82,7 @@ const accountCopy = {
     trackOrder: "Track"
   },
   ar: {
-    defaultName: "عميل بيست مارت",
+    defaultName: "عميل آي فيلا",
     noAddresses: "لا توجد عناوين محفوظة حتى الآن.",
     noOrders: "لا توجد طلبات حتى الآن.",
     order: "الطلب",

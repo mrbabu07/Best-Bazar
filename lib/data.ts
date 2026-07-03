@@ -544,7 +544,7 @@ export const adminStats = {
 };
 
 export const settings = {
-  storeName: { en: "Best Mart", ar: "بيست مارت" },
+  storeName: { en: "AyVella", ar: "آي فيلا" },
   contactInfo: {
     phone: "+971 4 555 0198",
     email: "support@bestmart.ae",

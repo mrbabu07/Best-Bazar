@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(url, {
       headers: {
         Accept: "application/json",
-        "User-Agent": "Best-Mart-Checkout/1.0"
+        "User-Agent": "AyVella-Checkout/1.0"
       },
       cache: "no-store"
     });

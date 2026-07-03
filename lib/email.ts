@@ -81,7 +81,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#111827;">
       <h1 style="margin:0 0 8px;font-size:24px;">Thank you for your order</h1>
-      <p style="margin:0 0 18px;color:#4b5563;">Hi ${escapeHtml(order.customerName)}, we received your Best Mart order.</p>
+      <p style="margin:0 0 18px;color:#4b5563;">Hi ${escapeHtml(order.customerName)}, we received your AyVella order.</p>
       <div style="border:1px solid #eee;border-radius:8px;padding:16px;margin-bottom:18px;">
         <p style="margin:0;font-weight:700;">${escapeHtml(order.orderNumber)}</p>
         <p style="margin:6px 0 0;color:#4b5563;">Status: ${escapeHtml(order.orderStatus)} | Payment: ${escapeHtml(order.paymentMethod)} / ${escapeHtml(order.paymentStatus)}</p>
@@ -100,7 +100,7 @@ export async function sendOrderConfirmationEmail(order: OrderWithItems) {
   await transporter.sendMail({
     from: config.from,
     to: order.customerEmail,
-    subject: `Best Mart order ${order.orderNumber}`,
+    subject: `AyVella order ${order.orderNumber}`,
     text: [
       `Thank you for your order, ${order.customerName}.`,
       "",
@@ -133,7 +133,7 @@ export async function sendOrderStatusEmail(order: OrderWithItems) {
 
   const transporter = nodemailer.createTransport(config.server);
   const confirmationUrl = getOrderConfirmationUrl(order);
-  const subject = `Best Mart order ${order.orderNumber} is ${order.orderStatus}`;
+  const subject = `AyVella order ${order.orderNumber} is ${order.orderStatus}`;
   const text = [
     `Hello ${order.customerName},`,
     "",
@@ -189,11 +189,11 @@ export async function sendPasswordResetEmail({
   await transporter.sendMail({
     from: config.from,
     to,
-    subject: "Reset your Best Mart password",
+    subject: "Reset your AyVella password",
     text: [
       `Hello${name ? ` ${name}` : ""},`,
       "",
-      "Use the secure link below to reset your Best Mart password.",
+      "Use the secure link below to reset your AyVella password.",
       "",
       resetUrl,
       "",
@@ -235,7 +235,7 @@ export async function sendNewProductOfferEmail({
   const subject = `New arrival: ${product.nameEn}`;
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:640px;margin:0 auto;color:#111;">
-      <p style="margin:0 0 10px;text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:#666;">Best Mart new arrival</p>
+      <p style="margin:0 0 10px;text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:#666;">AyVella new arrival</p>
       <h1 style="margin:0 0 12px;font-size:28px;line-height:1.2;">${escapeHtml(product.nameEn)}</h1>
       ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.nameEn)}" style="width:100%;max-height:520px;object-fit:cover;margin:0 0 18px;border:1px solid #eee;" />` : ""}
       <p style="margin:0 0 8px;font-size:18px;font-weight:700;">${escapeHtml(price)}${comparePrice ? ` <span style="font-size:14px;color:#777;text-decoration:line-through;font-weight:400;">${escapeHtml(comparePrice)}</span>` : ""}</p>
@@ -250,7 +250,7 @@ export async function sendNewProductOfferEmail({
     bcc: activeRecipients,
     subject,
     text: [
-      "Best Mart new arrival",
+      "AyVella new arrival",
       "",
       product.nameEn,
       price,

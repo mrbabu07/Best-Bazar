@@ -1,6 +1,6 @@
-# Best Mart
+# AyVella
 
-Best Mart is a Dubai-focused bilingual ecommerce application built with React 18 and Next.js 14, TypeScript, Tailwind CSS, Prisma, Neon PostgreSQL, NextAuth, Cloudinary uploads, Stripe checkout support, optional SMTP email, and Zustand cart/preferences state.
+AyVella is a UAE-focused bilingual ecommerce application built with React 18 and Next.js 14, TypeScript, Tailwind CSS, Prisma, Neon PostgreSQL, NextAuth, Cloudinary uploads, optional SMTP email, and Zustand cart/preferences state.
 
 For a step-by-step developer walkthrough, see [DEVELOPER_STEP_BY_STEP.md](./DEVELOPER_STEP_BY_STEP.md).
 For the full AI/developer handoff reference, see [AI_PROJECT_DOCUMENTATION.md](./AI_PROJECT_DOCUMENTATION.md).

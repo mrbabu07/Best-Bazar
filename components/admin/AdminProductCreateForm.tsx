@@ -140,7 +140,7 @@ function createEmptyForm(categoryId = ""): ProductForm {
     comparePrice: "",
     stock: "0",
     sku: "",
-    brand: "Best Mart",
+    brand: "AyVella",
     tags: "",
     fashionFields: { ...emptyFashionFields },
     customFieldValues: {},
@@ -716,7 +716,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
     const fallbackSlug = form.slug.trim() || slugify(fallbackName);
     const fallbackSku =
       form.sku.trim() ||
-      `BM-${(fallbackSlug || "PRODUCT").toUpperCase()}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+      `AY-${(fallbackSlug || "PRODUCT").toUpperCase()}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
     const fallbackDescription = form.descriptionEn.trim() || fallbackName;
 
     const payload = {
@@ -737,7 +737,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
       comparePrice: form.comparePrice ? Number(form.comparePrice) : null,
       stock: Number(form.stock),
       sku: fallbackSku,
-      brand: form.brand.trim() || "Best Mart",
+      brand: form.brand.trim() || "AyVella",
       tags: form.tags
         .split(",")
         .map((tag) => tag.trim())
@@ -1153,7 +1153,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                                 <input
                                   value={color.sku}
                                   onChange={(event) => updateQuickColorRow(color.id, "sku", event.target.value)}
-                                  placeholder={`${form.sku || "BM-PRODUCT"}-${color.nameEn || "BLACK"}`}
+                                  placeholder={`${form.sku || "AY-PRODUCT"}-${color.nameEn || "BLACK"}`}
                                   className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm font-semibold normal-case tracking-normal text-navy"
                                 />
                               </label>
@@ -1305,7 +1305,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                 <input
                   value={form.brand}
                   onChange={(event) => updateForm("brand", event.target.value)}
-                  placeholder="Best Mart"
+                  placeholder="AyVella"
                   className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
                 />
               </label>
@@ -1619,7 +1619,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
               <input
                 value={form.brand}
                 onChange={(event) => updateForm("brand", event.target.value)}
-                placeholder="Best Mart"
+                placeholder="AyVella"
                 className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
               />
             </label>
@@ -1650,7 +1650,7 @@ export function AdminProductCreateForm({ locale, categories, productsHref }: Adm
                   <input
                     value={form.brand}
                     onChange={(event) => updateForm("brand", event.target.value)}
-                    placeholder="Best Mart"
+                    placeholder="AyVella"
                     className="h-11 rounded-md border border-neutral-200 bg-white px-3 text-sm"
                   />
                 </label>

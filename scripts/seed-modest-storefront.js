@@ -96,7 +96,7 @@ async function upsertProduct(item) {
       comparePrice: item.comparePrice,
       stock: 18,
       sku: item.sku,
-      brand: "Best Mart Modest",
+      brand: "AyVella Modest",
       tags: ["modest", "new-arrival", "sale"],
       fashionFields: {
         fabric: "Soft satin blend",
@@ -119,7 +119,7 @@ async function upsertProduct(item) {
       comparePrice: item.comparePrice,
       stock: 18,
       sku: item.sku,
-      brand: "Best Mart Modest",
+      brand: "AyVella Modest",
       tags: ["modest", "new-arrival", "sale"],
       fashionFields: {
         fabric: "Soft satin blend",

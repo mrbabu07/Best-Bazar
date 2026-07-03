@@ -7,7 +7,7 @@ import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Banner Management | Best Mart"
+  title: "Banner Management | AyVella"
 };
 
 export default async function AdminBannersPage({ params }: { params: { locale: string } }) {

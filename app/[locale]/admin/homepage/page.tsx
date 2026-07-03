@@ -5,7 +5,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { isLocale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = { title: "Homepage Management | Best Mart" };
+export const metadata: Metadata = { title: "Homepage Management | AyVella" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomepagePage({ params }: { params: { locale: string } }) {

@@ -27,6 +27,10 @@ export function isAllowedRemoteImage(value?: string | null): value is string {
     return true;
   }
 
+  if (value === "/brand/ayvella-logo.svg") {
+    return true;
+  }
+
   try {
     const url = new URL(value);
     return url.protocol === "https:" && allowedRemoteImageHosts.has(url.hostname);

@@ -7,6 +7,7 @@ import type { ShippingSettings } from "@/utils/shipping";
 export type StorefrontFrameSettings = {
   storeNameEn: string;
   storeNameAr: string;
+  logo: string;
   announcementEn: string;
   announcementAr: string;
   announcementActive: boolean;

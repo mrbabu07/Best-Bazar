@@ -14,7 +14,7 @@ function createOrderNumber() {
   const timestamp = Date.now().toString(36).toUpperCase();
   const suffix = randomBytes(3).toString("hex").toUpperCase();
 
-  return `BB-${timestamp}-${suffix}`;
+  return `AY-${timestamp}-${suffix}`;
 }
 
 function createOrderAccessToken() {

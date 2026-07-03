@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Facebook, Instagram, Mail, MessageCircle, Music2, Phone } from "lucide-react";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { StorefrontFrameSettings } from "@/components/layout/AppFrame";
@@ -16,8 +17,12 @@ export function Footer({ locale, dictionary, settings }: FooterProps) {
     <footer className="border-t border-gold-100 bg-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_0.8fr_0.8fr] lg:px-8">
         <div>
-          <Link href={`/${locale}`} className="croissant-one-regular text-2xl text-navy">
-            {brandName || dictionary.brand}
+          <Link href={`/${locale}`} className="block w-40" aria-label={`${brandName || dictionary.brand} home`}>
+            {settings.logo ? (
+              <Image src={settings.logo} alt={brandName || dictionary.brand} width={620} height={150} unoptimized className="h-auto w-full" />
+            ) : (
+              <span className="font-editorial text-2xl font-semibold text-navy">{brandName || dictionary.brand}</span>
+            )}
           </Link>
           <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-gold-700">
             {locale === "ar" ? "تابعنا" : "Follow us"}

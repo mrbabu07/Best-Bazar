@@ -114,7 +114,7 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
             Order number
             <input
               name="orderNumber"
-              placeholder="BB-LX..."
+              placeholder="AY-LX..."
               required
               className="h-11 rounded-md border border-neutral-200 bg-paper px-3 text-sm"
             />
@@ -217,7 +217,7 @@ export function OrderTrackingForm({ locale }: OrderTrackingFormProps) {
           <div className="grid min-h-72 place-items-center rounded-md bg-paper p-6 text-center">
             <div>
               <PackageSearch size={34} className="mx-auto text-gold-700" />
-              <h2 className="mt-4 text-xl font-bold text-navy">Track any Best Mart order</h2>
+              <h2 className="mt-4 text-xl font-bold text-navy">Track any AyVella order</h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-neutral-600">
                 Order progress, payment status, delivery address, and totals will appear here.
               </p>

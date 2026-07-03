@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
@@ -345,9 +346,22 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
           <Link
             href={`/${locale}`}
             onClick={() => setOpen(false)}
-            className="absolute left-1/2 z-10 max-w-[calc(100%-10rem)] -translate-x-1/2 truncate text-center text-xl font-black uppercase text-neutral-950 sm:static sm:left-auto sm:mr-auto sm:max-w-none sm:translate-x-0 sm:text-2xl"
+            className="absolute left-1/2 z-10 flex h-11 w-[8.75rem] -translate-x-1/2 items-center justify-center sm:static sm:mr-auto sm:h-14 sm:w-[11rem] sm:translate-x-0"
+            aria-label={`${brandName || dictionary.brand} home`}
           >
-            {brandName || dictionary.brand}
+            {liveSettings.logo ? (
+              <Image
+                src={liveSettings.logo}
+                alt={brandName || dictionary.brand}
+                width={620}
+                height={150}
+                priority
+                unoptimized
+                className="h-auto w-full object-contain"
+              />
+            ) : (
+              <span className="font-editorial text-2xl font-semibold text-neutral-950">{brandName || dictionary.brand}</span>
+            )}
           </Link>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 lg:gap-2">
