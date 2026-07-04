@@ -153,6 +153,7 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
   const startEdit = (category: AdminCategoryRow) => {
     setSelectedId(category.id);
     setForm(fromCategory(category));
+    window.requestAnimationFrame(() => document.getElementById("category-editor")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -258,7 +259,7 @@ export function AdminCategoryManager({ locale, categories, saveLabel }: AdminCat
         ))}
       </section>
 
-      <aside id="category-editor" className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
+      <aside id="category-editor" className="scroll-mt-20 h-fit rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:p-5 xl:sticky xl:top-24">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-navy">Category editor</h2>

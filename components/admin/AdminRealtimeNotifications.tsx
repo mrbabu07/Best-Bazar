@@ -78,7 +78,7 @@ export function AdminRealtimeNotifications({ refreshSeconds = 60 }: { refreshSec
 
   // Show connection status indicator
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-20 right-3 z-50 sm:right-4 lg:bottom-4">
       {isConnected && (
         <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />

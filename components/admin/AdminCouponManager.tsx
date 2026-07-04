@@ -83,6 +83,7 @@ export function AdminCouponManager({ locale, coupons, saveLabel }: AdminCouponMa
   const startEdit = (coupon: AdminCouponRow) => {
     setSelectedId(coupon.id);
     setForm(fromCoupon(coupon));
+    window.requestAnimationFrame(() => document.getElementById("coupon-editor")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -185,7 +186,7 @@ export function AdminCouponManager({ locale, coupons, saveLabel }: AdminCouponMa
         </div>
       </section>
 
-      <aside id="coupon-editor" className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
+      <aside id="coupon-editor" className="scroll-mt-20 h-fit rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:p-5 xl:sticky xl:top-24">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-navy">Coupon editor</h2>

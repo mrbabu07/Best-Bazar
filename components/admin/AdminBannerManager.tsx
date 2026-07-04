@@ -93,6 +93,7 @@ export function AdminBannerManager({ locale, banners }: AdminBannerManagerProps)
   const startEdit = (banner: AdminBannerRow) => {
     setSelectedId(banner.id);
     setForm(fromBanner(banner));
+    window.requestAnimationFrame(() => document.getElementById("banner-editor")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -187,7 +188,7 @@ export function AdminBannerManager({ locale, banners }: AdminBannerManagerProps)
         ))}
       </section>
 
-      <aside id="banner-editor" className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
+      <aside id="banner-editor" className="scroll-mt-20 h-fit rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:p-5 xl:sticky xl:top-24">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-navy">Banner editor</h2>

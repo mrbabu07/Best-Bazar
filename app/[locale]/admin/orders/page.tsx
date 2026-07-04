@@ -423,8 +423,27 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_560px]">
         <section className="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-soft">
-          <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-3"><p className="text-sm font-bold text-navy">Select orders for parcel labels</p><BulkParcelLabelPrint /></div>
-          <div className="overflow-x-auto">
+          <div className="flex flex-col gap-3 border-b border-neutral-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm font-bold text-navy">Select orders for parcel labels</p><BulkParcelLabelPrint /></div>
+          <div className="grid divide-y divide-neutral-100 md:hidden">
+            {orders.map((order) => (
+              <article key={order.id} className={order.id === selectedOrder?.id ? "bg-gold-50/70 p-4" : "p-4"}>
+                <div className="flex items-start gap-3">
+                  <input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: compactProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", "), itemLines: order.items.map((item) => orderVariantLine(item, locale)), variantSummary: orderVariantSummary(order.items, locale), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="mt-1 h-5 w-5 shrink-0 accent-black" aria-label={`Select ${order.orderNumber} for printing`} />
+                  <Link href={buildOrderHref(locale, searchParams, order.id)} className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2"><strong className="text-navy">{order.orderNumber}</strong>{isNewOrder(order.createdAt, order.orderStatus) ? <Badge tone="blue">New</Badge> : null}</div>
+                    <p className="mt-1 truncate text-sm font-semibold text-neutral-700">{order.customerName}</p>
+                    <p className="mt-1 text-xs text-neutral-500">{order.items.length} item(s) · {order.emirate}, {order.city}</p>
+                  </Link>
+                  <div className="shrink-0 text-right"><p className="font-bold text-navy">{formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates)}</p><p className="mt-1 text-xs text-neutral-500">{formatCompactDate(order.createdAt, locale)}</p></div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 pt-3">
+                  <div className="flex flex-wrap gap-2"><Badge tone={orderStatusTone(order.orderStatus)}>{order.orderStatus}</Badge><Badge tone={order.paymentStatus === "PAID" ? "green" : "gold"}>{order.paymentStatus}</Badge></div>
+                  <AdminOrderStatusSelect orderId={order.id} initialStatus={order.orderStatus} />
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-full divide-y divide-neutral-200 text-sm">
               <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.12em] text-neutral-500 rtl:text-right">
                 <tr>

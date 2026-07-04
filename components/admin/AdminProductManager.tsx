@@ -373,6 +373,7 @@ export function AdminProductManager({
   const startEdit = (product: AdminProductRow) => {
     setSelectedId(product.id);
     setForm(fromProduct(product));
+    window.requestAnimationFrame(() => document.getElementById("product-editor")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   const updateImage = (index: number, key: keyof ProductImageForm, value: string) => {
@@ -661,7 +662,40 @@ export function AdminProductManager({
             <option value="low-stock">Low stock</option>
           </select>
         </div>
-        <div className="overflow-x-auto">
+        <div className="grid divide-y divide-neutral-100 md:hidden">
+          {filteredProducts.map((product) => (
+            <article key={product.id} className="grid gap-3 p-4">
+              <div className="flex min-w-0 gap-3">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+                  <Image src={safeRemoteImage(product.images[0]?.url, fallbackProductImage)} alt={product.images[0]?.alt || product.nameEn} fill sizes="64px" className="object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 font-bold text-navy">{getProductName(product, locale)}</p>
+                  <p className="mt-1 break-all text-xs font-semibold text-neutral-500">{product.sku}</p>
+                  <p className="mt-1 text-xs text-neutral-500">{getCategoryName(product, locale)}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-bold text-navy">{formatCurrency(product.price, "AED", locale)}</p>
+                  <Badge tone={product.stock <= 10 ? "red" : "green"}>{product.stock} stock</Badge>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge tone={product.isActive ? "green" : "red"}>{product.isActive ? "Active" : "Inactive"}</Badge>
+                {product.isFeatured ? <Badge tone="gold">Featured</Badge> : null}
+                {product.variants.slice(0, 5).map((variant) => <span key={`${product.id}-mobile-${variant.colorNameEn}-${variant.sortOrder}`} className="h-5 w-5 rounded-full border border-neutral-300" style={{ backgroundColor: variant.colorHex || "#ffffff" }} title={`${variant.colorNameEn}: ${variant.stock}`} />)}
+                {product.variants.length > 5 ? <span className="text-xs font-bold text-neutral-500">+{product.variants.length - 5}</span> : null}
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <Link href={`/${locale}/product/${product.slug}`} className="grid h-11 place-items-center rounded-md border border-gold-200 text-navy" aria-label={dictionary.actions.preview}><Eye size={17} /></Link>
+                <button type="button" onClick={() => startEdit(product)} className="grid h-11 place-items-center rounded-md border border-gold-200 text-navy" aria-label={`Edit ${product.nameEn}`}><Edit size={17} /></button>
+                <button type="button" onClick={() => duplicateProduct(product.id)} disabled={duplicatingId === product.id} className="grid h-11 place-items-center rounded-md border border-gold-200 text-navy disabled:opacity-60" aria-label={`Duplicate ${product.nameEn}`}><Copy size={17} /></button>
+                <div className="grid h-11 place-items-center rounded-md border border-red-100"><AdminDeleteButton endpoint={`/api/admin/products/${product.id}`} label={`Delete product ${product.nameEn}?`} successMessage="Product deleted" /></div>
+              </div>
+            </article>
+          ))}
+          {filteredProducts.length === 0 ? <p className="p-8 text-center text-sm font-semibold text-neutral-500">No products match this filter.</p> : null}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full divide-y divide-neutral-200 text-sm">
             <thead className="bg-paper text-left text-xs font-bold uppercase tracking-[0.12em] text-neutral-500 rtl:text-right">
               <tr>
@@ -771,7 +805,7 @@ export function AdminProductManager({
         </div>
       </section>
 
-      <aside id="product-editor" className="h-fit rounded-lg border border-neutral-200 bg-white p-5 shadow-soft xl:sticky xl:top-24">
+      <aside id="product-editor" className="scroll-mt-20 h-fit rounded-lg border border-neutral-200 bg-white p-4 shadow-soft sm:p-5 xl:sticky xl:top-24">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-gold-700">Store catalog</p>

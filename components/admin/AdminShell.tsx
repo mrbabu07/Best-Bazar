@@ -173,9 +173,16 @@ export function AdminShell({
       ]
     }
   ];
+  const mobileNavItems = [
+    { label: "Dashboard", href: `/${locale}/admin/dashboard`, icon: LayoutDashboard },
+    { label: "Orders", href: `/${locale}/admin/orders`, icon: Receipt, count: notifications.pendingOrders },
+    { label: "Add", href: `/${locale}/admin/products/new`, icon: Plus },
+    { label: "Products", href: `/${locale}/admin/products`, icon: Package, count: notifications.lowStockProducts },
+    { label: "Settings", href: `/${locale}/admin/settings`, icon: Settings }
+  ];
 
   return (
-    <div className="min-h-screen bg-paper lg:grid lg:grid-cols-[292px_1fr]">
+    <div className="min-h-screen overflow-x-hidden bg-paper lg:grid lg:grid-cols-[292px_1fr]">
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex w-[292px] flex-col border-r border-gold-100 bg-navy text-white shadow-lift transition lg:static lg:w-auto lg:shadow-none rtl:left-auto rtl:right-0 rtl:border-l rtl:border-r-0",
@@ -186,7 +193,7 @@ export function AdminShell({
           <div className="flex items-start justify-between gap-3">
             <Link href={`/${locale}/admin/dashboard`} className="flex min-w-0 items-center gap-3">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-gold-400 text-base font-black text-navy">
-                BB
+                AY
               </span>
               <span className="min-w-0">
                 <span className="croissant-one-regular block truncate text-lg leading-5">{dictionary.brand}</span>
@@ -343,7 +350,7 @@ export function AdminShell({
       ) : null}
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-gold-100 bg-white/92 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b border-gold-100 bg-white/92 px-3 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -359,13 +366,13 @@ export function AdminShell({
             </div>
           </div>
 
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             <Link
               href={`/${locale}/admin/dashboard#notifications`}
               prefetch={shouldLinkPrefetch}
               onMouseEnter={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
               onFocus={() => prefetchRoute(`/${locale}/admin/dashboard#notifications`)}
-              className="relative inline-flex h-10 items-center justify-center gap-2 rounded-md border border-gold-200 px-3 text-navy hover:bg-gold-50"
+              className="relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-md border border-gold-200 text-navy hover:bg-gold-50 sm:w-auto sm:px-3"
               aria-label={`Notifications: ${totalNotifications} total alerts`}
             >
               <Bell size={17} />
@@ -379,10 +386,10 @@ export function AdminShell({
             <Link
               href={switchLocalePath}
               prefetch={shouldLinkPrefetch}
-              className="inline-flex h-10 items-center gap-2 rounded-md border border-gold-200 px-3 text-xs font-bold text-navy hover:bg-gold-50"
+              className="inline-flex h-10 w-10 items-center justify-center gap-2 rounded-md border border-gold-200 text-xs font-bold text-navy hover:bg-gold-50 sm:w-auto sm:px-3"
             >
               <Globe2 size={16} />
-              {nextLocale.toUpperCase()}
+              <span className="hidden sm:inline">{nextLocale.toUpperCase()}</span>
             </Link>
             <div className="hidden min-w-0 items-center gap-3 rounded-md border border-neutral-200 bg-paper px-3 py-1.5 md:flex">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gold-100 text-xs font-bold text-navy">
@@ -400,7 +407,8 @@ export function AdminShell({
             <Link
               href={`/${locale}`}
               prefetch={shouldLinkPrefetch}
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-navy px-3 text-xs font-bold text-white hover:bg-neutral-800"
+              className="inline-flex h-10 w-10 items-center justify-center gap-2 rounded-md bg-navy text-xs font-bold text-white hover:bg-neutral-800 sm:w-auto sm:px-3"
+              aria-label="Open storefront"
             >
               <Boxes size={16} />
               <span className="hidden sm:inline">Storefront</span>
@@ -408,7 +416,8 @@ export function AdminShell({
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: `/${locale}/login` })}
-              className="inline-flex h-10 items-center gap-2 rounded-md border border-red-100 px-3 text-xs font-bold text-sale hover:bg-red-50"
+              className="inline-flex h-10 w-10 items-center justify-center gap-2 rounded-md border border-red-100 text-xs font-bold text-sale hover:bg-red-50 lg:w-auto lg:px-3"
+              aria-label="Log out"
             >
               <LogOut size={16} />
               <span className="hidden lg:inline">Logout</span>
@@ -416,7 +425,24 @@ export function AdminShell({
           </div>
         </header>
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="px-3 py-5 pb-24 sm:px-6 sm:py-6 lg:px-8 lg:pb-6">{children}</main>
+
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[4.5rem] grid-cols-5 border-t border-neutral-200 bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden" aria-label="Admin quick navigation">
+          {mobileNavItems.map((item) => {
+            const itemPath = item.href.split(/[?#]/)[0];
+            const active = currentPathname === itemPath || (itemPath !== `/${locale}/admin/dashboard` && currentPathname.startsWith(`${itemPath}/`));
+            const Icon = item.icon;
+            const count = "count" in item ? item.count ?? 0 : 0;
+
+            return (
+              <Link key={item.href} href={item.href} className={cn("relative flex min-w-0 flex-col items-center justify-center gap-1 px-1 text-[10px] font-bold", active ? "text-gold-800" : "text-neutral-500")}>
+                <span className={cn("grid h-8 w-10 place-items-center rounded-md", active && "bg-gold-100 text-navy")}><Icon size={19} /></span>
+                <span className="max-w-full truncate">{item.label}</span>
+                {count > 0 ? <span className="absolute right-[18%] top-1 grid h-4 min-w-4 place-items-center rounded-full bg-sale px-1 text-[9px] text-white">{formatCount(count)}</span> : null}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );
