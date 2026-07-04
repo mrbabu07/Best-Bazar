@@ -83,18 +83,28 @@ export default async function ParcelPage({ params, searchParams }: ParcelPagePro
         </section>
 
         <section className="py-5">
-          <h2 className="text-xs font-black uppercase tracking-[0.16em]">Products</h2>
-          <div className="mt-3 divide-y-2 divide-neutral-950 border-y-2 border-neutral-950">
-            {order.items.map((item) => {
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.16em]">Products</h2>
+            <p className="text-xs font-black">{order.items.length} item{order.items.length === 1 ? "" : "s"}</p>
+          </div>
+          <div className="mt-3 divide-y border-y-2 border-neutral-950">
+            {order.items.map((item, index) => {
               const details = getOrderItemDetails(item, params.locale);
               return (
-                <div key={item.id} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto]">
-                  <div>
-                    <p className="text-lg font-black">{details.name}</p>
-                    {details.code ? <p className="mt-2 text-2xl font-black tracking-[0.04em]">CODE: {details.code}</p> : null}
-                    <p className="mt-1 text-sm font-semibold">{[details.color ? `Color: ${details.color}` : "", details.size ? `Size: ${details.size}` : ""].filter(Boolean).join(" | ")}</p>
+                <div key={item.id} className="grid grid-cols-[32px_minmax(0,1fr)_auto] gap-3 py-4">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-neutral-950 text-xs font-black text-white">{index + 1}</span>
+                  <div className="min-w-0">
+                    <p className="font-black leading-5">{details.name}</p>
+                    <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold">
+                      <span className="border border-neutral-950 px-2 py-1">CODE: {details.code || "NOT SET"}</span>
+                      {details.variantCode && details.variantCode !== details.code ? <span className="border border-neutral-400 px-2 py-1">VARIANT: {details.variantCode}</span> : null}
+                    </div>
+                    <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                      <div><dt className="font-bold uppercase text-neutral-500">Color</dt><dd className="font-black">{details.color || "Default"}</dd></div>
+                      <div><dt className="font-bold uppercase text-neutral-500">Size</dt><dd className="font-black">{details.size || "One size"}</dd></div>
+                    </dl>
                   </div>
-                  <p className="font-black">Qty: {details.quantity}</p>
+                  <div className="text-right"><p className="text-[10px] font-bold uppercase text-neutral-500">Qty</p><p className="text-2xl font-black">{details.quantity}</p></div>
                 </div>
               );
             })}

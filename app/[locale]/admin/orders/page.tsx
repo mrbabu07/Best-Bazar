@@ -58,14 +58,20 @@ function orderProductCodes(items: Array<{ productSku?: string | null; product?: 
   return Array.from(new Set(items.map((item) => item.productSku || item.product?.sku || item.variantSku).filter(Boolean))).join(" / ") || "NOT SET";
 }
 
+function orderVariantLine(item: PrintableOrderItem, locale: string) {
+  const details = getOrderItemDetails(item, locale);
+  const code = details.code || details.variantCode || "NO CODE";
+  return [code, details.color || "Default", details.size || "One size", `x${details.quantity}`].join(" / ");
+}
+
 function orderVariantSummary(items: PrintableOrderItem[], locale: string) {
-  return items.map((item) => {
-    const details = getOrderItemDetails(item, locale);
-    const code = details.code || details.variantCode || "NO CODE";
-    return [details.name, details.color || "Default", details.size || "One size", `x${details.quantity}`, code]
-      .filter(Boolean)
-      .join(" / ");
-  }).join(", ");
+  return items.map((item) => orderVariantLine(item, locale)).join(", ");
+}
+
+function compactProductCodes(items: PrintableOrderItem[]) {
+  const codes = Array.from(new Set(items.map((item) => getOrderItemDetails(item, "en").code).filter(Boolean)));
+  const remaining = Math.max(codes.length - 3, 0);
+  return `${codes.slice(0, 3).join(" / ") || "NOT SET"}${remaining ? ` +${remaining}` : ""}`;
 }
 
 function qrContactPayload(order: {
@@ -443,7 +449,7 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                           : undefined
                     }
                   >
-                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: orderProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", "), variantSummary: orderVariantSummary(order.items, locale), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
+                    <td className="px-3 py-4"><input type="checkbox" data-parcel-order={encodeURIComponent(JSON.stringify({ orderNumber: order.orderNumber, date: formatDubaiDate(order.createdAt, locale), customerName: order.customerName, phone: order.customerPhone, address: formatAddress(order), productCode: compactProductCodes(order.items), products: order.items.map((item) => formatOrderItemDetails(item, locale, { includeCode: false })).join(", "), itemLines: order.items.map((item) => orderVariantLine(item, locale)), variantSummary: orderVariantSummary(order.items, locale), payment: order.paymentMethod, subtotal: formatCurrency(Number(order.subtotal), getCurrency(order.currency), locale, currencyRates), deliveryFee: formatCurrency(Number(order.shippingCost), getCurrency(order.currency), locale, currencyRates), total: formatCurrency(Number(order.total), getCurrency(order.currency), locale, currencyRates), note: order.notes ?? "", qrPayload: parcelQrPayload(order, locale, siteUrl) }))} className="h-4 w-4 accent-black" /></td>
                     <td className="px-5 py-4 font-bold text-navy">
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
@@ -541,8 +547,14 @@ export default async function AdminOrdersPage({ params, searchParams }: AdminOrd
                 <section className="parcel-date-row"><p className="parcel-date">{formatDubaiDate(selectedOrder.createdAt, locale)}</p><div className="parcel-mark">AY</div></section>
                 <section className="parcel-bottom">
                   <div className="parcel-codes">
-                    <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{orderProductCodes(selectedOrder.items)}</strong></div>
-                    <div className="parcel-variant"><span>PRODUCT / COLOR / SIZE / QTY / CODE</span><strong>{orderVariantSummary(selectedOrder.items, locale) || "DEFAULT / x1 / NO CODE"}</strong></div>
+                    <div className="parcel-product-code"><span>PRODUCT CODE</span><strong>{compactProductCodes(selectedOrder.items)}</strong></div>
+                    <div className="parcel-variant">
+                      <span>CODE / COLOR / SIZE / QTY</span>
+                      <ol className="parcel-item-list">
+                        {selectedOrder.items.slice(0, 3).map((item, index) => <li key={item.id}><b>{index + 1}.</b> {orderVariantLine(item, locale)}</li>)}
+                      </ol>
+                      {selectedOrder.items.length > 3 ? <em className="parcel-more">+{selectedOrder.items.length - 3} more - scan QR</em> : null}
+                    </div>
                     <div><span>PRODUCT</span><strong>{formatCurrency(Number(selectedOrder.subtotal), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div><span>DELIVERY</span><strong>{formatCurrency(Number(selectedOrder.shippingCost), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>
                     <div className="parcel-total"><span>TOTAL</span><strong>{formatCurrency(Number(selectedOrder.total), getCurrency(selectedOrder.currency), locale, currencyRates)}</strong></div>

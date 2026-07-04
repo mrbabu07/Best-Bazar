@@ -166,6 +166,10 @@ export function AdminPrintButton({ label, targetSelector = ".admin-print-target"
             .parcel-codes .parcel-product-code { grid-column: 1 / -1; min-height: .62in; }
             .parcel-codes .parcel-product-code strong { font-size: 18px; letter-spacing: .04em; }
             .parcel-codes .parcel-variant { grid-column: 1 / -1; }
+            .parcel-item-list { margin: 0; padding: 0; list-style: none; }
+            .parcel-item-list li { margin: 0 0 2px; font-size: 8px; font-weight: 800; line-height: 1.15; }
+            .parcel-item-list b { margin-right: 2px; }
+            .parcel-more { display: block; margin-top: 3px; font-size: 8px; font-weight: 900; font-style: normal; }
             .admin-parcel-label .invoice-qr { display: grid; align-content: center; justify-items: center; padding-left: 6px; }
             .admin-parcel-label .invoice-qr img { width: 1.5in !important; height: 1.5in !important; max-width: 1.5in; max-height: 1.5in; object-fit: contain; border: 1px solid #000; }
             .admin-parcel-label .invoice-qr p { margin: 4px 0 0; max-width: 1.5in; overflow: hidden; font-size: 7px; font-weight: 800; white-space: nowrap; }
