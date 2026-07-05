@@ -53,9 +53,8 @@ See `.env.example` for all required variables.
 ## 📚 Documentation
 
 - `VERCEL_DEPLOYMENT.md` - Full Vercel deployment guide
-- `VERCEL_NO_WEBSOCKET.md` - WebSocket limitations on Vercel
 - `.env.example` - Environment variables template
-- `PROJECT_STATUS.md` - Complete project status
+- `AI_PROJECT_DOCUMENTATION.md` - Complete project architecture and feature guide
 - `PWA_SETUP.md` - PWA configuration details
 
 ---
@@ -69,9 +68,8 @@ See `.env.example` for all required variables.
 
 ### 2. WebSocket Features
 - Vercel does NOT support WebSocket
-- Real-time notifications disabled on Vercel
+- Real-time notifications use the polling fallback on Vercel
 - All other features work perfectly
-- See `VERCEL_NO_WEBSOCKET.md` for alternatives
 
 ### 3. Database
 - Your Neon PostgreSQL database is production-ready
