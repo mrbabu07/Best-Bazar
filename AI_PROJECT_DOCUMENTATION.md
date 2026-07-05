@@ -1,14 +1,14 @@
-# Best Mart AI Project Documentation
+# AyVella AI Project Documentation
 
 Last updated: 2026-06-10
 
 This document is written for future AI agents and developers. It explains what the project is, how the pieces fit together, and where to change things without having to rediscover the whole repository.
 
-For an ordered first-day walkthrough, read `DEVELOPER_STEP_BY_STEP.md` first, then use this file as the deeper reference.
+Use this file as the detailed developer and AI handoff reference. Build and hosting instructions live in `BUILD_AND_DEPLOY_GUIDE.md`.
 
 ## 1. Project Summary
 
-Best Mart is a Dubai-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, Dubai delivery controls, cash on delivery, Stripe card payments, order tracking, invoices, notifications, and SEO.
+AyVella is a UAE-focused bilingual ecommerce app built with Next.js 14 App Router. It supports English and Arabic storefront pages, admin management, product variants by color and size, guest checkout, UAE delivery controls, cash on delivery, order tracking, invoices, notifications, and SEO.
 
 The main product goal is to behave like a real Dubai ecommerce store:
 

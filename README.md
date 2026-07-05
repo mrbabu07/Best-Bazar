@@ -2,8 +2,8 @@
 
 AyVella is a UAE-focused bilingual ecommerce application built with React 18 and Next.js 14, TypeScript, Tailwind CSS, Prisma, Neon PostgreSQL, NextAuth, Cloudinary uploads, optional SMTP email, and Zustand cart/preferences state.
 
-For a step-by-step developer walkthrough, see [DEVELOPER_STEP_BY_STEP.md](./DEVELOPER_STEP_BY_STEP.md).
 For the full AI/developer handoff reference, see [AI_PROJECT_DOCUMENTATION.md](./AI_PROJECT_DOCUMENTATION.md).
+For build and hosting instructions, see [BUILD_AND_DEPLOY_GUIDE.md](./BUILD_AND_DEPLOY_GUIDE.md).
 
 ## Current Features
 
