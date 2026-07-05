@@ -98,8 +98,8 @@ if (process.env.NODE_ENV !== "production") {
  */
 export async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 2,
-  delayMs = 100
+  maxRetries = 4,
+  delayMs = 500
 ): Promise<T> {
   let lastError: unknown;
   
@@ -113,6 +113,9 @@ export async function withRetry<T>(
       // Only retry on connection-related errors
       const isConnectionError = 
         errorMessage.includes("Connection") ||
+        errorMessage.includes("Can't reach database server") ||
+        errorMessage.includes("P1001") ||
+        errorMessage.includes("closed") ||
         errorMessage.includes("ECONNRESET") ||
         errorMessage.includes("ETIMEDOUT") ||
         errorMessage.includes("Transaction failed");

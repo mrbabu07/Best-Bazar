@@ -26,7 +26,7 @@ type ProductPageProps = {
 };
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const product = await getProductBySlugOrId(params.id);
+  const product = await getProductBySlugOrId(params.id).catch(() => null);
   const locale = params.locale === "ar" ? "ar" : "en";
   const title = product?.seo?.title?.[locale] || product?.name[locale] || "Product";
   const description = product?.seo?.description?.[locale] || product?.description[locale];

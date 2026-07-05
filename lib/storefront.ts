@@ -5,7 +5,7 @@ import { normalizeCategoryCustomFields, normalizeCustomFieldValues, normalizeFas
 import { getPresetColorHex, normalizeColorKey, shopColorPalette } from "@/lib/color-palette";
 import { cleanLengthSizeLabel, normalizeSizeFilterValue, sizeFilterCandidates } from "@/lib/product-size-label";
 import { fallbackCategoryImage, fallbackProductImage, safeRemoteImage } from "@/lib/images";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { reviewUserInclude, serializeStoreReview } from "@/lib/reviews";
 import { safeJsonParse, safeJsonStringify } from "@/lib/safe-json";
 import type { Category, Product, ProductColor, ProductSize } from "@/lib/types";
@@ -497,13 +497,15 @@ export const getActiveBanners = unstable_cache(readActiveBanners, ["active-banne
 });
 
 async function readProductBySlugOrId(id: string) {
-  const product = await prisma.product.findFirst({
-    where: {
-      isActive: true,
-      OR: [{ id }, { slug: id }]
-    },
-    include: productInclude
-  });
+  const product = await withRetry(() =>
+    prisma.product.findFirst({
+      where: {
+        isActive: true,
+        OR: [{ id }, { slug: id }]
+      },
+      include: productInclude
+    })
+  );
 
   return product ? mapStoreProduct(product) : null;
 }
@@ -514,12 +516,14 @@ export const getProductBySlugOrId = unstable_cache(readProductBySlugOrId, ["prod
 });
 
 async function readProductReviews(productId: string, limit = 12) {
-  const reviews = await prisma.review.findMany({
-    where: { productId, isApproved: true },
-    include: reviewUserInclude,
-    orderBy: { createdAt: "desc" },
-    take: limit
-  });
+  const reviews = await withRetry(() =>
+    prisma.review.findMany({
+      where: { productId, isApproved: true },
+      include: reviewUserInclude,
+      orderBy: { createdAt: "desc" },
+      take: limit
+    })
+  );
 
   return reviews.map(serializeStoreReview);
 }
@@ -530,16 +534,18 @@ export const getProductReviews = unstable_cache(readProductReviews, ["product-re
 });
 
 async function readRelatedProducts(categorySlug: string, productId: string, limit = 4) {
-  const products = await prisma.product.findMany({
-    where: {
-      isActive: true,
-      category: { slug: categorySlug },
-      id: { not: productId }
-    },
-    include: productListInclude,
-    orderBy: [{ isFeatured: "desc" }, { rating: "desc" }],
-    take: limit
-  });
+  const products = await withRetry(() =>
+    prisma.product.findMany({
+      where: {
+        isActive: true,
+        category: { slug: categorySlug },
+        id: { not: productId }
+      },
+      include: productListInclude,
+      orderBy: [{ isFeatured: "desc" }, { rating: "desc" }],
+      take: limit
+    })
+  );
 
   return products.map(mapStoreProduct);
 }
