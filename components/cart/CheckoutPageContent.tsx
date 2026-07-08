@@ -575,10 +575,24 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const accuracy = Number(position.coords.accuracy);
+        const locationZoom = accuracy <= 20
+          ? 20
+          : accuracy <= 50
+            ? 19.5
+            : accuracy <= 150
+              ? 18.5
+              : 17.5;
+
+        setMapZoom(locationZoom);
         void setDeliveryPin(position.coords.latitude, position.coords.longitude).then((validLocation) => {
           setLocating(false);
           if (validLocation) {
-            toast.success("Delivery map pin added.");
+            if (accuracy > 150) {
+              toast.success("Location found. Move the map slightly if the GPS pin needs adjustment.");
+            } else {
+              toast.success("Your exact location is centered on the map.");
+            }
           }
         });
       },
@@ -588,8 +602,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       },
       {
         enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 60000
+        timeout: 15000,
+        maximumAge: 0
       }
     );
   };
