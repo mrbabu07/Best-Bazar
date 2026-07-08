@@ -50,6 +50,70 @@ function distanceInMeters(lat1: number, lng1: number, lat2: number, lng2: number
   return earthRadius * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
 }
 
+function numberValue(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function pinIsInsideResultBounds(result: Record<string, unknown>, lat: number, lng: number) {
+  const bounds = Array.isArray(result.boundingbox) ? result.boundingbox : [];
+  if (bounds.length !== 4) return false;
+
+  const south = numberValue(bounds[0]);
+  const north = numberValue(bounds[1]);
+  const west = numberValue(bounds[2]);
+  const east = numberValue(bounds[3]);
+
+  return south !== null && north !== null && west !== null && east !== null &&
+    lat >= Math.min(south, north) && lat <= Math.max(south, north) &&
+    lng >= Math.min(west, east) && lng <= Math.max(west, east);
+}
+
+function isExactBuildingResult(result: Record<string, unknown>, lat: number, lng: number) {
+  const category = text(result.category).toLowerCase();
+  const type = text(result.type).toLowerCase();
+  const addressType = text(result.addresstype).toLowerCase();
+  const buildingLevel = category === "building" || [
+    "building",
+    "house",
+    "apartments",
+    "residential",
+    "commercial",
+    "office"
+  ].includes(type) || ["building", "house", "amenity", "shop", "office"].includes(addressType);
+
+  if (!buildingLevel) return false;
+  if (pinIsInsideResultBounds(result, lat, lng)) return true;
+
+  const resultLat = numberValue(result.lat);
+  const resultLng = numberValue(result.lon);
+  return resultLat !== null && resultLng !== null && distanceInMeters(lat, lng, resultLat, resultLng) <= 12;
+}
+
+function removeImpreciseBuildingDetails(result: Record<string, unknown>) {
+  const address = record(result.address);
+  const extratags = record(result.extratags);
+  const buildingKeys = [
+    "unit",
+    "flat",
+    "apartment",
+    "apartments",
+    "house_number",
+    "house_name",
+    "building",
+    "commercial",
+    "office",
+    "amenity",
+    "shop",
+    "tourism"
+  ];
+
+  for (const key of buildingKeys) delete address[key];
+  for (const key of ["addr:unit", "addr:flats", "addr:housenumber"]) delete extratags[key];
+  result.address = address;
+  result.extratags = extratags;
+}
+
 function coordinate(value: string | null, min: number, max: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : null;
@@ -99,6 +163,10 @@ export async function GET(request: NextRequest) {
 
     const result = await safeResponseJson<Record<string, unknown>>(response, {});
 
+    if (!isExactBuildingResult(result, lat, lng)) {
+      removeImpreciseBuildingDetails(result);
+    }
+
     if (!hasUnitNumber(result)) {
       const arcGisResponse = await arcGisRequest;
 
@@ -110,7 +178,7 @@ export async function GET(request: NextRequest) {
         const isCloseMatch =
           Number.isFinite(resultX) &&
           Number.isFinite(resultY) &&
-          distanceInMeters(lat, lng, resultY, resultX) <= 50;
+          distanceInMeters(lat, lng, resultY, resultX) <= 12;
         const addressNumber = text(arcAddress?.AddNum);
         const placeName = text(arcAddress?.PlaceName);
         const addressType = text(arcAddress?.Addr_type);
