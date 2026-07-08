@@ -283,6 +283,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const [mapZoom, setMapZoom] = useState(13);
   const [mapMode, setMapMode] = useState<"map" | "satellite">("satellite");
   const [mapLink, setMapLink] = useState("");
+  const [mapLocationLabel, setMapLocationLabel] = useState("");
   const [locating, setLocating] = useState(false);
   const [dragStart, setDragStart] = useState<{
     pointerId: number;
@@ -492,6 +493,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       );
 
       if (!response.ok || requestId !== reverseGeocodeRequestRef.current) {
+        if (requestId === reverseGeocodeRequestRef.current) {
+          setMapLocationLabel("Building name unavailable - enter apartment / villa no.");
+        }
         return false;
       }
 
@@ -508,6 +512,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         setMapCenter(defaultMapCenter);
         setMapZoom(13);
         setMapLink("");
+        setMapLocationLabel("");
         setEmirate("");
         toast.error("Delivery is available inside the UAE only. Please select a UAE location.");
         return false;
@@ -527,7 +532,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
       const fullAddress = Array.from(new Set([street, area, district].filter(Boolean))).join(", ");
       setFieldValue("street", fullAddress || result.display_name || "");
-      if (apartmentOrVilla && !apartmentManuallyEditedRef.current) {
+      setMapLocationLabel(apartmentOrVilla || Array.from(new Set([street, area].filter(Boolean))).join(", ") || "Building name unavailable - enter apartment / villa no.");
+      if (!apartmentManuallyEditedRef.current) {
         setFieldValue("apartment", apartmentOrVilla);
       }
       setFieldValue("city", city);
@@ -539,6 +545,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       return true;
     } catch {
       // Keep the selected pin even if address lookup is temporarily unavailable.
+      if (requestId === reverseGeocodeRequestRef.current) {
+        setMapLocationLabel("Building name unavailable - enter apartment / villa no.");
+      }
       return false;
     }
   };
@@ -552,6 +561,9 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setMapPin(nextPin);
     setMapCenter(nextPin);
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
+    apartmentManuallyEditedRef.current = false;
+    setFieldValue("apartment", "");
+    setMapLocationLabel("Checking building...");
     if (shouldFillAddress) {
       return fillAddressFromPin(nextPin.lat, nextPin.lng);
     }
@@ -1014,6 +1026,11 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     <MapPin size={18} fill="currentColor" strokeWidth={1.2} />
                   </div>
                   <div className="absolute left-1/2 top-1/2 z-20 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white ring-2 ring-red-600" />
+                  {(apartment.trim() || mapLocationLabel) ? (
+                    <div className="pointer-events-none absolute left-1/2 top-[calc(50%+10px)] z-20 max-w-[78%] -translate-x-1/2 rounded bg-white/95 px-2.5 py-1 text-center text-[10px] font-semibold leading-4 text-neutral-900 shadow-md backdrop-blur-sm">
+                      {apartment.trim() || mapLocationLabel}
+                    </div>
+                  ) : null}
                   <button
                     type="button"
                     onClick={setPinAtMapCenter}
