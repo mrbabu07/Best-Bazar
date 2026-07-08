@@ -29,6 +29,7 @@ import {
   type ProductType
 } from "@/lib/category-fields";
 import type { Locale } from "@/lib/i18n";
+import { shopColorPalette } from "@/lib/color-palette";
 import { getCategorySizeOptions, isSingleDefaultSize, type ProductSizeOption } from "@/lib/product-size-presets";
 import { safeResponseJson } from "@/lib/safe-json";
 import { titleCaseWords } from "@/lib/text-format";
@@ -162,27 +163,7 @@ function slugify(value: string) {
 }
 
 const customSizeValue = "__custom__";
-const quickColors = [
-  { nameEn: "Black", nameAr: "Black", colorHex: "#111827" },
-  { nameEn: "Maroon", nameAr: "Maroon", colorHex: "#7f1d1d" },
-  { nameEn: "Red", nameAr: "Red", colorHex: "#dc2626" },
-  { nameEn: "Rose", nameAr: "Rose", colorHex: "#f43f5e" },
-  { nameEn: "Pink", nameAr: "Pink", colorHex: "#ec4899" },
-  { nameEn: "Purple", nameAr: "Purple", colorHex: "#7c3aed" },
-  { nameEn: "Blue", nameAr: "Blue", colorHex: "#2563eb" },
-  { nameEn: "Sky Blue", nameAr: "Sky Blue", colorHex: "#38bdf8" },
-  { nameEn: "Gold", nameAr: "Gold", colorHex: "#d4af37" },
-  { nameEn: "Silver", nameAr: "Silver", colorHex: "#cbd5e1" },
-  { nameEn: "Grey", nameAr: "Grey", colorHex: "#6b7280" },
-  { nameEn: "White", nameAr: "White", colorHex: "#ffffff" },
-  { nameEn: "Navy", nameAr: "Navy", colorHex: "#1e3a8a" },
-  { nameEn: "Beige", nameAr: "Beige", colorHex: "#d6c4a3" },
-  { nameEn: "Brown", nameAr: "Brown", colorHex: "#92400e" },
-  { nameEn: "Olive", nameAr: "Olive", colorHex: "#556b2f" },
-  { nameEn: "Green", nameAr: "Green", colorHex: "#16a34a" },
-  { nameEn: "Orange", nameAr: "Orange", colorHex: "#f97316" },
-  { nameEn: "Yellow", nameAr: "Yellow", colorHex: "#facc15" }
-];
+const quickColors = shopColorPalette.map(({ nameEn, nameAr, colorHex }) => ({ nameEn, nameAr, colorHex }));
 
 const visibleQuickColorNames = new Set(["Black", "Maroon", "Red", "Blue", "Gold", "White"]);
 

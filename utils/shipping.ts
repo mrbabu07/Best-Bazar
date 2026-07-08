@@ -51,13 +51,13 @@ export type ShippingQuote = {
 };
 
 export const UAE_EMIRATES: EmirateOption[] = [
-  { key: "dubai", nameEn: "Dubai", nameAr: "Dubai" },
-  { key: "abudhabi", nameEn: "Abu Dhabi", nameAr: "Abu Dhabi" },
-  { key: "sharjah", nameEn: "Sharjah", nameAr: "Sharjah" },
-  { key: "ajman", nameEn: "Ajman", nameAr: "Ajman" },
-  { key: "rak", nameEn: "Ras Al Khaimah", nameAr: "Ras Al Khaimah" },
-  { key: "fujairah", nameEn: "Fujairah", nameAr: "Fujairah" },
-  { key: "uaq", nameEn: "Umm Al Quwain", nameAr: "Umm Al Quwain" }
+  { key: "dubai", nameEn: "Dubai", nameAr: "دبي" },
+  { key: "abudhabi", nameEn: "Abu Dhabi", nameAr: "أبوظبي" },
+  { key: "sharjah", nameEn: "Sharjah", nameAr: "الشارقة" },
+  { key: "ajman", nameEn: "Ajman", nameAr: "عجمان" },
+  { key: "rak", nameEn: "Ras Al Khaimah", nameAr: "رأس الخيمة" },
+  { key: "fujairah", nameEn: "Fujairah", nameAr: "الفجيرة" },
+  { key: "uaq", nameEn: "Umm Al Quwain", nameAr: "أم القيوين" }
 ];
 
 const defaultRateRecord: ShippingRateRecord = {

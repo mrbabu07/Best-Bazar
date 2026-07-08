@@ -75,7 +75,7 @@ const checkoutCopy = {
     delivery: "التوصيل",
     applied: (code: string) => `تم تطبيق ${code}`,
     fields: {
-      name: "????? ??????",
+      name: "الاسم الكامل",
       email: "البريد الإلكتروني",
       phone: "الهاتف",
       street: "عنوان الشارع",
@@ -266,6 +266,7 @@ function findUaeEmirate(address: ReverseGeocodeResponse["address"], displayName?
 
 export function CheckoutPageContent({ locale, dictionary, paymentAvailability, couponOffersAvailable, checkoutControls }: CheckoutPageContentProps) {
   const labels = checkoutCopy[locale];
+  const t = (english: string, arabic: string) => locale === "ar" ? arabic : english;
   const router = useRouter();
   const hydrated = useHydrated();
   const initialPayment: PaymentOptionKey = "cod";
@@ -315,9 +316,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     shippingOptions.find((rate) => rate.emirate.trim().toLowerCase() === emirate.trim().toLowerCase()) ??
     shippingOptions[0];
   const selectedEmirate = emirate;
-  const deliverySlotOptions = selectedEmirate.trim().toLowerCase() === "dubai"
-    ? dubaiDeliverySlots
-    : uaeDeliverySlots;
+  const deliverySlotOptions = locale === "ar"
+    ? selectedEmirate.trim().toLowerCase() === "dubai"
+      ? ["اليوم 6 مساءً - 10 مساءً", "غداً 9 صباحاً - 1 ظهراً", "غداً 1 ظهراً - 5 مساءً", "غداً 5 مساءً - 9 مساءً"]
+      : ["التوصيل القياسي 10 صباحاً - 6 مساءً", "التوصيل المسائي 5 مساءً - 9 مساءً"]
+    : selectedEmirate.trim().toLowerCase() === "dubai"
+      ? dubaiDeliverySlots
+      : uaeDeliverySlots;
   const shippingQuote = getShippingFee(
     selectedEmirate || selectedShippingRate?.emirate || "Dubai",
     subtotal,
@@ -494,7 +499,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
       if (!response.ok || requestId !== reverseGeocodeRequestRef.current) {
         if (requestId === reverseGeocodeRequestRef.current) {
-          setMapLocationLabel("Building name unavailable - enter apartment / villa no.");
+          setMapLocationLabel(t("Building name unavailable - enter apartment / villa no.", "اسم المبنى غير متوفر - أدخل رقم الشقة / الفيلا."));
         }
         return false;
       }
@@ -514,7 +519,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
         setMapLink("");
         setMapLocationLabel("");
         setEmirate("");
-        toast.error("Delivery is available inside the UAE only. Please select a UAE location.");
+        toast.error(t("Delivery is available inside the UAE only. Please select a UAE location.", "التوصيل متاح داخل الإمارات فقط. يرجى اختيار موقع داخل الإمارات."));
         return false;
       }
 
@@ -532,7 +537,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
       const fullAddress = Array.from(new Set([street, area, district].filter(Boolean))).join(", ");
       setFieldValue("street", fullAddress || result.display_name || "");
-      setMapLocationLabel(apartmentOrVilla || Array.from(new Set([street, area].filter(Boolean))).join(", ") || "Building name unavailable - enter apartment / villa no.");
+      setMapLocationLabel(apartmentOrVilla || Array.from(new Set([street, area].filter(Boolean))).join(", ") || t("Building name unavailable - enter apartment / villa no.", "اسم المبنى غير متوفر - أدخل رقم الشقة / الفيلا."));
       if (!apartmentManuallyEditedRef.current) {
         setFieldValue("apartment", apartmentOrVilla);
       }
@@ -546,7 +551,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     } catch {
       // Keep the selected pin even if address lookup is temporarily unavailable.
       if (requestId === reverseGeocodeRequestRef.current) {
-        setMapLocationLabel("Building name unavailable - enter apartment / villa no.");
+        setMapLocationLabel(t("Building name unavailable - enter apartment / villa no.", "اسم المبنى غير متوفر - أدخل رقم الشقة / الفيلا."));
       }
       return false;
     }
@@ -563,7 +568,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     setMapLink(`https://www.google.com/maps?q=${nextPin.lat},${nextPin.lng}`);
     apartmentManuallyEditedRef.current = false;
     setFieldValue("apartment", "");
-    setMapLocationLabel("Checking building...");
+    setMapLocationLabel(t("Checking building...", "جارٍ التحقق من المبنى..."));
     if (shouldFillAddress) {
       return fillAddressFromPin(nextPin.lat, nextPin.lng);
     }
@@ -573,7 +578,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const setPinAtMapCenter = () => {
     void setDeliveryPin(mapCenter.lat, mapCenter.lng).then((validLocation) => {
       if (validLocation) {
-        toast.success("Delivery pin set.");
+        toast.success(t("Delivery pin set.", "تم تثبيت موقع التوصيل."));
       }
     });
   };
@@ -601,16 +606,16 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
           setLocating(false);
           if (validLocation) {
             if (accuracy > 150) {
-              toast.success("Location found. Move the map slightly if the GPS pin needs adjustment.");
+              toast.success(t("Location found. Move the map slightly if the GPS pin needs adjustment.", "تم العثور على الموقع. حرّك الخريطة قليلاً إذا احتاج الموقع إلى تعديل."));
             } else {
-              toast.success("Your exact location is centered on the map.");
+              toast.success(t("Your exact location is centered on the map.", "تم توسيط موقعك الدقيق على الخريطة."));
             }
           }
         });
       },
       () => {
         setLocating(false);
-        toast.error("Unable to get location. Please allow location permission or tap the map.");
+        toast.error(t("Unable to get location. Please allow location permission or tap the map.", "تعذر تحديد الموقع. اسمح بإذن الموقع أو حدد الموقع على الخريطة."));
       },
       {
         enableHighAccuracy: true,
@@ -727,7 +732,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
     void setDeliveryPin(parsed.lat, parsed.lng).then((validLocation) => {
       if (validLocation) {
-        toast.success("Map pin added from link.");
+        toast.success(t("Map pin added from link.", "تمت إضافة الموقع من الرابط."));
       }
     });
   };
@@ -824,7 +829,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       }
 
       if (!result?.id) {
-        throw new Error("Order was placed but the confirmation link was not returned.");
+        throw new Error(t("Order was placed but the confirmation link was not returned.", "تم إنشاء الطلب ولكن لم يتم إرجاع رابط التأكيد."));
       }
       clearCart();
       toast.success(labels.orderPlaced);
@@ -840,18 +845,18 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
   const fields: CheckoutField[] = [
     { name: "name", label: labels.fields.name, type: "text", autoComplete: "name", placeholder: labels.fields.name },
-    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: "Email (optional)", required: false },
-    { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: "Phone number" },
-    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: "Full address: street, community and district" },
+    { name: "email", label: labels.fields.email, type: "email", autoComplete: "email", placeholder: t("Email (optional)", "البريد الإلكتروني (اختياري)"), required: false },
+    { name: "phone", label: labels.fields.phone, type: "tel", autoComplete: "tel", placeholder: t("Phone number", "رقم الهاتف") },
+    { name: "street", label: labels.fields.street, type: "text", autoComplete: "street-address", placeholder: t("Full address: street, community and district", "العنوان الكامل: الشارع والمنطقة والحي") },
     {
       name: "apartment",
-      label: "Apartment / villa no.",
+      label: t("Apartment / villa no.", "رقم الشقة / الفيلا"),
       type: "text",
       autoComplete: "address-line3",
-      placeholder: "Apartment / villa no. (optional)",
+      placeholder: t("Apartment / villa no. (optional)", "رقم الشقة / الفيلا (اختياري)"),
       required: false
     },
-    { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: "City" }
+    { name: "city", label: labels.fields.city, type: "text", autoComplete: "address-level2", placeholder: labels.fields.city }
   ];
 
   return (
@@ -860,17 +865,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       <form onSubmit={submitOrder} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_520px]">
         <section className="grid gap-6">
           <div>
-            <h1 className="text-3xl font-semibold tracking-[-0.02em] text-neutral-950 sm:text-4xl">Delivery</h1>
+            <h1 className="text-3xl font-semibold tracking-[-0.02em] text-neutral-950 sm:text-4xl">{labels.delivery}</h1>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-semibold text-neutral-800 sm:col-span-2">
-              <span className="sr-only">Country/Region</span>
+              <span className="sr-only">{t("Country/Region", "الدولة / المنطقة")}</span>
               <select
                 name="country"
                 defaultValue="United Arab Emirates"
                 className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950"
               >
-                <option value="United Arab Emirates">United Arab Emirates</option>
+                <option value="United Arab Emirates">{t("United Arab Emirates", "الإمارات العربية المتحدة")}</option>
               </select>
             </label>
               {fields.map((field) => (
@@ -910,7 +915,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   required
                   className="h-[74px] rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950"
                 >
-                  <option value="" disabled>Emirate</option>
+                  <option value="" disabled>{t("Emirate", "الإمارة")}</option>
                   {UAE_EMIRATES.map((emirateOption) => {
                     const rate = shippingOptions.find((item) => item.key === emirateOption.key);
                     const feeLabel = showEmirateFees && rate
@@ -919,7 +924,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
 
                     return (
                       <option key={emirateOption.key} value={emirateOption.nameEn}>
-                        {emirateOption.nameEn}{feeLabel}
+                        {locale === "ar" ? emirateOption.nameAr : emirateOption.nameEn}{feeLabel}
                       </option>
                     );
                   })}
@@ -932,19 +937,19 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       <Truck size={19} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-neutral-950">Delivery to {selectedEmirate}</p>
+                      <p className="text-sm font-bold text-neutral-950">{t("Delivery to", "التوصيل إلى")} {locale === "ar" ? UAE_EMIRATES.find((item) => item.nameEn === selectedEmirate)?.nameAr || selectedEmirate : selectedEmirate}</p>
                       <p className="mt-1 text-xs font-semibold text-emerald-800">
-                        Delivery in {formatDeliveryDays(shippingQuote.estimatedDays)}
+                        {t("Delivery in", "التوصيل خلال")} {formatDeliveryDays(shippingQuote.estimatedDays)}
                       </p>
                     </div>
                   </div>
                   <p className="text-sm font-bold text-neutral-950">
-                    {shipping === 0 ? "Free delivery" : formatCurrency(shipping, currency, locale, currencyRates)}
+                    {shipping === 0 ? t("Free delivery", "توصيل مجاني") : formatCurrency(shipping, currency, locale, currencyRates)}
                   </p>
                 </div>
               ) : null}
               <label className="grid gap-2 text-sm font-semibold text-neutral-800 sm:col-span-2">
-                <span>Preferred delivery time</span>
+                <span>{t("Preferred delivery time", "وقت التوصيل المفضل")}</span>
                 <select
                   name="deliverySlot"
                   value={deliverySlot}
@@ -954,7 +959,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   className="h-[64px] rounded-2xl border border-neutral-300 bg-white px-4 text-base font-medium text-neutral-950 transition focus:border-neutral-950 focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400"
                 >
                   <option value="" disabled>
-                    {hasShippingArea ? "Select delivery time" : "Select emirate first"}
+                    {hasShippingArea ? t("Select delivery time", "اختر وقت التوصيل") : t("Select emirate first", "اختر الإمارة أولاً")}
                   </option>
                   {deliverySlotOptions.map((slot) => (
                     <option key={slot} value={slot}>{slot}</option>
@@ -963,20 +968,20 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
               </label>
               <label className="flex items-center gap-3 text-base font-medium text-neutral-950 sm:col-span-2">
                 <input type="checkbox" name="saveInfo" className="h-7 w-7 rounded border-neutral-300 accent-neutral-950" />
-                Save this information for next time
+                {t("Save this information for next time", "حفظ هذه المعلومات للمرة القادمة")}
               </label>
                 <div className="grid gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3 sm:col-span-2 sm:p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                     <p className="flex items-center gap-2 text-sm font-semibold text-neutral-950">
                       <MapPin size={18} />
-                      Delivery map pin
+                      {t("Delivery map pin", "دبوس موقع التوصيل")}
                     </p>
-                    <p className="mt-1 text-[11px] leading-4 text-neutral-500">Optional. Drag to move, pinch with two fingers to zoom, then set the delivery pin.</p>
+                    <p className="mt-1 text-[11px] leading-4 text-neutral-500">{t("Optional. Drag to move, pinch with two fingers to zoom, then set the delivery pin.", "اختياري. اسحب للتحريك، وقرّب بإصبعين، ثم ثبّت موقع التوصيل.")}</p>
                   </div>
                   <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation} disabled={locating}>
                     <LocateFixed size={15} />
-                    {locating ? "Locating..." : "Use my location"}
+                    {locating ? t("Locating...", "جارٍ تحديد الموقع...") : t("Use my location", "استخدم موقعي")}
                   </Button>
                 </div>
                 <div
@@ -1005,7 +1010,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                             mapMode === mode ? "bg-white text-neutral-950" : "bg-neutral-100 text-neutral-600"
                           }`}
                         >
-                          {mode}
+                          {mode === "map" ? t("Map", "خريطة") : t("Satellite", "قمر صناعي")}
                         </button>
                       ))}
                     </div>
@@ -1037,18 +1042,18 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     onPointerDown={(event) => event.stopPropagation()}
                     className="absolute bottom-3 left-1/2 z-20 h-10 -translate-x-1/2 rounded bg-black px-5 text-sm font-semibold text-white shadow-lg"
                   >
-                    Set pin here
+                    {t("Set pin here", "ثبّت الموقع هنا")}
                   </button>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                   <input
                     value={mapLink}
                     onChange={(event) => setMapLink(event.target.value)}
-                    placeholder="Paste Google Maps link or coordinates (optional)"
+                    placeholder={t("Paste Google Maps link or coordinates (optional)", "ألصق رابط خرائط Google أو الإحداثيات (اختياري)")}
                     className="h-12 rounded-xl border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700"
                   />
                   <Button type="button" variant="secondary" onClick={applyMapLink} className="h-12 rounded-xl px-4">
-                    Use link
+                    {t("Use link", "استخدم الرابط")}
                   </Button>
                   <a
                     href={mapOpenUrl}
@@ -1056,14 +1061,14 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                     rel="noreferrer"
                     className="inline-flex h-12 items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-950 hover:bg-neutral-100"
                   >
-                    Open map
+                    {t("Open map", "افتح الخريطة")}
                   </a>
                 </div>
               </div>
               <textarea
                 name="notes"
                 rows={3}
-                placeholder="Order note (optional)"
+                placeholder={t("Order note (optional)", "ملاحظة الطلب (اختياري)")}
                 className="rounded-2xl border border-neutral-300 bg-white px-4 py-4 text-base font-medium text-neutral-950 placeholder:text-neutral-500 sm:col-span-2"
               />
             </div>
@@ -1075,7 +1080,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
               </span>
               <div>
                 <h2 className="text-xl font-bold text-navy">{dictionary.checkout.payment}</h2>
-                <p className="mt-1 text-sm font-semibold text-neutral-500">Choose payment method</p>
+                <p className="mt-1 text-sm font-semibold text-neutral-500">{t("Choose payment method", "اختر طريقة الدفع")}</p>
               </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -1129,7 +1134,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
               })}
               {!visiblePaymentOptions.length ? (
                 <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-sm font-bold text-sale sm:col-span-2">
-                  No payment method is currently available. Please contact support or enable a payment method from admin settings.
+                  {t("No payment method is currently available. Please contact support.", "لا توجد طريقة دفع متاحة حالياً. يرجى التواصل مع الدعم.")}
                 </div>
               ) : null}
             </div>
@@ -1176,7 +1181,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                   name="couponCode"
                   value={coupon}
                   onChange={(event) => updateCoupon(event.target.value)}
-                  placeholder="Discount code"
+                  placeholder={t("Discount code", "رمز الخصم")}
                   className="h-[72px] min-w-0 flex-1 rounded-2xl border border-neutral-300 bg-white px-4 text-lg font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-500"
                 />
                 <Button type="button" variant="secondary" onClick={applyCoupon} disabled={applyingCoupon || subtotal <= 0} className="h-[72px] rounded-2xl px-6 text-lg">
@@ -1198,13 +1203,13 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
               <span className="text-neutral-950">{dictionary.common.shipping}</span>
               <span className="text-right font-medium text-neutral-500">
                 {checkoutControls.freeDeliveryEnabled || thresholdFreeDelivery || hasProductFreeDelivery
-                  ? "Free delivery"
+                  ? t("Free delivery", "توصيل مجاني")
                   : hasShippingArea
                     ? formatCurrency(shipping, currency, locale, currencyRates)
-                    : "Enter shipping address"}
+                    : t("Enter shipping address", "أدخل عنوان الشحن")}
                 {hasShippingArea ? (
                   <span className="mt-1 block text-xs font-semibold text-neutral-500">
-                    Delivery in {formatDeliveryDays(shippingQuote.estimatedDays)}
+                    {t("Delivery in", "التوصيل خلال")} {formatDeliveryDays(shippingQuote.estimatedDays)}
                   </span>
                 ) : null}
               </span>

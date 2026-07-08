@@ -154,7 +154,7 @@ export function ProductFilters({
                 type="button"
                 onClick={() => setOpen(false)}
                 className="absolute right-4 top-4 grid h-8 w-8 place-items-center"
-                aria-label="Close filters"
+                aria-label={locale === "ar" ? "إغلاق عوامل التصفية" : "Close filters"}
               >
                 <X size={22} />
               </button>
@@ -167,7 +167,7 @@ export function ProductFilters({
             <div className="grid content-start gap-5 overflow-y-auto px-5 py-7">
               <div className="border-y border-neutral-200 py-5 text-sm text-neutral-800">
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-medium">Availability</span>
+                  <span className="text-base font-medium">{locale === "ar" ? "التوفر" : "Availability"}</span>
                   <span aria-hidden="true">+</span>
                 </div>
                 <label className="mt-5 flex cursor-pointer items-center gap-3 font-normal">
@@ -180,7 +180,7 @@ export function ProductFilters({
                     }}
                     className="h-5 w-5 accent-neutral-950"
                   />
-                  In stock
+                  {locale === "ar" ? "متوفر" : "In stock"}
                 </label>
               </div>
 

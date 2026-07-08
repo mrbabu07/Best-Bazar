@@ -56,7 +56,7 @@ export function ProductCard({ product, locale, dictionary, priority = false, sho
           />
           <div className="absolute bottom-2 left-2 flex flex-wrap gap-1.5 rtl:left-auto rtl:right-2">
             {hasSale ? <span className="rounded-full bg-[#6f345f] px-3 py-1 text-[11px] font-semibold text-white">{dictionary.common.sale}</span> : null}
-            {product.freeDelivery ? <span className="rounded-full bg-emerald-700 px-3 py-1 text-[11px] font-semibold text-white">Free delivery</span> : null}
+            {product.freeDelivery ? <span className="rounded-full bg-emerald-700 px-3 py-1 text-[11px] font-semibold text-white">{locale === "ar" ? "توصيل مجاني" : "Free delivery"}</span> : null}
             {totalStock <= 0 ? <Badge tone="red">{dictionary.common.outOfStock}</Badge> : null}
           </div>
         </Link>

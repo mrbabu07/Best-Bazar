@@ -421,7 +421,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 type="button"
                 onClick={() => setNotificationsOpen((value) => !value)}
                 className={`relative ${iconButtonClass}`}
-                aria-label={locale === "ar" ? "Notifications" : "Notifications"}
+                aria-label={locale === "ar" ? "الإشعارات" : "Notifications"}
                 aria-expanded={notificationsOpen}
               >
                 <Bell size={18} />
@@ -435,18 +435,18 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 <div className="fixed left-4 right-4 top-[4.75rem] z-50 rounded-lg border border-neutral-200 bg-white p-3 text-left shadow-lift sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80 rtl:text-right sm:rtl:left-0 sm:rtl:right-auto">
                   <div className="flex items-start justify-between gap-3 border-b border-neutral-100 pb-3">
                     <div>
-                      <p className="text-sm font-bold text-navy">Notifications</p>
+                      <p className="text-sm font-bold text-navy">{locale === "ar" ? "الإشعارات" : "Notifications"}</p>
                       <p className="mt-1 text-xs font-semibold text-neutral-500">
                         {visibleNotifications.length > 0
-                          ? `${visibleNotifications.length} update${visibleNotifications.length === 1 ? "" : "s"} available`
-                          : "You are all caught up"}
+                          ? locale === "ar" ? `${visibleNotifications.length} تحديث متاح` : `${visibleNotifications.length} update${visibleNotifications.length === 1 ? "" : "s"} available`
+                          : locale === "ar" ? "لا توجد تحديثات جديدة" : "You are all caught up"}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setNotificationsOpen(false)}
                       className="grid h-7 w-7 place-items-center rounded-md text-neutral-500 hover:bg-paper"
-                      aria-label="Close notifications"
+                      aria-label={locale === "ar" ? "إغلاق الإشعارات" : "Close notifications"}
                     >
                       <X size={15} />
                     </button>
@@ -470,7 +470,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-sm font-bold text-navy">{item.title}</p>
                                 <span className="rounded-full bg-gold-100 px-2 py-0.5 text-[10px] font-bold uppercase text-gold-700">
-                                  {item.icon === "product" ? "Product" : "Delivery"}
+                                  {item.icon === "product" ? locale === "ar" ? "منتج" : "Product" : locale === "ar" ? "توصيل" : "Delivery"}
                                 </span>
                               </div>
                               <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-neutral-500">
@@ -490,7 +490,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                             type="button"
                             onClick={() => dismissNotification(item.id)}
                             className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-neutral-400 hover:bg-white hover:text-sale"
-                            aria-label="Dismiss notification"
+                            aria-label={locale === "ar" ? "إخفاء الإشعار" : "Dismiss notification"}
                           >
                             <X size={14} />
                           </button>
@@ -498,9 +498,9 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                       ))
                     ) : (
                       <div className="rounded-md border border-dashed border-neutral-200 bg-paper p-4 text-center">
-                        <p className="text-sm font-bold text-navy">No notifications</p>
+                        <p className="text-sm font-bold text-navy">{locale === "ar" ? "لا توجد إشعارات" : "No notifications"}</p>
                         <p className="mt-1 text-xs font-semibold text-neutral-500">
-                          New products, delivery updates, and cart reminders will appear here.
+                          {locale === "ar" ? "ستظهر هنا المنتجات الجديدة وتحديثات التوصيل وتذكيرات السلة." : "New products, delivery updates, and cart reminders will appear here."}
                         </p>
                       </div>
                     )}
@@ -578,7 +578,7 @@ export function Header({ locale, dictionary, settings }: HeaderProps) {
                 ))}
               </div>
 
-              {!fashionLinks.length ? <p className="px-6 py-4 text-sm text-neutral-500">Add active categories from Admin to show them here.</p> : null}
+              {!fashionLinks.length ? <p className="px-6 py-4 text-sm text-neutral-500">{locale === "ar" ? "أضف فئات نشطة من لوحة الإدارة لإظهارها هنا." : "Add active categories from Admin to show them here."}</p> : null}
 
               <div className="grid gap-0 border-t border-neutral-200">
                 {navItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="border-b border-neutral-200 px-6 py-3.5 text-base font-medium text-neutral-950 hover:bg-white">{item.label}</Link>)}

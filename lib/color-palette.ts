@@ -9,7 +9,7 @@ export function normalizeColorKey(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-export const shopColorPalette: ShopColorPreset[] = [
+const rawShopColorPalette: ShopColorPreset[] = [
   { key: "black", nameEn: "Black", nameAr: "Black", colorHex: "#111827" },
   { key: "white", nameEn: "White", nameAr: "White", colorHex: "#ffffff" },
   { key: "off white", nameEn: "Off White", nameAr: "Off White", colorHex: "#faf9f4" },
@@ -65,6 +65,25 @@ export const shopColorPalette: ShopColorPreset[] = [
   { key: "rose", nameEn: "Rose", nameAr: "Rose", colorHex: "#fb7185" },
   { key: "multi", nameEn: "Multi", nameAr: "Multi", colorHex: "#64748b" }
 ];
+
+const arabicColorNames: Record<string, string> = {
+  black: "أسود", white: "أبيض", "off white": "أوف وايت", ivory: "عاجي", cream: "كريمي",
+  beige: "بيج", sand: "رملي", taupe: "رمادي داكن", nude: "نيود", gray: "رمادي",
+  charcoal: "فحمي", silver: "فضي", gold: "ذهبي", "rose gold": "ذهبي وردي", bronze: "برونزي",
+  copper: "نحاسي", brown: "بني", tan: "أسمر فاتح", camel: "جملي", khaki: "كاكي",
+  coffee: "قهوة", chocolate: "شوكولاتة", red: "أحمر", maroon: "عنابي", burgundy: "بورغندي",
+  coral: "مرجاني", peach: "خوخي", orange: "برتقالي", amber: "كهرماني", yellow: "أصفر",
+  mustard: "خردلي", lime: "ليموني", green: "أخضر", emerald: "زمردي", "forest green": "أخضر غابي",
+  olive: "زيتوني", mint: "نعناعي", teal: "أزرق مخضر", turquoise: "فيروزي", aqua: "مائي",
+  "sky blue": "أزرق سماوي", blue: "أزرق", "royal blue": "أزرق ملكي", navy: "كحلي", denim: "دنيم",
+  indigo: "نيلي", purple: "بنفسجي", plum: "برقوقي", lavender: "لافندر", mauve: "موف",
+  magenta: "أرجواني", pink: "وردي", rose: "وردي داكن", multi: "متعدد الألوان"
+};
+
+export const shopColorPalette: ShopColorPreset[] = rawShopColorPalette.map((color) => ({
+  ...color,
+  nameAr: arabicColorNames[color.key] ?? color.nameAr
+}));
 
 export function getPresetColorHex(colorName: string) {
   const key = normalizeColorKey(colorName);

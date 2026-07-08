@@ -16,6 +16,7 @@ type FavouritesPageContentProps = {
 };
 
 export function FavouritesPageContent({ locale }: FavouritesPageContentProps) {
+  const t = (en: string, ar: string) => locale === "ar" ? ar : en;
   const hydrated = useHydrated();
   const items = useFavouriteStore((state) => state.items);
   const remove = useFavouriteStore((state) => state.remove);
@@ -30,20 +31,20 @@ export function FavouritesPageContent({ locale }: FavouritesPageContentProps) {
           <Heart size={21} />
         </span>
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-gold-700">Saved products</p>
-          <h1 className="text-3xl font-bold text-navy">Favourites</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-gold-700">{t("Saved products", "المنتجات المحفوظة")}</p>
+          <h1 className="text-3xl font-bold text-navy">{t("Favourites", "المفضلة")}</h1>
         </div>
       </div>
 
       {!visibleItems.length ? (
         <section className="mt-8 rounded-lg border border-neutral-200 bg-white p-8 text-center shadow-soft">
-          <h2 className="text-xl font-bold text-navy">No favourites yet</h2>
-          <p className="mt-2 text-sm font-semibold text-neutral-500">Save products you want to check again later.</p>
+          <h2 className="text-xl font-bold text-navy">{t("No favourites yet", "لا توجد منتجات مفضلة بعد")}</h2>
+          <p className="mt-2 text-sm font-semibold text-neutral-500">{t("Save products you want to check again later.", "احفظ المنتجات التي ترغب في مشاهدتها لاحقاً.")}</p>
           <Link
             href={`/${locale}/shop`}
             className="mt-5 inline-flex h-11 items-center justify-center rounded-md bg-navy px-5 text-sm font-bold text-white"
           >
-            Continue shopping
+            {t("Continue shopping", "متابعة التسوق")}
           </Link>
         </section>
       ) : (
@@ -60,7 +61,7 @@ export function FavouritesPageContent({ locale }: FavouritesPageContentProps) {
                 <p className="text-sm font-black text-navy">{formatCurrency(item.price, currency, locale, currencyRates)}</p>
                 <Button type="button" variant="secondary" size="sm" onClick={() => remove(item.id)}>
                   <Trash2 size={15} />
-                  Remove
+                  {t("Remove", "إزالة")}
                 </Button>
               </div>
             </article>
