@@ -338,7 +338,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
   const selectedMapPoint = mapPin ?? mapCenter;
   const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selectedMapPoint.lat},${selectedMapPoint.lng}`)}`;
   const visibleMapTiles = useMemo(() => {
-    const nativeZoom = Math.min(mapZoom, maxNativeTileZoom);
+    const nativeZoom = Math.min(Math.floor(mapZoom), maxNativeTileZoom);
     const overzoomScale = 2 ** (mapZoom - nativeZoom);
     const renderedTileSize = mapTileSize * overzoomScale;
     const centerX = lngToTileX(mapCenter.lng, nativeZoom);
@@ -631,8 +631,8 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
       const gesture = pinchGestureRef.current;
 
       if (gesture) {
-        const zoomDelta = Math.log2(Math.max(distance, 1) / gesture.distance) * 2;
-        setMapZoom(clamp(Math.round(gesture.zoom + zoomDelta), minMapZoom, maxMapZoom));
+        const zoomDelta = Math.log2(Math.max(distance, 1) / gesture.distance);
+        setMapZoom(clamp(gesture.zoom + zoomDelta, minMapZoom, maxMapZoom));
       }
       return;
     }
@@ -672,14 +672,17 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
     }
   };
 
-  const zoomMap = (direction: 1 | -1) => {
-    setMapZoom((zoom) => clamp(zoom + direction, minMapZoom, maxMapZoom));
-  };
-
   const handleMapWheel = (event: WheelEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    zoomMap(event.deltaY < 0 ? 1 : -1);
+    const pixelDelta = event.deltaMode === 1
+      ? event.deltaY * 16
+      : event.deltaMode === 2
+        ? event.deltaY * event.currentTarget.clientHeight
+        : event.deltaY;
+    const zoomDelta = clamp(-pixelDelta * 0.003, -0.45, 0.45);
+
+    setMapZoom((zoom) => clamp(zoom + zoomDelta, minMapZoom, maxMapZoom));
   };
 
   const containMapTouch = (event: TouchEvent<HTMLDivElement>) => {
@@ -988,7 +991,7 @@ export function CheckoutPageContent({ locale, dictionary, paymentAvailability, c
                       src={tile.src}
                       alt=""
                       draggable={false}
-                      className="absolute max-w-none transition-[left,top,width,height] duration-150 ease-out"
+                      className="absolute max-w-none select-none [will-change:left,top,width,height]"
                       style={{ left: tile.left, top: tile.top, width: tile.size, height: tile.size }}
                     />
                   ))}
